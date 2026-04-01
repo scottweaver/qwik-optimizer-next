@@ -39,10 +39,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Specification — Infrastructure
 
 - [x] **SPEC-21**: Spec documents GlobalCollect behavior (import/export/root-declaration analysis)
-- [ ] **SPEC-22**: Spec documents Variable Migration (dependency analysis, segment-exclusive root var movement, export cleanup)
+- [x] **SPEC-22**: Spec documents Variable Migration (dependency analysis, segment-exclusive root var movement, export cleanup)
 - [x] **SPEC-23**: Spec documents Hash Generation algorithm (deterministic segment hashing for stable QRL identifiers)
 - [x] **SPEC-24**: Spec documents Path Resolution (canonical filename generation, relative path computation, extension mapping)
-- [ ] **SPEC-25**: Spec documents Source Map Generation contracts for both root module and segment modules
+- [x] **SPEC-25**: Spec documents Source Map Generation contracts for both root module and segment modules
 
 ### Specification — Bindings
 
@@ -130,10 +130,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-19 | Phase 4 | Pending |
 | SPEC-20 | Phase 4 | Pending |
 | SPEC-21 | Phase 1 | Complete |
-| SPEC-22 | Phase 1 | Pending |
+| SPEC-22 | Phase 1 | Complete |
 | SPEC-23 | Phase 1 | Complete |
 | SPEC-24 | Phase 1 | Complete |
-| SPEC-25 | Phase 1 | Pending |
+| SPEC-25 | Phase 1 | Complete |
 | SPEC-26 | Phase 4 | Pending |
 | SPEC-27 | Phase 4 | Pending |
 | SPEC-28 | Phase 4 | Pending |
