@@ -248,7 +248,672 @@ synthetic: [
 
 ## Stage 4: Core Transform
 
-> (Dollar Detection, Capture Analysis, QRL Wrapping, Segment Extraction, and Import Rewriting sections will be added in Plans 02-04)
+> Dollar Detection, QRL Wrapping, Segment Extraction, and Import Rewriting sections are added by Plans 02 and 04.
+
+### Capture Analysis (CONV-03)
+
+Capture analysis determines which variables cross the `$()` serialization boundary. Every identifier referenced inside a `$()` callback body must be classified: is it a capture (passed via `_captures[N]`), a self-import (resolved via `import { _auto_X as X } from "./module"`), a re-emitted import (same source as the original), a local (parameter of the callback itself), or an error (function/class declaration)? Getting this classification wrong causes runtime failures -- variables are either undefined (missing capture/import) or incorrectly serialized (extra captures bloating bundles). This section was the source of 293 runtime deviations in Jack's OXC implementation, 46 of which were caused by missing self-import reclassification alone.
+
+Source: transform.rs:820-1075 (`_create_synthetic_qsegment`), collector.rs:400-530 (`IdentCollector`), transform.rs:4894 (`compute_scoped_idents`)
+
+#### Algorithm Overview
+
+The capture analysis algorithm executes in 4 steps for each `$()` call site:
+
+**Step 1: Collect descendant identifiers.** An `IdentCollector` instance visits the `$()` callback body via SWC's `Visit` trait. It collects all referenced identifiers into a `HashSet<Id>`. The collector applies these filters:
+
+- **SyntaxContext must not be empty.** Identifiers with `SyntaxContext::empty()` are unresolved globals and are excluded. Source: collector.rs:459-460.
+- **Excludes global names.** The identifiers `undefined`, `NaN`, `Infinity`, and `null` are always excluded regardless of SyntaxContext. Source: collector.rs:461-464.
+- **Uses `ExprOrSkip` enum.** The collector maintains an `expr_ctxt` stack that tracks whether the current position is an expression context (`ExprOrSkip::Expr`) or a skip context (`ExprOrSkip::Skip`). Only identifiers in expression context are collected. Source: collector.rs:418-428.
+  - `visit_expr` pushes `Expr` (identifiers here ARE collected)
+  - `visit_stmt` pushes `Skip` (statement-level identifiers are NOT collected)
+  - `visit_jsx_attr` pushes `Skip` (JSX attribute names are NOT collected, but JSX expression containers within attributes ARE collected because they trigger `visit_expr`)
+  - `visit_key_value_prop` pushes `Skip` (property keys in object literals are NOT collected)
+  - `visit_member_expr` pushes `Skip` (member expression property names like `.foo` are NOT collected, but the object itself is collected because the ident is visited before the member push)
+- **JSX element names.** `visit_jsx_element_name` only visits children (collecting the identifier) when the element name starts with an uppercase letter (`A-Z`). Lowercase JSX elements (HTML tags like `<div>`) are not collected as identifier references. Source: collector.rs:441-451.
+- **JSX usage tracking.** The collector also tracks `use_h` (set to `true` when any JSX element or fragment is encountered) and `use_fragment` (set to `true` for JSX fragments). These flags inform import generation for JSX runtime helpers. Source: collector.rs:430-439.
+
+The output is a sorted `Vec<Id>` of all unique identifiers referenced in the callback body. Source: collector.rs:408-412.
+
+**Step 2: Partition declaration stack.** The `decl_stack` -- accumulated during the AST traversal as the optimizer descends into nested scopes -- contains entries of type `(Id, IdentType)`. Each entry records a declaration visible at the current scope level. The entries are partitioned into two sets:
+
+- **`Var`-type declarations** (capturable): `let`, `const`, `var`, function parameters, catch clause bindings. These are declarations whose values can be serialized and passed across the `$()` boundary.
+- **Non-`Var` declarations** (`invalid_decl`): `function` and `class` declarations. These produce ERROR diagnostics if referenced across `$()` boundaries because functions and classes cannot be serialized for resumability.
+
+Source: transform.rs:967-972.
+
+**Step 3: Compute scoped identifiers.** The `compute_scoped_idents()` function performs a set intersection: it finds identifiers that appear in BOTH the descendant identifier set (from Step 1) AND the `Var`-type declaration stack entries (from Step 2). These are the captured variables -- outer-scope locals that the `$()` callback references.
+
+```
+compute_scoped_idents(all_idents, all_decl) -> (Vec<Id>, bool):
+    set = HashSet::new()
+    is_const = true
+    for ident in all_idents:
+        if ident found in all_decl:
+            set.insert(ident)
+            if decl is not Var(true):  // Var(true) means const
+                is_const = false
+    output = sorted(set)
+    return (output, is_const)
+```
+
+The `is_const` flag tracks whether ALL captured variables are `const` declarations. This metadata is used by the QRL wrapping step to determine if the segment's captures are immutable.
+
+After `compute_scoped_idents()`, function callback parameters are filtered out -- they are local to the segment and must not be captured:
+
+```
+param_idents = get_function_params(folded_expr)
+scoped_idents.retain(|id| !param_idents.contains(id))
+```
+
+Source: transform.rs:4894-4908 (`compute_scoped_idents`), transform.rs:985-990 (parameter filtering).
+
+**Step 4: Classify each identifier against GlobalCollect.** For every identifier in the callback body's `local_idents` set (collected via a second `IdentCollector` pass on the folded expression), the optimizer checks `global_collect`:
+
+- If `global_collect.has_export_symbol(id.symbol)` returns `true`: the identifier is a module-level declaration. The optimizer calls `ensure_export(root_id)` to create a synthetic `_auto_{name}` export, enabling the segment to import it via self-import. This is NOT a capture.
+- If the identifier appears in `invalid_decl` (function/class declarations from Step 2): an ERROR diagnostic is emitted -- `"Reference to identifier '{name}' can not be used inside a Qrl($) scope because it's a function"`. The segment still generates (capture analysis does not bail on errors), but the identifier will be undefined at runtime.
+- If the identifier is in `global_collect.imports`: it will be re-emitted as an import statement in the segment module by `code_move::new_module()`. NOT a capture.
+- If the identifier is in `global_collect.root` (top-level declaration, not exported): same as the export case -- `ensure_export()` is called, creating a self-import path.
+- If the identifier passes through all global checks and appears in `scoped_idents`: it IS a capture, resolved via `_captures[N]` destructuring in the segment.
+
+Source: transform.rs:1022-1043 (local_idents classification loop).
+
+**Important behavioral note:** Capture analysis proceeds regardless of diagnostic errors. Only bail if the parsed body is empty (structural parse failure). Semantic errors (e.g., `await` in non-async function, type errors) produce valid ASTs that can still be analyzed for identifier references. This is critical -- bailing on semantic errors silently drops captures for valid code patterns, causing undefined variable errors at runtime. (Pitfall 4 from research; Jack's Plan 10 fix.)
+
+#### Mermaid Decision Tree (D-09)
+
+The following flowchart shows the classification logic for a single variable reference `V` found inside a `$()` callback body:
+
+```mermaid
+flowchart TD
+    Start["Variable V referenced in $() body"]
+    Start --> Q1{"Is V a parameter of<br/>the $() callback?"}
+    Q1 -->|YES| R1["Not captured<br/>(local to segment)"]
+    Q1 -->|NO| Q2{"Is V in<br/>global_collect.imports?"}
+    Q2 -->|YES| R2["Category 2:<br/>Re-emitted import"]
+    Q2 -->|NO| Q3{"Is V in global_collect.exports<br/>or global_collect.root?"}
+    Q3 -->|YES| R3["Category 1:<br/>Self-import via _auto_ export"]
+    Q3 -->|NO| Q4{"Is V a TypeScript<br/>type-only import?"}
+    Q4 -->|YES| R4["Category 6:<br/>Erased at compile time"]
+    Q4 -->|NO| Q5{"Is V's declaration a<br/>function or class?"}
+    Q5 -->|YES| R5["Category 8:<br/>ERROR diagnostic"]
+    Q5 -->|NO| Q6{"Is V shadowed by an inner<br/>binding in $() body?"}
+    Q6 -->|YES| R6["Category 7:<br/>Inner binding wins"]
+    Q6 -->|NO| Q7{"Is V in decl_stack<br/>as Var-type?"}
+    Q7 -->|YES| Q8{"Is V from a loop<br/>iteration scope?"}
+    Q8 -->|YES| R7["Category 4:<br/>Loop variable captured"]
+    Q8 -->|NO| R8["Category 3:<br/>Outer local captured"]
+    Q7 -->|NO| R9["Not referenced /<br/>global builtin"]
+```
+
+#### 8-Category Taxonomy Table (D-09)
+
+| # | Category | Is Capture? | How Resolved in Segment | SWC Mechanism | Example |
+|---|----------|-------------|------------------------|---------------|---------|
+| 1 | Module-level declarations | NO | Self-import: `import { _auto_X as X } from "./module_stem"` | `global_collect.has_export_symbol()` returns true; `ensure_export()` adds synthetic `_auto_` named export; `code_move::resolve_export_for_id()` generates the import in the segment | `const helper = () => 42;` at root scope, used in `$()` -- segment gets `import { _auto_helper as helper } from "./module"` |
+| 2 | User-code imports | NO | Re-emitted import statement from original source | `code_move::resolve_import_for_id()` finds the import in `global_collect.imports` and emits an identical import in the segment module | `import css from './style.css'` used in `$()` -- segment gets `import css from './style.css'` |
+| 3 | Outer-scope local variables | YES | `_captures[N]` destructuring at top of segment function body | `compute_scoped_idents()` returns them in the intersection of descendant idents and `Var`-type `decl_stack` entries | `const x = 5;` in component body, used in nested `$()` -- segment gets `const x = _captures[0];` |
+| 4 | Loop iteration variables | YES | Same as Category 3 (`_captures[N]` destructuring) | Loop variables (`for-of`, `for-in`, C-style `for`) are added to `decl_stack` via `iteration_var_stack` during traversal; `compute_scoped_idents()` picks them up | `for (const item of list) { $(() => use(item)) }` -- `item` captured via `_captures[N]` |
+| 5 | Destructured component props | YES (as `_rawProps`) | Captured as `_rawProps` after the props destructuring pre-pass transforms `({count}) => ...` to `(_rawProps) => ...` | Props destructuring (Stage 3, Step 8) runs BEFORE capture analysis, changing the parameter name; the `_rawProps` identifier then follows standard Category 3 capture rules | `component$(({count}) => $(() => count))` -- after props destructuring: `(_rawProps) => $(() => _rawProps.count)` -- `_rawProps` captured, accessed as `_rawProps.count` |
+| 6 | TypeScript type-only imports | NO | Erased at compile time; never reaches capture analysis | TypeScript strip (Stage 1, Step 3) removes type-only imports before GlobalCollect runs; they do not appear in `global_collect.imports` | `import type { Foo } from './types'` -- completely removed during TS strip |
+| 7 | Shadowed variables | NO (inner wins) | The inner binding is local to the segment; the outer binding is not referenced | `collect_local_declarations_from_expr()` in `get_local_idents` identifies inner declarations; the inner binding shadows the outer one in the descendant identifier set because they share the same name but have different `SyntaxContext` | `const x = 1; $(() => { const x = 2; use(x) })` -- the inner `x` has a different `SyntaxContext`, and only the inner one is referenced in the callback body |
+| 8 | Function/class declarations in scope | ERROR | Diagnostic emitted; segment still generated but identifier will be undefined at runtime | `invalid_decl` partition in `_create_synthetic_qsegment`: identifiers whose `decl_stack` entry has a non-`Var` type produce error `"Reference to identifier '{name}' can not be used inside a Qrl($) scope because it's a function"` (error code C02) | `function helper() {}; $(() => helper())` -- ERROR diagnostic emitted for `helper`; segment code references `helper` but it will be undefined |
+
+#### Self-Import Reclassification
+
+Self-import reclassification is the single most impactful behavioral distinction in the capture system. It resolved 46 of Jack's 293 runtime deviations in his OXC implementation. The mechanism ensures that module-level declarations (constants, functions, classes, enums at the top level of the source file) are NOT treated as captures but are instead made available to segment modules via synthetic exports and self-imports.
+
+**The problem it solves:** When a segment references a module-level declaration like `const API_URL = "/api"`, that declaration exists in the root module's scope. The segment module is a separate file -- it cannot directly access the root module's variables. Without self-import reclassification, the declaration would either be (a) incorrectly added as a `_captures[N]` entry (wrong -- it is not a closure variable) or (b) silently dropped (wrong -- the segment would get `ReferenceError` at runtime).
+
+**The mechanism (4 steps):**
+
+1. **Detection.** During the local_idents classification loop (transform.rs:1022-1043), for each identifier referenced by the segment, the optimizer checks `global_collect.has_export_symbol(id.symbol)`. If the identifier is already exported, no action is needed -- the segment can import it directly. If it is NOT exported but IS in `global_collect.root` (a top-level declaration), it needs a synthetic export.
+
+2. **Synthetic export creation.** `ensure_export(root_id)` (transform.rs:1024-1026) calls `global_collect.add_export(root_id, Some("_auto_{name}"))`. This adds a synthetic named export to the root module: `export { original_name as _auto_original_name }`. The `_auto_` prefix prevents collision with user-defined exports.
+
+3. **Segment import generation.** When `code_move::new_module()` constructs the segment module, it processes each identifier in `local_idents`. For identifiers that resolve to exports (including the new synthetic `_auto_` exports), `resolve_export_for_id()` generates: `import { _auto_X as X } from "./module_stem"`. The segment can now reference `X` as if it were a local variable.
+
+4. **Captures field is `false`.** Because the identifier is resolved via import rather than capture, the segment's `captures` field in `SegmentAnalysis` is `false` (assuming no other identifiers are captured). The segment does NOT import `_captures` from `@qwik.dev/core` and does NOT have destructuring at the function body top.
+
+**Key implementation detail:** The `_auto_` prefix is a convention, not a hard requirement from the language. It exists to prevent name collisions -- if a module already exports a `helper` name, the synthetic export `_auto_helper` does not conflict.
+
+Source: transform.rs:1024-1026 (`ensure_export`), code_move.rs:200-276 (`resolve_export_for_id` and import generation)
+
+#### Example 1: Captures with Destructuring (example_multi_capture)
+
+This example demonstrates Category 3 (outer-scope local variables) and Category 5 (destructured component props) captures. The component's props are destructured, transformed by the props destructuring pre-pass into `_rawProps`, and then captured across the `$()` boundary.
+
+**Input:**
+
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+
+export const Foo = component$(({foo}) => {
+  const arg0 = 20;
+  return $(() => {
+    const fn = ({aaa}) => aaa;
+    return (
+      <div>
+        {foo}{fn()}{arg0}
+      </div>
+    )
+  });
+})
+```
+
+**Root module output (test.jsx):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"),
+  "Foo_component_HTDRsvUbLiE"
+);
+//
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+```
+
+**Component segment output (test.tsx_Foo_component_HTDRsvUbLiE.jsx):**
+
+```javascript
+import { qrl } from "@qwik.dev/core";
+//
+const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_1_DvU6FitWglY"),
+  "Foo_component_1_DvU6FitWglY"
+);
+//
+export const Foo_component_HTDRsvUbLiE = (_rawProps)=>{
+    return q_Foo_component_1_DvU6FitWglY.w([
+        _rawProps
+    ]);
+};
+```
+
+**Nested segment output (test.tsx_Foo_component_1_DvU6FitWglY.jsx):**
+
+```javascript
+import { _captures } from "@qwik.dev/core";
+//
+export const Foo_component_1_DvU6FitWglY = ()=>{
+    const _rawProps = _captures[0];
+    const fn = ({ aaa })=>aaa;
+    return <div>
+        {_rawProps.foo}{fn()}{20}
+      </div>;
+};
+```
+
+**Capture analysis breakdown:**
+- `_rawProps` (Category 5): The original `{foo}` destructuring was transformed to `_rawProps` by the props destructuring pre-pass. In the component segment, `_rawProps` is a parameter (not captured). In the nested segment, `_rawProps` is an outer-scope local -- captured via `_captures[0]`. Access to `foo` becomes `_rawProps.foo`.
+- `arg0` (value `20`): This `const` initializer is inlined as the literal `20` in the segment -- it is NOT captured. The optimizer detects that `arg0` is a simple const with a literal initializer and substitutes it directly.
+- `fn` (Category 7 -- inner binding): The `fn` variable is declared INSIDE the `$()` callback body. It is local to the segment, not captured.
+- `captures: true` on the nested segment, `captureNames: ["_rawProps"]` -- confirming `_rawProps` is the only capture.
+- `captures: false` on the component segment -- `_rawProps` is a parameter, not a capture.
+
+#### Example 2: Import Re-emission (example_capture_imports)
+
+This example demonstrates Category 2 (user-code imports). Imports used inside a `$()` callback are NOT captured -- they are re-emitted as import statements in the segment module.
+
+**Input:**
+
+```typescript
+import { component$, useStyles$ } from '@qwik.dev/core';
+import css1 from './global.css';
+import css2 from './style.css';
+import css3 from './style.css';
+
+export const App = component$(() => {
+  useStyles$(`${css1}${css2}`);
+  useStyles$(css3);
+})
+```
+
+**Segment output for `useStyles$(\`...\`)` (test.tsx_App_component_useStyles_t35nSa5UV7U.js):**
+
+```javascript
+import css1 from "./global.css";
+import css2 from "./style.css";
+//
+export const App_component_useStyles_t35nSa5UV7U = `${css1}${css2}`;
+```
+
+**Segment output for `useStyles$(css3)` (test.tsx_style_css_TRu1FaIoUM0.js):**
+
+```javascript
+import css3 from "./style.css";
+//
+export const style_css_TRu1FaIoUM0 = css3;
+```
+
+**Capture analysis breakdown:**
+- `css1`, `css2`, `css3` (Category 2): All three are user-code imports. They appear in `global_collect.imports`. The segment modules re-emit identical import statements from the same sources. `captures: false` on both segments.
+- The `useStyles$` calls are converted to `useStylesQrl()` calls in the component segment, referencing the extracted QRL constants.
+- No `_captures` import appears in any segment -- all references resolve to imports.
+
+#### Example 3: Self-Import Reclassification (example_capturing_fn_class)
+
+This example demonstrates Category 1 (module-level declarations via self-import) and Category 8 (function/class declaration errors). It shows how the optimizer handles function and class declarations referenced across `$()` boundaries.
+
+**Input:**
+
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+
+export const App = component$(() => {
+  function hola() {
+    console.log('hola');
+  }
+  class Thing {}
+  class Other {}
+
+  return $(() => {
+    hola();
+    new Thing();
+    return (
+      <div></div>
+    )
+  });
+})
+```
+
+**Nested segment output (test.tsx_App_component_1_w0t0o3QMovU.js):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+//
+export const App_component_1_w0t0o3QMovU = ()=>{
+    hola();
+    new Thing();
+    return /*#__PURE__*/ _jsxSorted("div", null, null, null, 3, "u6_0");
+};
+```
+
+**Diagnostics:**
+
+```json
+[
+  {
+    "category": "error",
+    "code": "C02",
+    "message": "Reference to identifier 'Thing' can not be used inside a Qrl($) scope because it's a function"
+  },
+  {
+    "category": "error",
+    "code": "C02",
+    "message": "Reference to identifier 'hola' can not be used inside a Qrl($) scope because it's a function"
+  }
+]
+```
+
+**Capture analysis breakdown:**
+- `hola` and `Thing` (Category 8): Both are function/class declarations in the component scope. They appear in `invalid_decl` (non-`Var` partition of `decl_stack`). ERROR diagnostics are emitted with code C02. The segment still generates -- capture analysis does not bail on errors -- but `hola` and `Thing` will be undefined at runtime.
+- `Other` is declared but not referenced in the `$()` callback, so it does not appear in the analysis.
+- `captures: false` on the nested segment -- `hola` and `Thing` are not added to `scoped_idents` because they are not `Var`-type declarations.
+- The segment code references `hola()` and `new Thing()` directly (not through `_captures`), meaning they will cause `ReferenceError` at runtime. This is by design -- the ERROR diagnostic warns the developer.
+
+#### Named Capture Edge Cases
+
+Per D-10, the following 16 edge cases define the complete test matrix for capture analysis. Each edge case validates a specific behavioral rule. An implementation MUST handle all 16 cases correctly. Jack's OXC implementation initially had 293 runtime deviations, 46 of which were resolved by correctly implementing self-import reclassification (CAPTURE-EDGE-10 through CAPTURE-EDGE-12).
+
+---
+
+**CAPTURE-EDGE-01: Loop variable in for-of** (Category 4)
+
+**Rule tested:** Variables declared in `for-of` loop headers are added to `decl_stack` via `iteration_var_stack` and are capturable across `$()` boundaries.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const App = component$(() => {
+  const items = ['a', 'b'];
+  for (const item of items) {
+    $(() => console.log(item));
+  }
+});
+```
+
+**Expected behavior:** `item` IS captured via `_captures[0]`. The segment imports `_captures` from `@qwik.dev/core` and destructures `const item = _captures[0];` at the top of the function body.
+
+**Why it matters:** Loop iteration variables have fresh bindings per iteration. If not captured, the segment would reference a stale or undefined variable.
+
+Reference: example_component_with_event_listeners_inside_loop snapshot (loopForOf function).
+
+---
+
+**CAPTURE-EDGE-02: Loop variable in for-in** (Category 4)
+
+**Rule tested:** Variables declared in `for-in` loop headers follow the same capture path as `for-of`.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const App = component$(() => {
+  const obj = {a: 1, b: 2};
+  for (const key in obj) {
+    $(() => console.log(key));
+  }
+});
+```
+
+**Expected behavior:** `key` IS captured via `_captures[0]`. Same mechanism as CAPTURE-EDGE-01.
+
+**Why it matters:** `for-in` iteration variables must be treated identically to `for-of` variables for capture purposes.
+
+Reference: example_component_with_event_listeners_inside_loop snapshot (loopForIn function).
+
+---
+
+**CAPTURE-EDGE-03: C-style for loop variable** (Category 4)
+
+**Rule tested:** Variables declared in C-style `for` loop initializers (`for (let i = 0; ...)`) are capturable.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const App = component$(() => {
+  const results = ['a', 'b'];
+  for (let i = 0; i < results.length; i++) {
+    $(() => console.log(results[i]));
+  }
+});
+```
+
+**Expected behavior:** Both `i` and `results` ARE captured. The segment gets `const i = _captures[0]; const results = _captures[1];` (or similar ordering based on sorted `Id`).
+
+**Why it matters:** C-style `for` loop variables use `let` (mutable), which means each iteration does NOT get a fresh binding (unlike `for-of`/`for-in` with `const`). However, the optimizer still captures them because they appear in `decl_stack` as `Var`-type entries. The runtime behavior depends on the calling code to pass the correct value per iteration.
+
+Reference: example_component_with_event_listeners_inside_loop snapshot (loopForI function).
+
+---
+
+**CAPTURE-EDGE-04: Nested $() capturing from grandparent scope** (Category 3)
+
+**Rule tested:** When `$()` is nested inside another `$()`, the inner segment captures variables from its immediate enclosing scope (the outer segment), not from the grandparent scope. The outer segment must first capture the variable from the grandparent, then the inner segment captures it from the outer.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const App = component$(() => {
+  const value = 42;
+  return $(() => {
+    return $(() => {
+      console.log(value);
+    });
+  });
+});
+```
+
+**Expected behavior:** The middle segment captures `value` from the component scope via `_captures[0]`. The innermost segment captures `value` from the middle segment via `_captures[0]`. Each `$()` boundary independently captures what it needs from its direct parent scope -- there is no "skip-level" capture.
+
+**Why it matters:** Nested segments form a chain of captures. Each level must independently capture and re-expose variables. If the middle segment does not capture `value`, the inner segment has no way to access it.
+
+(Constructed example -- nesting pattern derived from example_multi_capture.)
+
+---
+
+**CAPTURE-EDGE-05: Shadowed variable -- inner binding hides outer** (Category 7)
+
+**Rule tested:** When a variable is declared both outside and inside the `$()` body, the inner declaration shadows the outer one. The outer variable is NOT captured.
+
+**Input:**
+```typescript
+import { $ } from '@qwik.dev/core';
+const x = 'outer';
+export const handler = $(() => {
+  const x = 'inner';
+  console.log(x);
+});
+```
+
+**Expected behavior:** `x` is NOT captured. The inner `const x = 'inner'` declaration has a different `SyntaxContext` than the outer `x`. The `IdentCollector` collects the inner `x`'s `Id`, which does not match any `decl_stack` entry for the outer `x`. The segment uses its own local `x`.
+
+**Why it matters:** Without proper shadowing, the segment would unnecessarily capture the outer `x` and the destructured capture would conflict with the inner declaration.
+
+(Constructed example.)
+
+---
+
+**CAPTURE-EDGE-06: Destructured object parameter in $() callback** (Not captured -- callback parameter)
+
+**Rule tested:** Parameters of the `$()` callback itself (including destructured parameters) are local to the segment and are NOT captured.
+
+**Input:**
+```typescript
+import { $ } from '@qwik.dev/core';
+export const handler = $((event, element) => {
+  console.log(event.target, element);
+});
+```
+
+**Expected behavior:** `event` and `element` are NOT captured. They are parameters of the callback function. `get_function_params()` identifies them and `scoped_idents.retain(|id| !param_idents.contains(id))` filters them out. `captures: false`.
+
+**Why it matters:** Callback parameters are provided at invocation time, not at extraction time. Capturing them would be incorrect -- they would be `undefined` at build time.
+
+(Constructed example.)
+
+---
+
+**CAPTURE-EDGE-07: Rest parameter in $() callback** (Not captured -- callback parameter)
+
+**Rule tested:** Rest parameters (`...args`) of the `$()` callback are also local to the segment.
+
+**Input:**
+```typescript
+import { $ } from '@qwik.dev/core';
+export const handler = $((...args) => {
+  console.log(args.length);
+});
+```
+
+**Expected behavior:** `args` is NOT captured. It is a rest parameter of the callback. `get_function_params()` handles rest parameters via `collect_from_pat` which recursively processes `Pat::Rest`. `captures: false`.
+
+**Why it matters:** Rest parameters are a common pattern for event handlers. They must not be treated as captures.
+
+(Constructed example.)
+
+---
+
+**CAPTURE-EDGE-08: Function declaration referenced across $() boundary** (Category 8 -- ERROR)
+
+**Rule tested:** Function declarations in an enclosing scope that are referenced inside `$()` produce an ERROR diagnostic. They are NOT captured (they are in `invalid_decl`, not in the `Var`-type partition).
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const App = component$(() => {
+  function helper() {
+    return 'help';
+  }
+  return $(() => helper());
+});
+```
+
+**Expected behavior:** ERROR diagnostic: `"Reference to identifier 'helper' can not be used inside a Qrl($) scope because it's a function"` (code C02). The segment still generates but `helper` will be undefined at runtime. `captures: false` because `helper` is not a `Var`-type declaration.
+
+**Why it matters:** Function declarations cannot be serialized for resumability. Silently capturing them would produce runtime failures without developer feedback. The error diagnostic gives actionable guidance.
+
+Reference: example_capturing_fn_class snapshot -- `hola()` produces this error.
+
+---
+
+**CAPTURE-EDGE-09: Class declaration referenced across $() boundary** (Category 8 -- ERROR)
+
+**Rule tested:** Class declarations follow the same error path as function declarations.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const App = component$(() => {
+  class MyWidget {}
+  return $(() => new MyWidget());
+});
+```
+
+**Expected behavior:** ERROR diagnostic: `"Reference to identifier 'MyWidget' can not be used inside a Qrl($) scope because it's a function"` (code C02). Same behavior as CAPTURE-EDGE-08. Note the error message says "function" for both function and class declarations -- this is the actual SWC behavior.
+
+**Why it matters:** Classes, like functions, cannot be serialized. They must be declared at module level (Category 1) to be usable across `$()` boundaries.
+
+Reference: example_capturing_fn_class snapshot -- `Thing` (a class) produces this error.
+
+---
+
+**CAPTURE-EDGE-10: Module-level const used in nested $() -- self-import, not capture** (Category 1)
+
+**Rule tested:** A `const` declaration at the top level of the module (root scope) that is referenced in a nested `$()` is resolved via self-import, NOT via `_captures[N]`.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+const API_URL = '/api/data';
+export const App = component$(() => {
+  return $(() => fetch(API_URL));
+});
+```
+
+**Expected behavior:** `API_URL` is NOT captured. `ensure_export()` creates a synthetic export `export { API_URL as _auto_API_URL }` in the root module. The segment module gets `import { _auto_API_URL as API_URL } from "./module_stem"`. `captures: false`.
+
+**Why it matters:** This is the most impactful edge case. Treating module-level declarations as captures was the source of 46 runtime deviations in Jack's implementation. Module-level declarations are available to all segments via imports -- capturing them would double-serialize them and break the QRL contract (`captures: true` vs `captures: false`).
+
+(Constructed example -- pattern from self-import reclassification subsection.)
+
+---
+
+**CAPTURE-EDGE-11: Module-level function used in $() -- self-import** (Category 1)
+
+**Rule tested:** Module-level function declarations (at root scope, outside any component) are resolved via self-import. Unlike CAPTURE-EDGE-08, these are at module level and available to all segments.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export function formatDate(d: Date) {
+  return d.toISOString();
+}
+export const App = component$(() => {
+  return $(() => formatDate(new Date()));
+});
+```
+
+**Expected behavior:** `formatDate` is NOT captured. It is already in `global_collect.exports` (user-exported), so `ensure_export()` is not needed. The segment module gets `import { formatDate } from "./module_stem"`. `captures: false`.
+
+**Why it matters:** The distinction between CAPTURE-EDGE-08 (function in component scope = ERROR) and CAPTURE-EDGE-11 (function at module level = self-import) is critical. The scope level determines the behavior, not the declaration type.
+
+(Constructed example.)
+
+---
+
+**CAPTURE-EDGE-12: TypeScript enum at module level -- self-import** (Category 1)
+
+**Rule tested:** TypeScript `enum` declarations at module level are collected in `global_collect.root` (or `global_collect.exports` if exported) and resolved via self-import in segments.
+
+**Input:**
+```typescript
+import { component$ } from '@qwik.dev/core';
+export enum Thing { A, B }
+export const App = component$(() => {
+  console.log(Thing.A);
+  return <p>Hello</p>;
+});
+```
+
+**Expected behavior:** `Thing` is NOT captured. It appears in `global_collect.exports`. The segment accesses `Thing.A` -- which SWC may inline as the literal `0` (since TypeScript enums with numeric values are const-evaluated) or import via self-import depending on the transpilation mode. In the SWC snapshot, `Thing.A` is inlined as `0` in the segment. `captures: false`.
+
+**Why it matters:** TypeScript enums are a common pattern. They must be recognized as module-level declarations, not captures. The `TSEnumDeclaration` variant must be collected by `GlobalCollect`'s root/export collection -- Jack's Plan 07 found this was initially missing.
+
+Reference: example_ts_enums snapshot -- `Thing.A` becomes `0` in segment output.
+
+---
+
+**CAPTURE-EDGE-13: Named import used in $() -- re-emitted, not captured** (Category 2)
+
+**Rule tested:** Named imports that are used inside a `$()` callback are re-emitted as import statements in the segment module, not captured.
+
+**Input:**
+```typescript
+import { component$, useStyles$ } from '@qwik.dev/core';
+import css1 from './global.css';
+import { helper } from './utils';
+export const App = component$(() => {
+  useStyles$(css1);
+  return $(() => helper());
+});
+```
+
+**Expected behavior:** `css1` and `helper` are NOT captured. They appear in `global_collect.imports`. The segment for `useStyles$` gets `import css1 from "./global.css"`. The nested segment gets `import { helper } from "./utils"`. `captures: false` on both segments.
+
+**Why it matters:** User imports are already available via the module system. Capturing them would serialize values that are meant to be loaded on demand.
+
+Reference: example_capture_imports snapshot -- `css1` and `css2` are re-emitted as imports.
+
+---
+
+**CAPTURE-EDGE-14: Default import used in $() -- re-emitted** (Category 2)
+
+**Rule tested:** Default imports follow the same re-emission path as named imports.
+
+**Input:**
+```typescript
+import { component$, useStyles$ } from '@qwik.dev/core';
+import styles from './component.module.css';
+export const App = component$(() => {
+  useStyles$(styles);
+});
+```
+
+**Expected behavior:** `styles` is NOT captured. It is a default import (`ImportKind::Default`) in `global_collect.imports`. The segment gets `import styles from "./component.module.css"`. `captures: false`.
+
+**Why it matters:** Default imports are common for CSS modules and third-party libraries. The import kind (Default vs Named vs All) must be preserved when re-emitting -- `import styles from X` must not become `import { styles } from X`.
+
+Reference: example_capture_imports snapshot -- `css1` is a default import that gets re-emitted.
+
+---
+
+**CAPTURE-EDGE-15: Props destructuring -- `_rawProps` captured after pre-pass** (Category 5)
+
+**Rule tested:** Component props destructuring is transformed by the Stage 3 pre-pass BEFORE capture analysis runs. The original destructured parameter names (e.g., `{count}`) become `_rawProps`, and property accesses become `_rawProps.count`. When `_rawProps` is used across a `$()` boundary, it follows standard Category 3 capture rules.
+
+**Input:**
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const Counter = component$(({count, label}) => {
+  return $(() => (
+    <div>{count} - {label}</div>
+  ));
+});
+```
+
+**Expected behavior:** After props destructuring pre-pass, the component becomes `(_rawProps) => { ... _rawProps.count ... _rawProps.label ... }`. In the component segment, `_rawProps` is a parameter (not captured). In the nested segment, `_rawProps` is captured via `_captures[0]`, and access is `_rawProps.count` and `_rawProps.label`. `captures: true, captureNames: ["_rawProps"]` on the nested segment.
+
+**Why it matters:** The ordering constraint -- props destructuring BEFORE capture analysis -- is critical. If capture analysis ran first, it would see `count` and `label` as individual identifiers (which do not exist in any outer scope after destructuring). After the pre-pass, there is a single capturable identifier (`_rawProps`) that cleanly represents all props.
+
+Reference: example_multi_capture snapshot -- `_rawProps` is captured with access patterns like `_rawProps.foo`.
+
+---
+
+**CAPTURE-EDGE-16: TypeScript type-only import -- erased, not captured** (Category 6)
+
+**Rule tested:** TypeScript `import type` declarations are removed during the TypeScript strip phase (Stage 1, Step 3), before GlobalCollect even runs. They never appear in `global_collect.imports` and therefore cannot be captured or re-emitted.
+
+**Input:**
+```typescript
+import { $ } from '@qwik.dev/core';
+import type { UserData } from './types';
+export const handler = $((data: UserData) => {
+  console.log(data.name);
+});
+```
+
+**Expected behavior:** `UserData` does not appear in the segment output at all. The `import type` is erased during TypeScript strip. The type annotation `data: UserData` is also erased. The segment output is simply `(data) => { console.log(data.name); }`. `captures: false` -- `data` is a callback parameter.
+
+**Why it matters:** Type-only imports must not generate runtime import statements in segments. If the TypeScript strip phase is bypassed or incomplete, type-only imports could leak into `global_collect.imports` and produce invalid `import type { X }` statements in segments that are pure JavaScript.
+
+(Constructed example.)
+
+---
+
+An implementation MUST handle all 16 edge cases. Jack's OXC implementation initially had 293 runtime deviations, 46 of which were resolved by correctly implementing self-import reclassification (CAPTURE-EDGE-10 through CAPTURE-EDGE-12). The remaining deviations were distributed across loop variable capture (CAPTURE-EDGE-01 through CAPTURE-EDGE-03), function/class declaration errors (CAPTURE-EDGE-08, CAPTURE-EDGE-09), and props destructuring ordering (CAPTURE-EDGE-15).
 
 ---
 

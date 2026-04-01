@@ -11,7 +11,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **SPEC-01**: Spec documents CONV-01 (Dollar Detection) — identification of `$`-suffixed function calls as marker functions requiring QRL extraction, including imported markers from `@qwik.dev/core` and locally-defined `$`-suffixed functions
 - [ ] **SPEC-02**: Spec documents CONV-02 (QRL Wrapping) — replacement of `$`-suffixed calls with `Qrl` counterparts, `qrl()`/`inlinedQrl()` reference generation, dev mode variants (`qrlDEV`, `inlinedQrlDEV`)
-- [ ] **SPEC-03**: Spec documents CONV-03 (Capture Analysis) — free variable detection across `$()` boundaries with full taxonomy of 8 capture categories (imports, inner locals, outer locals, loop variables, shadowed bindings, destructured params, hoisted functions, TS type-only imports)
+- [x] **SPEC-03**: Spec documents CONV-03 (Capture Analysis) — free variable detection across `$()` boundaries with full taxonomy of 8 capture categories (imports, inner locals, outer locals, loop variables, shadowed bindings, destructured params, hoisted functions, TS type-only imports)
 - [ ] **SPEC-04**: Spec documents CONV-04 (Props Destructuring) — transformation of destructured component props to `_rawProps` access patterns, `_restProps()` handling, pre-pass ordering requirement
 - [ ] **SPEC-05**: Spec documents CONV-05 (Segment Extraction) — extraction of `$()` callback bodies into separate output modules, canonical filename generation, hash suffixes, nested segment parent-child relationships, variable migration
 - [ ] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
@@ -53,7 +53,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **SPEC-28**: Spec includes OXC migration notes per transformation — where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena allocation)
 - [ ] **SPEC-29**: Spec includes representative input/output examples extracted from Jack's 162 spec files (minimum 20 covering all 14 CONVs)
-- [ ] **SPEC-30**: Spec includes capture analysis taxonomy with edge case examples for all 8 categories
+- [x] **SPEC-30**: Spec includes capture analysis taxonomy with edge case examples for all 8 categories
 
 ### Implementation — Core
 
@@ -111,7 +111,7 @@ Deferred to future release. Tracked but not in current roadmap.
 |-------------|-------|--------|
 | SPEC-01 | Phase 1 | Pending |
 | SPEC-02 | Phase 1 | Pending |
-| SPEC-03 | Phase 1 | Pending |
+| SPEC-03 | Phase 1 | Complete |
 | SPEC-04 | Phase 2 | Pending |
 | SPEC-05 | Phase 1 | Pending |
 | SPEC-06 | Phase 2 | Pending |
@@ -138,7 +138,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-27 | Phase 4 | Pending |
 | SPEC-28 | Phase 4 | Pending |
 | SPEC-29 | Phase 4 | Pending |
-| SPEC-30 | Phase 1 | Pending |
+| SPEC-30 | Phase 1 | Complete |
 | IMPL-01 | Phase 5 | Pending |
 | IMPL-02 | Phase 5 | Pending |
 | IMPL-03 | Phase 6 | Pending |
