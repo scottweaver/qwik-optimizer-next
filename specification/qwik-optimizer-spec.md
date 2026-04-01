@@ -3815,3 +3815,408 @@ The function body is the only part with reliable source mappings. A debugger ste
 Source: parse.rs:701-753 (emit_source_code)
 
 ---
+
+## Stage 5: Build Environment Transforms
+
+Three transforms handle environment-specific code removal during the build pipeline. **Const Replacement** (CONV-10) replaces build-time boolean constants (`isServer`, `isBrowser`, `isDev`) with literal `true`/`false` values. **Dead Branch Elimination** (CONV-09) then removes the unreachable branches created by those literal booleans. **Code Stripping** (CONV-11) provides three additional mechanisms for removing platform-specific code: export stubbing, context-name-based segment suppression, and event handler suppression. Together, these transforms ensure that server-only code never reaches client bundles and vice versa.
+
+These three transforms are tightly coupled: const replacement feeds dead branch elimination (replacement creates `if (true)`/`if (false)` patterns that the simplifier removes), and code stripping handles the cases where entire exports or segments must be removed rather than just dead branches within them.
+
+### Const Replacement (CONV-10)
+
+Const replacement substitutes build-time boolean identifiers with their resolved boolean literal values, enabling subsequent dead branch elimination. The transform is a single-pass AST visitor that matches identifier references against known imports from two source modules.
+
+**SWC Source:** `const_replace.rs` (~96 LOC)
+**Pipeline Position:** Step 9 of 20
+
+#### Rules
+
+**Rule 1: `isServer` replacement.** Any identifier imported as `isServer` from `@qwik.dev/core/build` or `@qwik.dev/core` is replaced with the boolean literal value of `config.is_server`. When `is_server` is not specified in the configuration, it defaults to `true` (lib.rs line 110: `config.is_server.unwrap_or(true)`).
+
+**Rule 2: `isBrowser` replacement.** Any identifier imported as `isBrowser` from `@qwik.dev/core/build` or `@qwik.dev/core` is replaced with the boolean literal `!config.is_server`. This is the logical inverse of `isServer` -- if `isServer` resolves to `true`, `isBrowser` resolves to `false`, and vice versa.
+
+**Rule 3: `isDev` replacement.** Any identifier imported as `isDev` from `@qwik.dev/core/build` or `@qwik.dev/core` is replaced with the boolean literal value of `is_dev`. The `is_dev` flag is derived from the emit mode: `true` when mode is `Dev` or `Hmr`, `false` for `Prod` (and not applicable for `Lib`/`Test` since the transform is skipped).
+
+Source: parse.rs line 293: `let is_dev = matches!(config.mode, EmitMode::Dev | EmitMode::Hmr);`
+
+**Rule 4: Aliased import handling.** The transform correctly handles aliased imports such as `import { isServer as myServer } from '@qwik.dev/core/build'`. Identifier matching uses SWC's `SyntaxContext` (hygiene marks) to track the local alias back to its import binding, so any local name is supported. The `id_eq!` macro in `const_replace.rs` compares both the symbol name (`sym`) and the syntax context (`ctxt`) to ensure only the specific imported binding is replaced, not unrelated identifiers with the same name.
+
+**Rule 5: Dual import source support.** Both `@qwik.dev/core/build` (the canonical build-time constants module) and `@qwik.dev/core` (which re-exports the same identifiers) are recognized as valid import sources. The visitor tracks six identifier slots: `is_server_ident`, `is_browser_ident`, `is_dev_ident` for `@qwik.dev/core/build`, and `is_core_server_ident`, `is_core_browser_ident`, `is_core_dev_ident` for `@qwik.dev/core`. An identifier from either source is replaced identically.
+
+**Rule 6: Lib mode skip.** When `config.mode == EmitMode::Lib`, const replacement is skipped entirely (parse.rs line 306). Libraries ship without environment-specific booleans baked in so that consumers can set `isServer`/`isBrowser` at their own build time.
+
+**Rule 7: Test mode skip.** When `config.mode == EmitMode::Test`, const replacement is also skipped (parse.rs line 308). Tests need `isServer`/`isBrowser` to remain as runtime-configurable identifiers so test harnesses can simulate different environments.
+
+**Rule 8: Visitor recursion on non-matching nodes.** When the visitor encounters an expression that is not a matching identifier, it recurses into child nodes via `visit_mut_children_with`. When a matching identifier IS found and replaced with a boolean literal, recursion stops for that node (the literal has no children to visit). This ensures replacements happen at all expression depths (e.g., inside function arguments, ternary branches, etc.) while avoiding unnecessary traversal of already-replaced literals.
+
+#### Example: Server Build with Aliased Imports (example_build_server)
+
+This example demonstrates const replacement on a server build (`is_server=true`) with imports from both `@qwik.dev/core` and `@qwik.dev/core/build`, including aliased imports. After const replacement, `isServer` and `isServer2` become `true`, `isBrowser`/`isb` become `false`, and subsequent DCE removes the dead `if (false)` branches.
+
+**Input:**
+```javascript
+import { component$, useStore, isDev, isServer as isServer2 } from '@qwik.dev/core';
+import { isServer, isBrowser as isb } from '@qwik.dev/core/build';
+import { mongodb } from 'mondodb';
+import { threejs } from 'threejs';
+import L from 'leaflet';
+
+export const functionThatNeedsWindow = () => {
+  if (isb) {
+    console.log('l', L);
+    console.log('hey');
+    window.alert('hey');
+  }
+};
+
+export const App = component$(() => {
+  useMount$(() => {
+    if (isServer) {
+      console.log('server', mongodb());
+    }
+    if (isb) {
+      console.log('browser', new threejs());
+    }
+  });
+  return (
+    <Cmp>
+      {isServer2 && <p>server</p>}
+      {isb && <p>server</p>}
+    </Cmp>
+  );
+});
+```
+
+**Output (root module):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_s_ckEPmXZlub0 = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_App_component_ckEPmXZlub0"), "s_ckEPmXZlub0"
+);
+
+export const functionThatNeedsWindow = () => {};
+export const App = /*#__PURE__*/ componentQrl(q_s_ckEPmXZlub0);
+```
+
+**Output (segment module `test.tsx_App_component_ckEPmXZlub0.tsx`):**
+```javascript
+import { mongodb } from "mondodb";
+
+export const s_ckEPmXZlub0 = () => {
+  useMount$(() => {
+    console.log('server', mongodb());
+  });
+  return <Cmp>
+    {<p>server</p>}
+    {false}
+  </Cmp>;
+};
+```
+
+Key observations:
+- `functionThatNeedsWindow` becomes an empty function body because `isb` (aliased `isBrowser`) resolved to `false` on a server build, and DCE removed the entire `if (false)` block.
+- In the segment module, the `if (isServer)` guard was replaced with `if (true)` and then DCE unwrapped the body (just `console.log('server', mongodb())`), while `if (isb)` became `if (false)` and was removed entirely.
+- The `{isServer2 && <p>server</p>}` JSX expression simplified to `{<p>server</p>}` (short-circuit with `true &&`), while `{isb && <p>server</p>}` simplified to `{false}`.
+- The `threejs` and `leaflet` imports were dropped because their only usage sites were inside dead branches.
+
+**See also:** `example_dead_code` (dead branch elimination after literal `false` condition)
+
+---
+
+### Dead Branch Elimination (CONV-09)
+
+Dead branch elimination removes unreachable code after const replacement has substituted boolean literals. The optimizer uses three distinct DCE mechanisms that run at different pipeline positions with different conditions, providing progressively deeper code cleanup.
+
+**SWC Source:** `clean_side_effects.rs` (~90 LOC) + `parse.rs` simplifier calls
+**Pipeline Position:** Steps 11-13c of 20 (primary DCE), Step 16 (post-migration DCE)
+
+#### Three DCE Mechanisms
+
+**Mechanism 1: SWC Simplifier (primary DCE) -- Step 12.**
+The SWC simplifier is a general-purpose dead code elimination pass. It evaluates constant expressions, removes unreachable branches (`if (false) { ... }`), eliminates unused variable declarations, and strips imports that are no longer referenced. It runs with `dce::Config { preserve_imports_with_side_effects: false }`, meaning even side-effectful imports are removed if they are not referenced by any surviving code.
+
+The simplifier is the primary DCE mechanism and handles all standard dead branch patterns created by const replacement.
+
+**Mechanism 2: Treeshaker (client-side cleanup) -- Steps 11, 13b, 13c.**
+The treeshaker is a two-phase span-based approach specifically designed to remove side-effectful statements that were previously hidden inside dead branches and became exposed as top-level statements after simplification.
+
+Phase 1 -- **CleanMarker** (Step 11): Before the simplifier runs, the marker visits all top-level module items and records the `Span` of every top-level `new` expression statement and `call` expression statement into a shared `HashSet<Span>`. These are the side-effectful statements that existed in the original code and should be preserved.
+
+Phase 2 -- **CleanSideEffects** (Step 13b): After the simplifier runs, the cleaner retains only those top-level `new`/`call` expression statements whose spans appear in the marker's set. Any `new`/`call` statement with an unknown span (i.e., it was NOT present before simplification) is removed. These are statements that were previously nested inside dead branches and became top-level after the simplifier removed their enclosing `if` block.
+
+Phase 3 -- **Second DCE pass** (Step 13c): If the treeshaker's `CleanSideEffects` dropped any items (`did_drop == true`), a second simplifier pass runs to clean up imports that became unused after the treeshaker removed their consuming statements.
+
+**Mechanism 3: Post-migration DCE -- Step 16.**
+After variable migration moves root-level variables into their consuming segment modules (Step 14), some imports in the root module may become unused. A third simplifier pass runs to remove these orphaned imports. This only runs when segments exist, variables were migrated, and `minify != MinifyMode::None`.
+
+#### Conditions Table
+
+| Mechanism | Pipeline Step | Conditions |
+|-----------|--------------|------------|
+| Simplifier DCE (primary) | Step 12 | `minify != MinifyMode::None` AND `mode != EmitMode::Lib` |
+| Treeshaker mark (CleanMarker) | Step 11 | `minify != MinifyMode::None` AND `!is_server` AND `mode != EmitMode::Lib` |
+| Treeshaker clean (CleanSideEffects) | Step 13b | `minify != MinifyMode::None` AND `!is_server` AND NOT `Inline`/`Hoist` strategy |
+| Second DCE pass | Step 13c | Treeshaker's `did_drop == true` |
+| Post-migration DCE | Step 16 | Segments exist AND variables were migrated AND `minify != MinifyMode::None` |
+
+**Why Inline/Hoist skip Treeshaker clean:** For Inline and Hoist entry strategies, `SideEffectVisitor` (add_side_effect.rs) runs at Step 13 instead of the treeshaker clean at Step 13b. `SideEffectVisitor` re-adds bare import statements (`import "./module"`) for relative-path modules that had side effects, preserving side-effectful module evaluation order. The treeshaker's aggressive removal of exposed call/new statements would conflict with this side-effect preservation, so the two approaches are mutually exclusive: Inline/Hoist use `SideEffectVisitor`, all other strategies use the treeshaker.
+
+Source: parse.rs lines 351-395 (DCE pipeline orchestration), clean_side_effects.rs (full file, Treeshaker implementation), add_side_effect.rs (full file, SideEffectVisitor for Inline/Hoist)
+
+#### Example: Dead Branch Removal After Literal False (example_dead_code)
+
+This example shows dead branch elimination in action. The input contains an `if (false)` condition (which would be the result of const replacement turning `if (isBrowser)` into `if (false)` on a server build). The simplifier removes the entire dead branch and its unused dependency import.
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+import { deps } from 'deps';
+
+export const Foo = component$(({foo}) => {
+  useMount$(() => {
+    if (false) {
+      deps();
+    }
+  });
+  return (
+    <div />
+  );
+})
+```
+
+**Output (segment module `test.tsx_Foo_component_HTDRsvUbLiE.tsx`):**
+```javascript
+export const Foo_component_HTDRsvUbLiE = (_rawProps) => {
+  useMount$(() => {});
+  return <div/>;
+};
+```
+
+**Output (root module):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE"
+);
+
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+```
+
+Key observations:
+- The `if (false) { deps(); }` block was entirely removed from the `useMount$` callback, leaving an empty function body `() => {}`.
+- The `import { deps } from 'deps'` was dropped from the segment module because `deps` is no longer referenced after branch removal.
+- The root module never had the `deps` import in the first place (it was only referenced inside the segment).
+
+**See also:** `example_build_server` (const replacement + DCE combined flow), `example_drop_side_effects` (treeshaker removing exposed side effects on client builds)
+
+---
+
+### Code Stripping (CONV-11)
+
+Code stripping provides three distinct mechanisms for removing platform-specific code that cannot be handled by const replacement + DCE alone. Unlike the branch-level removal of DCE, code stripping operates at the export, segment, and event-handler level -- removing entire declarations or suppressing entire segment extraction.
+
+**SWC Source:** `filter_exports.rs` (~76 LOC) + `transform.rs` `should_emit_segment`
+**Pipeline Position:** Step 2 of 20 (`strip_exports`) and Step 10 (`strip_ctx_name`, `strip_event_handlers` -- evaluated during QwikTransform)
+
+#### Mechanism 1: `strip_exports` (Export Stubbing)
+
+`strip_exports` is a pre-pass that runs at Step 2 of the pipeline -- before TypeScript stripping, before the resolver, before GlobalCollect, before everything else. It takes a list of export symbol names from the configuration (e.g., `["onGet", "onPost"]`) and replaces matching exported declarations with throwing stubs.
+
+**Rules:**
+
+1. **Matching criteria.** The visitor scans all `export` declarations in the module. It matches:
+   - `export const X = ...` (VarDecl with a single declarator whose binding is an identifier)
+   - `export function X() { ... }` (FnDecl)
+
+   Other export forms (re-exports, default exports, multi-declarator `const`, class declarations) are NOT matched and pass through unchanged.
+
+2. **Throwing stub generation.** When a match is found, the entire declaration body is replaced with an arrow function that throws a descriptive error string. The export and symbol name are preserved -- only the initializer/body is replaced:
+
+   ```javascript
+   // Before:
+   export const onGet = () => {
+     const data = mongodb.collection.whatever;
+     return { body: { data } };
+   };
+
+   // After (strip_exports: ["onGet"]):
+   export const onGet = () => {
+     throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
+   };
+   ```
+
+   The generated stub uses `export const X = () => { throw "..." }` form regardless of whether the original was a `const` or `function` declaration.
+
+3. **Symbol preservation.** The stub retains the original export name so that other modules importing the symbol continue to resolve. The stub only throws at runtime if the stripped symbol is actually called, providing a clear error message rather than a missing-export build error.
+
+4. **Early pipeline position.** Running at Step 2 means `strip_exports` sees the original source before any other transformation. This is important because the throwing stub prevents the original function body (which may reference server-only modules like `mongodb`) from being analyzed by later passes, avoiding unnecessary import resolution of platform-specific dependencies.
+
+Source: filter_exports.rs (full file, StripExportsVisitor + empty_module_item helper)
+
+#### Mechanism 2: `strip_ctx_name` (Segment Suppression by Context Name)
+
+`strip_ctx_name` is evaluated during the main QwikTransform pass (Step 10) when the transform decides whether to emit a segment. It takes a list of context name prefixes from the configuration (e.g., `["server"]`).
+
+**Rules:**
+
+1. **Prefix matching.** When `should_emit_segment` evaluates a segment, it checks whether the segment's `ctx_name` starts with any prefix in the `strip_ctx_name` list. For example, with `strip_ctx_name: ["server"]`, segments from `server$()`, `serverLoader$()`, and `serverStuff$()` are all matched because their `ctx_name` values (`"server$"`, `"serverLoader$"`, `"serverStuff$"`) all start with `"server"`.
+
+2. **Noop QRL replacement.** When a segment is stripped, `should_emit_segment` returns `false`. Instead of extracting the function body into a separate module, `create_noop_qrl` generates a `_noopQrl()` (or `_noopQrlDEV()` in Dev/Hmr modes) placeholder. The noop QRL receives the segment's symbol name as its argument so the runtime can identify the stripped segment.
+
+3. **Null segment output.** Stripped segments still produce an output module entry, but its content is just `export const symbolName = null;` with an empty source map. This ensures the segment's canonical filename exists in the output manifest even when its code is removed.
+
+4. **Capture preservation.** Even stripped segments emit capture arrays if the original function had captured variables. `create_noop_qrl` calls `self.emit_captures(&segment_data.captures, &mut args)` to append `.w([captures])` to the noop QRL call. This preserves runtime scope tracking information.
+
+#### Mechanism 3: `strip_event_handlers` (Event Handler Suppression)
+
+`strip_event_handlers` is a boolean flag evaluated alongside `strip_ctx_name` in `should_emit_segment` during Step 10.
+
+**Rules:**
+
+1. **SegmentKind check.** When `strip_event_handlers` is `true`, all segments whose `ctx_kind` is `SegmentKind::EventHandler` are stripped. This includes segments from `onClick$`, `onInput$`, `onScroll$`, and any other event handler `$`-suffixed call.
+
+2. **Same noop treatment.** Stripped event handlers receive the same noop QRL replacement and null segment output as `strip_ctx_name`-stripped segments.
+
+3. **SSR use case.** This flag is typically used for SSR (server-side rendering) builds where event handlers are unnecessary -- the server renders HTML but does not attach DOM event listeners. Stripping event handlers reduces the server bundle size.
+
+Source: transform.rs `should_emit_segment` (lines where `strip_ctx_name` and `strip_event_handlers` are evaluated)
+
+#### Example 1: Export Stubbing with Throwing Replacement (example_strip_exports_unused)
+
+This example shows `strip_exports` replacing an exported function with a throwing stub. The original `onGet` function references `mongodb`, but after stripping, the stub has no such dependency.
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+import mongodb from 'mongodb';
+
+export const onGet = () => {
+  const data = mongodb.collection.whatever;
+  return {
+    body: {
+      data
+    }
+  }
+};
+
+export default component$(() => {
+  return <div>cmp</div>
+});
+```
+
+**Output (root module):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg"
+);
+
+export const onGet = () => {
+  throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
+};
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+```
+
+Key observations:
+- `onGet` retains its export name but its body is replaced with the throwing stub.
+- The `mongodb` import is removed from the root module because it is no longer referenced (the original function body that used it was replaced).
+- The component and its QRL extraction proceed normally -- `strip_exports` only affects the named exports in its filter list.
+
+#### Example 2: Segment Suppression via strip_ctx_name (example_strip_server_code)
+
+This example shows `strip_ctx_name: ["server"]` suppressing server-specific segments on a client build. The `server$()` and `serverLoader$()` segments become noop QRLs while non-server segments are extracted normally. This snapshot uses Dev mode, so `_noopQrlDEV` is used instead of `_noopQrl`.
+
+**Input:**
+```javascript
+import { component$, serverLoader$, serverStuff$, $, client$, useStore, useTask$ } from '@qwik.dev/core';
+import { isServer } from '@qwik.dev/core';
+import mongo from 'mongodb';
+import redis from 'redis';
+import { handler } from 'serverless';
+
+export const Parent = component$(() => {
+  const state = useStore({ text: '' });
+
+  useTask$(async () => {
+    if (!isServer) return;
+    state.text = await mongo.users();
+    redis.set(state.text);
+  });
+
+  serverStuff$(async () => {
+    const a = $(() => { /* from $(), should not be removed */ });
+    const b = client$(() => { /* from client$(), should not be removed */ });
+    return [a, b];
+  });
+
+  serverLoader$(handler);
+
+  useTask$(() => { /* Code */ });
+
+  return (
+    <div onClick$={() => console.log('parent')}>
+      {state.text}
+    </div>
+  );
+});
+```
+
+**Output (root module):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo"
+);
+
+export const Parent = /*#__PURE__*/ componentQrl(q_s_0TaiDayHrlo);
+```
+
+**Output (stripped segment `test.tsx_Parent_component_serverStuff_r1qAHX7Opp0.js`):**
+```javascript
+export const s_r1qAHX7Opp0 = null;
+```
+
+**Output (component segment, showing noop QRLs for stripped segments):**
+```javascript
+import { _noopQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { serverLoaderQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+// ...
+
+const q_qrl_4294901766 = /*#__PURE__*/ _noopQrl("s_r1qAHX7Opp0");
+const q_qrl_4294901768 = /*#__PURE__*/ _noopQrl("s_ddV1irobfWI");
+// ... normal qrl() calls for non-stripped segments ...
+
+export const s_0TaiDayHrlo = () => {
+  const state = useStore({ text: '' });
+  useTaskQrl(q_s_gDH1EtUWqBU.w([state]));
+  serverStuffQrl(q_qrl_4294901766);       // noop QRL passed to wrapper
+  serverLoaderQrl(q_qrl_4294901768);      // noop QRL passed to wrapper
+  useTaskQrl(q_s_P8oRQhHsurk);
+  return /*#__PURE__*/ _jsxSorted("div", null, {
+    "q-e:click": q_s_zM9okM0TYrA
+  }, _wrapProp(state, "text"), 3, "u6_0");
+};
+```
+
+Key observations:
+- `serverStuff$` and `serverLoader$` segments are suppressed: their output modules contain only `export const symbolName = null;`.
+- In the component segment, the stripped segments' QRL variables use `_noopQrl("symbolName")` instead of `qrl(() => import(...))`.
+- Non-server segments (`$()`, `client$()`, `useTask$()`, `onClick$()`) are extracted normally with full function bodies.
+- The `serverStuffQrl(q_qrl_4294901766)` and `serverLoaderQrl(q_qrl_4294901768)` calls still appear -- the wrapper calls are preserved with noop QRLs as arguments. This maintains the component's API contract while making the server-only code a no-op.
+- The `mongo`, `redis`, and `handler` imports are removed from the root module since they are no longer referenced by any surviving code.
+
+**See also:** `example_strip_client_code` (Hoist pattern with stripped client segments and `.s()` registration), `example_strip_exports_used` (strip_exports when the stripped symbol is referenced by another segment)
+
+---
