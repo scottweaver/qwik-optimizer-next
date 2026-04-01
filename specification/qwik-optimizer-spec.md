@@ -1472,3 +1472,166 @@ export const Counter = component$(() => {
 The `explicit_extensions` flag exists because some bundlers (like Vite in certain configurations) require explicit `.js` extensions in import specifiers for proper module resolution, while others resolve extensions automatically.
 
 ---
+
+## Infrastructure: Source Map Generation
+
+The optimizer generates V3-format source maps for both root modules and segment modules. Source maps enable debugging of the transformed output by mapping generated JavaScript positions back to original source file locations. Each `TransformModule` in the output carries an optional `map: Option<String>` field containing the JSON-stringified source map (or `None` if source maps are disabled).
+
+Source: parse.rs:701-753 (`emit_source_code`)
+
+### Generation Mechanism
+
+The `emit_source_code` function produces JavaScript code and an optional source map in a single pass:
+
+1. **Create a `JsWriter`** with a source map buffer. The `JsWriter` records byte-position-to-original-position mappings during JavaScript serialization. When `source_maps` is `false`, the mapping buffer is `None` and no position tracking occurs.
+
+2. **Run `Emitter::emit_module()`** which serializes the AST to JavaScript source code. During emission, the `JsWriter` records the correspondence between output byte positions and original source `Span` positions stored in AST nodes.
+
+3. **Build V3 source map** from the recorded mappings using `SourceMap::build_source_map()`. This produces a V3-format source map with `version`, `sources`, `sourcesContent`, `names`, and `mappings` fields.
+
+4. **Set `sourceRoot`** (optional). If the `root_dir` config option is provided, it is set as the `sourceRoot` property of the source map, allowing consumers to resolve source file paths relative to a project root.
+
+5. **Return `(code: String, map: Option<String>)`** where `code` is the generated JavaScript and `map` is the JSON-stringified source map. If `source_maps` is `false`, `map` is `None`.
+
+```rust
+// Simplified signature
+pub fn emit_source_code(
+    source_map: Lrc<SourceMap>,
+    comments: Option<SingleThreadedComments>,
+    module: &ast::Module,
+    root_dir: Option<&Path>,
+    source_maps: bool,
+) -> Result<(String, Option<String>), Error>
+```
+
+### Root Module Source Maps
+
+Root module source maps are computed from the **mutated AST** after all transforms (QRL wrapping, variable migration, DCE, hygiene, fixer) have been applied.
+
+**Fidelity: HIGH.** The root module AST is mutated in-place throughout the pipeline. SWC's parser assigns `Span` positions to every AST node during the initial parse, and these spans are preserved through in-place mutations. When the emitter serializes a variable declaration or expression that existed in the original source, the span references the original source position, producing accurate source map mappings.
+
+The source map's `sources` array contains the original file path (e.g., `"src/components/Counter.tsx"`). The `sourcesContent` array contains the original source code text (if the source map implementation includes it).
+
+**What maps accurately:** All code that existed in the original source -- variable declarations, function bodies, expressions, import statements (even if rewritten, the span of the import declaration is preserved).
+
+**What does NOT map accurately:** Synthetic code injected by the optimizer -- QRL wrapper calls (`qrl(()=>import(...), "symbol")`), `_auto_` export statements, PURE annotations. These are generated with `DUMMY_SP` spans and produce no source mapping.
+
+### Segment Module Source Maps
+
+Each segment module is independently constructed via `new_module()` in code_move.rs, then processed through hygiene + fixer + codegen with source map generation.
+
+**Fidelity: MIXED.** The segment AST is built from scratch -- it is a new `Module` node assembled from:
+- The extracted function body (moved from the original AST)
+- Generated import statements (resolved by code_move)
+- `_captures` destructuring statement (generated)
+- Export wrapper (generated)
+- Migrated root variable declarations (if variable migration applied)
+
+**What maps accurately:** The function body portion of the segment. Because the function body's AST nodes retain their original `Span` positions from the initial parse, the emitter produces correct mappings back to the original source file.
+
+**What does NOT map accurately:** All generated code surrounding the function body:
+- `import { _captures } from "./module"` -- generated, no original source position
+- `const { capture1, capture2 } = _captures` -- generated destructuring
+- `export const symbol_hash = ...` -- generated export wrapper
+- Any migrated root variable declarations -- these retain their original spans, so they DO map back correctly
+
+The source map's `sources` array contains the **original file path** (e.g., `"src/components/Counter.tsx"`), NOT the segment filename. This means the segment's source map points back to the original source file for debugging.
+
+### Configuration
+
+| Option | Type | Effect |
+|--------|------|--------|
+| `source_maps` | `bool` | When `false`, `map` field is `None` for all `TransformModule` outputs. No source map computation occurs. When `true`, source maps are generated for both root and segment modules. |
+| `root_dir` | `Option<String>` | Sets the `sourceRoot` property in the generated source map JSON. Allows source map consumers to resolve source file paths relative to a project root directory. |
+
+The `TransformModule` output structure carries the source map:
+
+```rust
+pub struct TransformModule {
+    pub path: String,          // Output file path
+    pub code: String,          // Generated JavaScript
+    pub map: Option<String>,   // JSON-stringified V3 source map (None if disabled)
+    pub is_entry: bool,        // Whether this is the root module
+    // ... other fields
+}
+```
+
+### Behavioral Contract
+
+Source maps SHOULD reference original file positions for all code that originated from the input source. The contract differs by module type:
+
+- **Root modules:** Source map fidelity is high. All original code maps back accurately. Only optimizer-generated synthetic code (QRL wrappers, auto-exports) has no mapping.
+- **Segment modules:** Source map fidelity is mixed. Function body mappings are reliable (original spans preserved). Generated code (imports, captures destructuring, export wrappers) has no original-source mapping. Migrated root variables DO map back accurately (original spans preserved).
+
+### Example 1: Root Module Source Map (root_source_map)
+
+**Input:** `src/Counter.tsx`
+
+```typescript
+import { component$ } from '@qwik.dev/core';
+export const Counter = component$(() => {
+  return <div>Hello</div>;
+});
+```
+
+**Root module output:**
+
+```javascript
+import { qrl, _jsxC } from "@qwik.dev/core";
+const q_Counter = /*#__PURE__*/ qrl(()=>import("./Counter.tsx_Counter_abc123"), "Counter_abc123");
+export const Counter = /*#__PURE__*/ component$(q_Counter);
+```
+
+**Source map JSON structure (simplified):**
+
+```json
+{
+  "version": 3,
+  "sources": ["src/Counter.tsx"],
+  "sourcesContent": ["import { component$ } from '@qwik.dev/core';\nexport const Counter = ..."],
+  "names": ["Counter", "component$"],
+  "mappings": "AAAA,SAAS,...;AACA,...;AACA,...",
+  "sourceRoot": "/Users/project"
+}
+```
+
+The `sources` array points to the original file. The `mappings` field encodes position correspondences using VLQ-encoded segments. The `sourceRoot` is set from the `root_dir` configuration option.
+
+**Mapping coverage:**
+- `import { ... } from "@qwik.dev/core"` -- maps to line 1 of original (import was rewritten but span preserved)
+- `export const Counter = ...` -- maps to line 2 of original
+- `const q_Counter = qrl(...)` -- generated code, NO mapping (DUMMY_SP)
+
+### Example 2: Segment Module Source Map (segment_source_map)
+
+**Segment module output** (`Counter.tsx_Counter_abc123.tsx`):
+
+```javascript
+import { _jsxC } from "@qwik.dev/core";
+export const Counter_abc123 = ()=>{
+  return /*#__PURE__*/ _jsxC("div", { children: "Hello" });
+};
+```
+
+**Source map JSON structure (simplified):**
+
+```json
+{
+  "version": 3,
+  "sources": ["src/Counter.tsx"],
+  "sourcesContent": ["import { component$ } from '@qwik.dev/core';\nexport const Counter = ..."],
+  "names": [],
+  "mappings": ";AAAA,...;AACA,...;AACA"
+}
+```
+
+**Mapping coverage:**
+- `import { _jsxC } from "@qwik.dev/core"` -- generated import, NO mapping (no original source position)
+- `()=> { return _jsxC("div", ...) }` -- maps to lines 2-4 of original (function body spans preserved from parse)
+- `export const Counter_abc123 = ...` -- generated export wrapper, NO mapping
+
+The function body is the only part with reliable source mappings. A debugger stepping through this segment module will correctly show the original `Counter.tsx` source for the component body, but will not be able to map the import statement or export wrapper back to the original source.
+
+Source: parse.rs:701-753 (emit_source_code)
+
+---
