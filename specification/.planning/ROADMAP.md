@@ -31,10 +31,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The spec document describes segment extraction behavior — filename generation, hash computation, nested segment relationships, and variable migration — with input/output examples
   4. The spec document describes import rewriting rules (consumed import stripping, synthetic import addition, per-segment resolution) with before/after examples
   5. The spec document describes source map generation contracts for both root and segment modules
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
-- [ ] 01-01-PLAN.md — Pipeline Overview, GlobalCollect, Hash Generation, Path Resolution (infrastructure)
+- [x] 01-01-PLAN.md — Pipeline Overview, GlobalCollect, Hash Generation, Path Resolution (infrastructure)
 - [ ] 01-02-PLAN.md — Dollar Detection (CONV-01), QRL Wrapping (CONV-02)
 - [ ] 01-03-PLAN.md — Capture Analysis (CONV-03) with 8-category taxonomy and 16 edge cases
 - [ ] 01-04-PLAN.md — Segment Extraction (CONV-05), Import Rewriting (CONV-12)
@@ -102,7 +102,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Pipeline Specification | 0/5 | Planned | - |
+| 1. Core Pipeline Specification | 1/5 | In Progress|  |
 | 2. JSX, Props & Signal Specification | 0/? | Not started | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 0/? | Not started | - |
