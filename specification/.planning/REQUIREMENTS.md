@@ -17,9 +17,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
 - [x] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
 - [ ] **SPEC-08**: Spec documents CONV-08 (PURE Annotations) — `/*#__PURE__*/` on `componentQrl` only, with explicit anti-list of side-effectful wrappers that must NOT be annotated
-- [ ] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
-- [ ] **SPEC-10**: Spec documents CONV-10 (Const Replacement) — `isServer`/`isBrowser`/`isDev` replacement with boolean literals, import source handling, Test mode exception
-- [ ] **SPEC-11**: Spec documents CONV-11 (Code Stripping) — `strip_exports`, `strip_ctx_name`, `strip_event_handlers` mechanisms with throwing stub generation
+- [x] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
+- [x] **SPEC-10**: Spec documents CONV-10 (Const Replacement) — `isServer`/`isBrowser`/`isDev` replacement with boolean literals, import source handling, Test mode exception
+- [x] **SPEC-11**: Spec documents CONV-11 (Code Stripping) — `strip_exports`, `strip_ctx_name`, `strip_event_handlers` mechanisms with throwing stub generation
 - [x] **SPEC-12**: Spec documents CONV-12 (Import Rewriting) — legacy rename, consumed import stripping, synthetic import addition, per-segment import resolution
 - [ ] **SPEC-13**: Spec documents CONV-13 (sync$ Serialization) — `_qrlSync()` with stringified function body
 - [ ] **SPEC-14**: Spec documents CONV-14 (Noop QRL Handling) — `_noopQrl()`/`_noopQrlDEV()` for empty/unused callbacks
