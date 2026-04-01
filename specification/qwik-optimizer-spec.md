@@ -248,7 +248,7 @@ synthetic: [
 
 ## Stage 4: Core Transform
 
-> Dollar Detection, QRL Wrapping, Segment Extraction, and Import Rewriting sections are added by Plans 02 and 04.
+> Dollar Detection and QRL Wrapping sections are added by Plan 02. Segment Extraction (CONV-05) and Import Rewriting (CONV-12) are documented below.
 
 ### Capture Analysis (CONV-03)
 
