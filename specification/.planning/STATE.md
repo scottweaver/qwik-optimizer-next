@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-04-01T18:37:16.205Z"
-last_activity: 2026-04-01 — Roadmap created
+status: executing
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-04-01T18:53:47.296Z"
+last_activity: 2026-04-01
 progress:
   total_phases: 6
   completed_phases: 0
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 ## Current Position
 
 Phase: 1 of 6 (Core Pipeline Specification)
-Plan: 3 of 5 in current phase
-Status: Executing
-Last activity: 2026-04-01 — Completed 01-03-PLAN.md (Capture Analysis)
+Plan: 4 of 5 in current phase
+Status: Ready to execute
+Last activity: 2026-04-01
 
 Progress: [####░░░░░░] 40%
 
@@ -54,6 +54,7 @@ Progress: [####░░░░░░] 40%
 *Updated after each plan completion*
 | Phase 01 P01 | 4m | 2 tasks | 1 files |
 | Phase 01 P03 | 5m | 2 tasks | 1 files |
+| Phase 01 P04 | 5m | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Spec document follows pipeline execution order with 6 stage groupings (D-01)
 - [Phase 01 P03]: Capture analysis uses 8-category taxonomy with self-import reclassification as first-class pattern
 - [Phase 01 P03]: All 16 capture edge cases documented as named spec test cases (CAPTURE-EDGE-01 through 16)
+- [Phase 01]: Segment Extraction documented as 8-step new_module pipeline with captures injection, topological sort, and deduplication
+- [Phase 01]: Import Rewriting documented as 4 distinct mechanisms (legacy rename, consumed stripping, synthetic addition, per-segment resolution)
 
 ### Pending Todos
 
@@ -79,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T18:44:45Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-04-01T18:53:47.293Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
