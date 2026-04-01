@@ -15,7 +15,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SPEC-04**: Spec documents CONV-04 (Props Destructuring) — transformation of destructured component props to `_rawProps` access patterns, `_restProps()` handling, pre-pass ordering requirement
 - [x] **SPEC-05**: Spec documents CONV-05 (Segment Extraction) — extraction of `$()` callback bodies into separate output modules, canonical filename generation, hash suffixes, nested segment parent-child relationships, variable migration
 - [ ] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
-- [ ] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
+- [x] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
 - [ ] **SPEC-08**: Spec documents CONV-08 (PURE Annotations) — `/*#__PURE__*/` on `componentQrl` only, with explicit anti-list of side-effectful wrappers that must NOT be annotated
 - [ ] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
 - [ ] **SPEC-10**: Spec documents CONV-10 (Const Replacement) — `isServer`/`isBrowser`/`isDev` replacement with boolean literals, import source handling, Test mode exception
@@ -115,7 +115,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-04 | Phase 2 | Complete |
 | SPEC-05 | Phase 1 | Complete |
 | SPEC-06 | Phase 2 | Pending |
-| SPEC-07 | Phase 2 | Pending |
+| SPEC-07 | Phase 2 | Complete |
 | SPEC-08 | Phase 3 | Pending |
 | SPEC-09 | Phase 3 | Pending |
 | SPEC-10 | Phase 3 | Pending |
