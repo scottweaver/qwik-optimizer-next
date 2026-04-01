@@ -251,3 +251,348 @@ synthetic: [
 > (Dollar Detection, Capture Analysis, QRL Wrapping, Segment Extraction, and Import Rewriting sections will be added in Plans 02-04)
 
 ---
+
+## Infrastructure: Hash Generation
+
+The optimizer uses a deterministic hashing algorithm to generate stable, unique identifiers for each extracted segment. These hashes appear in symbol names, canonical filenames, and QRL references. Hash stability across builds is critical -- changing a hash invalidates cached QRL references and breaks resumability.
+
+Source: transform.rs:204-210 (file hash), transform.rs:353-421 (symbol hash), transform.rs:4725-4729 (base64 encoding), transform.rs:4612-4635 (escape_sym)
+
+### Two-Level Hashing
+
+The optimizer computes two separate hashes using `std::collections::hash_map::DefaultHasher` (Rust's SipHash-1-3):
+
+#### 1. File Hash
+
+Computed once per file during `QwikTransform::new()`. Used as a prefix for JSX key auto-generation.
+
+**Algorithm:**
+
+```
+hasher = DefaultHasher::new()
+if scope is set:
+    hasher.write(scope.as_bytes())
+hasher.write(rel_path.to_forward_slash().as_bytes())
+file_hash = hasher.finish()    // u64
+```
+
+**Inputs (in seed order):**
+1. `scope` -- optional string from `TransformModulesOptions.scope` (written first via `Hasher::write` if present)
+2. `rel_path` -- the file's relative path with all backslashes converted to forward slashes (via `to_slash_lossy()`)
+
+Source: transform.rs:204-210
+
+#### 2. Symbol Hash
+
+Computed per segment during `register_context_name()`. Produces the hash suffix that appears in symbol names and canonical filenames.
+
+**Algorithm:**
+
+```
+hasher = DefaultHasher::new()
+if hash_override is set:
+    hasher.write(hash_override.as_bytes())
+else:
+    if scope is set:
+        hasher.write(scope.as_bytes())
+    hasher.write(rel_path.to_forward_slash().as_bytes())
+    hasher.write(display_name.as_bytes())
+hash = hasher.finish()    // u64
+hash64 = base64(hash)     // see Base64 Encoding below
+```
+
+**Inputs (in seed order, when no hash_override):**
+1. `scope` -- optional string (written first if present)
+2. `rel_path` -- forward-slashed relative file path
+3. `display_name` -- the escaped, deduplicated display name (see Display Name Construction below)
+
+Source: transform.rs:393-421
+
+### Base64 Encoding
+
+The `base64()` function converts a `u64` hash to a string identifier:
+
+```rust
+fn base64(nu: u64) -> String {
+    base64::engine::general_purpose::URL_SAFE_NO_PAD
+        .encode(nu.to_le_bytes())
+        .replace(['-', '_'], "0")
+}
+```
+
+**Steps:**
+1. Convert the `u64` to 8 bytes in **little-endian** order (`to_le_bytes()`)
+2. Encode with `URL_SAFE_NO_PAD` base64 engine (alphabet: `A-Za-z0-9+/` with `-` and `_` instead of `+` and `/`, no `=` padding)
+3. Replace all `-` characters with `0`
+4. Replace all `_` characters with `0`
+
+The result is always 11 characters (8 bytes base64-encoded without padding = ceil(8*4/3) = 11 chars, with `-`/`_` replaced by `0`).
+
+Source: transform.rs:4725-4729
+
+### Display Name Construction
+
+The display name is built from the function context hierarchy and determines both the human-readable portion of symbol names and the hash input.
+
+**Algorithm:**
+
+```
+1. Build context string:
+   display_name = stack_ctxt.join("_")
+   if stack_ctxt is empty:
+       display_name = "s_"
+
+2. Escape non-alphanumeric characters:
+   display_name = escape_sym(display_name)
+   // escape_sym replaces non-[A-Za-z0-9] with '_'
+   // trims leading underscores
+   // squashes consecutive underscores to one
+
+3. Prepend underscore if starts with digit:
+   if display_name[0] is '0'-'9':
+       display_name = "_" + display_name
+
+4. Deduplicate via segment_names HashMap:
+   if display_name not in segment_names:
+       segment_names[display_name] = 0     // first occurrence, no suffix
+   else:
+       segment_names[display_name] += 1
+       display_name = display_name + "_" + count  // e.g., "sym_1", "sym_2"
+
+5. Compute hash using display_name (see Symbol Hash above)
+
+6. Build final display_name for metadata:
+   display_name = file_stem + "_" + display_name  // e.g., "Counter_onClick"
+```
+
+**`escape_sym()` details** (transform.rs:4612-4635):
+- Every character that is NOT `A-Z`, `a-z`, or `0-9` is replaced with `_`
+- Leading underscores are trimmed (the fold starts with an empty accumulator and only emits `_` when preceded by a non-underscore character)
+- Consecutive underscores are squashed to a single underscore (tracked via the `prev` state in the fold)
+
+**`stack_ctxt` contents:** The context stack is built during the traversal. Function names, variable names from assignments, and JSX element tag names are pushed onto `stack_ctxt` as the traversal descends. This gives segments meaningful names like `Counter_onClick` rather than anonymous hashes.
+
+Source: transform.rs:4612-4635 (escape_sym), transform.rs:353-376 (register_context_name)
+
+### Symbol Name Format
+
+The final symbol name depends on the emit mode:
+
+| Mode | Format | Example |
+|------|--------|---------|
+| Dev, Test, Hmr, Lib | `{display_name}_{hash64}` | `Counter_onClick_aXUrPXX5Lak` |
+| Prod | `s_{hash64}` | `s_aXUrPXX5Lak` |
+
+Source: transform.rs:407-414
+
+### Example 1: Basic Symbol Hash (example_6)
+
+**Input file:** `test.tsx` (relative path: `test.tsx`)
+
+```typescript
+import { $ } from '@qwik.dev/core';
+export const sym1 = $((ctx) => console.log("1"));
+```
+
+**Display name construction:**
+1. `stack_ctxt` at the `$()` call site: `["sym1"]` (from the variable assignment)
+2. `stack_ctxt.join("_")` = `"sym1"`
+3. `escape_sym("sym1")` = `"sym1"` (already alphanumeric)
+4. Does not start with digit, no prepend needed
+5. First occurrence in `segment_names`, no deduplication suffix
+6. Symbol hash inputs: `rel_path = "test.tsx"`, `display_name = "sym1"`
+7. Final `display_name` for metadata: `"test.tsx_sym1"`
+
+**Hash computation (Dev mode):**
+```
+hasher = DefaultHasher::new()
+hasher.write(b"test.tsx")
+hasher.write(b"sym1")
+hash = hasher.finish()           // some u64
+hash64 = base64(hash)            // e.g., "aXUrPXX5Lak"
+symbol_name = "sym1_aXUrPXX5Lak" // Dev mode: {display_name}_{hash64}
+```
+
+**In Prod mode:** `symbol_name = "s_aXUrPXX5Lak"` (same hash, different format)
+
+### Example 2: Deduplication with Multiple Dollar Calls (dedup_dollar)
+
+**Input file:** `test.tsx`
+
+```typescript
+import { $ } from '@qwik.dev/core';
+export const handler = () => {
+  const a = $(() => console.log("first"));
+  const b = $(() => console.log("second"));
+};
+```
+
+**Display name construction for first `$()`:**
+1. `stack_ctxt`: `["handler"]` (from the enclosing function)
+2. `display_name` = `"handler"`
+3. `segment_names` check: not present, insert `"handler" -> 0`
+4. No deduplication suffix
+5. Symbol hash inputs: `"test.tsx"` + `"handler"`
+6. `symbol_name` = `"handler_{hash1}"`
+
+**Display name construction for second `$()`:**
+1. `stack_ctxt`: `["handler"]` (same enclosing function)
+2. `display_name` = `"handler"`
+3. `segment_names` check: already present with count 0, increment to 1
+4. Deduplication suffix applied: `display_name` = `"handler_1"`
+5. Symbol hash inputs: `"test.tsx"` + `"handler_1"` (different input, different hash)
+6. `symbol_name` = `"handler_1_{hash2}"`
+
+**Result:** Two distinct segments with unique hashes despite sharing the same enclosing context.
+
+---
+
+## Infrastructure: Path Resolution
+
+Path resolution governs how the optimizer constructs file paths for segment modules -- both the canonical filename used to name the segment file and the import path used to reference it from the root module's QRL calls.
+
+Source: parse.rs:927-956 (parse_path), transform.rs:4910-4913 (get_canonical_filename), transform.rs:1110-1145 (create_segment)
+
+### parse_path()
+
+Extracts file metadata from the relative source path. Called once at the start of `transform_code()`.
+
+**Algorithm:**
+
+```
+input: relative_path (string), base_dir (Path)
+1. Convert backslashes to forward slashes: path = relative_path.replace('\\', '/')
+2. Extract file_stem: path without extension (e.g., "Counter" from "src/Counter.tsx")
+3. Extract extension: file extension without dot (e.g., "tsx")
+4. Extract file_name: full filename (e.g., "Counter.tsx")
+5. Extract rel_dir: parent directory of the relative path
+6. Compute abs_path: normalize(base_dir / path)
+7. Compute abs_dir: normalize(abs_path.parent())
+```
+
+**Output (PathData):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rel_path` | `PathBuf` | Forward-slashed relative path as provided |
+| `abs_path` | `PathBuf` | Normalized absolute path (base_dir joined with rel_path) |
+| `rel_dir` | `PathBuf` | Parent directory of rel_path |
+| `abs_dir` | `PathBuf` | Parent directory of abs_path |
+| `extension` | `String` | File extension without dot |
+| `file_name` | `String` | Full filename with extension |
+| `file_stem` | `String` | Filename without extension |
+
+Source: parse.rs:927-956
+
+### Output Extension Mapping
+
+The extension used for output modules (root and segments) depends on the `transpile_ts` and `transpile_jsx` configuration flags combined with the input file's detected type:
+
+| `transpile_ts` | `transpile_jsx` | `is_typescript` | `is_jsx` | Output Extension |
+|:-:|:-:|:-:|:-:|:--|
+| true | true | any | any | `.js` |
+| true | false | any | true | `.jsx` |
+| true | false | any | false | `.js` |
+| false | true | true | any | `.ts` |
+| false | true | false | any | `.js` |
+| false | false | any | any | same as input |
+
+In the common case (`transpile_ts: true, transpile_jsx: true`), all output is `.js` regardless of input type.
+
+Source: parse.rs:225-232
+
+### get_canonical_filename()
+
+Constructs the canonical filename for a segment module. This is the filename (without extension) used both for the output file and for the import path in QRL calls.
+
+**Algorithm:**
+
+```
+input: display_name (Atom), symbol_name (Atom)
+1. Extract hash suffix: split symbol_name on '_', take last segment
+2. canonical_filename = display_name + "_" + hash_suffix
+```
+
+**Example:**
+- `display_name` = `"test.tsx_sym1"`, `symbol_name` = `"sym1_aXUrPXX5Lak"`
+- Hash suffix = `"aXUrPXX5Lak"` (last `_`-delimited token)
+- `canonical_filename` = `"test.tsx_sym1_aXUrPXX5Lak"`
+
+Source: transform.rs:4910-4913
+
+### Import Path Construction
+
+The import path used in `qrl()` calls to reference segment modules is constructed in `create_segment()`:
+
+**Algorithm:**
+
+```
+input: canonical_filename, explicit_extensions (bool), extension (string)
+1. import_path = "./" + canonical_filename
+2. if explicit_extensions:
+       import_path = import_path + "." + extension
+```
+
+**Rules:**
+- Import paths always start with `"./"` (relative to the root module)
+- When `explicit_extensions` is `false` (the default), no extension is appended -- the bundler resolves the extension
+- When `explicit_extensions` is `true`, the output extension (from the extension mapping table above) is appended
+
+Source: transform.rs:1127-1131
+
+### Full Segment Path Construction
+
+The full output path for a segment module file (used in `TransformModule.path`) combines the relative directory with the canonical filename:
+
+```
+segment_path = rel_dir + "/" + canonical_filename + "." + extension
+```
+
+If `rel_dir` is empty (file is at the root of `src_dir`), the path is just `canonical_filename + "." + extension` with no leading separator.
+
+Source: parse.rs:450-461
+
+### Example 1: Basic Path Resolution (basic_path)
+
+**Input:** `src/components/Counter.tsx` with `transpile_ts: true`, `transpile_jsx: true`, `explicit_extensions: false`
+
+```typescript
+import { component$ } from '@qwik.dev/core';
+export const Counter = component$(() => {
+  return <div>Count</div>;
+});
+```
+
+**Path resolution:**
+- `parse_path("src/components/Counter.tsx", src_dir)`:
+  - `file_stem` = `"Counter"`
+  - `extension` = `"tsx"`
+  - `file_name` = `"Counter.tsx"`
+  - `rel_dir` = `"src/components"`
+- Output extension: `.js` (transpile_ts + transpile_jsx = true)
+- Display name (from hash generation): `"Counter.tsx_Counter"`
+- Symbol name: `"Counter_XYZ123hash"` (in Dev mode)
+- `get_canonical_filename("Counter.tsx_Counter", "Counter_XYZ123hash")`:
+  - Hash suffix = `"XYZ123hash"`
+  - canonical_filename = `"Counter.tsx_Counter_XYZ123hash"`
+- Import path in QRL: `"./Counter.tsx_Counter_XYZ123hash"` (no extension -- `explicit_extensions: false`)
+- Segment file path: `"src/components/Counter.tsx_Counter_XYZ123hash.js"`
+
+### Example 2: Explicit Extensions (explicit_ext)
+
+**Input:** Same `src/components/Counter.tsx` with `explicit_extensions: true`
+
+**Path resolution (only the import path differs):**
+- Import path in QRL: `"./Counter.tsx_Counter_XYZ123hash.js"` (extension appended)
+- Segment file path: `"src/components/Counter.tsx_Counter_XYZ123hash.js"` (unchanged -- segment file path always has an extension)
+
+**Comparison:**
+
+| Config | Import Path in `qrl()` Call |
+|--------|---------------------------|
+| `explicit_extensions: false` | `"./Counter.tsx_Counter_XYZ123hash"` |
+| `explicit_extensions: true` | `"./Counter.tsx_Counter_XYZ123hash.js"` |
+
+The `explicit_extensions` flag exists because some bundlers (like Vite in certain configurations) require explicit `.js` extensions in import specifiers for proper module resolution, while others resolve extensions automatically.
+
+---
