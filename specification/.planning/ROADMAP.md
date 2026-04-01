@@ -64,7 +64,13 @@ Plans:
   2. The spec document describes all 5 emit modes with per-transformation behavioral differences (especially dev mode QRL variants and test mode const replacement exceptions)
   3. The spec document describes the transformation pipeline ordering DAG — which CONVs run before/after which, and why ordering matters (e.g., const replacement before DCE, props destructuring before capture analysis)
   4. The spec document describes PURE annotations with the explicit whitelist (componentQrl only) and anti-list of side-effectful wrappers, const replacement, dead branch elimination, code stripping, sync$ serialization, and noop QRL handling
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Build Environment Transforms: Const Replacement (CONV-10), Dead Branch Elimination (CONV-09), Code Stripping (CONV-11)
+- [ ] 03-02-PLAN.md — QRL Special Cases: PURE Annotations (CONV-08), sync$ Serialization (CONV-13), Noop QRL Handling (CONV-14)
+- [ ] 03-03-PLAN.md — Entry Strategies (all 7) and Emit Modes (all 5 with Mode x CONV table)
+- [ ] 03-04-PLAN.md — Transformation Pipeline: Mermaid DAG and ordering constraints table
 
 ### Phase 4: Public API, Bindings & Cross-Cutting Specification
 **Goal**: The spec document is complete — all public-facing contracts are documented, OXC migration guidance is embedded per-transformation, and representative examples from Jack's 162 spec files are included as verification anchors
@@ -109,7 +115,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
 | 2. JSX, Props & Signal Specification | 1/3 | In Progress | - |
-| 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
+| 3. Build Modes & Remaining Transforms Specification | 0/4 | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 0/? | Not started | - |
 | 5. Core OXC Implementation | 0/? | Not started | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
