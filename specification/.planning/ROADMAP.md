@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
-| 2. JSX, Props & Signal Specification | 0/? | Not started | - |
+| 2. JSX, Props & Signal Specification | 1/3 | In Progress | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 0/? | Not started | - |
 | 5. Core OXC Implementation | 0/? | Not started | - |
