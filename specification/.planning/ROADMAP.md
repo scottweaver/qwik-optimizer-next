@@ -37,8 +37,8 @@ Plans:
 - [x] 01-01-PLAN.md — Pipeline Overview, GlobalCollect, Hash Generation, Path Resolution (infrastructure)
 - [ ] 01-02-PLAN.md — Dollar Detection (CONV-01), QRL Wrapping (CONV-02)
 - [x] 01-03-PLAN.md — Capture Analysis (CONV-03) with 8-category taxonomy and 16 edge cases
-- [x] 01-04-PLAN.md — Segment Extraction (CONV-05), Import Rewriting (CONV-12)
-- [ ] 01-05-PLAN.md — Variable Migration, Source Map Generation
+- [ ] 01-04-PLAN.md — Segment Extraction (CONV-05), Import Rewriting (CONV-12)
+- [x] 01-05-PLAN.md — Variable Migration, Source Map Generation
 
 ### Phase 2: JSX, Props & Signal Specification
 **Goal**: The spec document contains complete behavioral descriptions of the JSX transform subsystem (the largest single component), props destructuring, and signal optimization — building on the core pipeline specified in Phase 1
