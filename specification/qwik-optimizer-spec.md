@@ -4634,3 +4634,472 @@ Key observations:
 **See also:** `example_noop_dev_mode` (Dev mode noop QRLs with stripped segments), `example_strip_server_code` (Prod mode noop QRLs), `example_strip_client_code` (Hoist pattern with stripped client segments), `example_inlined_entry_strategy` (full Hoist strategy pattern)
 
 ---
+
+## Entry Strategies
+
+Entry strategies control how segments are grouped into output files. The optimizer defines an `EntryPolicy` trait with a single method:
+
+```rust
+pub trait EntryPolicy: Send + Sync {
+    fn get_entry_for_sym(&self, context: &[String], segment: &SegmentData) -> Option<Atom>;
+}
+```
+
+- Returns `Some(group_key)` to group the segment into a shared output file named by the key.
+- Returns `None` to give the segment its own output file (maximum granularity).
+- `context` is the `stack_ctxt` -- the component context stack containing root component names from the enclosing scope.
+
+Source: entry_strategy.rs (124 LOC), parse.rs:83 (`parse_entry_strategy` dispatch)
+
+The `EntryStrategy` enum has 7 variants that map to 5 distinct `EntryPolicy` implementations via `parse_entry_strategy`:
+
+```rust
+pub enum EntryStrategy {
+    Inline,    // -> InlineStrategy
+    Hoist,     // -> InlineStrategy (same!)
+    Single,    // -> SingleStrategy
+    Hook,      // -> PerSegmentStrategy
+    Segment,   // -> PerSegmentStrategy (same!)
+    Component, // -> PerComponentStrategy
+    Smart,     // -> SmartStrategy
+}
+```
+
+### InlineStrategy (Inline, Hoist)
+
+Both the `Inline` and `Hoist` enum variants use the same `InlineStrategy` implementation. The grouping behavior is identical -- the difference is entirely in post-processing output patterns.
+
+**Grouping:** Returns `Some("entry_segments")` for all segments. All segments are grouped into a single virtual entry.
+
+**Inline variant** (`should_inline=true`): The function body is inlined directly as the first argument to `inlinedQrl()`. No separate segment modules are generated. The root module contains all code:
+
+```javascript
+// Inline: function body passed directly to inlinedQrl()
+export const App = /*#__PURE__*/ componentQrl(
+  /*#__PURE__*/ inlinedQrl(() => {
+    // ... component body is here, inline ...
+  }, "App_component_hash", [captures])
+);
+```
+
+**Hoist variant** (`should_inline=false`): Creates separate `Segment` entries, then `hoist_qrl_to_module_scope` converts each `inlinedQrl()` call into a `_noopQrl()` declaration plus `.s()` registration pattern. Segments become top-level `const` declarations:
+
+```javascript
+// Hoist: _noopQrl declaration + .s() registration
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+const q_Child_component_useStyles_qBZTuFM0160 = /*#__PURE__*/ _noopQrl("Child_component_useStyles_qBZTuFM0160");
+//
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_9GyF01GDKqw.s(() => {
+    useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+    const state = useStore({ count: 0 });
+    return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+The Hoist pattern has three parts:
+1. `const q_symbolName = /*#__PURE__*/ _noopQrl("symbolName")` -- top-level declaration with PURE annotation
+2. `q_symbolName.s(fnBody)` -- registration call that binds the function body to the QRL, emitted at module scope for globally-accessible identifiers or inline via comma expression `(q_X.s(value), q_X)` for non-global identifiers
+3. `.w([captures])` -- appended to the QRL reference at usage site if the segment has captures
+
+**Lib mode exception:** `hoist_qrl_to_module_scope` returns the call expression unchanged when mode is `Lib` -- no hoisting occurs in library mode. Library output uses `inlinedQrl()` throughout (cross-reference: Emit Modes, Lib Mode).
+
+**Post-processing difference:** For Inline/Hoist strategies, `SideEffectVisitor` runs after DCE (instead of Treeshaker clean) to re-add bare import statements for modules with side effects, preserving module evaluation order (cross-reference: CONV-09 DCE conditions table).
+
+#### Example: Hoist Strategy with Component and Nested QRLs (example_inlined_entry_strategy)
+
+**Input:**
+
+```javascript
+import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+export const Child = component$(() => {
+    useStyles$('somestring');
+    const state = useStore({ count: 0 });
+    useBrowserVisibleTask$(() => {
+        state.count = thing.doStuff() + import("./sibling");
+    });
+    return (
+        <div onClick$={() => console.log(mongodb)}></div>
+    );
+});
+```
+
+**Output (root module -- all code in single file, Hoist pattern):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
+import { _captures } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+//
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+const q_Child_component_div_q_e_click_cROa4sult1s = /*#__PURE__*/ _noopQrl("Child_component_div_q_e_click_cROa4sult1s");
+const q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA = /*#__PURE__*/ _noopQrl("Child_component_useBrowserVisibleTask_0IGFPOyJmQA");
+const q_Child_component_useStyles_qBZTuFM0160 = /*#__PURE__*/ _noopQrl("Child_component_useStyles_qBZTuFM0160");
+//
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.s(() => {
+    const state = _captures[0];
+    state.count = thing.doStuff() + import("./sibling");
+});
+q_Child_component_div_q_e_click_cROa4sult1s.s(() => console.log(mongodb));
+q_Child_component_9GyF01GDKqw.s(() => {
+    useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+    const state = useStore({ count: 0 });
+    useBrowserVisibleTaskQrl(q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.w([state]));
+    return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+Key observations:
+- All four QRL declarations use `_noopQrl` with PURE annotations
+- Each `.s()` call registers the function body with its corresponding noop QRL at module scope
+- Captures are injected as `_captures[N]` references within `.s()` bodies
+- `.w([state])` on the visible task QRL preserves capture tracking at the usage site
+- No separate segment files are generated -- everything is in the root module
+
+**See also:** `example_noop_dev_mode` (Dev mode Hoist pattern with `_noopQrlDEV`), `example_strip_client_code` (Hoist pattern with stripped segments)
+
+### SingleStrategy (Single)
+
+**Grouping:** Returns `Some("entry_segments")` for all segments. All segments are extracted to a single shared output file.
+
+Unlike Inline/Hoist, segments ARE extracted to separate module code (via `new_module`), but all land in one output file because they share the same entry key. This is a middle ground: code splitting at the module level but bundled together for deployment.
+
+No dedicated snapshot available -- the output structure is the same as per-segment extraction but with all segment modules concatenated into one file. The root module uses `qrl(() => import("./entry_segments"))` references pointing to the shared file.
+
+### PerSegmentStrategy (Hook, Segment)
+
+**Grouping:** Returns `None` for all segments. Each segment gets its own output file for maximum lazy-loading granularity.
+
+`Hook` and `Segment` are enum aliases -- both map to the same `PerSegmentStrategy` implementation with identical behavior. The `Segment` name is the modern alias; `Hook` is the legacy name preserved for backward compatibility.
+
+#### Example: Per-Segment Output with Stripped Server Code (example_strip_server_code)
+
+**Input:**
+
+```javascript
+import { component$, serverLoader$, serverStuff$, $, client$, useStore, useTask$ } from '@qwik.dev/core';
+import { isServer } from '@qwik.dev/core';
+import mongo from 'mongodb';
+import redis from 'redis';
+import { handler } from 'serverless';
+
+export const Parent = component$(() => {
+    const state = useStore({ text: '' });
+    useTask$(async () => {
+        if (!isServer) return;
+        state.text = await mongo.users();
+        redis.set(state.text);
+    });
+    serverStuff$(async () => { /* ... */ });
+    serverLoader$(handler);
+    useTask$(() => { /* Code */ });
+    return (
+        <div onClick$={() => console.log('parent')}>{state.text}</div>
+    );
+});
+```
+
+**Output (root module):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(
+    () => import("./test.tsx_Parent_component_0TaiDayHrlo"),
+    "s_0TaiDayHrlo"
+);
+//
+export const Parent = /*#__PURE__*/ componentQrl(q_s_0TaiDayHrlo);
+```
+
+**Output (segment -- `test.tsx_Parent_component_0TaiDayHrlo.js`, ENTRY POINT):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { _wrapProp } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { serverLoaderQrl } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+//
+const q_qrl_4294901766 = /*#__PURE__*/ _noopQrl("s_r1qAHX7Opp0");
+const q_qrl_4294901768 = /*#__PURE__*/ _noopQrl("s_ddV1irobfWI");
+// ... other QRL declarations ...
+export const s_0TaiDayHrlo = () => {
+    const state = useStore({ text: '' });
+    useTaskQrl(q_s_gDH1EtUWqBU.w([state]));
+    serverStuffQrl(q_qrl_4294901766);
+    serverLoaderQrl(q_qrl_4294901768);
+    useTaskQrl(q_s_P8oRQhHsurk);
+    return /*#__PURE__*/ _jsxSorted("div", null, {
+        "q-e:click": q_s_zM9okM0TYrA
+    }, _wrapProp(state, "text"), 3, "u6_0");
+};
+```
+
+**Output (stripped segment -- `test.tsx_Parent_component_serverStuff_r1qAHX7Opp0.js`):**
+
+```javascript
+export const s_r1qAHX7Opp0 = null;
+```
+
+Key observations:
+- Each segment gets its own file (per-segment strategy)
+- Stripped server segments (`serverStuff$`, `serverLoader$`) produce noop outputs with `export const symbolName = null`
+- Non-stripped segments retain full function bodies with resolved imports
+- The root module is minimal -- just a `componentQrl` wrapper with a dynamic import
+
+**See also:** `example_strip_client_code` (client-side stripping), `example_dead_code` (DCE with per-segment output)
+
+### PerComponentStrategy (Component)
+
+**Grouping:** Groups segments by their enclosing component. The grouping key is constructed from the component context stack:
+
+```rust
+fn get_entry_for_sym(&self, context: &[String], segment: &SegmentData) -> Option<Atom> {
+    context.first().map_or_else(
+        || Some(ENTRY_SEGMENTS.clone()),       // no component context -> "entry_segments"
+        |root| Some(Atom::from([&segment.origin, "_entry_", root].concat())),
+    )
+}
+```
+
+- If the `context` (component stack) has a root component name, segments are grouped under `"{origin}_entry_{root}"` -- e.g., `"app.tsx_entry_App"`.
+- If there is no component context (top-level QRLs outside any component), segments fall back to `"entry_segments"`.
+- All segments within the same component are loaded together when any one of them is needed. This is a practical middle ground between per-segment granularity and single-file bundling.
+
+### SmartStrategy (Smart)
+
+The default strategy. Uses conditional grouping to optimize for common usage patterns:
+
+```rust
+fn get_entry_for_sym(&self, context: &[String], segment: &SegmentData) -> Option<Atom> {
+    // Event handlers without scope variables -> own file
+    if segment.scoped_idents.is_empty()
+        && (segment.ctx_kind != SegmentKind::Function || &segment.ctx_name == "event$")
+    {
+        return None;
+    }
+    // Everything else -> grouped by component (like PerComponentStrategy)
+    context.first().map_or_else(
+        || None,  // top-level QRLs -> own file
+        |root| Some(Atom::from([&segment.origin, "_entry_", root].concat())),
+    )
+}
+```
+
+**Three grouping rules:**
+
+1. **Event handlers without captures get their own file** (`None`): When `scoped_idents.is_empty()` AND the segment is either NOT a `SegmentKind::Function` OR the context name is `"event$"`. This isolates leaf event handlers (like `onClick$`) for optimal lazy-loading -- they are often loaded on user interaction and should not pull in component state.
+
+2. **Top-level QRLs get their own file** (`None`): When `context` is empty (no enclosing component). These are standalone functions that should be independently loadable.
+
+3. **Everything else is grouped by component**: Like `PerComponentStrategy`, segments with captures or component-scoped functions are grouped under `"{origin}_entry_{root}"`. This means all stateful QRLs for a component are loaded together if any one is used, which is a pragmatic optimization since they likely share data dependencies.
+
+**Rationale:** Smart strategy balances granularity and request count. Leaf event handlers are the most common lazy-loading targets (user clicks, hovers) and benefit from isolation. Stateful functions (tasks, effects) with captures typically need shared context and benefit from co-location.
+
+### Summary Table
+
+| Strategy Enum | EntryPolicy Impl | Grouping Behavior | Output Pattern |
+|:---|:---|:---|:---|
+| **Inline** | InlineStrategy | `Some("entry_segments")` -- all grouped | `inlinedQrl(fn, "name", [captures])` inline in root module |
+| **Hoist** | InlineStrategy | `Some("entry_segments")` -- all grouped | `_noopQrl("name")` + `.s(fn)` registration in root module |
+| **Single** | SingleStrategy | `Some("entry_segments")` -- all grouped | Segments extracted but all in one output file |
+| **Hook** | PerSegmentStrategy | `None` -- each segment separate | `qrl(() => import("./segment"))` per segment |
+| **Segment** | PerSegmentStrategy | `None` -- each segment separate | Same as Hook (modern alias) |
+| **Component** | PerComponentStrategy | `Some("{origin}_entry_{root}")` or fallback | Segments grouped by enclosing component |
+| **Smart** | SmartStrategy | Conditional (see rules above) | Event handlers isolated; stateful code grouped by component |
+
+---
+
+## Emit Modes
+
+The optimizer supports 5 emit modes that control per-transformation behavioral variations across build contexts. Modes are defined by the `EmitMode` enum:
+
+```rust
+pub enum EmitMode {
+    Prod,
+    Lib,
+    Dev,
+    Test,
+    Hmr,
+}
+```
+
+Source: parse.rs:78-84 (enum definition), parse.rs:293-436 (mode-conditional pipeline branches)
+
+A key derived value is `is_dev`, computed at parse.rs:293:
+
+```rust
+let is_dev = matches!(config.mode, EmitMode::Dev | EmitMode::Hmr);
+```
+
+This boolean controls `isDev` const replacement, QRL dev variant selection, and JSX source location emission. Both Dev and Hmr modes are considered "development" contexts.
+
+### Mode x CONV Cross-Reference Table
+
+This table is the primary lookup for "what changes in this mode?" Each cell shows behavioral differences from the normal (Prod) pipeline. "Normal" means no mode-specific variation. Bold entries indicate significant deviations.
+
+| CONV | Prod | Dev | Lib | Test | Hmr |
+|:---|:---|:---|:---|:---|:---|
+| CONV-01 (Dollar Detection) | Normal | Normal | Normal | Normal | Normal |
+| CONV-02 (QRL Wrapping) | `qrl()`/`inlinedQrl()` | `qrlDEV()`/`inlinedQrlDEV()` with source location | **`inlinedQrl()` only (all inline)** | Same as Prod | Same as Dev |
+| CONV-03 (Capture Analysis) | Normal | Normal | Normal | Normal | Normal |
+| CONV-04 (Props Destructuring) | Normal | Normal | Normal (runs for all modes) | Normal | Normal |
+| CONV-05 (Segment Extraction) | Normal | Normal | **SKIPPED** (no segments extracted, all inline) | Normal | Normal |
+| CONV-06 (JSX Transform) | Normal | Adds JSX source location `{ fileName, lineNumber, columnNumber }` | Normal | Normal | Adds JSX source location info |
+| CONV-07 (Signal Optimization) | Normal | Normal | Normal | Normal | Normal |
+| CONV-08 (PURE Annotations) | Normal | Normal | Normal | Normal | Normal |
+| CONV-09 (DCE) | Full (simplifier + treeshaker) | Full | **SKIPPED** | Full | Full |
+| CONV-10 (Const Replacement) | `isServer=config`, `isDev=false` | `isServer=config`, `isDev=true` | **SKIPPED** | **SKIPPED** | `isServer=config`, `isDev=true` |
+| CONV-11 (Code Stripping) | Normal | Normal | Normal | Normal | Normal |
+| CONV-12 (Import Rewriting) | Normal | Adds `_qrlDEV`, `_inlinedQrlDEV`, `_noopQrlDEV` imports | Normal | Normal | Same as Dev |
+| CONV-13 (sync$ Serialization) | Normal | Normal | Normal | Normal | Normal |
+| CONV-14 (Noop QRL) | `_noopQrl()` | `_noopQrlDEV()` with source location | Normal | Normal | `_noopQrlDEV()` |
+| **Other** | | | | | |
+| Post-processing (DCE, treeshaker, var migration) | Normal | Normal | **ALL SKIPPED** | Normal | Normal |
+| HMR hook injection | No | No | No | No | **`_useHmr(devPath)` in component$ bodies** |
+| Segment dev imports | No | `_qrlDEV`, `_inlinedQrlDEV`, `_noopQrlDEV` added to segment explicit imports | No | No | Same as Dev |
+
+### Prod Mode
+
+Full pipeline with all transformations enabled. Const replacement sets `isDev=false`, `isServer`/`isBrowser` based on `config.is_server`. DCE runs to remove dead branches created by const replacement. No development wrappers or source location information in QRL calls. This is the standard production build output.
+
+### Dev Mode
+
+Uses development variants of QRL factory functions: `qrlDEV()`, `inlinedQrlDEV()`, and `_noopQrlDEV()`. Each includes a source location object as an additional argument:
+
+```javascript
+qrlDEV(() => import("./segment"), "symbolName", {
+    file: "/path/to/source.tsx",
+    lo: 88,       // start byte offset in source
+    hi: 200,      // end byte offset in source
+    displayName: "source.tsx_Component_component"
+});
+```
+
+Const replacement sets `isDev=true`. JSX elements receive source location information as `{ fileName, lineNumber, columnNumber }` objects (cross-reference: CONV-06). Segment modules get explicit imports for `_qrlDEV`, `_inlinedQrlDEV`, and `_noopQrlDEV` to ensure dev helpers are available in extracted code.
+
+**See also:** `example_dev_mode` (Dev mode with separate segments), `example_dev_mode_inlined` (Dev mode with Inline strategy)
+
+### Lib Mode
+
+Minimal processing for library pre-compilation. Output is a `.qwik.mjs` file that consumers will process further with their own optimizer configuration. Lib mode has the most extensive skip list of any mode:
+
+- **Props Destructuring (CONV-04):** RUNS -- the only transform guaranteed to run in all modes, so library output already has signal-forwarding destructuring applied
+- **QRL Wrapping (CONV-02):** All QRLs wrapped as `inlinedQrl()` (inline form), not extracted
+- **Segment Extraction (CONV-05):** SKIPPED -- no segments are extracted, all code stays in the root module
+- **Const Replacement (CONV-10):** SKIPPED -- `isServer`/`isBrowser`/`isDev` remain as identifiers so consumers can set them
+- **DCE (CONV-09):** SKIPPED -- no dead code elimination
+- **Post-processing:** ALL SKIPPED -- no treeshaker, no variable migration, no export cleanup
+- **Hoist:** `hoist_qrl_to_module_scope` returns early with the call expression unchanged -- no `_noopQrl()` + `.s()` conversion
+
+The net effect is that library output contains all QRLs inlined with `inlinedQrl()` calls, preserving the function bodies for downstream processing:
+
+```javascript
+// Lib mode output -- all inline, no segments
+export const Works = /*#__PURE__*/ componentQrl(
+    /*#__PURE__*/ inlinedQrl((props) => {
+        useStyleQrl(/*#__PURE__*/ inlinedQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg"));
+        const sig = useSignal('hola');
+        useTaskQrl(/*#__PURE__*/ inlinedQrl(() => {
+            const sig = _captures[0];
+            console.log(sig.value, 'hola');
+        }, "Works_component_useTask_pjo5U5Ikll0", [sig]));
+        return /*#__PURE__*/ _jsxSorted("div", { /* ... */ }, null, null, 2, "u6_0");
+    }, "Works_component_t45qL4vNGv0")
+);
+```
+
+**See also:** `example_lib_mode` (complete Lib mode output), `lib_mode_fn_signal` (Lib mode with signal optimization)
+
+### Test Mode
+
+Like Prod but skips const replacement (CONV-10). `isServer` and `isBrowser` remain as runtime identifiers rather than being replaced with boolean literals. This allows test code to configure the environment at runtime (e.g., `isServer = true` in a test setup) without being locked to a compile-time value. All other transformations run normally -- DCE, segment extraction, post-processing are all enabled.
+
+### Hmr Mode
+
+Like Dev plus Hot Module Replacement hook injection. The `_useHmr(devPath)` call is injected as the **first statement** inside `component$` function bodies only -- not inside other `$`-suffixed calls like `useTask$`, `server$`, etc. Only components detected via `is_qcomponent` during the QwikTransform pass receive HMR injection.
+
+The `devPath` argument is the development-time file path (e.g., `"/user/qwik/src/test.tsx"`), enabling the HMR runtime to track which file originated the component for hot reload.
+
+#### Example: HMR Hook Injection in Component (hmr)
+
+**Input:**
+
+```javascript
+import { component$, $ } from "@qwik.dev/core";
+
+export const TestGetsHmr = component$(() => {
+    return <div>Test</div>;
+});
+export const TestNoHmr = componentQrl($(() => {
+    return <div>Test</div>;
+}));
+```
+
+**Output (root module -- Hmr mode, uses qrlDEV):**
+
+```javascript
+import { componentQrl as componentQrl1 } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+//
+const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(
+    () => import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"),
+    "TestGetsHmr_component_jBUoou0sxX4",
+    { file: "/user/qwik/src/test.tsx", lo: 105, hi: 143,
+      displayName: "test.tsx_TestGetsHmr_component" }
+);
+// ...
+export const TestGetsHmr = /*#__PURE__*/ componentQrl1(q_TestGetsHmr_component_jBUoou0sxX4);
+export const TestNoHmr = componentQrl(q_TestNoHmr_componentQrl_Uqk3jGTNmYs);
+```
+
+**Output (segment -- `test.tsx_TestGetsHmr_component_jBUoou0sxX4.js`, ENTRY POINT):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+import { _useHmr } from "@qwik.dev/core";
+//
+export const TestGetsHmr_component_jBUoou0sxX4 = () => {
+    _useHmr("/user/qwik/src/test.tsx");  // <-- HMR hook injected as first statement
+    return /*#__PURE__*/ _jsxSorted("div", null, null, "Test", 3, "u6_0", {
+        fileName: "test.tsx",
+        lineNumber: 5,
+        columnNumber: 11
+    });
+};
+```
+
+**Output (segment -- `test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs.js`, ENTRY POINT):**
+
+```javascript
+export const TestNoHmr_componentQrl_Uqk3jGTNmYs = () => {
+    // No _useHmr -- this was created via componentQrl($(...)), not component$()
+    return /*#__PURE__*/ _jsxSorted("div", null, null, "Test", 3, "u6_1", { /* ... */ });
+};
+```
+
+Key observations:
+- `TestGetsHmr` (created via `component$()`) receives `_useHmr` injection
+- `TestNoHmr` (created via `componentQrl($(...))`) does NOT receive `_useHmr` -- only `component$` triggers HMR
+- Both segments get JSX source location info (Dev-like behavior)
+- The root module uses `qrlDEV` (Dev-like QRL wrapping)
+
+**See also:** `example_dev_mode` (Dev mode without HMR for comparison)
+
+---
