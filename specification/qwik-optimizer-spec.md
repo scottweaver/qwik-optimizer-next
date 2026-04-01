@@ -242,7 +242,184 @@ synthetic: [
 
 ## Stage 3: Pre-Transforms
 
-> (Specified in Phase 2 -- Props Destructuring, Phase 3 -- Const Replacement)
+### Props Destructuring (CONV-04)
+
+Props destructuring is a pre-pass (Step 8 in the pipeline) that transforms destructured `component$` parameters into `_rawProps` member-access patterns. This enables signal reactivity tracking: the runtime can intercept individual property accesses on the raw props object rather than receiving already-destructured values. Props destructuring runs BEFORE the main `QwikTransform` (Step 10) because it changes variable references that capture analysis (CONV-03) later reads -- after this transform, captured variables reference `_rawProps.propName` instead of the original destructured binding names.
+
+**Source:** props_destructuring.rs (full file, 568 LOC): `transform_props_destructuring` (entry point, lines 22-37), `transform_component_props` (parameter rewriting, lines 62-88), `transform_component_body` (inlining optimizations, lines 89-284), `transform_pat` (pattern analysis, lines 361-478), `transform_rest` (rest-props insertion, lines 480-522), `create_omit_props` (exclusion-list builder, lines 524-568)
+
+#### Behavioral Rules
+
+**Rule 1: Trigger condition.** The transform activates on `component$()` calls whose first argument is an arrow function with exactly one parameter that is an object destructuring pattern. Additionally, standalone arrow functions (not wrapped in `component$`) with a single destructured parameter are transformed if their body is either (a) a block statement containing a `return` statement, or (b) a single expression (call expression). This second path handles inline components. The `component$` callee is identified by matching against the imported local identifier from `@qwik.dev/core` (via `global_collect.get_imported_local`).
+
+**Rule 2: `_rawProps` replacement.** When a destructured parameter is detected, a new identifier `_rawProps` replaces the destructured pattern as the function's sole parameter. Each destructured prop binding becomes a member access on `_rawProps`:
+
+- Simple binding: `{message}` becomes `_rawProps.message`
+- Renamed binding (key-value pattern): `{count: c}` uses the **original prop name** for access: all references to `c` in the function body are replaced with `_rawProps.count`
+- String-keyed binding: `{'bind:value': bindValue}` uses computed member access: `_rawProps["bind:value"]`
+- Default value with const expression: `{x = 5}` becomes `_rawProps.x ?? 5` (nullish coalescing)
+- Default value with non-const expression: the entire transform **bails out** -- the function is left unmodified. Const-ness is determined by `is_const_expr()`, which checks for literals, template literals without expressions, and references to known-global identifiers.
+
+The replacement mapping is stored in an `identifiers: HashMap<Id, Expr>` and applied via `visit_mut_expr` to all subsequent identifier references in the function body. Shorthand object properties are handled separately (see Rule 6).
+
+**Rule 3: `_restProps()` handling.** When the destructuring pattern includes a rest element (`{...rest}`), the transform imports `_restProps` from `@qwik.dev/core` and inserts a `const` declaration at the top of the function body:
+
+- With named props and rest: `({message, id, count: c, ...rest})` produces:
+  ```js
+  const rest = _restProps(_rawProps, ["message", "id", "count"]);
+  ```
+  The exclusion array contains the **original prop names** (not the local aliases). In the example above, `"count"` appears in the array (not `"c"`).
+
+- Rest-only pattern: `({...props})` produces:
+  ```js
+  const props = _restProps(_rawProps);
+  ```
+  No exclusion array argument is passed when there are no named props to exclude.
+
+If the arrow function body is a single expression (not a block statement), the transform wraps it in a block statement with the `_restProps` declaration followed by a `return` statement containing the original expression.
+
+**Rule 4: Inlining optimizations.** After parameter transformation, the function body is scanned for `const` declarations at the top of the block (scanning stops at the first non-`const` declaration). Eligible declarations are inlined:
+
+- **Literal initializers:** `const x = 5` -- the declaration is removed and all references to `x` are replaced with the literal value `5`.
+- **Member access on known identifiers:** `const y = _rawProps.something.count` -- if the object identifier (`_rawProps.something`) is already in the replacements map, the declaration is removed and `y` is inlined as the full member-access chain.
+- **Computed member access:** `const z = obj['key']` -- inlined if the object is a known identifier.
+- **`use*` hook results (direct):** `const store = useStore({})` -- the identifier is renamed to a lowercased version of the hook name (e.g., `useStore` -> `store`), but the declaration is **kept** (not inlined). The call expression is preserved.
+- **`use*` hook results with member access:** `const x = useStore({}).thing` -- split into a kept declaration `const store = useStore({})` plus the member access `store.thing` is used as the replacement for `x`.
+- **Identifier-only initializers:** `const y = someVar` -- if `someVar` is in the replacements map, `y` is replaced with whatever `someVar` maps to. The declaration is removed.
+
+**Rule 5: Skip condition (Lib mode).** If the function body starts with a `_captures` destructuring (indicating pre-compiled library code from Lib mode), the entire body transformation is skipped. This prevents inlining from disrupting inner QRL capture arrays that reference the named variables. Additionally, within `_inlinedQrl` / `_inlinedQrlDev` calls, the first argument (the function body) is skipped entirely -- only subsequent arguments (capture arrays) are visited.
+
+**Rule 6: Shorthand property expansion.** When a replaced prop identifier appears in a shorthand object property (e.g., `{name}` in an object literal or JSX spread), the shorthand is expanded to a key-value pair: `{name}` becomes `{name: _rawProps.name}`. This is necessary because shorthand properties reference the identifier by name, and after replacement the identifier no longer exists -- only the `_rawProps.name` member access does.
+
+**Rule 7: Unused declaration cleanup.** After inlining removes initializers from `const` declarations, some declarations are left as `const _unused;` (with no initializer). These are invalid JavaScript, so the transform removes any `const` declaration where all declarators have identifiers starting with `_unused` and no initializer. This cleanup runs as a final `retain` pass over the function body statements.
+
+#### Examples
+
+**Example 1: Basic Props Destructuring with Rest** (`should_destructure_args`)
+
+*Input:*
+```js
+import { component$ } from "@qwik.dev/core";
+
+export default component$(({ message, id, count: c, ...rest }: Record<string, any>) => {
+  const renders = useStore({ renders: 0 }, { reactive: false });
+  renders.renders++;
+  const rerenders = renders.renders + 0;
+  return (
+    <div id={id}>
+      <span {...rest}>
+        {message} {c}
+      </span>
+      <div class="renders">{rerenders}</div>
+    </div>
+  );
+});
+```
+
+*Output (segment module):*
+```js
+import { _restProps } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (_rawProps) => {
+  const rest = _restProps(_rawProps, ["message", "id", "count"]);
+  const renders = useStore({ renders: 0 }, { reactive: false });
+  renders.renders++;
+  const rerenders = renders.renders + 0;
+  return (
+    <div id={_rawProps.id}>
+      <span {...rest}>
+        {_rawProps.message} {_rawProps.count}
+      </span>
+      <div class="renders">{rerenders}</div>
+    </div>
+  );
+};
+```
+
+Key observations:
+- The destructured parameter `({message, id, count: c, ...rest})` becomes `(_rawProps)`
+- `message` -> `_rawProps.message`, `id` -> `_rawProps.id`
+- Renamed prop `count: c` uses the original name: `c` -> `_rawProps.count`
+- `_restProps` exclusion list contains `["message", "id", "count"]` (original names, not aliases)
+- `renders` and `rerenders` are left untouched (Rule 4 inlining applies only to const declarations with eligible initializers; `useStore` call is kept)
+
+> **See also:** `should_destructure_args` snapshot (SWC, full output with JSX transform and signal optimization applied)
+
+**Example 2: String-Keyed Props** (`destructure_args_colon_props`)
+
+*Input:*
+```js
+import { component$ } from "@qwik.dev/core";
+export default component$((props) => {
+  const { 'bind:value': bindValue } = props;
+  return <>{bindValue}</>;
+});
+```
+
+*Output (segment module):*
+```js
+export const test_component_LUXeXe0DQrg = (props) => {
+  return <>{props["bind:value"]}</>;
+};
+```
+
+Key observations:
+- When the component parameter is not a destructuring pattern (just `props`), the parameter name is kept as-is
+- The body-level `const { 'bind:value': bindValue } = props` is inlined: `bindValue` -> `props["bind:value"]` (computed member access for string keys)
+- The `const` declaration is removed after inlining
+
+> **See also:** `destructure_args_colon_props` snapshot; `destructure_args_colon_props2`, `destructure_args_colon_props3` snapshots (additional string-key variations with `useSignal` interaction)
+
+**Example 3: Rest-Only Pattern** (`should_convert_rest_props`)
+
+*Input:*
+```js
+import { component$, useTask$ } from '@qwik.dev/core';
+
+export default component$<any>(({ ...props }) => {
+  useTask$(() => {
+    props.checked;
+  });
+  return 'hi';
+});
+```
+
+*Output (segment module):*
+```js
+import { _restProps } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (_rawProps) => {
+  const props = _restProps(_rawProps);
+  useTask$(() => {
+    props.checked;
+  });
+  return 'hi';
+};
+```
+
+Key observations:
+- Rest-only destructuring `({...props})` transforms the parameter to `(_rawProps)`
+- `_restProps(_rawProps)` is called **without** an exclusion array (no named props to exclude)
+- The `props` variable now refers to the `_restProps` result, which is a proxy/copy of `_rawProps`
+- Nested `useTask$` captures `props` (the `_restProps` result), not `_rawProps` directly
+
+> **See also:** `should_convert_rest_props` snapshot (SWC, full output with QRL extraction for nested `useTask$`)
+
+#### See Also: Additional Snapshot Coverage
+
+The following snapshots provide additional coverage of props destructuring edge cases:
+
+- `destructure_args_colon_props2.snap`, `destructure_args_colon_props3.snap` -- string-key destructuring with `useSignal` interaction and nested member access
+- `destructure_args_inline_cmp_block_stmt.snap`, `destructure_args_inline_cmp_block_stmt2.snap` -- inline component (standalone arrow function) with block statement body
+- `destructure_args_inline_cmp_expr_stmt.snap` -- inline component with single expression body (triggers block-wrapping in Rule 3)
+- `should_not_generate_conflicting_props_identifiers.snap` -- validates that `_rawProps` identifier generation avoids name collisions with existing identifiers in scope
+- `example_functional_component_capture_props.snap` -- interaction between props destructuring and capture analysis: demonstrates how destructured prop references become `_rawProps.propName` before capture analysis determines what crosses segment boundaries
+
+#### Cross-References
+
+- **Pipeline ordering (Step 8 before Step 10):** Props destructuring runs as a pre-pass at Step 8, before the main `QwikTransform` at Step 10. This ordering is essential because `QwikTransform`'s capture analysis reads variable references to determine what crosses segment boundaries. After props destructuring, what was `message` (a local destructured binding) becomes `_rawProps.message` (a member access on the parameter) -- capture analysis then correctly sees `_rawProps` as the captured variable rather than individual prop names.
+- **Capture analysis (CONV-03):** The props destructuring transform changes the set of identifiers visible to capture analysis. A `component$` body that originally referenced `{message, count}` as local bindings will, after this transform, reference `_rawProps.message` and `_rawProps.count`. Capture analysis then classifies `_rawProps` as the single captured binding (if accessed in a nested `$` scope), rather than capturing `message` and `count` separately.
+- **Signal optimization (CONV-07, specified later in this phase):** After props destructuring rewrites accesses to `_rawProps.propName`, signal optimization generates `_wrapProp(_rawProps, "propName")` calls for JSX attribute positions. This enables fine-grained signal subscriptions per-prop rather than subscribing to the entire props object.
 
 ---
 
