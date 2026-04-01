@@ -2008,6 +2008,674 @@ Key observations:
 
 (Source: Jack's swc-snapshots/example_segment_variable_migration.snap)
 
+### JSX Transform (CONV-06)
+
+The JSX transform intercepts `jsx()`/`jsxs()`/`jsxDEV()` calls produced by Stage 1 JSX transpilation and converts them to Qwik's internal `_jsxSorted()` or `_jsxSplit()` calls with separated static/dynamic props, extracted children, computed flags, and auto-generated keys. This is the largest single transformation in the optimizer.
+
+Source: transform.rs:1149-2900 (handle_jsx, handle_jsx_props_obj, internal_handle_jsx_props_obj, transform_jsx_prop), transform.rs:4639-4728 (event name conversion, key generation), words.rs (constant definitions)
+
+#### _jsxSorted vs _jsxSplit Branch Point
+
+Both `_jsxSorted` and `_jsxSplit` produce the same 6-argument signature:
+
+```
+_jsxSorted(type, varProps, constProps, children, flags, key)
+_jsxSplit(type, varProps, constProps, children, flags, key)
+```
+
+The branch point determines which function is emitted:
+
+- **_jsxSorted path**: No spread props AND no component `bind:*` props. Props are sorted alphabetically by key at compile time. This is the "compile-time sorted" path.
+- **_jsxSplit path**: Spread props exist OR component has `bind:*` props. Props are NOT sorted at compile time; runtime handles ordering. This is the "runtime-sorted" path.
+
+**Note:** In the SWC source, the internal variable `should_sort` is `true` for the _jsxSplit path (counterintuitively -- it means "should the runtime sort"). The spec uses the clear terminology above instead.
+
+**Rules:**
+
+1. Input is `jsx(type, propsObject, key?)` from Stage 1 transpilation
+2. Output is `_jsxSorted(type, varProps, constProps, children, flags, key)` when no spreads and no component `bind:*` props
+3. Output is `_jsxSplit(type, varProps, constProps, children, flags, key)` when spreads exist or component has `bind:*` props
+4. `varProps` sorted alphabetically by key for `_jsxSorted` path; unsorted for `_jsxSplit`
+5. Empty `varProps` = `null` (2nd argument), empty `constProps` = `null` (3rd argument)
+6. Dev/Hmr emit modes add a 7th argument with source location info (`{ fileName, lineNumber, columnNumber }`)
+
+#### Element Transformation
+
+Element type detection determines how the JSX element is processed. The optimizer classifies the first argument of `jsx()` into three categories:
+
+| Element Type | Example | `is_fn` | `is_text_only` | `name_token` | Mutability |
+|---|---|---|---|---|---|
+| String literal | `"div"`, `"span"` | `false` | check list | `true` | N/A |
+| Identifier | `MyComponent`, `Foo` | `true` | `false` | `true` | mutable (unless in `immutable_function_cmp`) |
+| Other expression | `cond ? A : B` | `true` | `false` | `false` | always mutable |
+
+Source: transform.rs:1158-1174
+
+**Text-only element list:** `text`, `textarea`, `title`, `option`, `script`, `style`, `noscript`
+
+Text-only elements have their children forced to raw content treatment (no signal optimization on children).
+
+**`is_fn` determines:**
+
+- Key generation behavior: components (`is_fn=true`) always get a key; native elements may not (see [Key Generation](#key-generation))
+- `className` handling: native elements rename `className` to `class`; components keep `className` as-is
+- Event name conversion: native elements convert `onClick$` to `q-e:click`; components convert `onClick$` to `onClickQrl`
+- `bind:*` handling: on components, any `bind:*` forces the `_jsxSplit` path
+
+#### Prop Classification (Static vs Dynamic)
+
+Every prop in the JSX element is classified as either static (`constProps`) or dynamic (`varProps`). This separation enables Qwik's fine-grained reactivity -- static props never change and are inlined into the component's template, while dynamic props are tracked for re-rendering.
+
+Source: transform.rs:2066-2653
+
+**Static determination via `is_const_expr()`:**
+
+| Expression Type | Classification | Rationale |
+|---|---|---|
+| Literal values (string, number, boolean, null) | `constProps` | Compile-time constant |
+| Template literals with only literal parts | `constProps` | No runtime expressions |
+| Template literals where all expressions are const | `constProps` | Transitively constant |
+| Imported identifiers | `constProps` | Module-level, immutable binding |
+| `const`-declared variables with static initializers | `constProps` | In `const_idents` list with `IdentType::Var(true)` |
+| Global identifiers | `constProps` | Environment-provided, treated as stable |
+| Signal references (e.g., `signal`) | `constProps` | The signal object itself is stable |
+| Signal `.value` access (e.g., `signal.value`) | `constProps` | Wrapped via `_wrapProp` for reactivity |
+| Computed expressions over signals | `constProps` | Wrapped via `_fnSignal` for reactivity |
+| Function calls | `varProps` | Runtime side effects |
+| Variables not in `const_idents` | `varProps` | Mutable binding |
+| Expressions mixing signals with non-const | `varProps` | Cannot be statically optimized |
+| Object/array literals with dynamic contents | `varProps` | Runtime-constructed |
+
+**Empty bucket handling:** empty `varProps` -> `null`, empty `constProps` -> `null`.
+
+**Spread interaction preview:** When spreads exist, all props before the last spread go to `varProps` regardless of static nature (detailed in [Spread Props Handling](#spread-props-handling)).
+
+#### Special Attributes
+
+The optimizer treats certain prop names specially, applying transformations beyond simple static/dynamic classification.
+
+**Special Attribute Catalog:**
+
+| Attribute | Behavior | Target Bucket | Conditions |
+|---|---|---|---|
+| `children` | Extracted to 4th argument | Neither | Always extracted |
+| `ref` | Passed through, never optimized for signals | `varProps` | Always |
+| `q:slot` | Passed through, never optimized for signals | `varProps` | Always |
+| `className` | Renamed to `class` on native elements | Depends on value | `is_fn=false` only |
+| `class` | Kept as-is | Depends on value | Both native and components |
+| `bind:value` | Expands to value prop + `q-e:input` handler | `constProps` | Native elements without spreads |
+| `bind:checked` | Expands to checked prop + `q-e:input` handler | `constProps` | Native elements without spreads |
+| `bind:*` (other) | Kept as-is | `constProps` | Unrecognized bind directives |
+| `on*$` events | Extracted as QRL segments, name converted | `constProps` (static) or `varProps` | Depends on handler constness |
+| `q:p` / `q:ps` | Injected for iteration variable lifting | `varProps` | Loop context only |
+
+**Detailed behaviors:**
+
+1. **children**: Extracted to 4th argument, never appears in props. Single child passed directly, array of children as JS array literal, no children produces `null`.
+
+2. **ref**: Always goes to `varProps` (never optimized for signals).
+
+3. **q:slot**: Always goes to `varProps` (never optimized for signals).
+
+4. **className**: On native elements (`is_fn=false`), renamed to `"class"`. On components (`is_fn=true`), kept as `"className"`. The `class` attribute itself is never renamed for either type.
+
+5. **bind:value** (native elements, no spreads): Expands to a `value` prop containing the signal reference in `constProps`, plus a `q-e:input` event handler: `inlinedQrl(_val, "_val", [signal])` also in `constProps`. On native elements with spreads (_jsxSplit path): bind in `varProps` left untouched, only `constProps`-targeted bind expands. On components: forces `_jsxSplit`, no expansion.
+
+6. **bind:checked** (native elements, no spreads): Same pattern as `bind:value` but uses `_chk` helper instead of `_val`, and generates a `"checked"` prop.
+
+7. **bind:*** (other): Unrecognized bind directives (e.g., `bind:stuff`) are kept as-is in `constProps`. On components, any `bind:*` forces the `_jsxSplit` path.
+
+8. **on\*$ event handlers**: Arrow/function expressions are extracted as QRL segments. The event name is converted based on the element type (see Event Name Conversion below).
+
+9. **q:p / q:ps**: Injected by the optimizer for iteration variable lifting in loop contexts. `q:p` for a single variable (value is the variable directly), `q:ps` for multiple variables (value is an array). See [Iteration Variable Lifting](#iteration-variable-lifting-qpqps).
+
+**Event Name Conversion**
+
+Event handler prop names are converted based on their prefix pattern:
+
+| Input Pattern | Output Prefix | Example |
+|---|---|---|
+| `on*$` (native element) | `q-e:` | `onClick$` -> `q-e:click` |
+| `onDocument*$` | `q-e:document` | `onDocumentScroll$` -> `q-e:documentscroll` |
+| `document:on*$` | `q-e:document:` | `document:onScroll$` -> `q-e:document:scroll` (note: this is a distinct pattern from `onDocument*$`) |
+| `window:on*$` | `q-e:window:` | `window:onResize$` -> `q-e:window:resize` |
+| `host:*` | kept as-is | `host:onClick$` -> `host:onClick$` (no conversion) |
+| `on*$` (component) | replace `$` with `Qrl` | `onClick$` -> `onClickQrl` |
+
+**Case rules for native element event names:**
+
+1. Remove the `$` suffix
+2. Strip the scope prefix (`on`, `onDocument`, `document:on`, `window:on`)
+3. If the remaining name starts with `-`, use as-is (the `-` is a case-sensitive marker): `on-cLick$` -> `q-e:c-lick` (note: the `-` prefix on the name preserves case)
+4. Otherwise, lowercase the entire event name and convert camelCase to kebab-case: `onClick$` -> `q-e:click`
+5. For `onDocument*$` pattern (no colon separator), the prefix `document` is concatenated directly: `onDocumentScroll$` -> `q-e:documentscroll`
+
+**Handler merging:** Multiple handlers for the same converted key are emitted as duplicate properties. The runtime handles deduplication.
+
+**bind:value/bind:checked Expansion**
+
+On native elements without spreads:
+
+- `bind:value={signal}` expands to:
+  - `"value": signal` in `constProps`
+  - `"q-e:input": inlinedQrl(_val, "_val", [signal])` in `constProps`
+
+- `bind:checked={checked}` expands to:
+  - `"checked": checked` in `constProps`
+  - `"q-e:input": inlinedQrl(_chk, "_chk", [checked])` in `constProps`
+
+- If a `q-e:input` handler already exists (from an explicit `onInput$` prop), the bind handler is merged: the existing value and the new bind handler are combined into an array value for the `q-e:input` key.
+
+#### Example 1: Basic JSX with Static and Dynamic Props (example_derived_signals_div)
+
+Shows `_jsxSorted` with `varProps`/`constProps` separation, signal wrapping via `_wrapProp` and `_fnSignal`.
+
+**Input:**
+```javascript
+import { component$, useStore, mutable } from '@qwik.dev/core';
+import {dep} from './file';
+import styles from './styles.module.css';
+
+export const App = component$((props) => {
+  const signal = useSignal(0);
+  const store = useStore({});
+  const count = props.counter.count;
+  return (
+    <div
+      class={{ even: count % 2 === 0, odd: count % 2 === 1, stable0: true, hidden: false }}
+      staticClass={styles.foo}
+      staticText="text"
+      staticNumber={1}
+      staticBoolean={true}
+      signal={signal}
+      signalValue={signal.value}
+      signalComputedValue={12 + signal.value}
+      store={store.address.city.name}
+      storeComputed={store.address.city.name ? 'true' : 'false'}
+      dep={dep}
+      depAccess={dep.thing}
+      noInline={signal.value()}
+      noInline2={signal.value + unknown()}
+      noInline3={mutable(signal)}
+      noInline4={signal.value + dep}
+    />
+  );
+});
+```
+
+**Segment output (relevant JSX):**
+```javascript
+import { _fnSignal } from "@qwik.dev/core";
+import { _wrapProp } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+
+const _hf0 = (p0)=>12 + p0.value;
+const _hf0_str = "12+p0.value";
+const _hf1 = (p0)=>p0.address.city.name;
+const _hf1_str = "p0.address.city.name";
+const _hf2 = (p0)=>p0.address.city.name ? 'true' : 'false';
+const _hf2_str = 'p0.address.city.name?"true":"false"';
+
+/* ... */
+return /*#__PURE__*/ _jsxSorted("div", {
+    class: { even: count % 2 === 0, odd: count % 2 === 1, stable0: true, hidden: false },
+    global: globalThing,
+    noInline: signal.value(),
+    noInline2: signal.value + unknown(),
+    noInline3: mutable(signal),
+    noInline4: signal.value + dep,
+    staticDocument: window.document
+}, {
+    staticClass: styles.foo,
+    staticText: "text",
+    staticNumber: 1,
+    staticBoolean: true,
+    signal: signal,
+    signalValue: _wrapProp(signal),
+    signalComputedValue: _fnSignal(_hf0, [signal], _hf0_str),
+    store: _fnSignal(_hf1, [store], _hf1_str),
+    storeComputed: _fnSignal(_hf2, [store], _hf2_str),
+    dep: dep,
+    depAccess: dep.thing
+}, null, 3, "u6_0");
+```
+
+Key observations:
+- `varProps` (2nd arg) contains: object literals with dynamic keys (`class`), global accesses (`globalThing`), function call results (`signal.value()`, `mutable(signal)`), and mixed expressions (`signal.value + dep`)
+- `constProps` (3rd arg) contains: string/number/boolean literals, imported identifiers (`dep`), import member access (`dep.thing`), signal references wrapped via `_wrapProp(signal)`, and computed signal expressions wrapped via `_fnSignal`
+- Children: `null` (4th arg) -- no children
+- Flags: `3` (5th arg) -- `static_listeners + static_subtree` (no event handlers, no children)
+- Key: `"u6_0"` (6th arg) -- auto-generated (this is inside a component, root JSX position)
+
+(Source: Jack's swc-snapshots/example_derived_signals_div.snap)
+
+#### Example 2: Spread Props with _jsxSplit (should_split_spread_props)
+
+Shows the `_jsxSplit` path with `_getVarProps`/`_getConstProps` helper functions for identifier-based spreads.
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+
+export default component$((props) => {
+  return (
+    <div {...props}></div>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+import { _getConstProps } from "@qwik.dev/core";
+import { _getVarProps } from "@qwik.dev/core";
+import { _jsxSplit } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (props)=>{
+    return /*#__PURE__*/ _jsxSplit("div", {
+        ..._getVarProps(props)
+    }, _getConstProps(props), null, 0, "u6_0");
+};
+```
+
+Key observations:
+- `_jsxSplit` is used because spread props exist
+- Identifier-based spread `{...props}` is split into `_getVarProps(props)` (in varProps) and `_getConstProps(props)` (in constProps)
+- Flags: `0` -- fully dynamic in spread context (static_listeners and static_subtree both false)
+
+(Source: Jack's swc-snapshots/should_split_spread_props.snap)
+
+#### Example 3: Event Name Conversion (example_jsx_listeners)
+
+Shows `on*$`, `onDocument*$`, `document:on*$`, `window:on*$`, `host:*`, and case-sensitive patterns.
+
+**Input (relevant portion):**
+```javascript
+<div
+  onClick$={()=>console.log('onClick$')}
+  onDocumentScroll$={()=>console.log('onDocumentScroll')}
+  on-cLick$={()=>console.log('on-cLick$')}
+  onDocument-sCroll$={()=>console.log('onDocument-sCroll')}
+  host:onClick$={()=>console.log('host:onClick$')}
+  host:onDocumentScroll$={()=>console.log('host:onDocumentScroll')}
+  onKeyup$={handler}
+  onDocument:keyup$={handler}
+  onWindow:keyup$={handler}
+  custom$={()=>console.log('custom')}
+/>
+```
+
+**Output (JSX call in segment):**
+```javascript
+_jsxSorted("div", null, {
+    "q-e:click": q_..._q_e_click_YEa2A5ADUOg,
+    "q-e:documentscroll": q_..._q_e_documentscroll_0FSbGzUROso,
+    "q-e:c-lick": q_..._q_e_c_lick_kX5SiYdz650,
+    "q-e:document--scroll": q_..._q_e_document_scroll_6qyBttefepU,
+    "host:onClick$": q_..._host_onClick_cPEH970JbEY,
+    "host:onDocumentScroll$": q_..._host_onDocumentScroll_Zip7mifsjRY,
+    "q-e:keyup": handler,
+    "q-e:document:keyup": handler,
+    "q-e:window:keyup": handler,
+    custom$: q_..._custom_pyHnxab17ms
+}, null, 3, "u6_0");
+```
+
+Key observations:
+- `onClick$` -> `q-e:click` (standard conversion: strip `on`, strip `$`, lowercase)
+- `onDocumentScroll$` -> `q-e:documentscroll` (no colon: `onDocument` prefix, name concatenated directly)
+- `on-cLick$` -> `q-e:c-lick` (dash prefix preserves case: `-cLick` becomes `c-lick` keeping the `-` as separator)
+- `onDocument-sCroll$` -> `q-e:document--scroll` (dash prefix on document-scoped: `document-` + `-scroll`)
+- `host:onClick$` -> `host:onClick$` (host prefix: no conversion at all)
+- `onKeyup$` -> `q-e:keyup` (standard)
+- `onDocument:keyup$` -> `q-e:document:keyup` (colon-separated document scope)
+- `onWindow:keyup$` -> `q-e:window:keyup` (colon-separated window scope)
+- `custom$` -> `custom$` (not an event handler pattern -- no `on` prefix, kept as-is but still extracted as QRL)
+
+(Source: Jack's swc-snapshots/example_jsx_listeners.snap)
+
+#### Example 4: bind:value and bind:checked Expansion (example_input_bind)
+
+Shows `bind:value`, `bind:checked`, and unrecognized `bind:stuff`.
+
+**Input:**
+```javascript
+import { component$, $ } from '@qwik.dev/core';
+
+export const Greeter = component$(() => {
+  const value = useSignal(0);
+  const checked = useSignal(false);
+  const stuff = useSignal();
+  return (
+    <>
+      <input bind:value={value} />
+      <input bind:checked={checked} />
+      <input bind:stuff={stuff} />
+      <div>{value}</div>
+      <div>{value.value}</div>
+    </>
+  )
+});
+```
+
+**Output (inline segment):**
+```javascript
+return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+    /*#__PURE__*/ _jsxSorted("input", null, {
+        "value": value,
+        "q-e:input": inlinedQrl(_val, "_val", [value])
+    }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("input", null, {
+        "checked": checked,
+        "q-e:input": inlinedQrl(_chk, "_chk", [checked])
+    }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("input", null, {
+        "bind:stuff": stuff
+    }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, null, value, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, null, _wrapProp(value), 3, null)
+], 3, "u6_0");
+```
+
+Key observations:
+- `bind:value={value}` expands to `"value": value` + `"q-e:input": inlinedQrl(_val, "_val", [value])` in constProps
+- `bind:checked={checked}` expands to `"checked": checked` + `"q-e:input": inlinedQrl(_chk, "_chk", [checked])` in constProps
+- `bind:stuff={stuff}` is unrecognized -- kept as `"bind:stuff": stuff` in constProps, no expansion
+- Children `{value}` (signal ref) -> passed as-is; `{value.value}` (signal access) -> wrapped with `_wrapProp(value)`
+
+(Source: Jack's swc-snapshots/example_input_bind.snap)
+
+#### Example 5: className Normalization (example_class_name)
+
+Shows how `className` is treated differently for native elements vs components.
+
+**Input:**
+```javascript
+export const App2 = component$(() => {
+  const signal = useSignal();
+  const computed = signal.value + 'foo';
+  return (
+    <>
+      <div className="hola"></div>
+      <div className={signal.value}></div>
+      <div className={signal}></div>
+      <div className={computed}></div>
+      <Foo className="hola"></Foo>
+      <Foo className={signal.value}></Foo>
+      <Foo className={signal}></Foo>
+      <Foo className={computed}></Foo>
+    </>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+    /*#__PURE__*/ _jsxSorted("div", null, { "class": "hola" }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, { "class": _wrapProp(signal) }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, { "class": signal }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", { "class": computed }, null, null, 3, null),
+    /*#__PURE__*/ _jsxSorted(Foo, null, { className: "hola" }, null, 3, "u6_0"),
+    /*#__PURE__*/ _jsxSorted(Foo, null, { className: _wrapProp(signal) }, null, 3, "u6_1"),
+    /*#__PURE__*/ _jsxSorted(Foo, null, { className: signal }, null, 3, "u6_2"),
+    /*#__PURE__*/ _jsxSorted(Foo, { className: computed }, null, null, 3, "u6_3")
+], 1, "u6_4");
+```
+
+Key observations:
+- Native `<div>`: `className` renamed to `"class"` in all cases
+- Component `<Foo>`: `className` kept as `"className"` in all cases
+- `signal.value` access wrapped with `_wrapProp(signal)` in both native and component contexts
+- `computed` (dynamic expression) goes to `varProps` in both contexts
+- Native elements (`<div>`) get no auto-key (`null`); components (`<Foo>`) get auto-generated keys (`"u6_0"` through `"u6_3"`)
+
+(Source: Jack's swc-snapshots/example_class_name.snap)
+
+**See also:** example_jsx.snap, example_jsx_keyed.snap, example_jsx_keyed_dev.snap, should_split_spread_props_with_additional_prop.snap through ...5.snap, should_merge_attributes_with_spread_props.snap, should_merge_attributes_with_spread_props_before_and_after.snap, should_merge_bind_value_and_on_input.snap, should_merge_bind_checked_and_on_input.snap, should_merge_on_input_and_bind_value.snap, should_merge_on_input_and_bind_checked.snap, should_make_component_jsx_split_with_bind.snap, should_not_transform_bind_value_in_var_props_for_jsx_split.snap, should_not_transform_bind_checked_in_var_props_for_jsx_split.snap, should_move_bind_value_to_var_props.snap, should_convert_jsx_events.snap, example_component_with_event_listeners_inside_loop.snap
+
+#### Children Handling
+
+Children are extracted from the JSX props object and placed as the 4th argument to `_jsxSorted`/`_jsxSplit`. They never appear in the `varProps` or `constProps` buckets.
+
+Source: transform.rs:2327-2366
+
+**Rules:**
+
+1. Children extracted from props object, placed as 4th argument to `_jsxSorted`/`_jsxSplit`
+2. Single child: passed directly as 4th argument (not wrapped in array)
+3. Array of children: passed as a JS array literal
+4. No children: 4th argument is `null`
+5. Text-only elements (`text`, `textarea`, `title`, `option`, `script`, `style`, `noscript`): children forced to raw content treatment -- no signal optimization (no `_wrapProp` or `_fnSignal` wrapping) is applied to children of these elements
+6. Children in spread context: children appearing before a spread go to `varProps` as a regular `children` key-value prop instead of being extracted to the 4th argument
+7. Child expressions referencing signals are processed through `convert_to_signal_item` (may wrap in `_fnSignal` or `_wrapProp` -- see Signal Optimization CONV-07 in Plan 03)
+
+**Child classification examples:**
+
+| Child Expression | Output in 4th Arg | Reason |
+|---|---|---|
+| `{value}` (signal ref) | `value` | Signal object passed directly |
+| `{value.value}` (signal access) | `_wrapProp(value)` | `.value` access wrapped for reactivity |
+| `{count + 1}` (computed) | `_fnSignal(fn, [count], str)` | Expression wrapped for fine-grained tracking |
+| `"Hello"` (string literal) | `"Hello"` | Static content, no wrapping |
+| No children | `null` | Empty 4th argument |
+
+#### Key Generation
+
+Keys uniquely identify JSX elements for Qwik's reconciliation. The optimizer auto-generates keys when needed, using a deterministic format based on file hash and element position.
+
+Source: transform.rs:4639-4728
+
+**Rules:**
+
+1. **Explicit keys**: If the original `jsx()` call has a 3rd argument (explicit key), it is used as-is
+2. **Auto-generated key format**: `"{base64_prefix}_{counter}"` where `base64_prefix` = first 2 chars of base64(file_hash), `counter` = `jsx_key_counter` incremented per key in file
+3. **Example key values**: `"u6_0"`, `"u6_1"`, `"u6_2"` (where `u6` is the base64 prefix for the test file)
+4. **Components** (`is_fn=true`): Always get a key (auto-generated if not explicit)
+5. **Root-level JSX** (`root_jsx_mode=true`): Gets a key
+6. **Nested native elements in non-root position**: key is `null`
+7. `root_jsx_mode` starts `true`, is reset to `false` after the first JSX element is processed, and restored after processing completes
+
+**Key assignment summary:**
+
+| Element Type | Position | Key |
+|---|---|---|
+| Component (`is_fn=true`) | Any | Always (explicit or auto-generated) |
+| Native element | Root JSX | Auto-generated |
+| Native element | Nested, non-root | `null` |
+| Any | Explicit `key` prop | Explicit value used |
+
+#### Example 6: Key Generation Across Elements (example_jsx_keyed)
+
+**Input:**
+```javascript
+import { component$, useStore } from '@qwik.dev/core';
+
+export const App = component$((props: Stuff) => {
+  return (
+    <>
+      <Cmp key="stuff"></Cmp>
+      <Cmp></Cmp>
+      <Cmp prop="23"></Cmp>
+      <Cmp prop="23" key={props.stuff}></Cmp>
+      <p key={props.stuff}>Hello Qwik</p>
+    </>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+export const App_component_ckEPmXZlub0 = (props)=>{
+    return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+        /*#__PURE__*/ _jsxSorted(Cmp, null, null, null, 3, "stuff"),
+        /*#__PURE__*/ _jsxSorted(Cmp, null, null, null, 3, "u6_0"),
+        /*#__PURE__*/ _jsxSorted(Cmp, null, { prop: "23" }, null, 3, "u6_1"),
+        /*#__PURE__*/ _jsxSorted(Cmp, null, { prop: "23" }, null, 3, props.stuff),
+        /*#__PURE__*/ _jsxSorted("p", null, null, "Hello Qwik", 3, props.stuff)
+    ], 1, "u6_2");
+};
+```
+
+Key observations:
+- `<Cmp key="stuff">`: explicit key `"stuff"` used as-is
+- `<Cmp>`: component with no explicit key gets auto-generated `"u6_0"`
+- `<Cmp prop="23">`: component gets auto-generated `"u6_1"`
+- `<Cmp key={props.stuff}>`: explicit dynamic key `props.stuff` used
+- `<p key={props.stuff}>`: native element with explicit key `props.stuff` -- explicit keys always used regardless of element type
+- Fragment wrapper: component (`_Fragment`), gets auto-generated `"u6_2"`
+- Native `<p>` elements without explicit keys would get `null` -- but here the explicit key overrides
+
+(Source: Jack's swc-snapshots/example_jsx_keyed.snap)
+
+**See also:** example_jsx_keyed_dev.snap (key + dev mode 7th argument with source location)
+
+#### Flag Computation
+
+The flags bitmask (5th argument) communicates static analysis results to the Qwik runtime for optimization decisions.
+
+Source: transform.rs:2613-2622
+
+**Flag bit definitions:**
+
+| Bit | Value | Name | Meaning |
+|-----|-------|------|---------|
+| 0 | 1 | `static_listeners` | All event handlers are const (no captured mutable state) |
+| 1 | 2 | `static_subtree` | Children subtree is fully static |
+| 2 | 4 | `moved_captures` | Element has `q:p` or `q:ps` props (lifted iteration variables) |
+
+**Common flag combinations:**
+
+| Value | Composition | Meaning |
+|-------|-------------|---------|
+| 0 | none | Fully dynamic |
+| 1 | `static_listeners` | Static listeners, dynamic children |
+| 2 | `static_subtree` | Dynamic listeners, static children |
+| 3 | `static_listeners` + `static_subtree` | Fully static element |
+| 4 | `moved_captures` | Iteration variable lifting, dynamic |
+| 5 | `moved_captures` + `static_listeners` | Iteration lifting with static listeners |
+| 6 | `moved_captures` + `static_subtree` | Iteration lifting with static children |
+
+**Rules:**
+
+1. `static_listeners` (bit 0): Set to `1` when all event handlers in the element are const expressions -- no captured mutable state
+2. `static_subtree` (bit 1): Set to `1` when the children subtree contains no dynamic content -- all children are literals or static references
+3. `moved_captures` (bit 2): Set to `1` when the element has `q:p` or `q:ps` props injected by iteration variable lifting
+4. When spreads exist, both `static_listeners` and `static_subtree` start as `false` (flags default to `0` in spread context)
+5. The flags value is the bitwise OR of all applicable flags
+
+#### Spread Props Handling
+
+Spread props fundamentally change how the JSX element is processed: they force the `_jsxSplit` path and alter prop classification rules.
+
+Source: transform.rs:2570-2700
+
+**Rules:**
+
+1. **Identifier-based spreads** (`{...props}`): Split using `_getVarProps(props)` and `_getConstProps(props)` helpers imported from `@qwik.dev/core`. The `_getVarProps` spread goes to `varProps`, the `_getConstProps` call goes to `constProps`.
+2. **Non-identifier spreads** (`{...getProps()}`): Entire spread expression goes to `varProps` as-is
+3. **Multiple spreads**: All `constProps` spreads after the first spread go to `varProps` to maintain correct override order
+4. **Props before last spread**: ALL regular props before the last spread go to `varProps` regardless of their static nature
+5. **Props after last spread**: Follow normal static/dynamic classification unless `has_var_prop_after_last_spread` is set
+6. **Spread presence forces `_jsxSplit` path**
+
+#### Example 7: Spread with Additional Props (should_split_spread_props_with_additional_prop)
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+
+export default component$((props) => {
+  return (
+    <div {...props} test="test"></div>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+import { _getConstProps } from "@qwik.dev/core";
+import { _getVarProps } from "@qwik.dev/core";
+import { _jsxSplit } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (props)=>{
+    return /*#__PURE__*/ _jsxSplit("div", {
+        ..._getVarProps(props)
+    }, {
+        ..._getConstProps(props),
+        test: "test"
+    }, null, 0, "u6_0");
+};
+```
+
+Key observations:
+- Spread forces `_jsxSplit` path
+- `{...props}` (identifier) split into `_getVarProps(props)` in varProps and `_getConstProps(props)` in constProps
+- `test="test"` appears after the spread, so it follows normal classification -- string literal goes to constProps
+- Flags: `0` (spread context forces both static bits to false)
+
+(Source: Jack's swc-snapshots/should_split_spread_props_with_additional_prop.snap)
+
+**See also:** should_split_spread_props_with_additional_prop2.snap through ...5.snap, should_merge_attributes_with_spread_props.snap, should_merge_attributes_with_spread_props_before_and_after.snap
+
+#### Iteration Variable Lifting (q:p/q:ps)
+
+When JSX elements with event handlers appear inside loops, iteration variables referenced by those handlers must be "lifted" -- injected as extra parameters to the event handler function and passed via `q:p`/`q:ps` props on the JSX element. This allows the Qwik runtime to reconstruct the correct variable bindings when the lazily-loaded handler executes.
+
+Source: transform.rs:2066-2653 (iteration variable detection), transform.rs:4639-4728 (q:p/q:ps injection)
+
+**Rules:**
+
+1. In loop context: iteration variables from `iteration_var_stack` used by event handlers are collected
+2. Outside loop context: union of all captures from all event handlers is computed
+3. Variables are injected as extra parameters to event handler functions (e.g., `(_, _1, item) => { ... }`)
+4. `q:p` (single variable) or `q:ps` (multiple) prop added to `varProps`
+5. Props referencing iteration variables are moved to `varProps` even if otherwise const
+6. Sets `moved_captures` flag (bit 2, value `4`)
+
+#### Example 8: Loop Event Handlers with Iteration Variable Lifting (example_component_with_event_listeners_inside_loop)
+
+**Input (arrow function map pattern):**
+```javascript
+function loopArrowFn(results: string[]) {
+  return results.map((item) => (
+    <span onClick$={() => { cart.push(item); }}>{item}</span>
+  ));
+}
+```
+
+**Output:**
+```javascript
+function loopArrowFn(results) {
+    return results.map((item)=>/*#__PURE__*/ _jsxSorted("span", {
+            "q-e:click": App_component_loopArrowFn_span_q_e_click_Wau7C836nf0,
+            "q:p": item
+        }, null, item, 4, "u6_0"));
+}
+```
+
+**Handler segment:**
+```javascript
+export const App_component_loopArrowFn_span_q_e_click_Wau7C836nf0 = (_, _1, item)=>{
+    const cart = _captures[0];
+    cart.push(item);
+};
+```
+
+Key observations:
+- `item` is a loop iteration variable captured by the `onClick$` handler
+- `q:p`: single iteration variable `item` injected as `"q:p": item` in varProps
+- Handler function receives `item` as 3rd parameter (after `_` and `_1` placeholders)
+- `cart` is captured normally via `_captures` (not an iteration variable -- it's from outer component scope)
+- Flags: `4` (`moved_captures` only -- not static because of dynamic children `item`)
+- For `for` loops with index variables (e.g., `for(let i = ...)`) or `for...in` with key: the same `q:p` pattern applies -- the loop variable is injected as an extra handler parameter
+
+**For multiple iteration variables** (e.g., `for(let i = 0; ...)` where handler captures both `i` and `results`):
+- `q:p` is used for a single variable, `q:ps` for multiple -- but in the snapshot output, single iteration variable uses `q:p` with the variable directly as value
+
+(Source: Jack's swc-snapshots/example_component_with_event_listeners_inside_loop.snap)
+
+**See also:** should_move_props_related_to_iteration_variables_to_var_props.snap
+
 ## Variable Migration
 
 Variable migration is a post-transform optimization (Steps 14-16 in the pipeline) that moves root-level declarations used exclusively by a single segment into that segment's module. This reduces root module size and eliminates unnecessary self-imports -- the migrated variable is emitted directly in the segment module instead of being imported from the root module. Variable migration runs AFTER the core QRL transform has completed segment extraction, so it operates on the fully-transformed AST where segments already have their `local_idents` and `scoped_idents` populated by capture analysis.
