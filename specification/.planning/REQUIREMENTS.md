@@ -112,52 +112,57 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-01 | Phase 1 | Pending |
 | SPEC-02 | Phase 1 | Pending |
 | SPEC-03 | Phase 1 | Pending |
-| SPEC-04 | Phase 1 | Pending |
+| SPEC-04 | Phase 2 | Pending |
 | SPEC-05 | Phase 1 | Pending |
-| SPEC-06 | Phase 1 | Pending |
-| SPEC-07 | Phase 1 | Pending |
-| SPEC-08 | Phase 1 | Pending |
-| SPEC-09 | Phase 1 | Pending |
-| SPEC-10 | Phase 1 | Pending |
-| SPEC-11 | Phase 1 | Pending |
+| SPEC-06 | Phase 2 | Pending |
+| SPEC-07 | Phase 2 | Pending |
+| SPEC-08 | Phase 3 | Pending |
+| SPEC-09 | Phase 3 | Pending |
+| SPEC-10 | Phase 3 | Pending |
+| SPEC-11 | Phase 3 | Pending |
 | SPEC-12 | Phase 1 | Pending |
-| SPEC-13 | Phase 1 | Pending |
-| SPEC-14 | Phase 1 | Pending |
-| SPEC-15 | Phase 1 | Pending |
-| SPEC-16 | Phase 1 | Pending |
-| SPEC-17 | Phase 1 | Pending |
-| SPEC-18 | Phase 1 | Pending |
-| SPEC-19 | Phase 1 | Pending |
-| SPEC-20 | Phase 1 | Pending |
+| SPEC-13 | Phase 3 | Pending |
+| SPEC-14 | Phase 3 | Pending |
+| SPEC-15 | Phase 3 | Pending |
+| SPEC-16 | Phase 3 | Pending |
+| SPEC-17 | Phase 3 | Pending |
+| SPEC-18 | Phase 4 | Pending |
+| SPEC-19 | Phase 4 | Pending |
+| SPEC-20 | Phase 4 | Pending |
 | SPEC-21 | Phase 1 | Pending |
 | SPEC-22 | Phase 1 | Pending |
 | SPEC-23 | Phase 1 | Pending |
 | SPEC-24 | Phase 1 | Pending |
 | SPEC-25 | Phase 1 | Pending |
-| SPEC-26 | Phase 1 | Pending |
-| SPEC-27 | Phase 1 | Pending |
-| SPEC-28 | Phase 1 | Pending |
-| SPEC-29 | Phase 1 | Pending |
+| SPEC-26 | Phase 4 | Pending |
+| SPEC-27 | Phase 4 | Pending |
+| SPEC-28 | Phase 4 | Pending |
+| SPEC-29 | Phase 4 | Pending |
 | SPEC-30 | Phase 1 | Pending |
-| IMPL-01 | TBD | Pending |
-| IMPL-02 | TBD | Pending |
-| IMPL-03 | TBD | Pending |
-| IMPL-04 | TBD | Pending |
-| IMPL-05 | TBD | Pending |
-| IMPL-06 | TBD | Pending |
-| IMPL-07 | TBD | Pending |
-| IMPL-08 | TBD | Pending |
-| IMPL-09 | TBD | Pending |
+| IMPL-01 | Phase 5 | Pending |
+| IMPL-02 | Phase 5 | Pending |
+| IMPL-03 | Phase 6 | Pending |
+| IMPL-04 | Phase 6 | Pending |
+| IMPL-05 | Phase 5 | Pending |
+| IMPL-06 | Phase 6 | Pending |
+| IMPL-07 | Phase 6 | Pending |
+| IMPL-08 | Phase 5 | Pending |
+| IMPL-09 | Phase 5 | Pending |
 | REF-01 | — | Reference |
 | REF-02 | — | Reference |
 | REF-03 | — | Reference |
 | REF-04 | — | Reference |
 
 **Coverage:**
-- v1 requirements: 39 total
-- Mapped to phases: 30 (spec requirements to Phase 1)
-- Unmapped: 9 (IMPL requirements — mapped during roadmap creation)
+- v1 requirements: 35 phase-mapped + 4 reference = 39 total
+- Mapped to phases: 35/35 (100%)
+- Phase 1: 11 requirements (SPEC-01, 02, 03, 05, 12, 21, 22, 23, 24, 25, 30)
+- Phase 2: 3 requirements (SPEC-04, 06, 07)
+- Phase 3: 9 requirements (SPEC-08, 09, 10, 11, 13, 14, 15, 16, 17)
+- Phase 4: 7 requirements (SPEC-18, 19, 20, 26, 27, 28, 29)
+- Phase 5: 5 requirements (IMPL-01, 02, 05, 08, 09)
+- Phase 6: 4 requirements (IMPL-03, 04, 06, 07)
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-01 after initial definition*
+*Last updated: 2026-04-01 after roadmap creation*
