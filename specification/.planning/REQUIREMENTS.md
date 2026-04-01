@@ -26,8 +26,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Specification — Strategies & Modes
 
-- [ ] **SPEC-15**: Spec documents all 7 entry strategies (Inline, Hoist, Single, Hook, Segment, Component, Smart) with grouping rules and behavioral differences — noting Inline/Hoist shared EntryPolicy with Hoist's `.s()` registration post-processing
-- [ ] **SPEC-16**: Spec documents all 5 emit modes (Prod, Dev, Lib, Test, Hmr) with behavioral differences per transformation
+- [x] **SPEC-15**: Spec documents all 7 entry strategies (Inline, Hoist, Single, Hook, Segment, Component, Smart) with grouping rules and behavioral differences — noting Inline/Hoist shared EntryPolicy with Hoist's `.s()` registration post-processing
+- [x] **SPEC-16**: Spec documents all 5 emit modes (Prod, Dev, Lib, Test, Hmr) with behavioral differences per transformation
 - [ ] **SPEC-17**: Spec documents the transformation pipeline ordering — which CONVs run before/after which, the dependency DAG, and why ordering matters
 
 ### Specification — Public API
@@ -123,8 +123,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-12 | Phase 1 | Complete |
 | SPEC-13 | Phase 3 | Complete |
 | SPEC-14 | Phase 3 | Complete |
-| SPEC-15 | Phase 3 | Pending |
-| SPEC-16 | Phase 3 | Pending |
+| SPEC-15 | Phase 3 | Complete |
+| SPEC-16 | Phase 3 | Complete |
 | SPEC-17 | Phase 3 | Pending |
 | SPEC-18 | Phase 4 | Pending |
 | SPEC-19 | Phase 4 | Pending |
