@@ -5103,3 +5103,152 @@ Key observations:
 **See also:** `example_dev_mode` (Dev mode without HMR for comparison)
 
 ---
+
+## Transformation Pipeline
+
+This section formalizes the dependency relationships between all 20 pipeline steps. The [Pipeline Overview](#pipeline-overview) diagram (Stage 1) shows the sequential execution flow; this section shows **why** that ordering is required. Together, the sequential diagram and the dependency DAG below provide an implementer with both the execution order and the correctness constraints that mandate it.
+
+### Pipeline Dependency DAG
+
+The following Mermaid diagram shows the dependency relationships between pipeline steps. An arrow from step A to step B means "A must complete before B can begin." Steps without inbound arrows depend only on receiving the program AST from the prior stage boundary.
+
+```mermaid
+flowchart TD
+    subgraph Stage1["Stage 1: Parse"]
+        S1["Step 1: Parse source code"]
+        S2["Step 2: Strip exports<br/><i>if strip_exports configured</i>"]
+        S3["Step 3: TypeScript strip<br/><i>if transpile_ts && is_typescript</i>"]
+        S4["Step 4: JSX transpile<br/><i>if transpile_jsx && is_jsx</i>"]
+        S5["Step 5: Rename legacy imports"]
+        S6["Step 6: Resolver"]
+    end
+
+    subgraph Stage2["Stage 2: Collect"]
+        S7["Step 7: GlobalCollect"]
+    end
+
+    subgraph Stage3["Stage 3: Pre-Transforms"]
+        S8["Step 8: Props Destructuring<br/>(CONV-04)"]
+        S9["Step 9: Const Replacement<br/>(CONV-10)<br/><i>if mode != Lib && mode != Test</i>"]
+    end
+
+    subgraph Stage4["Stage 4: Core Transform"]
+        S10["Step 10: QwikTransform<br/>(CONV-01,02,03,05,06,07,08,12,13,14)"]
+    end
+
+    subgraph Stage5["Stage 5: Post-Transform"]
+        S11["Step 11: Treeshaker mark<br/><i>if minify != None && !is_server</i>"]
+        S12["Step 12: Simplifier DCE<br/>(CONV-09)<br/><i>if minify != None</i>"]
+        S13["Step 13: Side effect preservation<br/><i>if strategy == Inline|Hoist</i>"]
+        S14a["Step 14a: Treeshaker clean<br/><i>if minify != None && !is_server<br/>&& strategy != Inline|Hoist</i>"]
+        S14b["Step 14b: Second simplifier DCE<br/><i>if treeshaker.did_drop</i>"]
+        S15["Step 15: Variable migration<br/><i>if segments not empty</i>"]
+        S16["Step 16: Export cleanup<br/><i>if vars migrated</i>"]
+        S17["Step 17: Third DCE pass<br/><i>if vars migrated && minify != None</i>"]
+        S18["Step 18: Hygiene + Fixer"]
+    end
+
+    subgraph Stage6["Stage 6: Emit"]
+        S19["Step 19: Codegen root module"]
+        S20["Step 20: Build & codegen segment modules"]
+    end
+
+    %% Stage 1 internal dependencies (strictly sequential)
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+    S4 --> S5
+    S5 --> S6
+
+    %% Stage 1 -> Stage 2
+    S6 -->|"resolved AST with scope marks"| S7
+
+    %% Stage 2 -> Stage 3
+    S7 -->|"import/export metadata"| S8
+    S7 -->|"import/export metadata"| S9
+
+    %% Stage 3 internal
+    S8 -->|"restructured props change variable refs"| S9
+
+    %% Stage 3 -> Stage 4
+    S8 -->|"props transformed for signal tracking"| S10
+    S9 -->|"boolean literals replace env identifiers"| S10
+
+    %% Stage 4 -> Stage 5
+    S10 -->|"segments extracted, QRLs wrapped"| S11
+    S10 -->|"segments extracted, QRLs wrapped"| S12
+    S10 -->|"segments + global_collect"| S13
+    S10 -->|"segments extracted"| S15
+
+    %% Stage 5 internal dependencies
+    S11 -->|"side effects marked for removal"| S12
+    S12 -->|"dead code removed"| S13
+    S12 -->|"dead code removed"| S14a
+    S14a -->|"treeshaker dropped expressions"| S14b
+    S13 --> S18
+    S14b --> S18
+    S15 -->|"variables moved to segments"| S16
+    S16 -->|"exports removed"| S17
+    S17 --> S18
+
+    %% Stage 5 -> Stage 6
+    S18 -->|"final AST"| S19
+    S18 -->|"final AST + segments"| S20
+```
+
+Source: `parse.rs` `transform_code()` function (lines 240-450)
+
+**Reading the DAG:** An implementer can determine the correct execution order by topologically sorting this graph. Any topological ordering is valid, though the SWC implementation uses the specific linear order shown in the [Pipeline Overview](#pipeline-overview). The critical constraint is that no step executes before all its incoming dependencies are satisfied.
+
+**Note on step numbering:** Steps 14a/14b and 17 represent conditional paths that are mutually exclusive with step 13 (Side effect preservation runs for Inline/Hoist strategies; Treeshaker clean runs for all other strategies). The Pipeline Overview numbers these sequentially (11-20) for simplicity; this DAG shows the actual branching structure.
+
+### Ordering Constraints Table
+
+Each row documents one ordering dependency: the step that must run first (Before), the step that must run after (After), and the rationale for why violating this order produces incorrect output.
+
+| Constraint | Before Step | After Step | Rationale | Source |
+|------------|-------------|------------|-----------|--------|
+| **Strip before transforms** | 2. Strip exports | 8-10. All transforms | Throwing stubs must replace stripped export bodies before any transform reads them. Otherwise transforms process code that will be discarded, wasting work and potentially extracting segments from dead code. | `parse.rs:247-250` |
+| **TS strip before resolver** | 3. TypeScript strip | 6. Resolver | Type annotations contain identifiers that would receive scope marks from the resolver, creating phantom bindings. Stripping types first ensures the resolver only processes runtime code. | `parse.rs:254-256` |
+| **JSX before resolver** | 4. JSX transpile | 6. Resolver | JSX transpilation generates `jsx()`/`jsxs()` calls with synthetic identifiers that need scope marks. Running resolver first would miss these generated identifiers. | `parse.rs:259-275` |
+| **Rename before resolver** | 5. Rename legacy imports | 6. Resolver | Legacy `@builder.io/qwik` imports must be renamed to `@qwik.dev/core` before the resolver assigns marks, so that mark-based lookups in GlobalCollect find the correct module specifiers. | `parse.rs:278` |
+| **Resolver before GlobalCollect** | 6. Resolver | 7. GlobalCollect | GlobalCollect catalogs identifiers using their resolved (mark-qualified) names. Without resolver marks, identifiers from different scopes would collide in the metadata catalog. | `parse.rs:281-285, 287` |
+| **GlobalCollect before all CONVs** | 7. GlobalCollect | 8-10. All transforms | Every transformation reads import/export metadata from GlobalCollect. Props Destructuring checks for `@qwik.dev/core` imports; Const Replacement checks for `@qwik.dev/core/build` imports; QwikTransform queries imports for dollar detection, capture analysis, and import rewriting. | `parse.rs:287` |
+| **Props Destructuring before Capture Analysis** | 8. Props Destructuring (CONV-04) | 10. QwikTransform (CONV-03) | Props destructuring transforms `({count}) => ...` into `(_rawProps) => { count = _rawProps.count; ... }`, changing which variable identifiers appear in scope. Capture analysis must see the post-destructuring variable references to correctly determine captured bindings. | `parse.rs:299-303` |
+| **Props Destructuring before Const Replacement** | 8. Props Destructuring | 9. Const Replacement | Props destructuring mutates the GlobalCollect metadata (adds synthetic imports for `_rawProps` helpers). Const Replacement reads GlobalCollect to find `@qwik.dev/core/build` imports. Running them in reverse could miss imports added by destructuring. | `parse.rs:299-308` |
+| **Const Replacement before DCE** | 9. Const Replacement (CONV-10) | 12. Simplifier DCE (CONV-09) | Const replacement transforms `isServer` to `true`/`false`, creating dead branches (`if (true) { ... } else { dead }` or `if (false) { dead } else { ... }`). DCE removes these dead branches. Without prior const replacement, DCE has no dead branches to eliminate. | `parse.rs:308-312, 359-369` |
+| **QwikTransform before Treeshaker** | 10. QwikTransform | 11. Treeshaker mark | QwikTransform wraps calls with `qrl()`/`inlinedQrl()` and adds PURE annotations. The Treeshaker marks `new` and `call` expressions for removal on the client -- it must see the final call structure including QRL wrappers and PURE-annotated `componentQrl` calls. | `parse.rs:348, 352-356` |
+| **QwikTransform before Variable Migration** | 10. QwikTransform (CONV-05) | 15. Variable migration | Segment extraction occurs during QwikTransform, producing the segment list. Variable migration analyzes which root-level variables are exclusively used by a single segment and moves them into that segment. Segments must exist before migration can analyze them. | `parse.rs:348, 399-435` |
+| **Treeshaker mark before DCE** | 11. Treeshaker mark | 12. Simplifier DCE | The Treeshaker marker annotates client-side `new`/`call` expressions as side-effect-free (by wrapping in `/* @__PURE__ */` or equivalent). The subsequent DCE pass uses these annotations to determine what can be safely removed. | `parse.rs:353-356, 359-369` |
+| **DCE before Side Effect Preservation** | 12. Simplifier DCE | 13. Side effect preservation | For Inline/Hoist strategies, `SideEffectVisitor` re-adds bare import statements for modules with side effects. It must run after DCE so that it only preserves imports that survived dead code elimination, not imports from dead branches. | `parse.rs:359-378` |
+| **DCE before Treeshaker Clean** | 12. Simplifier DCE | 14a. Treeshaker clean | The Treeshaker cleaner removes expressions that the marker flagged. It runs after the first DCE pass to catch expressions that DCE simplified but did not fully remove (e.g., expressions reduced to stubs). | `parse.rs:380-394` |
+| **Treeshaker Clean before Second DCE** | 14a. Treeshaker clean | 14b. Second simplifier DCE | When the Treeshaker cleaner drops expressions (`did_drop == true`), a second DCE pass is needed to remove imports and declarations that became unused after the dropped expressions were removed. | `parse.rs:383-394` |
+| **Variable Migration before Export Cleanup** | 15. Variable migration | 16. Export cleanup | Variable migration moves root-level variables into segments, making their root-level export declarations dangling. Export cleanup (`remove_migrated_exports`) removes these now-invalid exports. Running cleanup before migration would have nothing to clean. | `parse.rs:402-415` |
+| **Export Cleanup before Third DCE** | 16. Export cleanup | 17. Third DCE pass | After migrating variables and removing their exports, some imports in the root module may become unused (they were only referenced by the migrated code). A final DCE pass removes these orphaned imports. | `parse.rs:417-430` |
+| **Hygiene before Codegen** | 18. Hygiene + Fixer | 19-20. Codegen | Hygiene renames identifiers to avoid scope collisions (e.g., two different `x` variables in nested scopes get distinct names). Fixer repairs AST invariants (parenthesization, expression contexts). Codegen must see the final, collision-free AST. | `parse.rs:438-439` |
+| **Root Codegen before Segment Build** | 19. Codegen root module | 20. Build & codegen segments | Segment modules are constructed from extracted expressions and resolved imports. While logically independent, the SWC implementation processes the root module first to finalize the comment map, then iterates over segments. | `parse.rs:441-448` |
+
+### Conditional Execution Summary
+
+Several pipeline steps execute conditionally based on build configuration. The following table summarizes which steps are conditional and when they are skipped.
+
+| Step | Condition | Skipped When | Config Fields |
+|------|-----------|--------------|---------------|
+| 2. Strip exports | `strip_exports` is `Some` | No `strip_exports` configured (most dev builds) | `strip_exports: Option<Vec<String>>` |
+| 3. TypeScript strip | `transpile_ts && is_type_script` | Non-TypeScript files, or `transpile_ts` disabled | `transpile_ts: bool` |
+| 4. JSX transpile | `transpile_jsx && is_jsx` | Non-JSX files, or `transpile_jsx` disabled | `transpile_jsx: bool` |
+| 9. Const Replacement | `mode != Lib && mode != Test` | Lib mode (library publishing) and Test mode (test environment) | `mode: EmitMode` |
+| 11. Treeshaker mark | `minify != None && !is_server` | Server builds, or minification disabled | `minify: MinifyMode`, `is_server: bool` |
+| 12. Simplifier DCE | `minify != None` | Minification disabled (some dev builds) | `minify: MinifyMode` |
+| 13. Side effect preservation | `strategy == Inline \|\| strategy == Hoist` | All other entry strategies (Hook, Segment, Component, Smart, Single) | `entry_strategy: EntryStrategy` |
+| 14a. Treeshaker clean | `minify != None && !is_server && strategy != Inline && strategy != Hoist` | Server builds, minification disabled, or Inline/Hoist strategies (which use step 13 instead) | `minify`, `is_server`, `entry_strategy` |
+| 14b. Second DCE | `treeshaker.cleaner.did_drop` | Treeshaker clean did not drop any expressions | Runtime condition |
+| 15. Variable migration | `!segments.is_empty() && mode != Lib` | Lib mode, or no segments extracted (no `$()` calls found) | `mode: EmitMode` |
+| 16. Export cleanup | `!migrated_ids.is_empty()` | No variables were migrated (all variables used by multiple segments or root) | Runtime condition |
+| 17. Third DCE pass | `!migrated_ids.is_empty() && minify != None` | No migration occurred, or minification disabled | Runtime + `minify` |
+
+**Unconditional steps:** Steps 1 (Parse), 5 (Rename), 6 (Resolver), 7 (GlobalCollect), 8 (Props Destructuring), 10 (QwikTransform), 18 (Hygiene + Fixer), 19 (Codegen root), and 20 (Codegen segments) always execute regardless of configuration. Note that Props Destructuring runs in all modes including Lib, because library `.qwik.mjs` output must already have props transformed for signal tracking.
+
+**Mutually exclusive paths:** Steps 13 and 14a are mutually exclusive -- Inline/Hoist strategies take the side-effect preservation path (step 13), while all other strategies take the treeshaker cleanup path (step 14a). An implementation may represent this as a branch rather than sequential conditional checks.
+
+---
