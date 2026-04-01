@@ -917,6 +917,544 @@ An implementation MUST handle all 16 edge cases. Jack's OXC implementation initi
 
 ---
 
+### Segment Extraction (CONV-05)
+
+Segment extraction is the primary output mechanism of the Qwik optimizer. Each `$()` marker call produces a **segment**: a self-contained JavaScript module that can be lazy-loaded independently. The extraction pipeline has two phases: `create_segment` (during QwikTransform traversal) records what to extract, and `new_module` (during emit) constructs the actual segment module with resolved imports, captures injection, hoisted declarations, and topological ordering.
+
+Source: transform.rs:1110-1145 (`create_segment`), code_move.rs:105-450 (`new_module`), parse.rs:446-583 (segment construction loop)
+
+#### Segment Creation (`create_segment`)
+
+When QwikTransform encounters a `$()` marker call and has analyzed captures, it calls `create_segment` to register the extracted function for later processing. This function does NOT build the output module -- it records a `Segment` struct and returns a QRL call expression to replace the original `$()` in the root module.
+
+**Behavioral rules:**
+
+1. **Compute `canonical_filename`**: Calls `get_canonical_filename(display_name, symbol_name)` which concatenates the display name and the last token of the symbol name (the hash). See [Hash Generation](#infrastructure-hash-generation) and [Path Resolution](#infrastructure-path-resolution) for the full algorithms.
+
+2. **Classify entry**: Queries `entry_policy.get_entry_for_sym(stack_ctxt, segment_data)` to determine how the bundler should chunk this segment. Entry classification is strategy-dependent (documented in Phase 3). If `entry` is `None`, the segment is an entry point; if `Some(name)`, it is grouped with the named entry.
+
+3. **Build `import_path`**: Constructs `"./" + canonical_filename`. If `explicit_extensions` config is `true`, appends `"." + extension` to the path. This import path appears in the QRL reference in the root module.
+
+4. **Create QRL call**: Calls `create_qrl(import_path, symbol_name, segment_data, span)` to build the `qrl()` or `inlinedQrl()` call expression that replaces the original `$()`. See QRL Wrapping section for `create_qrl` details.
+
+5. **Push Segment struct**: Appends a `Segment` to `self.segments` for later processing during emit (Stage 6).
+
+Source: transform.rs:1110-1145
+
+#### Segment Struct Fields
+
+Each `Segment` records everything needed to construct the output module during emit:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `Atom` | Symbol name (hash-suffixed, e.g., `sym1_aXUrPXX5Lak`) |
+| `canonical_filename` | `String` | Output module path stem (e.g., `test.tsx_sym1_aXUrPXX5Lak`) |
+| `expr` | `Box<Expr>` | The extracted function expression (AST node) |
+| `data.scoped_idents` | `Vec<Id>` | Captured variables from [Capture Analysis](#capture-analysis-conv-03) |
+| `data.local_idents` | `Vec<Id>` | All identifiers referenced by the segment body |
+| `data.display_name` | `String` | Human-readable name for dev tools |
+| `data.ctx_kind` | `SegmentKind` | `Function`, `EventHandler`, or `JSXProp` |
+| `data.ctx_name` | `String` | Original marker name (e.g., `"component$"`, `"useTask$"`, `"$"`) |
+| `data.parent_segment` | `Option<String>` | Parent segment name if nested (see below) |
+| `data.need_transform` | `bool` | Whether captures injection is needed |
+| `data.migrated_root_vars` | `Vec<ModuleItem>` | Variable declarations migrated from root module |
+| `entry` | `Option<String>` | Entry classification from `entry_policy` |
+| `hash` | `u64` | Segment hash for ordering |
+| `param_names` | `Vec<Atom>` | Parameter names of the extracted function |
+
+#### Nested Segments (`segment_stack`)
+
+The optimizer tracks nesting depth using a `segment_stack` during AST traversal. When a `$()` is encountered inside another `$()` body, the inner segment records a parent-child relationship.
+
+**Behavioral rules:**
+
+1. **Stack tracking**: When QwikTransform begins processing a `$()` callback, it pushes the segment name onto `segment_stack`. When processing completes, it pops.
+
+2. **Parent assignment**: If `segment_stack` is non-empty when a new segment is created, `parent_segment` is set to `segment_stack.last()` -- the name of the immediately enclosing segment.
+
+3. **Component nesting**: A `component$` body typically contains event handlers (`onClick$`), tasks (`useTask$`), and other `$()` calls. All inner segments have `parent` pointing to the component segment.
+
+4. **SegmentAnalysis exposure**: The `parent` field flows through to `SegmentAnalysis.parent` in the transform output, enabling bundlers to understand segment relationships.
+
+Source: transform.rs segment_stack usage throughout QwikTransform
+
+#### Segment Module Construction (`new_module`)
+
+During emit (Stage 6, Steps 19-20), `code_move::new_module()` constructs a complete JavaScript module from each `Segment`. This is a multi-step process that resolves imports, injects captures, hoists declarations, and orders everything by dependency.
+
+**Step-by-step process:**
+
+**Step 1: Captures injection.** If `scoped_idents` is non-empty (segment has captured variables from [Capture Analysis](#capture-analysis-conv-03)):
+- Add `import { _captures } from "@qwik.dev/core"` to the module
+- Transform the function expression: for each captured variable at index N, inject `const {name} = _captures[N]` as the first statements in the function body
+- The root module passes captures via `.w([capture0, capture1, ...])` on the QRL reference
+
+**Step 2: QRL hoisting.** If the segment body contains nested `$()` calls (e.g., an event handler inside a component), the inner QRL declarations (`const q_... = qrl(...)`) are hoisted from inline position to module-level `var` declarations. `var` declarations hoist naturally, so forward references work without reordering.
+
+**Step 3: Self-referential variable fix.** Scans function bodies for variable declarations that reference themselves (e.g., `const x = fn(x)`) and applies fixups to avoid initialization errors.
+
+**Step 4: Extra top items.** Collects additional declarations needed by this segment that were registered during transform (e.g., shared helper declarations, additional QRL references). Filters out items whose symbols are already provided by imports, hoisted QRLs, or migrated vars to prevent duplicates.
+
+**Step 5: Import resolution for `local_idents`.** For each identifier in the segment's `local_idents` (plus identifiers from hoisted items and migrated vars), resolves where it comes from. See [Import Rewriting (CONV-12)](#import-rewriting-conv-12) for the full resolution algorithm. Three outcomes:
+- **User import**: Re-emit with original source path
+- **Module export (self-import)**: Generate `import { _auto_X as X } from "./module_stem"`
+- **Collision**: Rename with `_N` suffix
+
+**Step 6: Topological sort.** All non-import declarations (hoisted QRLs + migrated root variables + extra top items) are sorted by dependency using `order_items_by_dependency()`. This ensures that declarations appear before their uses in the output module.
+
+**Step 7: Deduplication.** Final aggressive pass removes any duplicate symbols from the module body. Comparison uses symbol names only (not SyntaxContext) to catch duplicates across imports, const declarations, and export declarations.
+
+**Step 8: Named export.** Creates the final export statement: `export const {symbol_name} = {function_expression}`. This is the segment's public API -- the symbol that the QRL reference in the root module imports.
+
+Source: code_move.rs:122-449
+
+#### Segment Construction Loop (parse.rs)
+
+The pipeline's emit stage (Steps 19-20 in parse.rs:446-583) iterates over all segments and calls `new_module` for each:
+
+1. For each segment, construct a `NewModuleCtx` with: the extracted expression, path data, symbol name, local_idents, scoped_idents, GlobalCollect reference, core module path, extra_top_items, migrated_root_vars, and explicit_imports (dev-mode QRL helpers in Dev/Hmr modes).
+2. Call `new_module(ctx)` to get the segment's AST module.
+3. Optionally run DCE (if minification is enabled).
+4. Run hygiene renaming and AST fixer.
+5. Generate JavaScript code and source map via codegen.
+6. Build `TransformModule` with the segment's code, source map, path, ordering hash, and `SegmentAnalysis` metadata.
+
+Source: parse.rs:446-583
+
+#### Example 1: Basic Segment (example_6)
+
+A simple `$()` call with no captures -- the most basic extraction case.
+
+**Input:**
+```javascript
+import { $, component$ } from '@qwik.dev/core';
+export const sym1 = $((ctx) => console.log("1"));
+```
+
+**Root module output (`test.tsx`):**
+```javascript
+import { qrl } from "@qwik.dev/core";
+//
+const q_sym1_aXUrPXX5Lak = /*#__PURE__*/ qrl(()=>import("./test.tsx_sym1_aXUrPXX5Lak"), "sym1_aXUrPXX5Lak");
+//
+export const sym1 = q_sym1_aXUrPXX5Lak;
+```
+
+**Segment module output (`test.tsx_sym1_aXUrPXX5Lak.tsx`):**
+```javascript
+export const sym1_aXUrPXX5Lak = (ctx)=>console.log("1");
+```
+
+**SegmentAnalysis:**
+```json
+{
+  "origin": "test.tsx",
+  "name": "sym1_aXUrPXX5Lak",
+  "entry": null,
+  "displayName": "test.tsx_sym1",
+  "hash": "aXUrPXX5Lak",
+  "canonicalFilename": "test.tsx_sym1_aXUrPXX5Lak",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [72, 97],
+  "paramNames": ["ctx"]
+}
+```
+
+Key observations:
+- No captures: `scoped_idents` is empty, so no `_captures` import or destructuring
+- The segment module contains only the named export with the extracted function
+- `parent` is `null` -- this is a top-level segment
+- `entry` is `null` meaning this segment IS an entry point
+- The original `$` and `component$` imports are consumed (not re-emitted in root)
+
+(Source: Jack's swc-snapshots/example_6.snap)
+
+#### Example 2: Segment with Captures (example_multi_capture)
+
+A component with a nested `$()` that captures a variable from the outer scope.
+
+**Input:**
+```javascript
+import { $, component$ } from '@qwik.dev/core';
+
+export const Foo = component$(({foo}) => {
+  const arg0 = 20;
+  return $(() => {
+    const fn = ({aaa}) => aaa;
+    return (
+      <div>
+        {foo}{fn()}{arg0}
+      </div>
+    )
+  });
+})
+```
+
+**Root module output (`test.jsx`):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+//
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+```
+
+**Component segment output (`test.tsx_Foo_component_HTDRsvUbLiE.jsx`):**
+```javascript
+import { qrl } from "@qwik.dev/core";
+//
+const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
+//
+export const Foo_component_HTDRsvUbLiE = (_rawProps)=>{
+    return q_Foo_component_1_DvU6FitWglY.w([
+        _rawProps
+    ]);
+};
+```
+
+**Inner segment output (`test.tsx_Foo_component_1_DvU6FitWglY.jsx`):**
+```javascript
+import { _captures } from "@qwik.dev/core";
+//
+export const Foo_component_1_DvU6FitWglY = ()=>{
+    const _rawProps = _captures[0];
+    const fn = ({ aaa })=>aaa;
+    return <div>
+        {_rawProps.foo}{fn()}{20}
+      </div>;
+};
+```
+
+**SegmentAnalysis (inner segment):**
+```json
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_1_DvU6FitWglY",
+  "displayName": "test.tsx_Foo_component_1",
+  "hash": "DvU6FitWglY",
+  "canonicalFilename": "test.tsx_Foo_component_1_DvU6FitWglY",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": ["_rawProps"]
+}
+```
+
+Key observations:
+- The inner segment imports `_captures` from `@qwik.dev/core` and destructures: `const _rawProps = _captures[0]`
+- The component segment passes captures via `.w([_rawProps])` on the QRL reference
+- `arg0` (value `20`) was inlined as a constant literal -- it does not appear as a capture because the optimizer constant-folded it
+- `parent` points to the component segment (`Foo_component_HTDRsvUbLiE`), establishing the nesting relationship
+- The component segment itself has `captures: false` -- `_rawProps` is its own parameter, not a capture from an outer scope
+
+(Source: Jack's swc-snapshots/example_multi_capture.snap)
+
+#### Example 3: Nested Segments with Parent-Child Relationships (example_capture_imports)
+
+A component with nested `useStyles$` calls that demonstrate segment nesting and import re-emission.
+
+**Input:**
+```javascript
+import { component$, useStyles$ } from '@qwik.dev/core';
+import css1 from './global.css';
+import css2 from './style.css';
+import css3 from './style.css';
+
+export const App = component$(() => {
+  useStyles$(`${css1}${css2}`);
+  useStyles$(css3);
+})
+```
+
+**Root module output (`test.js`):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+//
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Component segment (`test.tsx_App_component_ckEPmXZlub0.js`):**
+```javascript
+import { qrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+//
+const q_App_component_useStyles_t35nSa5UV7U = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_useStyles_t35nSa5UV7U"), "App_component_useStyles_t35nSa5UV7U");
+const q_style_css_TRu1FaIoUM0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_style_css_TRu1FaIoUM0"), "style_css_TRu1FaIoUM0");
+//
+export const App_component_ckEPmXZlub0 = ()=>{
+    useStylesQrl(q_App_component_useStyles_t35nSa5UV7U);
+    useStylesQrl(q_style_css_TRu1FaIoUM0);
+};
+```
+
+**useStyles segment (`test.tsx_App_component_useStyles_t35nSa5UV7U.js`):**
+```javascript
+import css1 from "./global.css";
+import css2 from "./style.css";
+//
+export const App_component_useStyles_t35nSa5UV7U = `${css1}${css2}`;
+```
+
+Key observations:
+- The useStyles segments have `parent: "App_component_ckEPmXZlub0"` -- they are children of the component segment
+- User imports (`css1`, `css2`) are re-emitted in the segment with their original source paths
+- The component segment has hoisted QRL declarations for both inner segments
+- `useStyles$` was replaced with `useStylesQrl` in the component segment (QRL Wrapping)
+- `captures: false` on the useStyles segments -- `css1`, `css2` are resolved as user import re-emissions, not captures
+
+(Source: Jack's swc-snapshots/example_capture_imports.snap)
+
+---
+
+### Import Rewriting (CONV-12)
+
+Import rewriting ensures that every output module (root and segments) has correct, complete import statements. The optimizer does not simply copy imports from the original source -- it must add synthetic imports for transformed code, strip consumed imports, re-emit user imports for segments, generate self-imports for module-level declarations, and handle naming collisions. Import rewriting spans multiple stages of the pipeline and involves four distinct mechanisms.
+
+Source: rename_imports.rs (legacy rename), code_move.rs:66-277 (per-segment resolution), collector.rs ImportKind + `import()` method, transform.rs:1265-1284 (`ensure_core_import`, `ensure_export`)
+
+#### Mechanism 1: Legacy Rename (Step 5)
+
+`RenameTransform` is a simple AST visitor that rewrites legacy `@builder.io` import paths to their `@qwik.dev` equivalents. It runs as Step 5 of the pipeline -- BEFORE GlobalCollect -- so all subsequent analysis sees normalized paths.
+
+**Rewrite rules:**
+
+| Original Path | Rewritten Path |
+|---------------|----------------|
+| `@builder.io/qwik` | `@qwik.dev/core` |
+| `@builder.io/qwik/build` | `@qwik.dev/core/build` |
+| `@builder.io/qwik-city` | `@qwik.dev/router` |
+| `@builder.io/qwik-city/...` | `@qwik.dev/router/...` |
+| `@builder.io/qwik-react` | `@qwik.dev/react` |
+| `@builder.io/qwik-react/...` | `@qwik.dev/react/...` |
+
+The rename is prefix-based: `@builder.io/qwik` matches and the remainder of the path is appended to `@qwik.dev/core`. The order of checks matters -- `@builder.io/qwik-city` and `@builder.io/qwik-react` are checked before `@builder.io/qwik` to prevent incorrect prefix matching.
+
+Source: rename_imports.rs (full file, 17 lines)
+
+#### Mechanism 2: Consumed Import Stripping
+
+After QwikTransform replaces `$`-suffixed function calls with their `Qrl` equivalents, the original `$`-suffixed identifiers are no longer referenced in the root module AST. The optimizer does NOT explicitly strip these imports -- it relies on SWC's post-transform hygiene and DCE passes (Steps 12 and 16) to remove unreferenced imports automatically.
+
+**Example flow:**
+- Original: `import { $, component$ } from '@qwik.dev/core'`
+- After QwikTransform: `$` is consumed (replaced by `qrl()`), `component$` is consumed (replaced by `componentQrl()`)
+- After DCE: Neither `$` nor `component$` is referenced, so the import is removed
+- Synthetic imports for `qrl` and `componentQrl` remain (added by Mechanism 3)
+
+**Key insight:** The optimizer transforms the call sites but never touches the import statements directly. Import cleanup is a natural consequence of dead code elimination. This means if DCE fails or is misconfigured, stale imports persist in the output.
+
+#### Mechanism 3: Synthetic Import Addition
+
+During QwikTransform, whenever the optimizer needs a runtime function that wasn't in the original source, it calls `ensure_core_import(specifier)` to register a synthetic import.
+
+**How it works:**
+1. `ensure_core_import(specifier)` delegates to `global_collect.import(specifier, core_module)`
+2. This adds an entry to `GlobalCollect.imports` with `synthetic: true` and `kind: ImportKind::Named`
+3. The import is registered with the `core_module` path (typically `@qwik.dev/core`)
+4. During codegen, all imports in GlobalCollect (both user and synthetic) are emitted in the root module
+
+**Common synthetic imports:**
+
+| Specifier | Added When |
+|-----------|-----------|
+| `qrl` | Any `$()` call produces a `qrl()` reference |
+| `componentQrl` | `component$()` call |
+| `inlinedQrl` | Inline entry strategy |
+| `_jsxSorted` | JSX elements (Phase 2) |
+| `_jsxSplit` | JSX with spread props (Phase 2) |
+| `_fnSignal` | Signal optimization (Phase 2) |
+| `_captures` | Segment with captured variables (imported in segment, not root) |
+| `_noopQrl` | Stripped segment placeholder (Phase 3) |
+| `useStylesQrl` | `useStyles$()` call |
+
+**`ensure_export` for self-imports:** When a segment references a module-level declaration (Category 4 in [Capture Analysis](#capture-analysis-conv-03)), the optimizer calls `ensure_export(id)` which:
+1. Computes the canonical Id for the symbol
+2. Adds a synthetic export with name `_auto_{symbol}` to GlobalCollect
+3. Inserts `export { symbol as _auto_symbol }` at the bottom of the root module
+
+This creates the "self-import" pattern: the root module exports the declaration under an `_auto_` prefix, and the segment imports it back. See [Self-Import Reclassification](#self-import-reclassification) in Capture Analysis.
+
+Source: transform.rs:1265-1284 (`ensure_core_import`, `ensure_export`), collector.rs `import()` method
+
+#### Mechanism 4: Per-Segment Import Resolution
+
+During segment module construction (`new_module` in code_move.rs), each identifier used by the segment must be resolved to an import source. The function `resolve_import_for_id` handles this with a priority-based lookup.
+
+**Resolution algorithm for each identifier in `local_idents`:**
+
+1. **Exact match in GlobalCollect imports**: If `global_collect.imports` contains an entry with the same `Id` (symbol + SyntaxContext), use that import. Re-emit with the original source path. Example: `import css1 from './global.css'` in the original source becomes `import css1 from "./global.css"` in the segment.
+
+2. **Unique-by-symbol fallback**: If exact Id match fails, check if there is exactly one import in GlobalCollect whose symbol name matches (ignoring SyntaxContext). If unique, use it. This handles cases where the resolver assigned different SyntaxContexts to the same symbol.
+
+3. **Export (not import) -- self-import**: If the identifier is in `GlobalCollect.exports` but NOT in `GlobalCollect.imports`, it is a module-level declaration that was exported via `ensure_export`. Generate a self-import: `import { _auto_X as X } from "./module_stem"`. The module stem is `file_stem` if `explicit_extensions` is false, or `file_name` if true.
+
+4. **No match**: If the identifier is not in GlobalCollect at all, it is not imported (it may be a local parameter, a hoisted variable, or a global). No import is generated.
+
+**Collision handling:** After collecting all imports for a segment, the algorithm detects collisions -- cases where the same local name is needed for imports from different sources. Resolution:
+- First import with the name keeps the original name
+- Subsequent imports get renamed with `_{index}` suffix (e.g., `foo`, `foo_1`, `foo_2`)
+- Sorting by symbol name ensures deterministic collision resolution
+
+**Dev-mode explicit imports:** In `Dev` and `Hmr` emit modes, additional explicit imports are passed to `new_module`: `_qrlDev`, `_inlinedQrlDev`, and `_noopQrlDev` from `@qwik.dev/core`. These take priority during resolution (checked via `explicit_imports` parameter).
+
+Source: code_move.rs:197-276 (`resolve_import_for_id` and collision handling)
+
+#### Example 1: Root Module Import Transformation (example_6)
+
+Shows how original `$`-suffixed imports are consumed and replaced by synthetic imports.
+
+**Input:**
+```javascript
+import { $, component$ } from '@qwik.dev/core';
+export const sym1 = $((ctx) => console.log("1"));
+```
+
+**Root module output (`test.tsx`):**
+```javascript
+import { qrl } from "@qwik.dev/core";
+//
+const q_sym1_aXUrPXX5Lak = /*#__PURE__*/ qrl(()=>import("./test.tsx_sym1_aXUrPXX5Lak"), "sym1_aXUrPXX5Lak");
+//
+export const sym1 = q_sym1_aXUrPXX5Lak;
+```
+
+Key observations:
+- `$` is consumed: no longer referenced after QRL wrapping replaced `$((ctx) => ...)` with `qrl(...)`
+- `component$` is consumed: was imported but never used in this module (only `$` was called)
+- `qrl` is synthetic: added by `ensure_core_import("qrl")` during QRL wrapping
+- The original import statement `import { $, component$ } from '@qwik.dev/core'` is entirely gone -- DCE removed it because neither `$` nor `component$` is referenced
+- The new import `import { qrl } from "@qwik.dev/core"` was registered via `ensure_core_import`
+
+(Source: Jack's swc-snapshots/example_6.snap)
+
+#### Example 2: Segment Import Resolution (example_capture_imports)
+
+Shows how segments re-emit user imports from the original source.
+
+**Input:**
+```javascript
+import { component$, useStyles$ } from '@qwik.dev/core';
+import css1 from './global.css';
+import css2 from './style.css';
+import css3 from './style.css';
+
+export const App = component$(() => {
+  useStyles$(`${css1}${css2}`);
+  useStyles$(css3);
+})
+```
+
+**useStyles segment output (`test.tsx_App_component_useStyles_t35nSa5UV7U.js`):**
+```javascript
+import css1 from "./global.css";
+import css2 from "./style.css";
+//
+export const App_component_useStyles_t35nSa5UV7U = `${css1}${css2}`;
+```
+
+**css3 segment output (`test.tsx_style_css_TRu1FaIoUM0.js`):**
+```javascript
+import css3 from "./style.css";
+//
+export const style_css_TRu1FaIoUM0 = css3;
+```
+
+Key observations:
+- `css1` and `css2` are resolved via Mechanism 4 Step 1 (exact match in GlobalCollect imports) -- re-emitted with original source paths
+- `css3` is also a user import re-emission -- note it imports from `"./style.css"` (same source as `css2` but different symbol)
+- These are NOT captures (`captures: false` in both segments) -- they are resolved as re-emitted user imports, which are more efficient than capture-based resolution
+- Each segment only imports what it actually uses: the first useStyles segment needs `css1` and `css2`, the second needs only `css3`
+
+(Source: Jack's swc-snapshots/example_capture_imports.snap)
+
+#### Example 3: Self-Import Pattern (example_segment_variable_migration)
+
+Shows the `_auto_` self-import pattern for module-level declarations referenced by segments.
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+
+const helperFn = (msg) => {
+  console.log('Helper: ' + msg);
+  return msg.toUpperCase();
+};
+
+const SHARED_CONFIG = { value: 42 };
+
+export const publicHelper = () => console.log('public');
+
+export const App = component$(() => {
+  const result = helperFn('hello');
+  return <div>{result} {SHARED_CONFIG.value}</div>;
+});
+
+export const Other = component$(() => {
+  return <div>{SHARED_CONFIG.value}</div>;
+});
+```
+
+**Root module output (`test.tsx`):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+const q_Other_component_C1my3EIdP1k = /*#__PURE__*/ qrl(()=>import("./test.tsx_Other_component_C1my3EIdP1k"), "Other_component_C1my3EIdP1k");
+//
+const SHARED_CONFIG = {
+    value: 42
+};
+export const publicHelper = ()=>console.log('public');
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+export const Other = /*#__PURE__*/ componentQrl(q_Other_component_C1my3EIdP1k);
+export { SHARED_CONFIG as _auto_SHARED_CONFIG };
+```
+
+**App segment output (`test.tsx_App_component_ckEPmXZlub0.tsx`):**
+```javascript
+import { _auto_SHARED_CONFIG as SHARED_CONFIG } from "./test";
+//
+const helperFn = (msg)=>{
+    console.log('Helper: ' + msg);
+    return msg.toUpperCase();
+};
+export const App_component_ckEPmXZlub0 = ()=>{
+    const result = helperFn('hello');
+    return <div>{result} {SHARED_CONFIG.value}</div>;
+};
+```
+
+**Other segment output (`test.tsx_Other_component_C1my3EIdP1k.tsx`):**
+```javascript
+import { _auto_SHARED_CONFIG as SHARED_CONFIG } from "./test";
+//
+export const Other_component_C1my3EIdP1k = ()=>{
+    return <div>{SHARED_CONFIG.value}</div>;
+};
+```
+
+Key observations:
+- `SHARED_CONFIG` is used by multiple segments, so it stays in the root module and gets a synthetic export: `export { SHARED_CONFIG as _auto_SHARED_CONFIG }`
+- Both segments import it back via self-import: `import { _auto_SHARED_CONFIG as SHARED_CONFIG } from "./test"`
+- `helperFn` is only used by the App segment, so it was migrated into the App segment (Variable Migration, documented separately). It does NOT get a self-import -- it was physically moved.
+- `publicHelper` stays at root because it's an explicit user export
+- The self-import pattern uses `_auto_` prefix via `ensure_export` (Mechanism 3) and Mechanism 4 Step 3
+
+(Source: Jack's swc-snapshots/example_segment_variable_migration.snap)
+
+---
+
 ## Infrastructure: Hash Generation
 
 The optimizer uses a deterministic hashing algorithm to generate stable, unique identifiers for each extracted segment. These hashes appear in symbol names, canonical filenames, and QRL references. Hash stability across builds is critical -- changing a hash invalidates cached QRL references and breaks resumability.
