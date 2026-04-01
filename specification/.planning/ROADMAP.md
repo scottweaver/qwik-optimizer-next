@@ -51,7 +51,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Props Destructuring (CONV-04): _rawProps, _restProps, pre-pass ordering
+- [x] 02-01-PLAN.md — Props Destructuring (CONV-04): _rawProps, _restProps, pre-pass ordering
 - [ ] 02-02-PLAN.md — JSX Transform (CONV-06): branch point, element types, prop classification, special attributes, children, keys, flags, spreads
 - [ ] 02-03-PLAN.md — Signal Optimization (CONV-07): _fnSignal, _wrapProp, decision table, hoisting
 
