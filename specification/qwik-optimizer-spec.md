@@ -248,7 +248,385 @@ synthetic: [
 
 ## Stage 4: Core Transform
 
-> Dollar Detection and QRL Wrapping sections are added by Plan 02. Segment Extraction (CONV-05) and Import Rewriting (CONV-12) are documented below.
+### Dollar Detection (CONV-01)
+
+Dollar detection is the entry gate for the entire QRL extraction pipeline. It identifies which function calls in user code are `$`-suffixed marker functions that trigger QRL extraction, and determines the corresponding `Qrl`-suffixed callee name for the replacement call. Without dollar detection, no QRL wrapping, capture analysis, or segment extraction occurs.
+
+Source: transform.rs:189-202 (marker construction), transform.rs:179-187 (convert_qrl_word), words.rs (QRL_SUFFIX = `'$'`, LONG_SUFFIX = `"Qrl"`)
+
+#### Behavioral Rules
+
+**Rule 1: Imported markers.** Any named import from `@qwik.dev/core` whose specifier ends with `$` (the `QRL_SUFFIX` constant, which is the character `'$'`) is a marker function. Detection occurs during `QwikTransform::new()` by iterating `global_collect.imports` and checking `import.specifier.ends_with(QRL_SUFFIX)`. Only `ImportKind::Named` imports qualify -- default imports and namespace imports are never markers. Each detected marker is stored in a `marker_functions: HashMap<Id, Atom>` that maps the local `Id` (symbol name + scope context) to the original specifier name (e.g., `"component$"`, `"useTask$"`, `"$"`).
+
+```rust
+// transform.rs:191-196
+for (id, import) in options.global_collect.imports.iter() {
+    if import.kind == ImportKind::Named && import.specifier.ends_with(QRL_SUFFIX) {
+        marker_functions.insert(id.clone(), import.specifier.clone());
+    }
+}
+```
+
+**Rule 2: Local markers.** Any locally-defined export whose name ends with `$` is also a marker function. Detection occurs by calling `global_collect.export_local_ids()` and checking `id.0.ends_with(QRL_SUFFIX)`. These are added to the same `marker_functions` HashMap, with the specifier set to the symbol name itself. This enables library authors to define custom dollar functions that participate in QRL extraction.
+
+```rust
+// transform.rs:198-202
+for id in options.global_collect.export_local_ids() {
+    if id.0.ends_with(QRL_SUFFIX) {
+        marker_functions.insert(id.clone(), id.0.clone());
+    }
+}
+```
+
+**Rule 3: Callee conversion rule.** When a `$`-suffixed call is detected, the callee is replaced with the `Qrl` variant. The `convert_qrl_word()` function (transform.rs:179-187) strips the trailing `$` and appends `"Qrl"` (the `LONG_SUFFIX` constant). Examples:
+
+| Original Callee | Converted Callee |
+|-----------------|-----------------|
+| `component$` | `componentQrl` |
+| `useTask$` | `useTaskQrl` |
+| `useVisibleTask$` | `useVisibleTaskQrl` |
+| `useStyles$` | `useStylesQrl` |
+| `$` | `qrl` (special case: the bare `$` function maps to QSEGMENT, and `convert_qrl_word` produces `qrl` by stripping `$` and appending `Qrl` -- but the empty prefix means the result is just `Qrl`, which is then lowercased to `qrl` via the QSEGMENT code path) |
+
+```rust
+// transform.rs:179-187
+fn convert_qrl_word(id: &Atom) -> Option<Atom> {
+    let ident_name = id.as_ref();
+    let needs_qrl = ident_name.ends_with(QRL_SUFFIX);
+    if needs_qrl {
+        let new_specifier = [&ident_name[0..ident_name.len() - 1], LONG_SUFFIX].concat();
+        Some(Atom::from(new_specifier))
+    } else {
+        None
+    }
+}
+```
+
+**Rule 4: Special cases.**
+- **`sync$`**: Has its own dedicated code path for serialization (produces `_qrlSync` calls), not segment extraction. It is still detected as a marker but handled differently from other dollar functions.
+- **`$()` (bare dollar)**: Maps to the `QSEGMENT` constant (`"$"`). The converted callee is `qrl` (from `@qwik.dev/core`). This is the generic segment extraction marker.
+- **`component$`**: In addition to the standard QRL wrapping, `component$` triggers a `/*#__PURE__*/` annotation on its `componentQrl` wrapper call (see [QRL Wrapping -- PURE Annotation](#qrl-wrapping-conv-02) for details). This is CONV-08 behavior but triggered as part of the dollar detection/wrapping flow.
+
+**Rule 5: Detection site.** Dollar detection occurs in `fold_call_expr` during the `QwikTransform` traversal. When a `CallExpr`'s callee is an `Identifier` found in the `marker_functions` HashMap, the dollar detection triggers and initiates QRL wrapping for that call expression. The specifier value from the HashMap determines which conversion path to follow.
+
+**Rule 6: Non-markers.** Functions whose names happen to end with `$` but are NOT imported from `@qwik.dev/core` (or its sub-paths) AND are NOT locally exported are NOT markers. They pass through the traversal unchanged. This prevents false positives on user-defined functions that coincidentally use `$` in their names.
+
+#### Example 1: Basic Dollar Extraction (example_6)
+
+**Input:**
+
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+export const sym1 = $((ctx) => console.log("1"));
+```
+
+**Dollar detection results:**
+
+```
+marker_functions: {
+  ($,          ctx1) -> "$"           // bare $ -> QSEGMENT
+  (component$, ctx1) -> "component$"  // component$ marker
+}
+```
+
+**Callee conversion:**
+
+| Call Site | Marker Specifier | Converted Callee | Import Added |
+|-----------|-----------------|-----------------|--------------|
+| `$((ctx) => ...)` | `"$"` (QSEGMENT) | `qrl` | `import { qrl } from "@qwik.dev/core"` |
+
+**Root module output:**
+
+```javascript
+import { qrl } from "@qwik.dev/core";
+
+const q_sym1_aXUrPXX5Lak = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_sym1_aXUrPXX5Lak"), "sym1_aXUrPXX5Lak"
+);
+
+export const sym1 = q_sym1_aXUrPXX5Lak;
+```
+
+**Key observations:**
+- The original `import { $ } from '@qwik.dev/core'` is removed (the `$` function is no longer called directly)
+- A synthetic `import { qrl } from "@qwik.dev/core"` is added via `global_collect.import()`
+- The `$()` call is replaced by a `qrl()` call that lazily imports the extracted segment
+
+#### Example 2: Multiple Markers from Same Import (example_capture_imports)
+
+**Input:**
+
+```typescript
+import { component$, useStyles$ } from '@qwik.dev/core';
+import css1 from './global.css';
+import css2 from './style.css';
+import css3 from './style.css';
+
+export const App = component$(() => {
+  useStyles$(`${css1}${css2}`);
+  useStyles$(css3);
+});
+```
+
+**Dollar detection results:**
+
+```
+marker_functions: {
+  (component$, ctx1) -> "component$"
+  (useStyles$, ctx1) -> "useStyles$"
+}
+```
+
+**Callee conversions:**
+
+| Call Site | Converted Callee |
+|-----------|-----------------|
+| `component$(...)` | `componentQrl` |
+| `useStyles$(...)` (first) | `useStylesQrl` |
+| `useStyles$(...)` (second) | `useStylesQrl` |
+
+**Root module output:**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0"
+);
+
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Key observations:**
+- Both `component$` and `useStyles$` are detected from the same `@qwik.dev/core` import
+- Each marker is independently converted: `component$` -> `componentQrl`, `useStyles$` -> `useStylesQrl`
+- The `useStylesQrl` calls appear inside the extracted component segment, not in the root module
+- `componentQrl` gets the `/*#__PURE__*/` annotation; `useStylesQrl` does not (see QRL Wrapping PURE rule)
+
+#### Example 3: Non-Marker Dollar Function (non_marker_edge_case)
+
+**Input:**
+
+```typescript
+import { component$ } from '@qwik.dev/core';
+
+// NOT a marker: locally defined but NOT exported
+const myHelper$ = (x) => x * 2;
+
+// IS a marker: locally defined AND exported
+export const customDollar$ = (fn) => fn;
+
+export const App = component$(() => {
+  // myHelper$ passes through unchanged — not in marker_functions
+  const result = myHelper$(42);
+  return <div>{result}</div>;
+});
+```
+
+**Dollar detection results:**
+
+```
+marker_functions: {
+  (component$,    ctx1) -> "component$"    // imported from @qwik.dev/core
+  (customDollar$, ctx0) -> "customDollar$" // locally exported, ends with $
+}
+// myHelper$ is NOT in marker_functions — it is not exported
+```
+
+**Key observations:**
+- `myHelper$` is defined locally but not exported, so it is NOT a marker. Calls to `myHelper$` pass through the transform unchanged.
+- `customDollar$` IS exported (appears in `global_collect.exports`), so it IS detected as a marker. Any call to `customDollar$()` with a callback argument would trigger QRL extraction.
+- This demonstrates the two-source rule: markers come from either (1) `@qwik.dev/core` imports or (2) locally exported `$`-suffixed functions. All other `$`-suffixed identifiers are ignored.
+
+### QRL Wrapping (CONV-02)
+
+QRL wrapping is the transformation that replaces a detected `$`-suffixed marker call with a QRL reference. After dollar detection identifies a marker function call, QRL wrapping produces the replacement code: a `qrl()`, `inlinedQrl()`, or `_noopQrl()` call that references the extracted segment. The QRL wrapping path determines whether the callback body is lazy-loaded (via dynamic import), inlined (kept in the same module), or stripped (replaced with a noop placeholder).
+
+QRL wrapping connects dollar detection (upstream) to segment extraction (downstream): dollar detection identifies *which* calls to transform, QRL wrapping produces *what replaces them*, and segment extraction creates *the output modules* that the QRL references point to. The symbol names used in QRL calls are generated by the [Hash Generation](#infrastructure-hash-generation) algorithm, and the import paths follow the [Path Resolution](#infrastructure-path-resolution) rules.
+
+Source: transform.rs:1888-2062 (create_qrl, create_inline_qrl, create_internal_call), transform.rs:3000-3027 (create_noop_qrl), transform.rs:2013-2029 (emit_captures), transform.rs:1372-1457 (hoist_qrl_if_needed, .w() call construction)
+
+#### Behavioral Rules
+
+**Rule 1: Three QRL creation paths.** Which path is taken depends on the entry strategy and whether the segment should be emitted:
+
+| Path | Function | When Used | Output Pattern |
+|------|----------|-----------|----------------|
+| Segment QRL | `create_qrl()` | Segment, Hook, Single, Component, Smart strategies when `should_emit_segment()` is true | `qrl(() => import("./path"), "symbol_name")` |
+| Inline QRL | `create_inline_qrl()` | Inline or Hoist strategies, or Lib emit mode | `inlinedQrl(fn_expr, "symbol_name")` |
+| Noop QRL | `create_noop_qrl()` | When `should_emit_segment()` returns false (callback stripped via `strip_ctx_name` or `strip_event_handlers` config) | `_noopQrl("symbol_name")` |
+
+**`create_qrl()`** (transform.rs:1888-1943): Constructs a QRL call with a dynamic import arrow function as the first argument and the symbol name string as the second argument:
+
+```javascript
+qrl(() => import("./segment_path"), "symbol_name")
+// With captures:
+qrl(() => import("./segment_path"), "symbol_name", [capture1, capture2])
+```
+
+The import path (`"./segment_path"`) is the canonical filename constructed by `get_canonical_filename()` per the [Path Resolution](#infrastructure-path-resolution) rules. The symbol name (`"symbol_name"`) is the hash-suffixed identifier from the [Hash Generation](#infrastructure-hash-generation) algorithm (e.g., `"sym1_aXUrPXX5Lak"`).
+
+**`create_inline_qrl()`** (transform.rs:1945-2011): Constructs an inlined QRL call that keeps the function expression in the same module rather than extracting it to a separate segment file:
+
+```javascript
+inlinedQrl(original_fn_expr, "symbol_name")
+// With captures:
+inlinedQrl(original_fn_expr, "symbol_name", [capture1, capture2])
+```
+
+For the Hoist strategy (not Inline or Lib mode), the function expression is replaced with a new identifier referencing a separately-emitted segment, and the segment is registered with a `qrl_id` for `.s()` call emission.
+
+**`create_noop_qrl()`** (transform.rs:3000-3027): Constructs a noop QRL placeholder when the segment should not be emitted (stripped callbacks). The segment module is still created (with `null` as the export value) for metadata purposes, but the runtime call is a noop:
+
+```javascript
+_noopQrl("symbol_name")
+// With dev info:
+_noopQrlDEV("symbol_name", { file: "path", lo: 0, hi: 0, displayName: "name" })
+```
+
+Noop QRLs are used when `strip_ctx_name` matches the marker function name (e.g., `serverStuff$` stripped for client builds) or when `strip_event_handlers` is true and the segment kind is `EventHandler`.
+
+**Rule 2: Dev mode variants.** When the emit mode is `Dev` or `Hmr`, each QRL creation function uses a dev-suffixed variant that includes source location metadata as an additional argument:
+
+| Production | Dev/HMR |
+|------------|---------|
+| `qrl(...)` | `qrlDEV(..., { file, lo, hi, displayName })` |
+| `inlinedQrl(...)` | `inlinedQrlDEV(..., { file, lo, hi, displayName })` |
+| `_noopQrl(...)` | `_noopQrlDEV(..., { file, lo, hi, displayName })` |
+
+The dev info object has four fields:
+
+| Field | Type | Source |
+|-------|------|--------|
+| `file` | string | `dev_path` option (if set) or absolute file path from `path_data.abs_path` |
+| `lo` | number | Start byte offset of the original expression's `Span` |
+| `hi` | number | End byte offset of the original expression's `Span` |
+| `displayName` | string | The segment's `display_name` from the [Hash Generation](#infrastructure-hash-generation) algorithm (e.g., `"test.tsx_App_component"`) |
+
+Source: transform.rs:1926-1937 (qrl dev path), transform.rs:1994-2007 (inlinedQrl dev path), transform.rs:3011-3023 (noop dev path)
+
+**Rule 3: Captures emission.** When the segment has captured variables (`scoped_idents` from capture analysis is non-empty), the captured identifiers are emitted as an array literal appended as the last argument to the QRL call. The `emit_captures()` function (transform.rs:2013-2029) handles two cases:
+
+- **Auto captures** (`Captures::Auto(ids)`): When the list is non-empty, an `ArrayLiteral` of identifier references is appended: `[capture1, capture2, ...]`
+- **Explicit captures** (`Captures::Explicit(arr)`): The user-provided array expression is passed through directly
+- **No captures**: No additional argument is appended
+
+Additionally, after hoisting the QRL to module scope, if captures exist, a `.w([captures])` method call is constructed on the QRL reference. The `.w()` method ("with captures") registers the captured variable bindings at the call site where the variables are in scope, while the QRL definition itself (hoisted to module scope) has no captures:
+
+```javascript
+// Module scope (hoisted, no captures):
+const q_sym1_hash = /*#__PURE__*/ qrl(() => import("./path"), "symbol_name");
+
+// Call site (where captures are in scope):
+q_sym1_hash.w([capturedVar1, capturedVar2])
+```
+
+Source: transform.rs:2013-2029 (emit_captures), transform.rs:1593-1607 (.w() construction for qrl path), transform.rs:1651-1665 (.w() construction for inlinedQrl path)
+
+**Rule 4: PURE annotation.** The `/*#__PURE__*/` comment annotation is added to QRL wrapper calls to enable tree-shaking by bundlers. The annotation is controlled by the `pure` parameter of `create_internal_call()` (transform.rs:2032-2062):
+
+- **All QRL creation calls** (`qrl()`, `inlinedQrl()`, `_noopQrl()`) receive `/*#__PURE__*/` -- they are always passed `pure: true` by `create_qrl()`, `create_inline_qrl()`, and `create_noop_qrl()`.
+- **`componentQrl()` wrapper calls** also receive `/*#__PURE__*/` because component definitions are tree-shakeable (if the component is not referenced, the entire QRL + component can be eliminated).
+- **Other `*Qrl` wrappers** (`useTaskQrl()`, `useVisibleTaskQrl()`, `useStylesQrl()`, etc.) do NOT receive `/*#__PURE__*/` because they register side effects (tasks, styles, event handlers) that must not be eliminated by tree-shaking.
+
+The practical effect: `/*#__PURE__*/` appears on the hoisted `const q_symbol = /*#__PURE__*/ qrl(...)` declaration at module scope, and on `/*#__PURE__*/ componentQrl(q_symbol)` calls. It does NOT appear on `useTaskQrl(q_symbol)` or similar side-effecting wrapper calls.
+
+**Rule 5: Symbol name.** The second argument to every QRL call is the symbol name string (e.g., `"sym1_aXUrPXX5Lak"`). This is the hash-suffixed name produced by the [Hash Generation](#infrastructure-hash-generation) algorithm. It serves as:
+- The segment identifier for lazy loading (the runtime uses it to resolve the correct export from the dynamically imported module)
+- The export name in the segment module (`export const sym1_aXUrPXX5Lak = ...`)
+- Part of the canonical filename for the segment file
+
+**Rule 6: Import path.** The first argument to `qrl()` is a dynamic import arrow function: `() => import("./canonical_filename")`. The path is constructed per the [Path Resolution](#infrastructure-path-resolution) algorithm. For `inlinedQrl()`, no import path is needed because the function body is kept in the same module.
+
+#### Example 1: Basic QRL Wrapping (example_6)
+
+**Input:**
+
+```typescript
+import { $ } from '@qwik.dev/core';
+export const sym1 = $((ctx) => console.log("1"));
+```
+
+**QRL wrapping transforms the `$()` call (Segment strategy, default):**
+
+**Root module output:**
+
+```javascript
+import { qrl } from "@qwik.dev/core";
+
+const q_sym1_aXUrPXX5Lak = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_sym1_aXUrPXX5Lak"), "sym1_aXUrPXX5Lak"
+);
+
+export const sym1 = q_sym1_aXUrPXX5Lak;
+```
+
+**Segment module output (`test.tsx_sym1_aXUrPXX5Lak.tsx`):**
+
+```javascript
+export const sym1_aXUrPXX5Lak = (ctx) => console.log("1");
+```
+
+**Key observations:**
+- `create_qrl()` is used (Segment strategy, `should_emit_segment()` returns true)
+- The `qrl()` call is hoisted to module scope as `const q_sym1_aXUrPXX5Lak = ...`
+- `/*#__PURE__*/` is applied to the `qrl()` call
+- The original `$` import is removed; a synthetic `qrl` import is added
+- No captures (the callback only uses its parameter `ctx`), so no `.w()` call and no third argument
+
+#### Example 2: QRL with Captures (example_multi_capture)
+
+**Input:**
+
+```typescript
+import { $, component$ } from '@qwik.dev/core';
+
+export const Foo = component$(({foo}) => {
+  const arg0 = 20;
+  return $(() => {
+    const fn = ({aaa}) => aaa;
+    return (
+      <div>
+        {foo}{fn()}{arg0}
+      </div>
+    )
+  });
+});
+```
+
+**QRL wrapping for the inner `$()` call inside `Foo`'s component body:**
+
+The inner `$()` captures `_rawProps` (the component's props parameter, renamed during props destructuring). Capture analysis identifies this as a scoped identifier because `_rawProps` is defined in the component segment, not the root module.
+
+**Component segment output (`test.tsx_Foo_component_HTDRsvUbLiE.jsx`):**
+
+```javascript
+import { qrl } from "@qwik.dev/core";
+
+const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_Foo_component_1_DvU6FitWglY"),
+  "Foo_component_1_DvU6FitWglY"
+);
+
+export const Foo_component_HTDRsvUbLiE = (_rawProps) => {
+  return q_Foo_component_1_DvU6FitWglY.w([_rawProps]);
+};
+```
+
+**Inner segment output (`test.tsx_Foo_component_1_DvU6FitWglY.jsx`):**
+
+```javascript
+import { _captures } from "@qwik.dev/core";
+
+export const Foo_component_1_DvU6FitWglY = () => {
+  const _rawProps = _captures[0];
+  const fn = ({ aaa }) => aaa;
+  return <div>{_rawProps.foo}{fn()}{20}</div>;
+};
+```
+
+**Root module output:**
 
 ### Capture Analysis (CONV-03)
 
