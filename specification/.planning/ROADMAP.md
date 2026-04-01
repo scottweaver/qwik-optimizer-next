@@ -67,8 +67,8 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [x] 03-01-PLAN.md — Build Environment Transforms: Const Replacement (CONV-10), Dead Branch Elimination (CONV-09), Code Stripping (CONV-11)
-- [ ] 03-02-PLAN.md — QRL Special Cases: PURE Annotations (CONV-08), sync$ Serialization (CONV-13), Noop QRL Handling (CONV-14)
+- [ ] 03-01-PLAN.md — Build Environment Transforms: Const Replacement (CONV-10), Dead Branch Elimination (CONV-09), Code Stripping (CONV-11)
+- [x] 03-02-PLAN.md — QRL Special Cases: PURE Annotations (CONV-08), sync$ Serialization (CONV-13), Noop QRL Handling (CONV-14)
 - [ ] 03-03-PLAN.md — Entry Strategies (all 7) and Emit Modes (all 5 with Mode x CONV table)
 - [ ] 03-04-PLAN.md — Transformation Pipeline: Mermaid DAG and ordering constraints table
 

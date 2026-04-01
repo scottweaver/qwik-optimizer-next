@@ -3883,11 +3883,62 @@ export const App = component$(() => {
       {isServer2 && <p>server</p>}
       {isb && <p>server</p>}
     </Cmp>
+## Stage 6: QRL Special Cases
+
+Three independent behaviors modify how QRLs are generated or annotated. PURE annotations control bundler tree-shaking eligibility, sync$ serialization bypasses the segment extraction pipeline entirely, and noop QRL handling replaces stripped segments with lightweight placeholders. These transforms operate during the main QwikTransform pass (Step 10) but address distinct concerns that do not depend on each other.
+
+### PURE Annotations (CONV-08)
+
+PURE annotations (`/*#__PURE__*/`) are comments that tell bundlers (Rollup, esbuild, webpack) that a call expression has no side effects and can be safely tree-shaken if its return value is unused. The Qwik optimizer places PURE annotations on specific call sites to enable dead code elimination of unused components and QRL declarations.
+
+Source: transform.rs:4043-4046 (componentQrl PURE), transform.rs:1502-1508 (create_internal_call with pure: true), transform.rs:4006 (qSegment PURE)
+
+#### Behavioral Rules
+
+**Rule 1: PURE annotation placement sites.** The optimizer annotates the following call expressions with `/*#__PURE__*/`:
+
+| Call Site | Source Location | Purpose |
+|-----------|----------------|---------|
+| `componentQrl(...)` | transform.rs:4043 (`add_pure_comment`) | Component declarations are tree-shakeable -- if the component is never referenced, the bundler can drop it |
+| `qrl(...)` | transform.rs:1504 (`create_internal_call(..., pure: true)`) | Internal QRL factory calls -- unused QRL declarations can be dropped |
+| `inlinedQrl(...)` | transform.rs:1504 (`create_internal_call(..., pure: true)`) | Inline QRL factory calls -- same tree-shaking rationale |
+| `_noopQrl(...)` / `_noopQrlDEV(...)` | transform.rs:3026 (`create_internal_call(..., pure: true)`) | Noop QRL placeholders for stripped segments -- always tree-shakeable |
+| `qSegment(...)` | transform.rs:4006 | Segment registration calls -- tree-shakeable if the segment is unused |
+| `_jsxSorted(...)` / `_jsxSplit(...)` | (documented in Phase 2, JSX Transform) | JSX element creation calls |
+
+**Rule 2: The PURE anti-list -- side-effectful wrappers that must NOT get PURE.** All other `Qrl`-suffixed wrapper calls are side-effectful registrations at component render time. Annotating them as PURE would cause bundlers to incorrectly drop them:
+
+- `useTaskQrl(...)` -- registers a reactive task (side effect: schedules re-execution on dependency changes)
+- `useStyleQrl(...)` -- registers scoped styles (side effect: injects CSS into the document)
+- `useBrowserVisibleTaskQrl(...)` -- registers a browser-only visible task
+- `serverStuffQrl(...)` -- registers server-side logic
+- All other `Qrl`-suffixed wrappers produced by `convert_qrl_word()` (e.g., `useOnQrl`, `useComputedQrl`, `useResourceQrl`)
+
+**Key distinction:** The difference is between **declaration** (`componentQrl` creates a component definition that is tree-shakeable if never imported) versus **registration** (`useTaskQrl` registers a side effect that must execute at render time). Only declarations get PURE annotations.
+
+**Rule 3: PURE annotation mechanism.** The `create_internal_call` function accepts a `pure: bool` parameter (transform.rs:2042-2054). When `pure` is true, it calls `comments.add_pure_comment(span.lo)` which attaches the `/*#__PURE__*/` leading comment to the call expression's span. For `componentQrl`, the PURE comment is added directly on the outer call via `add_pure_comment(node.span.lo)` at transform.rs:4044.
+
+**Rule 4: PURE annotations are mode-independent.** Unlike QRL wrapping (which varies by emit mode), PURE annotations are applied identically in all emit modes (Prod, Dev, Lib, Test, Hmr). The tree-shaking hints are always present.
+
+#### Example: PURE on componentQrl but not on side-effectful wrappers (impure_template_fns)
+
+**Input:**
+
+```javascript
+import { component$, useSignal } from '@qwik.dev/core';
+
+export default component$(() => {
+  const count = useSignal(0);
+  return (
+    <>
+      <button onClick$={() => count.value++}>Count up</button>
+    </>
   );
 });
 ```
 
 **Output (root module):**
+
 ```javascript
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
@@ -4090,6 +4141,20 @@ Source: transform.rs `should_emit_segment` (lines where `strip_ctx_name` and `st
 This example shows `strip_exports` replacing an exported function with a throwing stub. The original `onGet` function references `mongodb`, but after stripping, the stub has no such dependency.
 
 **Input:**
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_test_component_LUXeXe0DQrg"),
+  "test_component_LUXeXe0DQrg"
+);
+
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+```
+
+Note: `qrl()` gets PURE (internal QRL factory), `componentQrl()` gets PURE (component declaration). If this component used `useTaskQrl()` or `useStylesQrl()` in its body, those calls would NOT have PURE annotations -- they are side-effectful registrations.
+
+#### Example: PURE on stripped exports with qrl() calls (example_strip_exports_unused)
+
+**Input:**
+
 ```javascript
 import { component$ } from '@qwik.dev/core';
 import mongodb from 'mongodb';
@@ -4109,12 +4174,24 @@ export default component$(() => {
 ```
 
 **Output (root module):**
+  return { body: { data } };
+};
+
+export default component$(() => {
+  return <div>cmp</div>;
+});
+```
+
+**Output (root module, with strip_exports: ["onGet"]):**
+
 ```javascript
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(
   () => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg"
+  () => import("./test.tsx_test_component_LUXeXe0DQrg"),
+  "test_component_LUXeXe0DQrg"
 );
 
 export const onGet = () => {
@@ -4162,6 +4239,302 @@ export const Parent = component$(() => {
   return (
     <div onClick$={() => console.log('parent')}>
       {state.text}
+Note: Both `qrl()` and `componentQrl()` have PURE annotations. The `onGet` throwing stub does NOT get PURE -- it is a regular export, not a QRL factory call.
+
+**See also:** `impure_template_fns` (PURE on componentQrl, not on wrappers), `example_strip_exports_unused` (PURE on qrl() calls), `example_inlined_entry_strategy` (PURE on _noopQrl() in Hoist pattern), `example_noop_dev_mode` (PURE on _noopQrlDEV() calls)
+
+---
+
+### sync$ Serialization (CONV-13)
+
+The `sync$` marker function produces a synchronous QRL that keeps the function body inline (no segment extraction) while also providing a serialized string representation for runtime hydration. Unlike all other `$`-suffixed markers, `sync$` does NOT trigger the segment extraction pipeline -- the function remains in the same module.
+
+Source: transform.rs:697-733 (handle_sync_qrl), inlined_fn.rs:188-217 (render_expr)
+
+#### Behavioral Rules
+
+**Rule 1: Detection.** `sync$(fn)` is detected during the main QwikTransform pass when the callee identifier matches the `sync_qrl_fn` identifier (imported from `@qwik.dev/core`).
+
+**Rule 2: Argument validation.** The first argument must be an `ArrowExpr` or `FnExpr` (arrow function or function expression). If the argument is any other expression type, the call is passed through unchanged -- no transformation occurs.
+
+**Rule 3: Minified serialization.** The function expression is serialized to a minified JavaScript string using codegen with `Config::with_minify(true)` and no comments (transform.rs:704, inlined_fn.rs:194). The serialization process:
+
+1. Clones the expression AST
+2. Applies hygiene normalization (`hygiene_with_config`)
+3. Applies the fixer pass
+4. Emits the expression as a module statement via SWC's codegen with minification enabled
+5. Strips the trailing semicolon from the output string (`trim_end_matches(';')`)
+6. Comments inside the function body are removed during serialization (the codegen has `comments: None`)
+
+**Rule 4: Output format.** The `sync$` call is replaced with `_qrlSync(originalFn, "serializedString")`:
+
+```javascript
+// Input:
+sync$(fn_expr)
+
+// Output:
+_qrlSync(fn_expr, "minified_string_of_fn_expr")
+```
+
+Both the original function expression (preserving comments and formatting in the AST) AND the minified string representation are emitted. The `_qrlSync` function is imported from `@qwik.dev/core` via `ensure_core_import`.
+
+**Rule 5: No segment extraction.** Unlike other `$`-suffixed calls, `sync$` does NOT:
+- Extract the function body to a separate segment module
+- Generate a segment hash or canonical filename
+- Create a dynamic import reference
+- Produce segment metadata (SegmentAnalysis)
+
+The function stays inline in whichever module contains the `sync$` call (root or segment).
+
+**Rule 6: Import rewriting.** The `sync$` import is rewritten to `_qrlSync` (via `ensure_core_import`), and the `_qrlSync` import is added to the module's import declarations.
+
+#### Example: Three sync$ function forms (example_of_synchronous_qrl)
+
+**Input:**
+
+```javascript
+import { sync$, component$ } from "@qwik.dev/core";
+
+export default component$(() => {
+  return (
+    <>
+      <input onClick$={sync$(function(event, target) {
+        // comment should be removed
+        event.preventDefault();
+      })}/>
+      <input onClick$={sync$((event, target) => {
+        event.preventDefault();
+      })}/>
+      <input onClick$={sync$((event, target) => event.preventDefault())}/>
+    </>
+  );
+});
+```
+
+**Output (segment module -- test.tsx_test_component_LUXeXe0DQrg.js):**
+
+```javascript
+import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
+import { _jsxSorted } from "@qwik.dev/core";
+import { _qrlSync } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = () => {
+  return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+    /*#__PURE__*/ _jsxSorted("input", {
+      "q-e:click": _qrlSync(function(event, target) {
+        // comment should be removed
+        event.preventDefault();
+      }, "function(event,target){event.preventDefault();}")
+    }, null, null, 2, null),
+    /*#__PURE__*/ _jsxSorted("input", {
+      "q-e:click": _qrlSync((event, target) => {
+        event.preventDefault();
+      }, "(event,target)=>{event.preventDefault();}")
+    }, null, null, 2, null),
+    /*#__PURE__*/ _jsxSorted("input", {
+      "q-e:click": _qrlSync(
+        (event, target) => event.preventDefault(),
+        "(event,target)=>event.preventDefault()"
+      )
+    }, null, null, 2, null)
+  ], 1, "u6_0");
+};
+```
+
+Key observations:
+- **Function expression form:** `function(event, target) {...}` -- serialized as `"function(event,target){event.preventDefault();}"`. The comment in the AST expression is preserved, but the serialized string has no comments.
+- **Arrow block body:** `(event, target) => {...}` -- serialized as `"(event,target)=>{event.preventDefault();}"`.
+- **Arrow concise body:** `(event, target) => event.preventDefault()` -- serialized as `"(event,target)=>event.preventDefault()"`.
+- All three forms are valid inputs. The minified serialization removes whitespace and comments.
+
+**See also:** `example_of_synchronous_qrl` (all three function forms)
+
+---
+
+### Noop QRL Handling (CONV-14)
+
+Noop QRLs are lightweight placeholder QRL calls that replace callbacks whose segments should not be emitted. They serve two purposes: (1) replacing stripped segments (via `strip_ctx_name` or `strip_event_handlers`) with runtime-safe placeholders, and (2) providing the declaration pattern for the Hoist entry strategy's `.s()` registration mechanism.
+
+Source: transform.rs:3000-3027 (create_noop_qrl), transform.rs:1459-1608 (hoist_qrl_to_module_scope)
+
+#### Behavioral Rules
+
+**Rule 1: When noop QRLs are generated.** Noop QRLs appear in two contexts:
+
+| Context | Trigger | Source |
+|---------|---------|--------|
+| Stripped segments | `should_emit_segment()` returns false -- either `strip_ctx_name` prefix matches the segment's `ctx_name`, or `strip_event_handlers` is true and the segment's `ctx_kind` is `EventHandler` | transform.rs:2978-2996 |
+| Hoist strategy | `hoist_qrl_to_module_scope()` converts `inlinedQrl()` calls to `_noopQrl()` + `.s()` registration pattern | transform.rs:1482-1548 |
+
+**Rule 2: Mode-dependent noop QRL forms.** The function name and arguments differ by emit mode:
+
+| Mode | Function | Arguments | Example |
+|------|----------|-----------|---------|
+| Prod, Lib, Test | `_noopQrl` | `("symbolName")` | `_noopQrl("Child_component_9GyF01GDKqw")` |
+| Dev, Hmr | `_noopQrlDEV` | `("symbolName", { file: "...", lo: N, hi: N, displayName: "..." })` | `_noopQrlDEV("App_component_serverStuff_ebyHaP15ytQ", { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0, displayName: "test.tsx_App_component_serverStuff" })` |
+
+The Dev/Hmr form includes a source location object with:
+- `file`: The `dev_path` option if provided, otherwise the module's absolute path (via `path_data.abs_path.to_slash_lossy()`)
+- `lo`, `hi`: Source span byte offsets (0,0 for stripped segments whose original span is unavailable)
+- `displayName`: The segment's display name (origin + context path)
+
+Source: transform.rs:3011-3023 (mode check, get_qrl_dev_obj call)
+
+**Rule 3: All noop QRL calls receive PURE annotations.** The `create_noop_qrl` method calls `create_internal_call(fn_name, args, true)` where the third argument (`true`) is the `pure` flag. This enables bundlers to tree-shake unused noop QRL declarations. (Cross-reference: CONV-08 PURE Annotations.)
+
+**Rule 4: Captures preserved on noop QRLs.** Even when a segment is stripped, if the original function had captured variables, the capture array is emitted on the noop QRL call. The `create_noop_qrl` method calls `self.emit_captures(&segment_data.captures, &mut args)` (transform.rs:3025). At the call site, this produces the `.w([captures])` call chain:
+
+```javascript
+// Stripped segment with captures:
+serverStuffQrl(q_qrl_4294901760.w([stuff]));
+
+// Stripped segment without captures:
+serverStuffQrl(q_qrl_4294901762);
+```
+
+This preserves runtime scope tracking -- the framework can still inspect which variables were captured even when the segment body is not loaded.
+
+**Rule 5: Noop segment output modules.** When a segment is stripped (not emitted), its output module still appears in the transform output but contains only a null export with an empty source map:
+
+```javascript
+export const App_component_serverStuff_ebyHaP15ytQ = null;
+```
+
+Source map: `{"version":3,"sources":[],"names":[],"mappings":""}`
+
+The segment metadata (SegmentAnalysis) is still generated with correct `origin`, `displayName`, `hash`, `ctxKind`, `ctxName`, and `captures` fields. The `loc` field is `[0, 0]` for stripped segments.
+
+**Rule 6: Hoist strategy noop QRL pattern.** When the Hoist entry strategy is active, `hoist_qrl_to_module_scope()` (transform.rs:1459-1608) converts `inlinedQrl()` calls into a two-part pattern:
+
+1. **Top-level const declaration:** `const q_symbolName = /*#__PURE__*/ _noopQrl("symbolName");`
+2. **Registration call:** `q_symbolName.s(fnBody);` -- either at module scope (for global identifiers) or inline via comma expression `(q_X.s(value), q_X)` for non-global identifiers
+3. **Capture chain:** `.w([captures])` appended if the segment has captured variables
+
+The `.s()` call assigns the function body to the noop QRL at runtime, enabling the segment to be loaded lazily while keeping the QRL reference available synchronously.
+
+**Rule 7: Lib mode exception.** `hoist_qrl_to_module_scope()` returns the call expression unchanged when mode is Lib (transform.rs:1461-1463). No hoisting occurs in library mode.
+
+#### Example: Dev mode noop QRLs with stripped segments and captures (example_noop_dev_mode)
+
+**Input:**
+
+```javascript
+import { component$, useStore, serverStuff$, $ } from '@qwik.dev/core';
+
+export const App = component$(() => {
+  const stuff = useStore();
+  serverStuff$(async () => {
+    // should be removed but keep scope
+    console.log(stuff.count)
+  })
+  serverStuff$(async () => {
+    // should be removed
+  })
+
+  return (
+    <Cmp>
+      <p class="stuff"
+        shouldRemove$={() => stuff.count}
+        onClick$={() => console.log('warn')}
+      >
+        Hello Qwik
+      </p>
+    </Cmp>
+  );
+});
+```
+
+**Config:** `strip_ctx_name: ["server"]`, `strip_event_handlers: true`, `mode: Dev`
+
+**Output (root module):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrlDEV(
+  () => import("./test.tsx_App_component_ckEPmXZlub0"),
+  "App_component_ckEPmXZlub0",
+  { file: "/hello/from/dev/test.tsx", lo: 105, hi: 452, displayName: "test.tsx_App_component" }
+);
+
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Output (segment module -- test.tsx_App_component_ckEPmXZlub0.js):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+import { _noopQrlDEV } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+
+const q_qrl_4294901760 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_serverStuff_ebyHaP15ytQ",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_serverStuff" }
+);
+const q_qrl_4294901762 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_serverStuff_1_PQCqO0ANabY",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_serverStuff_1" }
+);
+const q_qrl_4294901764 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_Cmp_p_shouldRemove_uU0MG0jvQD4",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_Cmp_p_shouldRemove" }
+);
+const q_qrl_4294901766 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_Cmp_p_q_e_click" }
+);
+
+export const App_component_ckEPmXZlub0 = () => {
+  const stuff = useStore();
+  serverStuffQrl(q_qrl_4294901760.w([stuff]));
+  serverStuffQrl(q_qrl_4294901762);
+  return /*#__PURE__*/ _jsxSorted(Cmp, null, null,
+    /*#__PURE__*/ _jsxSorted("p", { "q:p": stuff }, {
+      class: "stuff",
+      shouldRemove$: q_qrl_4294901764,
+      "q-e:click": q_qrl_4294901766
+    }, "Hello Qwik", 7, null, { ... }), 1, "u6_0", { ... });
+};
+```
+
+Key observations:
+- All four stripped segments use `_noopQrlDEV` (Dev mode) with PURE annotations
+- `q_qrl_4294901760` has `.w([stuff])` -- the first `serverStuff$` captured the `stuff` variable; captures are preserved even though the segment is stripped
+- `q_qrl_4294901762` has no `.w()` -- the second `serverStuff$` had no captures
+- Stripped segment output modules contain `export const symbolName = null;` with empty source maps
+- `lo: 0, hi: 0` in the dev info because stripped segments lose their original source spans
+
+**Output (stripped segment module -- e.g., test.tsx_App_component_serverStuff_ebyHaP15ytQ.js):**
+
+```javascript
+export const App_component_serverStuff_ebyHaP15ytQ = null;
+```
+
+#### Example: Hoist strategy noop QRL with .s() registration (example_inlined_entry_strategy)
+
+**Input:**
+
+```javascript
+import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+export const Child = component$(() => {
+  useStyles$('somestring');
+  const state = useStore({ count: 0 });
+
+  useBrowserVisibleTask$(() => {
+    state.count = thing.doStuff() + import("./sibling");
+  });
+
+  return (
+    <div onClick$={() => console.log(mongodb)}>
     </div>
   );
 });
@@ -4218,5 +4591,46 @@ Key observations:
 - The `mongo`, `redis`, and `handler` imports are removed from the root module since they are no longer referenced by any surviving code.
 
 **See also:** `example_strip_client_code` (Hoist pattern with stripped client segments and `.s()` registration), `example_strip_exports_used` (strip_exports when the stripped symbol is referenced by another segment)
+**Output (root module, Hoist strategy):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
+import { _captures } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+const q_Child_component_div_q_e_click_cROa4sult1s = /*#__PURE__*/ _noopQrl("Child_component_div_q_e_click_cROa4sult1s");
+const q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA = /*#__PURE__*/ _noopQrl("Child_component_useBrowserVisibleTask_0IGFPOyJmQA");
+const q_Child_component_useStyles_qBZTuFM0160 = /*#__PURE__*/ _noopQrl("Child_component_useStyles_qBZTuFM0160");
+
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.s(() => {
+  const state = _captures[0];
+  state.count = thing.doStuff() + import("./sibling");
+});
+q_Child_component_div_q_e_click_cROa4sult1s.s(() => console.log(mongodb));
+q_Child_component_9GyF01GDKqw.s(() => {
+  useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+  const state = useStore({ count: 0 });
+  useBrowserVisibleTaskQrl(q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.w([state]));
+  return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+Key observations:
+- All four QRL declarations use `_noopQrl` (Prod mode) with PURE annotations
+- Each `.s()` call registers the function body with its corresponding noop QRL
+- The `.s()` calls are emitted at module scope (after the `const` declarations) for globally-accessible identifiers
+- `useBrowserVisibleTaskQrl(...)` does NOT have PURE -- it is a side-effectful registration (cross-reference: CONV-08 anti-list)
+- `componentQrl(...)` DOES have PURE -- it is a tree-shakeable component declaration
+- `.w([state])` on the visible task QRL preserves capture tracking
+
+**See also:** `example_noop_dev_mode` (Dev mode noop QRLs with stripped segments), `example_strip_server_code` (Prod mode noop QRLs), `example_strip_client_code` (Hoist pattern with stripped client segments), `example_inlined_entry_strategy` (full Hoist strategy pattern)
 
 ---
