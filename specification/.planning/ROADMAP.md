@@ -48,7 +48,12 @@ Plans:
   1. The spec document describes JSX transformation rules (`_jsxSorted`/`_jsxSplit` conversion, static/dynamic prop separation, class normalization, bind sugar, slot/ref/children/key handling) with input/output examples
   2. The spec document describes signal optimization rules (`_fnSignal` generation for inline JSX expressions, positional parameter creation) with examples showing when optimization applies vs when it does not
   3. The spec document describes props destructuring transformation (`_rawProps` access patterns, `_restProps()` handling) and explicitly states the pre-pass ordering requirement relative to capture analysis
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Props Destructuring (CONV-04): _rawProps, _restProps, pre-pass ordering
+- [ ] 02-02-PLAN.md — JSX Transform (CONV-06): branch point, element types, prop classification, special attributes, children, keys, flags, spreads
+- [ ] 02-03-PLAN.md — Signal Optimization (CONV-07): _fnSignal, _wrapProp, decision table, hoisting
 
 ### Phase 3: Build Modes & Remaining Transforms Specification
 **Goal**: The spec document contains complete behavioral descriptions for all remaining CONV transformations and the strategy/mode system that controls optimizer behavior across different build contexts
@@ -103,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
-| 2. JSX, Props & Signal Specification | 0/? | Not started | - |
+| 2. JSX, Props & Signal Specification | 0/3 | Planned | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 0/? | Not started | - |
 | 5. Core OXC Implementation | 0/? | Not started | - |
