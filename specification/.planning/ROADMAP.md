@@ -115,5 +115,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. JSX, Props & Signal Specification | 0/? | Not started | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
-| 5. Core OXC Implementation | 0/7 | Not started | - |
+| 5. Core OXC Implementation | 1/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
