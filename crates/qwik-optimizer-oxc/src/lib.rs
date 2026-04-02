@@ -9,10 +9,10 @@ pub mod words;
 pub mod hash;
 pub mod errors;
 pub mod is_const;
+pub(crate) mod parse;
+pub(crate) mod collector;
+pub(crate) mod entry_strategy;
+pub(crate) mod rename_imports;
 
 // Re-export all public types
 pub use types::*;
-// qwik-optimizer-oxc: Core transform engine for the Qwik optimizer
-// This crate implements all 14 CONV transformations using idiomatic OXC patterns.
-
-// Placeholder: full module declarations will be added by plan 05-01
