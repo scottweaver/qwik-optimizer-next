@@ -44,7 +44,7 @@ fn transform_code(
     config: &TransformCodeOptions,
     input_code: &str,
     input_path: &str,
-    _dev_path: Option<&str>,
+    dev_path: Option<&str>,
 ) -> TransformOutput {
     // Stage 0: Decompose path.
     let path_data = match parse::parse_path(input_path, Path::new(&config.src_dir)) {
@@ -221,6 +221,14 @@ fn transform_code(
     let mut segment_modules: Vec<TransformModule> = Vec::new();
     let record_extension = parse::output_extension(input_path, config.transpile_ts, config.transpile_jsx);
 
+    // HMR: compute effective dev_path for _useHmr injection (D-41).
+    // Defaults to abs_dir/file_name when dev_path is not provided.
+    let effective_dev_path: String = dev_path.map(|s| s.to_string()).unwrap_or_else(|| {
+        let abs = path_data.abs_dir.join(&path_data.file_name);
+        abs.to_slash_lossy().into_owned()
+    });
+    let is_hmr_mode = config.mode == EmitMode::Hmr;
+
     for record in &xfrm.segments {
         // Skip inline segments (they live in the parent module)
         if record.is_inline {
@@ -232,18 +240,48 @@ fn transform_code(
             None => continue,
         };
 
+        // HMR _useHmr() injection (D-41): inject into component$ segment bodies only.
+        let is_component_hmr = is_hmr_mode && record.ctx_name == "component$";
+        let hmr_expr_code: String;
+        let final_expr_code: &str = if is_component_hmr {
+            hmr_expr_code = code_move::inject_use_hmr(expr_code, &effective_dev_path);
+            &hmr_expr_code
+        } else {
+            expr_code
+        };
+
+        // For HMR component$ segments, add _useHmr to the local_idents so it gets imported.
+        let mut local_idents_with_hmr: Vec<String>;
+        let effective_local_idents: &[String] = if is_component_hmr {
+            local_idents_with_hmr = record.local_idents.clone();
+            if !local_idents_with_hmr.contains(&"_useHmr".to_string()) {
+                local_idents_with_hmr.push("_useHmr".to_string());
+            }
+            &local_idents_with_hmr
+        } else {
+            &record.local_idents
+        };
+
+        // Build synthetic imports for HMR _useHmr
+        let hmr_import = if is_component_hmr {
+            vec![format!(r#"import {{ _useHmr }} from "{}";"#, config.core_module)]
+        } else {
+            vec![]
+        };
+
         // Build segment module code via new_module
         let module_code = code_move::new_module(code_move::NewModuleCtx {
-            expr: expr_code,
+            expr: final_expr_code,
             name: &record.name,
             file_stem: &path_data.file_stem,
-            local_idents: &record.local_idents,
+            local_idents: effective_local_idents,
             scoped_idents: &record.scoped_idents,
             global: &collect,
             core_module: &config.core_module,
             explicit_extensions: config.explicit_extensions,
             extra_top_items: &xfrm.extra_top_items,
             migrated_root_vars: &record.migrated_root_vars,
+            synthetic_imports: &hmr_import,
         });
 
         // Parse + codegen for normalization
