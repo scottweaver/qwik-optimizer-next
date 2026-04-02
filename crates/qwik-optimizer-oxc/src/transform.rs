@@ -41,12 +41,14 @@ fn arena_str<'a>(ctx: &TraverseCtx<'a, ()>, s: &str) -> &'a str {
 
 /// Classification of a declaration binding for capture analysis.
 ///
-/// `Var(true)` = const, `Var(false)` = let/var/param,
+/// `Const` and `Let` are capturable variable bindings;
 /// `Fn` and `Class` are non-capturable (produce C02 errors).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum IdentType {
-    /// Variable binding. Inner bool is `true` if `const`.
-    Var(bool),
+    /// `const` binding -- captured by reference (no setter needed).
+    Const,
+    /// `let`/`var`/parameter binding -- captured with getter/setter.
+    Let,
     /// Function declaration (not capturable across $ boundary).
     Fn,
     /// Class declaration (not capturable across $ boundary).
@@ -182,11 +184,12 @@ pub(crate) fn compute_scoped_idents(
         for (decl_name, decl_type) in all_decl {
             if name == decl_name {
                 match decl_type {
-                    IdentType::Var(c) => {
+                    IdentType::Const => {
                         matched.insert(name.clone());
-                        if !c {
-                            is_const = false;
-                        }
+                    }
+                    IdentType::Let => {
+                        matched.insert(name.clone());
+                        is_const = false;
                     }
                     // Fn/Class entries are NOT captured as scoped idents
                     IdentType::Fn | IdentType::Class => {}
@@ -506,7 +509,7 @@ impl QwikTransform {
             // be found during compute_scoped_idents, but then reclassify them
             // as self-imports in the post-processing step.
             // We treat them as Var(true) since root-level consts are typical.
-            root_frame.push((name.clone(), IdentType::Var(true)));
+            root_frame.push((name.clone(), IdentType::Const));
         }
 
         let entry_policy = crate::entry_strategy::parse_entry_strategy(&config.entry_strategy);
@@ -1708,7 +1711,7 @@ fn collect_formal_params_to_decl(formal: &FormalParameters<'_>, frame: &mut Vec<
 fn collect_binding_to_decl(pat: &BindingPattern<'_>, frame: &mut Vec<IdPlusType>, is_const: bool) {
     match pat {
         BindingPattern::BindingIdentifier(id) => {
-            frame.push((id.name.as_str().to_string(), IdentType::Var(is_const)));
+            frame.push((id.name.as_str().to_string(), if is_const { IdentType::Const } else { IdentType::Let }));
         }
         BindingPattern::ObjectPattern(obj) => {
             for prop in &obj.properties {
@@ -2363,9 +2366,9 @@ mod tests {
         idents.insert("z".to_string());
 
         let decl: Vec<IdPlusType> = vec![
-            ("x".to_string(), IdentType::Var(true)),
-            ("y".to_string(), IdentType::Var(false)),
-            ("w".to_string(), IdentType::Var(true)),
+            ("x".to_string(), IdentType::Const),
+            ("y".to_string(), IdentType::Let),
+            ("w".to_string(), IdentType::Const),
         ];
 
         let (scoped, is_const) = compute_scoped_idents(&idents, &decl);
@@ -2373,7 +2376,7 @@ mod tests {
         assert!(scoped.contains(&"y".to_string()));
         assert!(!scoped.contains(&"z".to_string())); // not in decl
         assert!(!scoped.contains(&"w".to_string())); // not in idents
-        assert!(!is_const); // y is Var(false)
+        assert!(!is_const); // y is Let
     }
 
     #[test]
@@ -2386,7 +2389,7 @@ mod tests {
         let decl: Vec<IdPlusType> = vec![
             ("myFn".to_string(), IdentType::Fn),
             ("myClass".to_string(), IdentType::Class),
-            ("myVar".to_string(), IdentType::Var(true)),
+            ("myVar".to_string(), IdentType::Const),
         ];
 
         let (scoped, _) = compute_scoped_idents(&idents, &decl);

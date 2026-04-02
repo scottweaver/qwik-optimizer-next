@@ -63,3 +63,19 @@ This document tracks missteps made during AI-assisted development and the correc
 - Updated all call sites in `lib.rs` and `transform.rs`
 - Moved corresponding tests from `parse.rs` to `source_path.rs`
 - `parse.rs` now contains only AST parsing logic (`parse_module`, `ParseResult`)
+
+---
+
+## 005: Boolean flag in enum variant instead of distinct variants
+
+**Date:** 2026-04-02
+
+**What happened:** `IdentType::Var(bool)` used a boolean to distinguish `const` (`true`) from `let`/`var` (`false`) bindings. Call sites read `IdentType::Var(true)` and `IdentType::Var(false)` — a classic "boolean trap" where the meaning of `true`/`false` is invisible without checking the enum definition.
+
+**Why it was wrong:** Boolean parameters and enum payloads that encode domain distinctions are error-prone and unreadable. Rust's enum system exists precisely to make these distinctions explicit. A match arm like `IdentType::Var(c) => { if !c { ... } }` obscures intent compared to separate `Const`/`Let` arms.
+
+**Corrective action:**
+- Split `IdentType::Var(bool)` into `IdentType::Const` and `IdentType::Let`
+- Updated the `compute_scoped_idents` match to use separate arms for `Const` and `Let`
+- Updated `collect_binding_to_decl` to map `is_const` bool -> `IdentType::Const`/`IdentType::Let` at the boundary
+- Updated all test call sites
