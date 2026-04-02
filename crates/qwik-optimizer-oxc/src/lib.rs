@@ -8,7 +8,7 @@ pub mod words;
 pub mod hash;
 pub mod errors;
 pub mod is_const;
-pub(crate) mod parse;
+pub(crate) mod parser;
 pub(crate) mod source_path;
 pub(crate) mod collector;
 pub(crate) mod entry_strategy;
@@ -60,7 +60,7 @@ fn transform_code(
     let source_in_arena: &str = allocator.alloc_str(input_code);
 
     let (is_type_script, is_jsx, mut program, diagnostics) =
-        match parse::parse(&allocator, source_in_arena, input_path) {
+        match parser::parse(&allocator, source_in_arena, input_path) {
             Ok((parse_result, diags)) => {
                 let is_ts = parse_result.source_type.is_typescript();
                 let is_jsx = parse_result.source_type.is_jsx();
