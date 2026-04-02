@@ -242,7 +242,184 @@ synthetic: [
 
 ## Stage 3: Pre-Transforms
 
-> (Specified in Phase 2 -- Props Destructuring, Phase 3 -- Const Replacement)
+### Props Destructuring (CONV-04)
+
+Props destructuring is a pre-pass (Step 8 in the pipeline) that transforms destructured `component$` parameters into `_rawProps` member-access patterns. This enables signal reactivity tracking: the runtime can intercept individual property accesses on the raw props object rather than receiving already-destructured values. Props destructuring runs BEFORE the main `QwikTransform` (Step 10) because it changes variable references that capture analysis (CONV-03) later reads -- after this transform, captured variables reference `_rawProps.propName` instead of the original destructured binding names.
+
+**Source:** props_destructuring.rs (full file, 568 LOC): `transform_props_destructuring` (entry point, lines 22-37), `transform_component_props` (parameter rewriting, lines 62-88), `transform_component_body` (inlining optimizations, lines 89-284), `transform_pat` (pattern analysis, lines 361-478), `transform_rest` (rest-props insertion, lines 480-522), `create_omit_props` (exclusion-list builder, lines 524-568)
+
+#### Behavioral Rules
+
+**Rule 1: Trigger condition.** The transform activates on `component$()` calls whose first argument is an arrow function with exactly one parameter that is an object destructuring pattern. Additionally, standalone arrow functions (not wrapped in `component$`) with a single destructured parameter are transformed if their body is either (a) a block statement containing a `return` statement, or (b) a single expression (call expression). This second path handles inline components. The `component$` callee is identified by matching against the imported local identifier from `@qwik.dev/core` (via `global_collect.get_imported_local`).
+
+**Rule 2: `_rawProps` replacement.** When a destructured parameter is detected, a new identifier `_rawProps` replaces the destructured pattern as the function's sole parameter. Each destructured prop binding becomes a member access on `_rawProps`:
+
+- Simple binding: `{message}` becomes `_rawProps.message`
+- Renamed binding (key-value pattern): `{count: c}` uses the **original prop name** for access: all references to `c` in the function body are replaced with `_rawProps.count`
+- String-keyed binding: `{'bind:value': bindValue}` uses computed member access: `_rawProps["bind:value"]`
+- Default value with const expression: `{x = 5}` becomes `_rawProps.x ?? 5` (nullish coalescing)
+- Default value with non-const expression: the entire transform **bails out** -- the function is left unmodified. Const-ness is determined by `is_const_expr()`, which checks for literals, template literals without expressions, and references to known-global identifiers.
+
+The replacement mapping is stored in an `identifiers: HashMap<Id, Expr>` and applied via `visit_mut_expr` to all subsequent identifier references in the function body. Shorthand object properties are handled separately (see Rule 6).
+
+**Rule 3: `_restProps()` handling.** When the destructuring pattern includes a rest element (`{...rest}`), the transform imports `_restProps` from `@qwik.dev/core` and inserts a `const` declaration at the top of the function body:
+
+- With named props and rest: `({message, id, count: c, ...rest})` produces:
+  ```js
+  const rest = _restProps(_rawProps, ["message", "id", "count"]);
+  ```
+  The exclusion array contains the **original prop names** (not the local aliases). In the example above, `"count"` appears in the array (not `"c"`).
+
+- Rest-only pattern: `({...props})` produces:
+  ```js
+  const props = _restProps(_rawProps);
+  ```
+  No exclusion array argument is passed when there are no named props to exclude.
+
+If the arrow function body is a single expression (not a block statement), the transform wraps it in a block statement with the `_restProps` declaration followed by a `return` statement containing the original expression.
+
+**Rule 4: Inlining optimizations.** After parameter transformation, the function body is scanned for `const` declarations at the top of the block (scanning stops at the first non-`const` declaration). Eligible declarations are inlined:
+
+- **Literal initializers:** `const x = 5` -- the declaration is removed and all references to `x` are replaced with the literal value `5`.
+- **Member access on known identifiers:** `const y = _rawProps.something.count` -- if the object identifier (`_rawProps.something`) is already in the replacements map, the declaration is removed and `y` is inlined as the full member-access chain.
+- **Computed member access:** `const z = obj['key']` -- inlined if the object is a known identifier.
+- **`use*` hook results (direct):** `const store = useStore({})` -- the identifier is renamed to a lowercased version of the hook name (e.g., `useStore` -> `store`), but the declaration is **kept** (not inlined). The call expression is preserved.
+- **`use*` hook results with member access:** `const x = useStore({}).thing` -- split into a kept declaration `const store = useStore({})` plus the member access `store.thing` is used as the replacement for `x`.
+- **Identifier-only initializers:** `const y = someVar` -- if `someVar` is in the replacements map, `y` is replaced with whatever `someVar` maps to. The declaration is removed.
+
+**Rule 5: Skip condition (Lib mode).** If the function body starts with a `_captures` destructuring (indicating pre-compiled library code from Lib mode), the entire body transformation is skipped. This prevents inlining from disrupting inner QRL capture arrays that reference the named variables. Additionally, within `_inlinedQrl` / `_inlinedQrlDev` calls, the first argument (the function body) is skipped entirely -- only subsequent arguments (capture arrays) are visited.
+
+**Rule 6: Shorthand property expansion.** When a replaced prop identifier appears in a shorthand object property (e.g., `{name}` in an object literal or JSX spread), the shorthand is expanded to a key-value pair: `{name}` becomes `{name: _rawProps.name}`. This is necessary because shorthand properties reference the identifier by name, and after replacement the identifier no longer exists -- only the `_rawProps.name` member access does.
+
+**Rule 7: Unused declaration cleanup.** After inlining removes initializers from `const` declarations, some declarations are left as `const _unused;` (with no initializer). These are invalid JavaScript, so the transform removes any `const` declaration where all declarators have identifiers starting with `_unused` and no initializer. This cleanup runs as a final `retain` pass over the function body statements.
+
+#### Examples
+
+**Example 1: Basic Props Destructuring with Rest** (`should_destructure_args`)
+
+*Input:*
+```js
+import { component$ } from "@qwik.dev/core";
+
+export default component$(({ message, id, count: c, ...rest }: Record<string, any>) => {
+  const renders = useStore({ renders: 0 }, { reactive: false });
+  renders.renders++;
+  const rerenders = renders.renders + 0;
+  return (
+    <div id={id}>
+      <span {...rest}>
+        {message} {c}
+      </span>
+      <div class="renders">{rerenders}</div>
+    </div>
+  );
+});
+```
+
+*Output (segment module):*
+```js
+import { _restProps } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (_rawProps) => {
+  const rest = _restProps(_rawProps, ["message", "id", "count"]);
+  const renders = useStore({ renders: 0 }, { reactive: false });
+  renders.renders++;
+  const rerenders = renders.renders + 0;
+  return (
+    <div id={_rawProps.id}>
+      <span {...rest}>
+        {_rawProps.message} {_rawProps.count}
+      </span>
+      <div class="renders">{rerenders}</div>
+    </div>
+  );
+};
+```
+
+Key observations:
+- The destructured parameter `({message, id, count: c, ...rest})` becomes `(_rawProps)`
+- `message` -> `_rawProps.message`, `id` -> `_rawProps.id`
+- Renamed prop `count: c` uses the original name: `c` -> `_rawProps.count`
+- `_restProps` exclusion list contains `["message", "id", "count"]` (original names, not aliases)
+- `renders` and `rerenders` are left untouched (Rule 4 inlining applies only to const declarations with eligible initializers; `useStore` call is kept)
+
+> **See also:** `should_destructure_args` snapshot (SWC, full output with JSX transform and signal optimization applied)
+
+**Example 2: String-Keyed Props** (`destructure_args_colon_props`)
+
+*Input:*
+```js
+import { component$ } from "@qwik.dev/core";
+export default component$((props) => {
+  const { 'bind:value': bindValue } = props;
+  return <>{bindValue}</>;
+});
+```
+
+*Output (segment module):*
+```js
+export const test_component_LUXeXe0DQrg = (props) => {
+  return <>{props["bind:value"]}</>;
+};
+```
+
+Key observations:
+- When the component parameter is not a destructuring pattern (just `props`), the parameter name is kept as-is
+- The body-level `const { 'bind:value': bindValue } = props` is inlined: `bindValue` -> `props["bind:value"]` (computed member access for string keys)
+- The `const` declaration is removed after inlining
+
+> **See also:** `destructure_args_colon_props` snapshot; `destructure_args_colon_props2`, `destructure_args_colon_props3` snapshots (additional string-key variations with `useSignal` interaction)
+
+**Example 3: Rest-Only Pattern** (`should_convert_rest_props`)
+
+*Input:*
+```js
+import { component$, useTask$ } from '@qwik.dev/core';
+
+export default component$<any>(({ ...props }) => {
+  useTask$(() => {
+    props.checked;
+  });
+  return 'hi';
+});
+```
+
+*Output (segment module):*
+```js
+import { _restProps } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (_rawProps) => {
+  const props = _restProps(_rawProps);
+  useTask$(() => {
+    props.checked;
+  });
+  return 'hi';
+};
+```
+
+Key observations:
+- Rest-only destructuring `({...props})` transforms the parameter to `(_rawProps)`
+- `_restProps(_rawProps)` is called **without** an exclusion array (no named props to exclude)
+- The `props` variable now refers to the `_restProps` result, which is a proxy/copy of `_rawProps`
+- Nested `useTask$` captures `props` (the `_restProps` result), not `_rawProps` directly
+
+> **See also:** `should_convert_rest_props` snapshot (SWC, full output with QRL extraction for nested `useTask$`)
+
+#### See Also: Additional Snapshot Coverage
+
+The following snapshots provide additional coverage of props destructuring edge cases:
+
+- `destructure_args_colon_props2.snap`, `destructure_args_colon_props3.snap` -- string-key destructuring with `useSignal` interaction and nested member access
+- `destructure_args_inline_cmp_block_stmt.snap`, `destructure_args_inline_cmp_block_stmt2.snap` -- inline component (standalone arrow function) with block statement body
+- `destructure_args_inline_cmp_expr_stmt.snap` -- inline component with single expression body (triggers block-wrapping in Rule 3)
+- `should_not_generate_conflicting_props_identifiers.snap` -- validates that `_rawProps` identifier generation avoids name collisions with existing identifiers in scope
+- `example_functional_component_capture_props.snap` -- interaction between props destructuring and capture analysis: demonstrates how destructured prop references become `_rawProps.propName` before capture analysis determines what crosses segment boundaries
+
+#### Cross-References
+
+- **Pipeline ordering (Step 8 before Step 10):** Props destructuring runs as a pre-pass at Step 8, before the main `QwikTransform` at Step 10. This ordering is essential because `QwikTransform`'s capture analysis reads variable references to determine what crosses segment boundaries. After props destructuring, what was `message` (a local destructured binding) becomes `_rawProps.message` (a member access on the parameter) -- capture analysis then correctly sees `_rawProps` as the captured variable rather than individual prop names.
+- **Capture analysis (CONV-03):** The props destructuring transform changes the set of identifiers visible to capture analysis. A `component$` body that originally referenced `{message, count}` as local bindings will, after this transform, reference `_rawProps.message` and `_rawProps.count`. Capture analysis then classifies `_rawProps` as the single captured binding (if accessed in a nested `$` scope), rather than capturing `message` and `count` separately.
+- **Signal optimization (CONV-07, specified later in this phase):** After props destructuring rewrites accesses to `_rawProps.propName`, signal optimization generates `_wrapProp(_rawProps, "propName")` calls for JSX attribute positions. This enables fine-grained signal subscriptions per-prop rather than subscribing to the entire props object.
 
 ---
 
@@ -1831,6 +2008,1095 @@ Key observations:
 
 (Source: Jack's swc-snapshots/example_segment_variable_migration.snap)
 
+### JSX Transform (CONV-06)
+
+The JSX transform intercepts `jsx()`/`jsxs()`/`jsxDEV()` calls produced by Stage 1 JSX transpilation and converts them to Qwik's internal `_jsxSorted()` or `_jsxSplit()` calls with separated static/dynamic props, extracted children, computed flags, and auto-generated keys. This is the largest single transformation in the optimizer.
+
+Source: transform.rs:1149-2900 (handle_jsx, handle_jsx_props_obj, internal_handle_jsx_props_obj, transform_jsx_prop), transform.rs:4639-4728 (event name conversion, key generation), words.rs (constant definitions)
+
+#### _jsxSorted vs _jsxSplit Branch Point
+
+Both `_jsxSorted` and `_jsxSplit` produce the same 6-argument signature:
+
+```
+_jsxSorted(type, varProps, constProps, children, flags, key)
+_jsxSplit(type, varProps, constProps, children, flags, key)
+```
+
+The branch point determines which function is emitted:
+
+- **_jsxSorted path**: No spread props AND no component `bind:*` props. Props are sorted alphabetically by key at compile time. This is the "compile-time sorted" path.
+- **_jsxSplit path**: Spread props exist OR component has `bind:*` props. Props are NOT sorted at compile time; runtime handles ordering. This is the "runtime-sorted" path.
+
+**Note:** In the SWC source, the internal variable `should_sort` is `true` for the _jsxSplit path (counterintuitively -- it means "should the runtime sort"). The spec uses the clear terminology above instead.
+
+**Rules:**
+
+1. Input is `jsx(type, propsObject, key?)` from Stage 1 transpilation
+2. Output is `_jsxSorted(type, varProps, constProps, children, flags, key)` when no spreads and no component `bind:*` props
+3. Output is `_jsxSplit(type, varProps, constProps, children, flags, key)` when spreads exist or component has `bind:*` props
+4. `varProps` sorted alphabetically by key for `_jsxSorted` path; unsorted for `_jsxSplit`
+5. Empty `varProps` = `null` (2nd argument), empty `constProps` = `null` (3rd argument)
+6. Dev/Hmr emit modes add a 7th argument with source location info (`{ fileName, lineNumber, columnNumber }`)
+
+#### Element Transformation
+
+Element type detection determines how the JSX element is processed. The optimizer classifies the first argument of `jsx()` into three categories:
+
+| Element Type | Example | `is_fn` | `is_text_only` | `name_token` | Mutability |
+|---|---|---|---|---|---|
+| String literal | `"div"`, `"span"` | `false` | check list | `true` | N/A |
+| Identifier | `MyComponent`, `Foo` | `true` | `false` | `true` | mutable (unless in `immutable_function_cmp`) |
+| Other expression | `cond ? A : B` | `true` | `false` | `false` | always mutable |
+
+Source: transform.rs:1158-1174
+
+**Text-only element list:** `text`, `textarea`, `title`, `option`, `script`, `style`, `noscript`
+
+Text-only elements have their children forced to raw content treatment (no signal optimization on children).
+
+**`is_fn` determines:**
+
+- Key generation behavior: components (`is_fn=true`) always get a key; native elements may not (see [Key Generation](#key-generation))
+- `className` handling: native elements rename `className` to `class`; components keep `className` as-is
+- Event name conversion: native elements convert `onClick$` to `q-e:click`; components convert `onClick$` to `onClickQrl`
+- `bind:*` handling: on components, any `bind:*` forces the `_jsxSplit` path
+
+#### Prop Classification (Static vs Dynamic)
+
+Every prop in the JSX element is classified as either static (`constProps`) or dynamic (`varProps`). This separation enables Qwik's fine-grained reactivity -- static props never change and are inlined into the component's template, while dynamic props are tracked for re-rendering.
+
+Source: transform.rs:2066-2653
+
+**Static determination via `is_const_expr()`:**
+
+| Expression Type | Classification | Rationale |
+|---|---|---|
+| Literal values (string, number, boolean, null) | `constProps` | Compile-time constant |
+| Template literals with only literal parts | `constProps` | No runtime expressions |
+| Template literals where all expressions are const | `constProps` | Transitively constant |
+| Imported identifiers | `constProps` | Module-level, immutable binding |
+| `const`-declared variables with static initializers | `constProps` | In `const_idents` list with `IdentType::Var(true)` |
+| Global identifiers | `constProps` | Environment-provided, treated as stable |
+| Signal references (e.g., `signal`) | `constProps` | The signal object itself is stable |
+| Signal `.value` access (e.g., `signal.value`) | `constProps` | Wrapped via `_wrapProp` for reactivity |
+| Computed expressions over signals | `constProps` | Wrapped via `_fnSignal` for reactivity |
+| Function calls | `varProps` | Runtime side effects |
+| Variables not in `const_idents` | `varProps` | Mutable binding |
+| Expressions mixing signals with non-const | `varProps` | Cannot be statically optimized |
+| Object/array literals with dynamic contents | `varProps` | Runtime-constructed |
+
+**Empty bucket handling:** empty `varProps` -> `null`, empty `constProps` -> `null`.
+
+**Spread interaction preview:** When spreads exist, all props before the last spread go to `varProps` regardless of static nature (detailed in [Spread Props Handling](#spread-props-handling)).
+
+#### Special Attributes
+
+The optimizer treats certain prop names specially, applying transformations beyond simple static/dynamic classification.
+
+**Special Attribute Catalog:**
+
+| Attribute | Behavior | Target Bucket | Conditions |
+|---|---|---|---|
+| `children` | Extracted to 4th argument | Neither | Always extracted |
+| `ref` | Passed through, never optimized for signals | `varProps` | Always |
+| `q:slot` | Passed through, never optimized for signals | `varProps` | Always |
+| `className` | Renamed to `class` on native elements | Depends on value | `is_fn=false` only |
+| `class` | Kept as-is | Depends on value | Both native and components |
+| `bind:value` | Expands to value prop + `q-e:input` handler | `constProps` | Native elements without spreads |
+| `bind:checked` | Expands to checked prop + `q-e:input` handler | `constProps` | Native elements without spreads |
+| `bind:*` (other) | Kept as-is | `constProps` | Unrecognized bind directives |
+| `on*$` events | Extracted as QRL segments, name converted | `constProps` (static) or `varProps` | Depends on handler constness |
+| `q:p` / `q:ps` | Injected for iteration variable lifting | `varProps` | Loop context only |
+
+**Detailed behaviors:**
+
+1. **children**: Extracted to 4th argument, never appears in props. Single child passed directly, array of children as JS array literal, no children produces `null`.
+
+2. **ref**: Always goes to `varProps` (never optimized for signals).
+
+3. **q:slot**: Always goes to `varProps` (never optimized for signals).
+
+4. **className**: On native elements (`is_fn=false`), renamed to `"class"`. On components (`is_fn=true`), kept as `"className"`. The `class` attribute itself is never renamed for either type.
+
+5. **bind:value** (native elements, no spreads): Expands to a `value` prop containing the signal reference in `constProps`, plus a `q-e:input` event handler: `inlinedQrl(_val, "_val", [signal])` also in `constProps`. On native elements with spreads (_jsxSplit path): bind in `varProps` left untouched, only `constProps`-targeted bind expands. On components: forces `_jsxSplit`, no expansion.
+
+6. **bind:checked** (native elements, no spreads): Same pattern as `bind:value` but uses `_chk` helper instead of `_val`, and generates a `"checked"` prop.
+
+7. **bind:*** (other): Unrecognized bind directives (e.g., `bind:stuff`) are kept as-is in `constProps`. On components, any `bind:*` forces the `_jsxSplit` path.
+
+8. **on\*$ event handlers**: Arrow/function expressions are extracted as QRL segments. The event name is converted based on the element type (see Event Name Conversion below).
+
+9. **q:p / q:ps**: Injected by the optimizer for iteration variable lifting in loop contexts. `q:p` for a single variable (value is the variable directly), `q:ps` for multiple variables (value is an array). See [Iteration Variable Lifting](#iteration-variable-lifting-qpqps).
+
+**Event Name Conversion**
+
+Event handler prop names are converted based on their prefix pattern:
+
+| Input Pattern | Output Prefix | Example |
+|---|---|---|
+| `on*$` (native element) | `q-e:` | `onClick$` -> `q-e:click` |
+| `onDocument*$` | `q-e:document` | `onDocumentScroll$` -> `q-e:documentscroll` |
+| `document:on*$` | `q-e:document:` | `document:onScroll$` -> `q-e:document:scroll` (note: this is a distinct pattern from `onDocument*$`) |
+| `window:on*$` | `q-e:window:` | `window:onResize$` -> `q-e:window:resize` |
+| `host:*` | kept as-is | `host:onClick$` -> `host:onClick$` (no conversion) |
+| `on*$` (component) | replace `$` with `Qrl` | `onClick$` -> `onClickQrl` |
+
+**Case rules for native element event names:**
+
+1. Remove the `$` suffix
+2. Strip the scope prefix (`on`, `onDocument`, `document:on`, `window:on`)
+3. If the remaining name starts with `-`, use as-is (the `-` is a case-sensitive marker): `on-cLick$` -> `q-e:c-lick` (note: the `-` prefix on the name preserves case)
+4. Otherwise, lowercase the entire event name and convert camelCase to kebab-case: `onClick$` -> `q-e:click`
+5. For `onDocument*$` pattern (no colon separator), the prefix `document` is concatenated directly: `onDocumentScroll$` -> `q-e:documentscroll`
+
+**Handler merging:** Multiple handlers for the same converted key are emitted as duplicate properties. The runtime handles deduplication.
+
+**bind:value/bind:checked Expansion**
+
+On native elements without spreads:
+
+- `bind:value={signal}` expands to:
+  - `"value": signal` in `constProps`
+  - `"q-e:input": inlinedQrl(_val, "_val", [signal])` in `constProps`
+
+- `bind:checked={checked}` expands to:
+  - `"checked": checked` in `constProps`
+  - `"q-e:input": inlinedQrl(_chk, "_chk", [checked])` in `constProps`
+
+- If a `q-e:input` handler already exists (from an explicit `onInput$` prop), the bind handler is merged: the existing value and the new bind handler are combined into an array value for the `q-e:input` key.
+
+#### Example 1: Basic JSX with Static and Dynamic Props (example_derived_signals_div)
+
+Shows `_jsxSorted` with `varProps`/`constProps` separation, signal wrapping via `_wrapProp` and `_fnSignal`.
+
+**Input:**
+```javascript
+import { component$, useStore, mutable } from '@qwik.dev/core';
+import {dep} from './file';
+### Signal Optimization (CONV-07)
+
+Signal optimization wraps reactive JSX prop expressions in `_fnSignal()` or `_wrapProp()` calls for fine-grained reactivity tracking. This allows Qwik's runtime to detect exactly which signal accesses a prop depends on without re-executing the entire component. Signal optimization runs within the JSX prop processing pipeline -- `convert_to_getter` handles props, `convert_to_signal_item` handles children.
+
+Source: transform.rs:737-817 (create_synthetic_qqsegment), transform.rs:791-804 (_wrapProp generation), transform.rs:2763-2872 (hoist_fn_signal_call), inlined_fn.rs (full file, 294 LOC: convert_inlined_fn, ReplaceIdentifiers, ObjectUsageChecker)
+
+#### Decision Flow (create_synthetic_qqsegment)
+
+The gateway function `create_synthetic_qqsegment(expr, accept_call_expr)` determines what wrapping (if any) an expression receives. It returns `(Option<Expr>, bool)` where the Option is the wrapped expression and the bool indicates const-ness.
+
+**Step-by-step decision process:**
+
+1. **Collect identifiers:** Visit the expression with `IdentCollector` to gather all identifier references used in the expression.
+
+2. **Partition declaration stack:** Split the current scope's declaration stack into two groups:
+   - `decl_collect`: Scope variables (`IdentType::Var`) -- these are capturable local variables
+   - `invalid_decl`: Other declarations (functions, classes) -- these disqualify wrapping
+
+3. **Check disqualifying conditions** (for each identifier in the expression):
+   - If the identifier is a **global** (known to GlobalCollect as an import or external) -> set `contains_side_effect = true`
+   - If the identifier appears in `invalid_decl` (function/class declaration) -> **bail out immediately**, return `(None, false)` -- no wrapping
+   - If the identifier is not found in the declaration stack at all -> **bail out immediately**, return `(None, false)` -- unknown binding, no wrapping
+   - If the identifier is in `decl_collect` -> continue (valid local variable)
+
+4. **Compute scoped identifiers and const-ness:** Call `compute_scoped_idents` to determine which identifiers are captured (non-const local variables) vs const. `is_const` is true when all referenced identifiers are const-declared.
+
+5. **Side effect check:** If `contains_side_effect` is true -> return `(None, scoped_idents.is_empty())`. No wrapping, but report const-ness based on whether any non-const locals were found.
+
+6. **Simple identifier check:** If the expression is a bare `Ident` (e.g., just `signal`) -> return `(None, is_const)`. No wrapping needed -- passing the signal reference directly is sufficient.
+
+7. **Call/template literal check:** If the expression is a `CallExpr` or `Tpl` (template literal) AND is not const -> return `(None, false)`. Calls and template literals with captured variables cannot be wrapped because they may have side effects.
+
+8. **Member expression check (-> _wrapProp):** If the expression is `ident.prop` (member expression where the object is a simple identifier, possibly parenthesized for type assertions like `(obj as any).prop`):
+   - Extract the property name as a string
+   - Generate `_wrapProp(ident)` (one-argument form)
+   - Return `(Some(_wrapProp_call), is_const)`
+
+9. **Everything else (-> attempt _fnSignal):** Call `convert_inlined_fn` to attempt `_fnSignal` wrapping. This handles computed expressions like `12 + signal.value`, ternaries, binary operations, etc.
+
+#### _wrapProp: Signal Property Access
+
+`_wrapProp` wraps direct signal property accesses for fine-grained tracking. It has two distinct forms depending on how the signal reference was obtained.
+
+**One-argument form: `_wrapProp(signal)`**
+
+Generated when the expression is a member expression where the object is a simple identifier (possibly parenthesized). The runtime knows to access `.value` on the wrapped signal.
+
+```
+// Input:
+signal.value
+store.address
+(obj as any).prop
+
+// Output:
+_wrapProp(signal)
+_wrapProp(store)
+_wrapProp(obj)
+```
+
+This form is generated by Step 8 of the decision flow. The property name is extracted but not passed -- the runtime infers `.value` access.
+
+Source: transform.rs:791-804
+
+**Two-argument form: `_wrapProp(_rawProps, "propName")`**
+
+Generated when Props Destructuring (CONV-04) has transformed a destructured component prop to a `_rawProps.propName` access. Signal optimization sees this as a member expression where the object is `_rawProps` (a simple identifier), and generates the two-argument form to preserve the original prop name for runtime tracking.
+
+```
+// After props destructuring:
+_rawProps.message    // was: message (destructured from props)
+_rawProps.count      // was: count (destructured from props)
+
+// Signal optimization wraps these:
+_wrapProp(_rawProps, "message")
+_wrapProp(_rawProps, "count")
+```
+
+The two-argument form is a natural consequence of Props Destructuring rewriting `message` -> `_rawProps.message`. The decision flow (Step 8) sees `_rawProps.message` as `ident.prop` and generates `_wrapProp(_rawProps, "message")` via `make_wrap`, which passes both the object and the property name string.
+
+See also: Props Destructuring (CONV-04) section for the `_rawProps` rewriting rules that produce these member expressions.
+
+#### _fnSignal: Computed Expression Wrapping
+
+`_fnSignal` wraps computed expressions that depend on reactive values into a form that enables fine-grained reactivity tracking. It converts the expression into an arrow function with positional parameters, paired with an array of the actual captured variables.
+
+Source: inlined_fn.rs:24-115 (convert_inlined_fn)
+
+**Bail-out conditions** (convert_inlined_fn returns None, no wrapping):
+
+1. **Arrow expression:** If the expression is already an `ArrowExpr` -> return `(None, is_const)`. Already a function, no need to wrap.
+
+2. **Call expression detected:** `ObjectUsageChecker` visits the expression; if any `CallExpr` node is found, `used_as_call = true` -> return `(None, false)`. Function calls cannot be safely wrapped because they may have side effects. (Note: this check runs on the expression tree, not just the top level.)
+
+3. **Identifiers not used as objects:** `ObjectUsageChecker` checks if any captured identifier appears as the object of a member expression (e.g., `signal` in `signal.value`). If NO captured identifier is used as an object (`used_as_object = false`) -> return `(None, is_const)`. Without member access, there is no signal to track.
+
+4. **ReplaceIdentifiers abort:** During identifier replacement, the visitor aborts if it encounters any of: nested `ArrowExpr`, `Function`, `ClassExpr`, `Decorator`, `Stmt`, or a disallowed `Callee` (specifically `import()` calls, or any callee when `accept_call_expr = false`). Abort -> return `(None, is_const)`.
+
+5. **150-character limit:** After replacing identifiers and rendering the expression to a minified string, if the result exceeds 150 characters -> return `(None, false)`. This is a practical limit to avoid bloating the module with overly long stringified expressions. **Behavioral consequence:** The expression loses fine-grained reactivity tracking -- it will be evaluated eagerly rather than tracked as a computed signal. This is a silent degradation, not an error.
+
+6. **Empty scoped_idents:** If `scoped_idents` is empty after filtering (all captured identifiers are const) -> return `(None, true)`. No reactive variables to track, expression is const.
+
+**Successful _fnSignal generation:**
+
+When none of the bail-out conditions apply:
+
+1. **Create positional parameters:** For each scoped identifier, create a parameter named `p0`, `p1`, `p2`, etc. (one per captured variable, in order).
+
+2. **Replace captured identifiers:** The `ReplaceIdentifiers` visitor replaces all occurrences of captured identifiers in the expression with their positional parameter names. Shorthand object properties are expanded: `{ signal }` becomes `{ signal: p0 }`.
+
+3. **Render to minified string:** The transformed expression is rendered to a minified JavaScript string (the "stringified version") using SWC's codegen with minify=true. Trailing semicolons are stripped.
+
+4. **Wrap in arrow function:** The transformed expression becomes the body of an arrow function with the positional parameters: `(p0, p1) => expression_with_p0_p1`.
+
+5. **Generate _fnSignal call:**
+   ```
+   _fnSignal(arrowFn, [capturedVar0, capturedVar1], "stringified")
+   ```
+
+**Arguments:**
+1. Arrow function with positional parameters (the computation)
+2. Array of captured variable references (actual runtime signal/store values)
+3. (Server mode only) Stringified version of the expression for SSR serialization. Omitted in client-only builds (`serialize_fn = false`).
+
+**Context-dependent behavior:**
+
+The `accept_call_expr` parameter controls how strictly call expressions are handled during `ReplaceIdentifiers`:
+- `convert_to_getter` (JSX props): passes `accept_call_expr = true` -- call expressions in prop values are allowed through the replacement visitor (but still detected by `ObjectUsageChecker` as bail-out)
+- `convert_to_signal_item` (JSX children): passes `accept_call_expr = false` -- any callee encountered during replacement triggers an abort (stricter filtering for children context)
+
+#### _fnSignal Hoisting
+
+After `_fnSignal` calls are generated, the `hoist_fn_signal_call` post-processing step extracts the arrow function and stringified expression into module-level `const` declarations. This avoids recreating these values on every render.
+
+Source: transform.rs:2763-2872 (hoist_fn_signal_call)
+
+**Hoisting process:**
+
+1. **Extract arrow function (1st argument):** The arrow function is hoisted to a module-level const declaration with a counter-based name:
+   ```javascript
+   const _hf0 = (p0) => 12 + p0.value;
+   ```
+
+2. **Extract stringified expression (3rd argument, if present):** The string literal is hoisted to a companion const:
+   ```javascript
+   const _hf0_str = "12+p0.value";
+   ```
+
+3. **Rewrite _fnSignal call:** The original call is rewritten to reference the hoisted names:
+   ```javascript
+   // Before hoisting:
+   _fnSignal((p0) => 12 + p0.value, [signal], "12+p0.value")
+   // After hoisting:
+   _fnSignal(_hf0, [signal], _hf0_str)
+   ```
+
+4. **Counter-based naming:** Hoisted functions are named `_hf0`, `_hf1`, `_hf2`, etc. Corresponding string constants are `_hf0_str`, `_hf1_str`, etc. The counter increments for each unique arrow function body.
+
+5. **Deduplication:** Before creating a new hoisted declaration, the arrow function body is rendered to a string key and checked against `hoisted_fn_signals` (a HashMap). If the same arrow function body was already hoisted, the existing `_hfN` / `_hfN_str` references are reused. This means identical computed expressions across multiple JSX elements share a single hoisted declaration.
+
+**Placement:** Hoisted declarations are added to `extra_top_items` and emitted at the top of the module (after imports, before component code).
+
+#### Application Boundaries Decision Table
+
+This table covers ALL expression type x context combinations, providing a complete decision reference for what wrapping (if any) a given JSX expression receives. Per D-21.
+
+| Expression Type | Captured Vars | Side Effects | Result | Example Input -> Output |
+|----------------|--------------|--------------|--------|------------------------|
+| Simple identifier | any | any | No wrapping | `signal` -> `signal` |
+| `ident.prop` (member on ident) | yes | no | `_wrapProp(ident)` | `signal.value` -> `_wrapProp(signal)` |
+| `ident.prop` (member on ident) | yes | yes (global ident) | No wrapping | `globalThing.thing` -> `globalThing.thing` |
+| `_rawProps.prop` (after CONV-04) | yes | no | `_wrapProp(_rawProps, "prop")` | `_rawProps.message` -> `_wrapProp(_rawProps, "message")` |
+| Computed expression (binary/ternary) | yes, non-empty | no | `_fnSignal(fn, [...])` | `12 + signal.value` -> `_fnSignal(_hf0, [signal], _hf0_str)` |
+| Computed expression | empty (all const) | no | No wrapping (const) | `1 + 2` -> `1 + 2` |
+| Computed expression | yes | yes (global ident) | No wrapping | `signal.value + globalFn()` -> as-is |
+| Arrow/function expression | any | any | No wrapping (bail) | `() => {}` -> `() => {}` |
+| Call expression | any | any | No wrapping (non-const) | `fn()` -> `fn()` |
+| Template literal (non-const) | yes | no | No wrapping (non-const) | `` `${signal.value}` `` -> as-is |
+| Expression > 150 chars rendered | yes | no | No wrapping (non-const) | (long expression) -> as-is |
+| Ternary/binary (no calls) | yes, non-empty | no | `_fnSignal(fn, [...])` | `a.value ? 'yes' : 'no'` -> `_fnSignal(...)` |
+| Ternary containing call | yes | no | No wrapping (abort) | `a.value ? fn() : b` -> as-is |
+| Ident with invalid decl (fn/class) | n/a | n/a | No wrapping (bail) | expression referencing function decl -> as-is |
+| Ident not in scope | n/a | n/a | No wrapping (bail) | expression with unknown binding -> as-is |
+
+**Context-dependent behavior note:**
+- `convert_to_getter` (JSX props): `accept_call_expr = true` -- call expressions pass through `ReplaceIdentifiers` (but are still caught by `ObjectUsageChecker`)
+- `convert_to_signal_item` (JSX children): `accept_call_expr = false` -- any callee during replacement triggers abort (stricter)
+
+This means the same expression may produce different results depending on whether it appears as a prop value or as a child expression. In practice, the `ObjectUsageChecker` bail-out for call expressions catches most cases regardless of context, but edge cases exist where the `accept_call_expr` flag changes the abort timing.
+
+#### Example 1: Signal Optimization Showcase (example_derived_signals_div)
+
+This example demonstrates the full range of signal optimization decisions on a `<div>` element with many prop types.
+
+**Input:**
+```jsx
+import { component$, useStore, mutable } from '@qwik.dev/core';
+import { dep } from './file';
+import styles from './styles.module.css';
+
+export const App = component$((props) => {
+  const signal = useSignal(0);
+  const store = useStore({});
+  const count = props.counter.count;
+
+  return (
+    <div
+      class={{ even: count % 2 === 0, odd: count % 2 === 1, stable0: true, hidden: false }}
+      staticClass={styles.foo}
+      staticText="text"
+      staticNumber={1}
+      staticBoolean={true}
+      staticExpr={`text${12}`}
+      signal={signal}
+      signalValue={signal.value}
+      signalComputedValue={12 + signal.value}
+      store={store.address.city.name}
+      storeComputed={store.address.city.name ? 'true' : 'false'}
+      dep={dep}
+      depAccess={dep.thing}
+      depComputed={dep.thing + 'stuff'}
+      global={globalThing}
+      globalAccess={globalThing.thing}
+      globalComputed={globalThing.thing + 'stuff'}
+      noInline={signal.value()}
+      noInline2={signal.value + unknown()}
+      noInline3={mutable(signal)}
+      noInline4={signal.value + dep}
+    />
+  );
+});
+```
+
+**Segment output (relevant JSX):**
+**Output (root module, signal-relevant parts):**
+```javascript
+import { _fnSignal } from "@qwik.dev/core";
+import { _wrapProp } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+
+const _hf0 = (p0)=>12 + p0.value;
+const _hf0_str = "12+p0.value";
+const _hf1 = (p0)=>p0.address.city.name;
+const _hf1_str = "p0.address.city.name";
+const _hf2 = (p0)=>p0.address.city.name ? 'true' : 'false';
+const _hf2_str = 'p0.address.city.name?"true":"false"';
+
+/* ... */
+return /*#__PURE__*/ _jsxSorted("div", {
+    class: { even: count % 2 === 0, odd: count % 2 === 1, stable0: true, hidden: false },
+    global: globalThing,
+    noInline: signal.value(),
+    noInline2: signal.value + unknown(),
+    noInline3: mutable(signal),
+    noInline4: signal.value + dep,
+    staticDocument: window.document
+}, {
+    staticClass: styles.foo,
+    staticText: "text",
+    staticNumber: 1,
+    staticBoolean: true,
+    signal: signal,
+// ... other imports ...
+
+// Hoisted _fnSignal arrow functions and stringified expressions:
+const _hf0 = (p0) => 12 + p0.value;
+const _hf0_str = "12+p0.value";
+const _hf1 = (p0) => p0.address.city.name;
+const _hf1_str = "p0.address.city.name";
+const _hf2 = (p0) => p0.address.city.name ? 'true' : 'false';
+const _hf2_str = 'p0.address.city.name?"true":"false"';
+
+const App_component_ckEPmXZlub0 = (props) => {
+  const signal = useSignal(0);
+  const store = useStore({});
+  const count = props.counter.count;
+  return _jsxSorted("div", {
+    // Dynamic props (no signal optimization -- side effects or globals):
+    class: { even: count % 2 === 0, odd: count % 2 === 1, stable0: true, hidden: false },
+    global: globalThing,                    // global ident -> no wrapping
+    globalAccess: globalThing.thing,        // global member -> no wrapping
+    globalComputed: globalThing.thing + 'stuff',  // global in expression -> no wrapping
+    noInline: signal.value(),               // call expression -> no wrapping
+    noInline2: signal.value + unknown(),    // global (unknown) -> no wrapping
+    noInline3: mutable(signal),             // call expression -> no wrapping
+    noInline4: signal.value + dep,          // dep is import (global) -> no wrapping
+    staticDocument: window.document         // global (window) -> no wrapping
+  }, {
+    // Immutable/signal-optimized props:
+    staticClass: styles.foo,                // import ref -> no wrapping (global/const)
+    staticText: "text",                     // literal -> const
+    staticText2: `text`,                    // literal -> const
+    staticNumber: 1,                        // literal -> const
+    staticBoolean: true,                    // literal -> const
+    staticExpr: `text${12}`,               // const template -> const
+    staticExpr2: typeof `text${12}` === 'string' ? 12 : 43,  // const -> const
+    signal: signal,                         // simple ident -> no wrapping (Step 6)
+    signalValue: _wrapProp(signal),         // ident.prop -> _wrapProp (Step 8)
+    signalComputedValue: _fnSignal(_hf0, [signal], _hf0_str),  // computed -> _fnSignal (Step 9)
+    store: _fnSignal(_hf1, [store], _hf1_str),    // store.a.b.c -> _fnSignal (not simple ident.prop)
+    storeComputed: _fnSignal(_hf2, [store], _hf2_str),  // ternary -> _fnSignal
+    dep: dep,                               // import ref -> no wrapping
+    depAccess: dep.thing,                   // import (global) member -> no wrapping
+    depComputed: dep.thing + 'stuff'        // import (global) in expression -> no wrapping
+  }, null, 3, "u6_0");
+};
+```
+
+**Key observations:**
+- `signalValue: signal.value` -> `_wrapProp(signal)` (one-arg form, Step 8)
+- `signalComputedValue: 12 + signal.value` -> `_fnSignal(_hf0, [signal], _hf0_str)` (computed, Step 9)
+- `store.address.city.name` -> `_fnSignal(_hf1, [store], _hf1_str)` (chained member, NOT simple ident.prop so goes to Step 9)
+- `dep.thing` -> no wrapping because `dep` is an import (global), fails Step 3
+- `signal.value()` -> no wrapping because it's a call expression, fails Step 7 (CallExpr check in ObjectUsageChecker)
+- All three `_hf` declarations are hoisted to module top
+
+(Source: Jack's swc-snapshots/example_derived_signals_div.snap)
+
+#### Example 2: Component Signal Optimization (example_derived_signals_cmp)
+
+Signal optimization applies identically to component props (`<Cmp .../>`) as to intrinsic element props (`<div .../>`). The same decision flow runs for each prop expression.
+
+**Input:**
+```jsx
+import { component$, useStore, mutable } from '@qwik.dev/core';
+import { dep } from './file';
+import { Cmp } from './cmp';
+
+export const App = component$(() => {
+  const signal = useSignal(0);
+  const store = useStore({});
+  return (
+    <Cmp
+      signalValue={signal.value}
+      signalComputedValue={12 + signal.value}
+      store={store.address.city.name}
+      storeComputed={store.address.city.name ? 'true' : 'false'}
+      dep={dep}
+      depAccess={dep.thing}
+      noInline={signal.value()}
+      noInline4={signal.value + dep}
+    />
+  );
+});
+```
+
+**Output (signal-relevant props):**
+```javascript
+const _hf0 = (p0) => 12 + p0.value;
+const _hf0_str = "12+p0.value";
+const _hf1 = (p0) => p0.address.city.name;
+const _hf1_str = "p0.address.city.name";
+const _hf2 = (p0) => p0.address.city.name ? 'true' : 'false';
+const _hf2_str = 'p0.address.city.name?"true":"false"';
+
+// In the component body:
+_jsxSorted(Cmp, {
+    // Dynamic (no optimization):
+    noInline: signal.value(),
+    noInline4: signal.value + dep
+  }, {
+    // Immutable/optimized:
+    signalValue: _wrapProp(signal),
+    signalComputedValue: _fnSignal(_hf0, [signal], _hf0_str),
+    store: _fnSignal(_hf1, [store], _hf1_str),
+    storeComputed: _fnSignal(_hf2, [store], _hf2_str),
+    dep: dep,
+    depAccess: dep.thing
+}, null, 3, "u6_0");
+```
+
+Key observations:
+- `varProps` (2nd arg) contains: object literals with dynamic keys (`class`), global accesses (`globalThing`), function call results (`signal.value()`, `mutable(signal)`), and mixed expressions (`signal.value + dep`)
+- `constProps` (3rd arg) contains: string/number/boolean literals, imported identifiers (`dep`), import member access (`dep.thing`), signal references wrapped via `_wrapProp(signal)`, and computed signal expressions wrapped via `_fnSignal`
+- Children: `null` (4th arg) -- no children
+- Flags: `3` (5th arg) -- `static_listeners + static_subtree` (no event handlers, no children)
+- Key: `"u6_0"` (6th arg) -- auto-generated (this is inside a component, root JSX position)
+
+(Source: Jack's swc-snapshots/example_derived_signals_div.snap)
+
+#### Example 2: Spread Props with _jsxSplit (should_split_spread_props)
+
+Shows the `_jsxSplit` path with `_getVarProps`/`_getConstProps` helper functions for identifier-based spreads.
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+
+export default component$((props) => {
+  return (
+    <div {...props}></div>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+import { _getConstProps } from "@qwik.dev/core";
+import { _getVarProps } from "@qwik.dev/core";
+import { _jsxSplit } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (props)=>{
+    return /*#__PURE__*/ _jsxSplit("div", {
+        ..._getVarProps(props)
+    }, _getConstProps(props), null, 0, "u6_0");
+};
+```
+
+Key observations:
+- `_jsxSplit` is used because spread props exist
+- Identifier-based spread `{...props}` is split into `_getVarProps(props)` (in varProps) and `_getConstProps(props)` (in constProps)
+- Flags: `0` -- fully dynamic in spread context (static_listeners and static_subtree both false)
+
+(Source: Jack's swc-snapshots/should_split_spread_props.snap)
+
+#### Example 3: Event Name Conversion (example_jsx_listeners)
+
+Shows `on*$`, `onDocument*$`, `document:on*$`, `window:on*$`, `host:*`, and case-sensitive patterns.
+
+**Input (relevant portion):**
+```javascript
+<div
+  onClick$={()=>console.log('onClick$')}
+  onDocumentScroll$={()=>console.log('onDocumentScroll')}
+  on-cLick$={()=>console.log('on-cLick$')}
+  onDocument-sCroll$={()=>console.log('onDocument-sCroll')}
+  host:onClick$={()=>console.log('host:onClick$')}
+  host:onDocumentScroll$={()=>console.log('host:onDocumentScroll')}
+  onKeyup$={handler}
+  onDocument:keyup$={handler}
+  onWindow:keyup$={handler}
+  custom$={()=>console.log('custom')}
+/>
+```
+
+**Output (JSX call in segment):**
+```javascript
+_jsxSorted("div", null, {
+    "q-e:click": q_..._q_e_click_YEa2A5ADUOg,
+    "q-e:documentscroll": q_..._q_e_documentscroll_0FSbGzUROso,
+    "q-e:c-lick": q_..._q_e_c_lick_kX5SiYdz650,
+    "q-e:document--scroll": q_..._q_e_document_scroll_6qyBttefepU,
+    "host:onClick$": q_..._host_onClick_cPEH970JbEY,
+    "host:onDocumentScroll$": q_..._host_onDocumentScroll_Zip7mifsjRY,
+    "q-e:keyup": handler,
+    "q-e:document:keyup": handler,
+    "q-e:window:keyup": handler,
+    custom$: q_..._custom_pyHnxab17ms
+}, null, 3, "u6_0");
+```
+
+Key observations:
+- `onClick$` -> `q-e:click` (standard conversion: strip `on`, strip `$`, lowercase)
+- `onDocumentScroll$` -> `q-e:documentscroll` (no colon: `onDocument` prefix, name concatenated directly)
+- `on-cLick$` -> `q-e:c-lick` (dash prefix preserves case: `-cLick` becomes `c-lick` keeping the `-` as separator)
+- `onDocument-sCroll$` -> `q-e:document--scroll` (dash prefix on document-scoped: `document-` + `-scroll`)
+- `host:onClick$` -> `host:onClick$` (host prefix: no conversion at all)
+- `onKeyup$` -> `q-e:keyup` (standard)
+- `onDocument:keyup$` -> `q-e:document:keyup` (colon-separated document scope)
+- `onWindow:keyup$` -> `q-e:window:keyup` (colon-separated window scope)
+- `custom$` -> `custom$` (not an event handler pattern -- no `on` prefix, kept as-is but still extracted as QRL)
+
+(Source: Jack's swc-snapshots/example_jsx_listeners.snap)
+
+#### Example 4: bind:value and bind:checked Expansion (example_input_bind)
+
+Shows `bind:value`, `bind:checked`, and unrecognized `bind:stuff`.
+
+**Input:**
+```javascript
+import { component$, $ } from '@qwik.dev/core';
+
+export const Greeter = component$(() => {
+  const value = useSignal(0);
+  const checked = useSignal(false);
+  const stuff = useSignal();
+  return (
+    <>
+      <input bind:value={value} />
+      <input bind:checked={checked} />
+      <input bind:stuff={stuff} />
+      <div>{value}</div>
+      <div>{value.value}</div>
+    </>
+  )
+});
+```
+
+**Output (inline segment):**
+```javascript
+return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+    /*#__PURE__*/ _jsxSorted("input", null, {
+        "value": value,
+        "q-e:input": inlinedQrl(_val, "_val", [value])
+    }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("input", null, {
+        "checked": checked,
+        "q-e:input": inlinedQrl(_chk, "_chk", [checked])
+    }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("input", null, {
+        "bind:stuff": stuff
+    }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, null, value, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, null, _wrapProp(value), 3, null)
+], 3, "u6_0");
+```
+
+Key observations:
+- `bind:value={value}` expands to `"value": value` + `"q-e:input": inlinedQrl(_val, "_val", [value])` in constProps
+- `bind:checked={checked}` expands to `"checked": checked` + `"q-e:input": inlinedQrl(_chk, "_chk", [checked])` in constProps
+- `bind:stuff={stuff}` is unrecognized -- kept as `"bind:stuff": stuff` in constProps, no expansion
+- Children `{value}` (signal ref) -> passed as-is; `{value.value}` (signal access) -> wrapped with `_wrapProp(value)`
+
+(Source: Jack's swc-snapshots/example_input_bind.snap)
+
+#### Example 5: className Normalization (example_class_name)
+
+Shows how `className` is treated differently for native elements vs components.
+
+**Input:**
+```javascript
+export const App2 = component$(() => {
+  const signal = useSignal();
+  const computed = signal.value + 'foo';
+  return (
+    <>
+      <div className="hola"></div>
+      <div className={signal.value}></div>
+      <div className={signal}></div>
+      <div className={computed}></div>
+      <Foo className="hola"></Foo>
+      <Foo className={signal.value}></Foo>
+      <Foo className={signal}></Foo>
+      <Foo className={computed}></Foo>
+  }, null, 3, null);
+```
+
+Component props follow the exact same optimization rules as intrinsic element props. The hoisted `_hf` declarations are identical because the same expressions produce the same arrow function bodies.
+
+(Source: Jack's swc-snapshots/example_derived_signals_cmp.snap)
+
+#### Example 3: Children Signal Optimization (example_derived_signals_children)
+
+Children expressions use `convert_to_signal_item` instead of `convert_to_getter`, with `accept_call_expr = false` (stricter).
+
+**Input:**
+```jsx
+export const App = component$(() => {
+  const signal = useSignal(0);
+  const store = useStore({});
+  return (
+    <>
+      <div>{signal.value}</div>
+      <div>{12 + signal.value}</div>
+      <div>{store.address.city.name}</div>
+      <div>{store.address.city.name ? 'true' : 'false'}</div>
+      <div>{dep.thing}</div>
+      <div>{globalThing.thing}</div>
+      <div>{signal.value()}</div>
+      <div>{signal.value + dep}</div>
+    </>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+    /*#__PURE__*/ _jsxSorted("div", null, { "class": "hola" }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, { "class": _wrapProp(signal) }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", null, { "class": signal }, null, 3, null),
+    /*#__PURE__*/ _jsxSorted("div", { "class": computed }, null, null, 3, null),
+    /*#__PURE__*/ _jsxSorted(Foo, null, { className: "hola" }, null, 3, "u6_0"),
+    /*#__PURE__*/ _jsxSorted(Foo, null, { className: _wrapProp(signal) }, null, 3, "u6_1"),
+    /*#__PURE__*/ _jsxSorted(Foo, null, { className: signal }, null, 3, "u6_2"),
+    /*#__PURE__*/ _jsxSorted(Foo, { className: computed }, null, null, 3, "u6_3")
+], 1, "u6_4");
+```
+
+Key observations:
+- Native `<div>`: `className` renamed to `"class"` in all cases
+- Component `<Foo>`: `className` kept as `"className"` in all cases
+- `signal.value` access wrapped with `_wrapProp(signal)` in both native and component contexts
+- `computed` (dynamic expression) goes to `varProps` in both contexts
+- Native elements (`<div>`) get no auto-key (`null`); components (`<Foo>`) get auto-generated keys (`"u6_0"` through `"u6_3"`)
+
+(Source: Jack's swc-snapshots/example_class_name.snap)
+
+**See also:** example_jsx.snap, example_jsx_keyed.snap, example_jsx_keyed_dev.snap, should_split_spread_props_with_additional_prop.snap through ...5.snap, should_merge_attributes_with_spread_props.snap, should_merge_attributes_with_spread_props_before_and_after.snap, should_merge_bind_value_and_on_input.snap, should_merge_bind_checked_and_on_input.snap, should_merge_on_input_and_bind_value.snap, should_merge_on_input_and_bind_checked.snap, should_make_component_jsx_split_with_bind.snap, should_not_transform_bind_value_in_var_props_for_jsx_split.snap, should_not_transform_bind_checked_in_var_props_for_jsx_split.snap, should_move_bind_value_to_var_props.snap, should_convert_jsx_events.snap, example_component_with_event_listeners_inside_loop.snap
+
+#### Children Handling
+
+Children are extracted from the JSX props object and placed as the 4th argument to `_jsxSorted`/`_jsxSplit`. They never appear in the `varProps` or `constProps` buckets.
+
+Source: transform.rs:2327-2366
+
+**Rules:**
+
+1. Children extracted from props object, placed as 4th argument to `_jsxSorted`/`_jsxSplit`
+2. Single child: passed directly as 4th argument (not wrapped in array)
+3. Array of children: passed as a JS array literal
+4. No children: 4th argument is `null`
+5. Text-only elements (`text`, `textarea`, `title`, `option`, `script`, `style`, `noscript`): children forced to raw content treatment -- no signal optimization (no `_wrapProp` or `_fnSignal` wrapping) is applied to children of these elements
+6. Children in spread context: children appearing before a spread go to `varProps` as a regular `children` key-value prop instead of being extracted to the 4th argument
+7. Child expressions referencing signals are processed through `convert_to_signal_item` (may wrap in `_fnSignal` or `_wrapProp` -- see Signal Optimization CONV-07 in Plan 03)
+
+**Child classification examples:**
+
+| Child Expression | Output in 4th Arg | Reason |
+|---|---|---|
+| `{value}` (signal ref) | `value` | Signal object passed directly |
+| `{value.value}` (signal access) | `_wrapProp(value)` | `.value` access wrapped for reactivity |
+| `{count + 1}` (computed) | `_fnSignal(fn, [count], str)` | Expression wrapped for fine-grained tracking |
+| `"Hello"` (string literal) | `"Hello"` | Static content, no wrapping |
+| No children | `null` | Empty 4th argument |
+
+#### Key Generation
+
+Keys uniquely identify JSX elements for Qwik's reconciliation. The optimizer auto-generates keys when needed, using a deterministic format based on file hash and element position.
+
+Source: transform.rs:4639-4728
+
+**Rules:**
+
+1. **Explicit keys**: If the original `jsx()` call has a 3rd argument (explicit key), it is used as-is
+2. **Auto-generated key format**: `"{base64_prefix}_{counter}"` where `base64_prefix` = first 2 chars of base64(file_hash), `counter` = `jsx_key_counter` incremented per key in file
+3. **Example key values**: `"u6_0"`, `"u6_1"`, `"u6_2"` (where `u6` is the base64 prefix for the test file)
+4. **Components** (`is_fn=true`): Always get a key (auto-generated if not explicit)
+5. **Root-level JSX** (`root_jsx_mode=true`): Gets a key
+6. **Nested native elements in non-root position**: key is `null`
+7. `root_jsx_mode` starts `true`, is reset to `false` after the first JSX element is processed, and restored after processing completes
+
+**Key assignment summary:**
+
+| Element Type | Position | Key |
+|---|---|---|
+| Component (`is_fn=true`) | Any | Always (explicit or auto-generated) |
+| Native element | Root JSX | Auto-generated |
+| Native element | Nested, non-root | `null` |
+| Any | Explicit `key` prop | Explicit value used |
+
+#### Example 6: Key Generation Across Elements (example_jsx_keyed)
+
+**Input:**
+```javascript
+import { component$, useStore } from '@qwik.dev/core';
+
+export const App = component$((props: Stuff) => {
+  return (
+    <>
+      <Cmp key="stuff"></Cmp>
+      <Cmp></Cmp>
+      <Cmp prop="23"></Cmp>
+      <Cmp prop="23" key={props.stuff}></Cmp>
+      <p key={props.stuff}>Hello Qwik</p>
+    </>
+**Output (children-relevant parts):**
+```javascript
+const _hf0 = (p0) => 12 + p0.value;
+const _hf0_str = "12+p0.value";
+const _hf1 = (p0) => p0.address.city.name;
+const _hf1_str = "p0.address.city.name";
+const _hf2 = (p0) => p0.address.city.name ? 'true' : 'false';
+const _hf2_str = 'p0.address.city.name?"true":"false"';
+
+// Children in _jsxSorted calls:
+_jsxSorted("div", null, null, _wrapProp(signal), 3, null)          // signal.value -> _wrapProp
+_jsxSorted("div", null, null, _fnSignal(_hf0, [signal], _hf0_str), 3, null)  // computed
+_jsxSorted("div", null, null, _fnSignal(_hf1, [store], _hf1_str), 3, null)   // store chain
+_jsxSorted("div", null, null, _fnSignal(_hf2, [store], _hf2_str), 3, null)   // ternary
+_jsxSorted("div", null, null, dep.thing, 3, null)                  // import (global) -> no wrapping
+_jsxSorted("div", null, null, globalThing.thing, 1, null)          // global -> no wrapping
+_jsxSorted("div", null, null, signal.value(), 1, null)             // call -> no wrapping
+_jsxSorted("div", null, null, signal.value + dep, 1, null)         // mixed global -> no wrapping
+```
+
+Children signal optimization produces the same `_wrapProp` and `_fnSignal` wrappers as prop optimization. The key difference is the stricter `accept_call_expr = false` setting, which means any callee encountered during `ReplaceIdentifiers` triggers an immediate abort. In practice, this rarely changes outcomes because `ObjectUsageChecker` already catches call expressions, but it provides defense-in-depth for the children context.
+
+(Source: Jack's swc-snapshots/example_derived_signals_children.snap)
+
+#### Example 4: Props Destructuring + Signal (should_destructure_args)
+
+This example shows the two-argument `_wrapProp(_rawProps, "propName")` form generated when Props Destructuring (CONV-04) has rewritten destructured props to `_rawProps` member accesses.
+
+**Input:**
+```jsx
+import { component$ } from "@qwik.dev/core";
+
+export default component$(({ message, id, count: c, ...rest }: Record<string, any>) => {
+  const renders = useStore({ renders: 0 }, { reactive: false });
+  renders.renders++;
+  const rerenders = renders.renders + 0;
+  return (
+    <div id={id}>
+      <span {...rest}>
+        {message} {c}
+      </span>
+      <div class="renders">{rerenders}</div>
+    </div>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+export const App_component_ckEPmXZlub0 = (props)=>{
+    return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+        /*#__PURE__*/ _jsxSorted(Cmp, null, null, null, 3, "stuff"),
+        /*#__PURE__*/ _jsxSorted(Cmp, null, null, null, 3, "u6_0"),
+        /*#__PURE__*/ _jsxSorted(Cmp, null, { prop: "23" }, null, 3, "u6_1"),
+        /*#__PURE__*/ _jsxSorted(Cmp, null, { prop: "23" }, null, 3, props.stuff),
+        /*#__PURE__*/ _jsxSorted("p", null, null, "Hello Qwik", 3, props.stuff)
+    ], 1, "u6_2");
+};
+```
+
+Key observations:
+- `<Cmp key="stuff">`: explicit key `"stuff"` used as-is
+- `<Cmp>`: component with no explicit key gets auto-generated `"u6_0"`
+- `<Cmp prop="23">`: component gets auto-generated `"u6_1"`
+- `<Cmp key={props.stuff}>`: explicit dynamic key `props.stuff` used
+- `<p key={props.stuff}>`: native element with explicit key `props.stuff` -- explicit keys always used regardless of element type
+- Fragment wrapper: component (`_Fragment`), gets auto-generated `"u6_2"`
+- Native `<p>` elements without explicit keys would get `null` -- but here the explicit key overrides
+
+(Source: Jack's swc-snapshots/example_jsx_keyed.snap)
+
+**See also:** example_jsx_keyed_dev.snap (key + dev mode 7th argument with source location)
+
+#### Flag Computation
+
+The flags bitmask (5th argument) communicates static analysis results to the Qwik runtime for optimization decisions.
+
+Source: transform.rs:2613-2622
+
+**Flag bit definitions:**
+
+| Bit | Value | Name | Meaning |
+|-----|-------|------|---------|
+| 0 | 1 | `static_listeners` | All event handlers are const (no captured mutable state) |
+| 1 | 2 | `static_subtree` | Children subtree is fully static |
+| 2 | 4 | `moved_captures` | Element has `q:p` or `q:ps` props (lifted iteration variables) |
+
+**Common flag combinations:**
+
+| Value | Composition | Meaning |
+|-------|-------------|---------|
+| 0 | none | Fully dynamic |
+| 1 | `static_listeners` | Static listeners, dynamic children |
+| 2 | `static_subtree` | Dynamic listeners, static children |
+| 3 | `static_listeners` + `static_subtree` | Fully static element |
+| 4 | `moved_captures` | Iteration variable lifting, dynamic |
+| 5 | `moved_captures` + `static_listeners` | Iteration lifting with static listeners |
+| 6 | `moved_captures` + `static_subtree` | Iteration lifting with static children |
+
+**Rules:**
+
+1. `static_listeners` (bit 0): Set to `1` when all event handlers in the element are const expressions -- no captured mutable state
+2. `static_subtree` (bit 1): Set to `1` when the children subtree contains no dynamic content -- all children are literals or static references
+3. `moved_captures` (bit 2): Set to `1` when the element has `q:p` or `q:ps` props injected by iteration variable lifting
+4. When spreads exist, both `static_listeners` and `static_subtree` start as `false` (flags default to `0` in spread context)
+5. The flags value is the bitwise OR of all applicable flags
+
+#### Spread Props Handling
+
+Spread props fundamentally change how the JSX element is processed: they force the `_jsxSplit` path and alter prop classification rules.
+
+Source: transform.rs:2570-2700
+
+**Rules:**
+
+1. **Identifier-based spreads** (`{...props}`): Split using `_getVarProps(props)` and `_getConstProps(props)` helpers imported from `@qwik.dev/core`. The `_getVarProps` spread goes to `varProps`, the `_getConstProps` call goes to `constProps`.
+2. **Non-identifier spreads** (`{...getProps()}`): Entire spread expression goes to `varProps` as-is
+3. **Multiple spreads**: All `constProps` spreads after the first spread go to `varProps` to maintain correct override order
+4. **Props before last spread**: ALL regular props before the last spread go to `varProps` regardless of their static nature
+5. **Props after last spread**: Follow normal static/dynamic classification unless `has_var_prop_after_last_spread` is set
+6. **Spread presence forces `_jsxSplit` path**
+
+#### Example 7: Spread with Additional Props (should_split_spread_props_with_additional_prop)
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+
+export default component$((props) => {
+  return (
+    <div {...props} test="test"></div>
+  );
+});
+```
+
+**Segment output:**
+```javascript
+import { _getConstProps } from "@qwik.dev/core";
+import { _getVarProps } from "@qwik.dev/core";
+import { _jsxSplit } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = (props)=>{
+    return /*#__PURE__*/ _jsxSplit("div", {
+        ..._getVarProps(props)
+    }, {
+        ..._getConstProps(props),
+        test: "test"
+    }, null, 0, "u6_0");
+};
+```
+
+Key observations:
+- Spread forces `_jsxSplit` path
+- `{...props}` (identifier) split into `_getVarProps(props)` in varProps and `_getConstProps(props)` in constProps
+- `test="test"` appears after the spread, so it follows normal classification -- string literal goes to constProps
+- Flags: `0` (spread context forces both static bits to false)
+
+(Source: Jack's swc-snapshots/should_split_spread_props_with_additional_prop.snap)
+
+**See also:** should_split_spread_props_with_additional_prop2.snap through ...5.snap, should_merge_attributes_with_spread_props.snap, should_merge_attributes_with_spread_props_before_and_after.snap
+
+#### Iteration Variable Lifting (q:p/q:ps)
+
+When JSX elements with event handlers appear inside loops, iteration variables referenced by those handlers must be "lifted" -- injected as extra parameters to the event handler function and passed via `q:p`/`q:ps` props on the JSX element. This allows the Qwik runtime to reconstruct the correct variable bindings when the lazily-loaded handler executes.
+
+Source: transform.rs:2066-2653 (iteration variable detection), transform.rs:4639-4728 (q:p/q:ps injection)
+
+**Rules:**
+
+1. In loop context: iteration variables from `iteration_var_stack` used by event handlers are collected
+2. Outside loop context: union of all captures from all event handlers is computed
+3. Variables are injected as extra parameters to event handler functions (e.g., `(_, _1, item) => { ... }`)
+4. `q:p` (single variable) or `q:ps` (multiple) prop added to `varProps`
+5. Props referencing iteration variables are moved to `varProps` even if otherwise const
+6. Sets `moved_captures` flag (bit 2, value `4`)
+
+#### Example 8: Loop Event Handlers with Iteration Variable Lifting (example_component_with_event_listeners_inside_loop)
+
+**Input (arrow function map pattern):**
+```javascript
+function loopArrowFn(results: string[]) {
+  return results.map((item) => (
+    <span onClick$={() => { cart.push(item); }}>{item}</span>
+  ));
+}
+```
+
+**Output:**
+```javascript
+function loopArrowFn(results) {
+    return results.map((item)=>/*#__PURE__*/ _jsxSorted("span", {
+            "q-e:click": App_component_loopArrowFn_span_q_e_click_Wau7C836nf0,
+            "q:p": item
+        }, null, item, 4, "u6_0"));
+}
+```
+
+**Handler segment:**
+```javascript
+export const App_component_loopArrowFn_span_q_e_click_Wau7C836nf0 = (_, _1, item)=>{
+    const cart = _captures[0];
+    cart.push(item);
+};
+```
+
+Key observations:
+- `item` is a loop iteration variable captured by the `onClick$` handler
+- `q:p`: single iteration variable `item` injected as `"q:p": item` in varProps
+- Handler function receives `item` as 3rd parameter (after `_` and `_1` placeholders)
+- `cart` is captured normally via `_captures` (not an iteration variable -- it's from outer component scope)
+- Flags: `4` (`moved_captures` only -- not static because of dynamic children `item`)
+- For `for` loops with index variables (e.g., `for(let i = ...)`) or `for...in` with key: the same `q:p` pattern applies -- the loop variable is injected as an extra handler parameter
+
+**For multiple iteration variables** (e.g., `for(let i = 0; ...)` where handler captures both `i` and `results`):
+- `q:p` is used for a single variable, `q:ps` for multiple -- but in the snapshot output, single iteration variable uses `q:p` with the variable directly as value
+
+(Source: Jack's swc-snapshots/example_component_with_event_listeners_inside_loop.snap)
+
+**See also:** should_move_props_related_to_iteration_variables_to_var_props.snap
+**Output (segment module):**
+```javascript
+import { _wrapProp } from "@qwik.dev/core";
+import { _restProps } from "@qwik.dev/core";
+// ... other imports ...
+
+export const test_component_LUXeXe0DQrg = (_rawProps) => {
+  const rest = _restProps(_rawProps, ["message", "id", "count"]);
+  const renders = useStore({ renders: 0 }, { reactive: false });
+  renders.renders++;
+  const rerenders = renders.renders + 0;
+  return _jsxSorted("div", {
+    id: _wrapProp(_rawProps, "id")              // two-arg form: _rawProps.id
+  }, null, [
+    _jsxSplit("span", {
+      ..._getVarProps(rest)
+    }, _getConstProps(rest), [
+      _wrapProp(_rawProps, "message"),           // two-arg form: _rawProps.message
+      " ",
+      _wrapProp(_rawProps, "count")              // two-arg form: _rawProps.count (aliased from 'c')
+    ], 0, null),
+    _jsxSorted("div", null, { class: "renders" }, rerenders, 1, null)
+  ], 1, "u6_0");
+};
+```
+
+**Key observations:**
+- Props Destructuring (CONV-04) rewrites `({ message, id, count: c, ...rest })` -> `(_rawProps)` with `_restProps` for the rest pattern
+- Each destructured prop access becomes `_rawProps.propName`, which signal optimization (Step 8) recognizes as `ident.prop` and wraps as `_wrapProp(_rawProps, "propName")`
+- The alias `count: c` uses the original prop name `"count"` in the two-argument form (the binding alias `c` is irrelevant -- the prop key matters)
+- `rerenders` is a local variable computed from `renders.renders + 0`, but `renders` is not a signal/store in the reactive sense (created with `reactive: false`), so no signal wrapping applies
+
+(Source: Jack's swc-snapshots/should_destructure_args.snap)
+
+**See also:** These additional snapshots demonstrate signal optimization edge cases and variations:
+
+- example_derived_signals_complext_children.snap, example_derived_signals_multiple_children.snap -- complex children nesting
+- example_getter_generation.snap, example_immutable_analysis.snap -- getter and immutability analysis
+- example_immutable_function_components.snap -- function component immutability
+- example_props_wrapping.snap, example_props_wrapping2.snap -- prop wrapping variations
+- example_props_wrapping_children.snap, example_props_wrapping_children2.snap -- children wrapping
+- example_props_optimization.snap -- optimization combinations
+- should_wrap_object_with_fn_signal.snap, should_wrap_logical_expression_in_template.snap -- object/logical wrapping
+- should_wrap_store_expression.snap, should_wrap_type_asserted_variables_in_template.snap -- store and type assertion cases
+- should_wrap_prop_from_destructured_array.snap, should_wrap_inner_inline_component_prop.snap -- destructured array and nested component cases
+- should_not_wrap_fn.snap, should_not_wrap_ternary_function_operator_with_fn.snap -- negative cases (bail-outs)
+- should_not_wrap_var_template_string.snap -- template string non-wrapping
+- ternary_prop.snap, hoisted_fn_signal_in_loop.snap, lib_mode_fn_signal.snap -- ternary, loop, and lib mode variations
+
 ## Variable Migration
 
 Variable migration is a post-transform optimization (Steps 14-16 in the pipeline) that moves root-level declarations used exclusively by a single segment into that segment's module. This reduces root module size and eliminates unnecessary self-imports -- the migrated variable is emitted directly in the segment module instead of being imported from the root module. Variable migration runs AFTER the core QRL transform has completed segment extraction, so it operates on the fully-transformed AST where segments already have their `local_idents` and `scoped_idents` populated by capture analysis.
@@ -2549,3 +3815,3468 @@ The function body is the only part with reliable source mappings. A debugger ste
 Source: parse.rs:701-753 (emit_source_code)
 
 ---
+
+## Stage 5: Build Environment Transforms
+
+Three transforms handle environment-specific code removal during the build pipeline. **Const Replacement** (CONV-10) replaces build-time boolean constants (`isServer`, `isBrowser`, `isDev`) with literal `true`/`false` values. **Dead Branch Elimination** (CONV-09) then removes the unreachable branches created by those literal booleans. **Code Stripping** (CONV-11) provides three additional mechanisms for removing platform-specific code: export stubbing, context-name-based segment suppression, and event handler suppression. Together, these transforms ensure that server-only code never reaches client bundles and vice versa.
+
+These three transforms are tightly coupled: const replacement feeds dead branch elimination (replacement creates `if (true)`/`if (false)` patterns that the simplifier removes), and code stripping handles the cases where entire exports or segments must be removed rather than just dead branches within them.
+
+### Const Replacement (CONV-10)
+
+Const replacement substitutes build-time boolean identifiers with their resolved boolean literal values, enabling subsequent dead branch elimination. The transform is a single-pass AST visitor that matches identifier references against known imports from two source modules.
+
+**SWC Source:** `const_replace.rs` (~96 LOC)
+**Pipeline Position:** Step 9 of 20
+
+#### Rules
+
+**Rule 1: `isServer` replacement.** Any identifier imported as `isServer` from `@qwik.dev/core/build` or `@qwik.dev/core` is replaced with the boolean literal value of `config.is_server`. When `is_server` is not specified in the configuration, it defaults to `true` (lib.rs line 110: `config.is_server.unwrap_or(true)`).
+
+**Rule 2: `isBrowser` replacement.** Any identifier imported as `isBrowser` from `@qwik.dev/core/build` or `@qwik.dev/core` is replaced with the boolean literal `!config.is_server`. This is the logical inverse of `isServer` -- if `isServer` resolves to `true`, `isBrowser` resolves to `false`, and vice versa.
+
+**Rule 3: `isDev` replacement.** Any identifier imported as `isDev` from `@qwik.dev/core/build` or `@qwik.dev/core` is replaced with the boolean literal value of `is_dev`. The `is_dev` flag is derived from the emit mode: `true` when mode is `Dev` or `Hmr`, `false` for `Prod` (and not applicable for `Lib`/`Test` since the transform is skipped).
+
+Source: parse.rs line 293: `let is_dev = matches!(config.mode, EmitMode::Dev | EmitMode::Hmr);`
+
+**Rule 4: Aliased import handling.** The transform correctly handles aliased imports such as `import { isServer as myServer } from '@qwik.dev/core/build'`. Identifier matching uses SWC's `SyntaxContext` (hygiene marks) to track the local alias back to its import binding, so any local name is supported. The `id_eq!` macro in `const_replace.rs` compares both the symbol name (`sym`) and the syntax context (`ctxt`) to ensure only the specific imported binding is replaced, not unrelated identifiers with the same name.
+
+**Rule 5: Dual import source support.** Both `@qwik.dev/core/build` (the canonical build-time constants module) and `@qwik.dev/core` (which re-exports the same identifiers) are recognized as valid import sources. The visitor tracks six identifier slots: `is_server_ident`, `is_browser_ident`, `is_dev_ident` for `@qwik.dev/core/build`, and `is_core_server_ident`, `is_core_browser_ident`, `is_core_dev_ident` for `@qwik.dev/core`. An identifier from either source is replaced identically.
+
+**Rule 6: Lib mode skip.** When `config.mode == EmitMode::Lib`, const replacement is skipped entirely (parse.rs line 306). Libraries ship without environment-specific booleans baked in so that consumers can set `isServer`/`isBrowser` at their own build time.
+
+**Rule 7: Test mode skip.** When `config.mode == EmitMode::Test`, const replacement is also skipped (parse.rs line 308). Tests need `isServer`/`isBrowser` to remain as runtime-configurable identifiers so test harnesses can simulate different environments.
+
+**Rule 8: Visitor recursion on non-matching nodes.** When the visitor encounters an expression that is not a matching identifier, it recurses into child nodes via `visit_mut_children_with`. When a matching identifier IS found and replaced with a boolean literal, recursion stops for that node (the literal has no children to visit). This ensures replacements happen at all expression depths (e.g., inside function arguments, ternary branches, etc.) while avoiding unnecessary traversal of already-replaced literals.
+
+#### Example: Server Build with Aliased Imports (example_build_server)
+
+This example demonstrates const replacement on a server build (`is_server=true`) with imports from both `@qwik.dev/core` and `@qwik.dev/core/build`, including aliased imports. After const replacement, `isServer` and `isServer2` become `true`, `isBrowser`/`isb` become `false`, and subsequent DCE removes the dead `if (false)` branches.
+
+**Input:**
+```javascript
+import { component$, useStore, isDev, isServer as isServer2 } from '@qwik.dev/core';
+import { isServer, isBrowser as isb } from '@qwik.dev/core/build';
+import { mongodb } from 'mondodb';
+import { threejs } from 'threejs';
+import L from 'leaflet';
+
+export const functionThatNeedsWindow = () => {
+  if (isb) {
+    console.log('l', L);
+    console.log('hey');
+    window.alert('hey');
+  }
+};
+
+export const App = component$(() => {
+  useMount$(() => {
+    if (isServer) {
+      console.log('server', mongodb());
+    }
+    if (isb) {
+      console.log('browser', new threejs());
+    }
+  });
+  return (
+    <Cmp>
+      {isServer2 && <p>server</p>}
+      {isb && <p>server</p>}
+    </Cmp>
+## Stage 6: QRL Special Cases
+
+Three independent behaviors modify how QRLs are generated or annotated. PURE annotations control bundler tree-shaking eligibility, sync$ serialization bypasses the segment extraction pipeline entirely, and noop QRL handling replaces stripped segments with lightweight placeholders. These transforms operate during the main QwikTransform pass (Step 10) but address distinct concerns that do not depend on each other.
+
+### PURE Annotations (CONV-08)
+
+PURE annotations (`/*#__PURE__*/`) are comments that tell bundlers (Rollup, esbuild, webpack) that a call expression has no side effects and can be safely tree-shaken if its return value is unused. The Qwik optimizer places PURE annotations on specific call sites to enable dead code elimination of unused components and QRL declarations.
+
+Source: transform.rs:4043-4046 (componentQrl PURE), transform.rs:1502-1508 (create_internal_call with pure: true), transform.rs:4006 (qSegment PURE)
+
+#### Behavioral Rules
+
+**Rule 1: PURE annotation placement sites.** The optimizer annotates the following call expressions with `/*#__PURE__*/`:
+
+| Call Site | Source Location | Purpose |
+|-----------|----------------|---------|
+| `componentQrl(...)` | transform.rs:4043 (`add_pure_comment`) | Component declarations are tree-shakeable -- if the component is never referenced, the bundler can drop it |
+| `qrl(...)` | transform.rs:1504 (`create_internal_call(..., pure: true)`) | Internal QRL factory calls -- unused QRL declarations can be dropped |
+| `inlinedQrl(...)` | transform.rs:1504 (`create_internal_call(..., pure: true)`) | Inline QRL factory calls -- same tree-shaking rationale |
+| `_noopQrl(...)` / `_noopQrlDEV(...)` | transform.rs:3026 (`create_internal_call(..., pure: true)`) | Noop QRL placeholders for stripped segments -- always tree-shakeable |
+| `qSegment(...)` | transform.rs:4006 | Segment registration calls -- tree-shakeable if the segment is unused |
+| `_jsxSorted(...)` / `_jsxSplit(...)` | (documented in Phase 2, JSX Transform) | JSX element creation calls |
+
+**Rule 2: The PURE anti-list -- side-effectful wrappers that must NOT get PURE.** All other `Qrl`-suffixed wrapper calls are side-effectful registrations at component render time. Annotating them as PURE would cause bundlers to incorrectly drop them:
+
+- `useTaskQrl(...)` -- registers a reactive task (side effect: schedules re-execution on dependency changes)
+- `useStyleQrl(...)` -- registers scoped styles (side effect: injects CSS into the document)
+- `useBrowserVisibleTaskQrl(...)` -- registers a browser-only visible task
+- `serverStuffQrl(...)` -- registers server-side logic
+- All other `Qrl`-suffixed wrappers produced by `convert_qrl_word()` (e.g., `useOnQrl`, `useComputedQrl`, `useResourceQrl`)
+
+**Key distinction:** The difference is between **declaration** (`componentQrl` creates a component definition that is tree-shakeable if never imported) versus **registration** (`useTaskQrl` registers a side effect that must execute at render time). Only declarations get PURE annotations.
+
+**Rule 3: PURE annotation mechanism.** The `create_internal_call` function accepts a `pure: bool` parameter (transform.rs:2042-2054). When `pure` is true, it calls `comments.add_pure_comment(span.lo)` which attaches the `/*#__PURE__*/` leading comment to the call expression's span. For `componentQrl`, the PURE comment is added directly on the outer call via `add_pure_comment(node.span.lo)` at transform.rs:4044.
+
+**Rule 4: PURE annotations are mode-independent.** Unlike QRL wrapping (which varies by emit mode), PURE annotations are applied identically in all emit modes (Prod, Dev, Lib, Test, Hmr). The tree-shaking hints are always present.
+
+#### Example: PURE on componentQrl but not on side-effectful wrappers (impure_template_fns)
+
+**Input:**
+
+```javascript
+import { component$, useSignal } from '@qwik.dev/core';
+
+export default component$(() => {
+  const count = useSignal(0);
+  return (
+    <>
+      <button onClick$={() => count.value++}>Count up</button>
+    </>
+  );
+});
+```
+
+**Output (root module):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_s_ckEPmXZlub0 = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_App_component_ckEPmXZlub0"), "s_ckEPmXZlub0"
+);
+
+export const functionThatNeedsWindow = () => {};
+export const App = /*#__PURE__*/ componentQrl(q_s_ckEPmXZlub0);
+```
+
+**Output (segment module `test.tsx_App_component_ckEPmXZlub0.tsx`):**
+```javascript
+import { mongodb } from "mondodb";
+
+export const s_ckEPmXZlub0 = () => {
+  useMount$(() => {
+    console.log('server', mongodb());
+  });
+  return <Cmp>
+    {<p>server</p>}
+    {false}
+  </Cmp>;
+};
+```
+
+Key observations:
+- `functionThatNeedsWindow` becomes an empty function body because `isb` (aliased `isBrowser`) resolved to `false` on a server build, and DCE removed the entire `if (false)` block.
+- In the segment module, the `if (isServer)` guard was replaced with `if (true)` and then DCE unwrapped the body (just `console.log('server', mongodb())`), while `if (isb)` became `if (false)` and was removed entirely.
+- The `{isServer2 && <p>server</p>}` JSX expression simplified to `{<p>server</p>}` (short-circuit with `true &&`), while `{isb && <p>server</p>}` simplified to `{false}`.
+- The `threejs` and `leaflet` imports were dropped because their only usage sites were inside dead branches.
+
+**See also:** `example_dead_code` (dead branch elimination after literal `false` condition)
+
+---
+
+### Dead Branch Elimination (CONV-09)
+
+Dead branch elimination removes unreachable code after const replacement has substituted boolean literals. The optimizer uses three distinct DCE mechanisms that run at different pipeline positions with different conditions, providing progressively deeper code cleanup.
+
+**SWC Source:** `clean_side_effects.rs` (~90 LOC) + `parse.rs` simplifier calls
+**Pipeline Position:** Steps 11-13c of 20 (primary DCE), Step 16 (post-migration DCE)
+
+#### Three DCE Mechanisms
+
+**Mechanism 1: SWC Simplifier (primary DCE) -- Step 12.**
+The SWC simplifier is a general-purpose dead code elimination pass. It evaluates constant expressions, removes unreachable branches (`if (false) { ... }`), eliminates unused variable declarations, and strips imports that are no longer referenced. It runs with `dce::Config { preserve_imports_with_side_effects: false }`, meaning even side-effectful imports are removed if they are not referenced by any surviving code.
+
+The simplifier is the primary DCE mechanism and handles all standard dead branch patterns created by const replacement.
+
+**Mechanism 2: Treeshaker (client-side cleanup) -- Steps 11, 13b, 13c.**
+The treeshaker is a two-phase span-based approach specifically designed to remove side-effectful statements that were previously hidden inside dead branches and became exposed as top-level statements after simplification.
+
+Phase 1 -- **CleanMarker** (Step 11): Before the simplifier runs, the marker visits all top-level module items and records the `Span` of every top-level `new` expression statement and `call` expression statement into a shared `HashSet<Span>`. These are the side-effectful statements that existed in the original code and should be preserved.
+
+Phase 2 -- **CleanSideEffects** (Step 13b): After the simplifier runs, the cleaner retains only those top-level `new`/`call` expression statements whose spans appear in the marker's set. Any `new`/`call` statement with an unknown span (i.e., it was NOT present before simplification) is removed. These are statements that were previously nested inside dead branches and became top-level after the simplifier removed their enclosing `if` block.
+
+Phase 3 -- **Second DCE pass** (Step 13c): If the treeshaker's `CleanSideEffects` dropped any items (`did_drop == true`), a second simplifier pass runs to clean up imports that became unused after the treeshaker removed their consuming statements.
+
+**Mechanism 3: Post-migration DCE -- Step 16.**
+After variable migration moves root-level variables into their consuming segment modules (Step 14), some imports in the root module may become unused. A third simplifier pass runs to remove these orphaned imports. This only runs when segments exist, variables were migrated, and `minify != MinifyMode::None`.
+
+#### Conditions Table
+
+| Mechanism | Pipeline Step | Conditions |
+|-----------|--------------|------------|
+| Simplifier DCE (primary) | Step 12 | `minify != MinifyMode::None` AND `mode != EmitMode::Lib` |
+| Treeshaker mark (CleanMarker) | Step 11 | `minify != MinifyMode::None` AND `!is_server` AND `mode != EmitMode::Lib` |
+| Treeshaker clean (CleanSideEffects) | Step 13b | `minify != MinifyMode::None` AND `!is_server` AND NOT `Inline`/`Hoist` strategy |
+| Second DCE pass | Step 13c | Treeshaker's `did_drop == true` |
+| Post-migration DCE | Step 16 | Segments exist AND variables were migrated AND `minify != MinifyMode::None` |
+
+**Why Inline/Hoist skip Treeshaker clean:** For Inline and Hoist entry strategies, `SideEffectVisitor` (add_side_effect.rs) runs at Step 13 instead of the treeshaker clean at Step 13b. `SideEffectVisitor` re-adds bare import statements (`import "./module"`) for relative-path modules that had side effects, preserving side-effectful module evaluation order. The treeshaker's aggressive removal of exposed call/new statements would conflict with this side-effect preservation, so the two approaches are mutually exclusive: Inline/Hoist use `SideEffectVisitor`, all other strategies use the treeshaker.
+
+Source: parse.rs lines 351-395 (DCE pipeline orchestration), clean_side_effects.rs (full file, Treeshaker implementation), add_side_effect.rs (full file, SideEffectVisitor for Inline/Hoist)
+
+#### Example: Dead Branch Removal After Literal False (example_dead_code)
+
+This example shows dead branch elimination in action. The input contains an `if (false)` condition (which would be the result of const replacement turning `if (isBrowser)` into `if (false)` on a server build). The simplifier removes the entire dead branch and its unused dependency import.
+
+**Input:**
+```javascript
+import { component$ } from '@qwik.dev/core';
+import { deps } from 'deps';
+
+export const Foo = component$(({foo}) => {
+  useMount$(() => {
+    if (false) {
+      deps();
+    }
+  });
+  return (
+    <div />
+  );
+})
+```
+
+**Output (segment module `test.tsx_Foo_component_HTDRsvUbLiE.tsx`):**
+```javascript
+export const Foo_component_HTDRsvUbLiE = (_rawProps) => {
+  useMount$(() => {});
+  return <div/>;
+};
+```
+
+**Output (root module):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE"
+);
+
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+```
+
+Key observations:
+- The `if (false) { deps(); }` block was entirely removed from the `useMount$` callback, leaving an empty function body `() => {}`.
+- The `import { deps } from 'deps'` was dropped from the segment module because `deps` is no longer referenced after branch removal.
+- The root module never had the `deps` import in the first place (it was only referenced inside the segment).
+
+**See also:** `example_build_server` (const replacement + DCE combined flow), `example_drop_side_effects` (treeshaker removing exposed side effects on client builds)
+
+---
+
+### Code Stripping (CONV-11)
+
+Code stripping provides three distinct mechanisms for removing platform-specific code that cannot be handled by const replacement + DCE alone. Unlike the branch-level removal of DCE, code stripping operates at the export, segment, and event-handler level -- removing entire declarations or suppressing entire segment extraction.
+
+**SWC Source:** `filter_exports.rs` (~76 LOC) + `transform.rs` `should_emit_segment`
+**Pipeline Position:** Step 2 of 20 (`strip_exports`) and Step 10 (`strip_ctx_name`, `strip_event_handlers` -- evaluated during QwikTransform)
+
+#### Mechanism 1: `strip_exports` (Export Stubbing)
+
+`strip_exports` is a pre-pass that runs at Step 2 of the pipeline -- before TypeScript stripping, before the resolver, before GlobalCollect, before everything else. It takes a list of export symbol names from the configuration (e.g., `["onGet", "onPost"]`) and replaces matching exported declarations with throwing stubs.
+
+**Rules:**
+
+1. **Matching criteria.** The visitor scans all `export` declarations in the module. It matches:
+   - `export const X = ...` (VarDecl with a single declarator whose binding is an identifier)
+   - `export function X() { ... }` (FnDecl)
+
+   Other export forms (re-exports, default exports, multi-declarator `const`, class declarations) are NOT matched and pass through unchanged.
+
+2. **Throwing stub generation.** When a match is found, the entire declaration body is replaced with an arrow function that throws a descriptive error string. The export and symbol name are preserved -- only the initializer/body is replaced:
+
+   ```javascript
+   // Before:
+   export const onGet = () => {
+     const data = mongodb.collection.whatever;
+     return { body: { data } };
+   };
+
+   // After (strip_exports: ["onGet"]):
+   export const onGet = () => {
+     throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
+   };
+   ```
+
+   The generated stub uses `export const X = () => { throw "..." }` form regardless of whether the original was a `const` or `function` declaration.
+
+3. **Symbol preservation.** The stub retains the original export name so that other modules importing the symbol continue to resolve. The stub only throws at runtime if the stripped symbol is actually called, providing a clear error message rather than a missing-export build error.
+
+4. **Early pipeline position.** Running at Step 2 means `strip_exports` sees the original source before any other transformation. This is important because the throwing stub prevents the original function body (which may reference server-only modules like `mongodb`) from being analyzed by later passes, avoiding unnecessary import resolution of platform-specific dependencies.
+
+Source: filter_exports.rs (full file, StripExportsVisitor + empty_module_item helper)
+
+#### Mechanism 2: `strip_ctx_name` (Segment Suppression by Context Name)
+
+`strip_ctx_name` is evaluated during the main QwikTransform pass (Step 10) when the transform decides whether to emit a segment. It takes a list of context name prefixes from the configuration (e.g., `["server"]`).
+
+**Rules:**
+
+1. **Prefix matching.** When `should_emit_segment` evaluates a segment, it checks whether the segment's `ctx_name` starts with any prefix in the `strip_ctx_name` list. For example, with `strip_ctx_name: ["server"]`, segments from `server$()`, `serverLoader$()`, and `serverStuff$()` are all matched because their `ctx_name` values (`"server$"`, `"serverLoader$"`, `"serverStuff$"`) all start with `"server"`.
+
+2. **Noop QRL replacement.** When a segment is stripped, `should_emit_segment` returns `false`. Instead of extracting the function body into a separate module, `create_noop_qrl` generates a `_noopQrl()` (or `_noopQrlDEV()` in Dev/Hmr modes) placeholder. The noop QRL receives the segment's symbol name as its argument so the runtime can identify the stripped segment.
+
+3. **Null segment output.** Stripped segments still produce an output module entry, but its content is just `export const symbolName = null;` with an empty source map. This ensures the segment's canonical filename exists in the output manifest even when its code is removed.
+
+4. **Capture preservation.** Even stripped segments emit capture arrays if the original function had captured variables. `create_noop_qrl` calls `self.emit_captures(&segment_data.captures, &mut args)` to append `.w([captures])` to the noop QRL call. This preserves runtime scope tracking information.
+
+#### Mechanism 3: `strip_event_handlers` (Event Handler Suppression)
+
+`strip_event_handlers` is a boolean flag evaluated alongside `strip_ctx_name` in `should_emit_segment` during Step 10.
+
+**Rules:**
+
+1. **SegmentKind check.** When `strip_event_handlers` is `true`, all segments whose `ctx_kind` is `SegmentKind::EventHandler` are stripped. This includes segments from `onClick$`, `onInput$`, `onScroll$`, and any other event handler `$`-suffixed call.
+
+2. **Same noop treatment.** Stripped event handlers receive the same noop QRL replacement and null segment output as `strip_ctx_name`-stripped segments.
+
+3. **SSR use case.** This flag is typically used for SSR (server-side rendering) builds where event handlers are unnecessary -- the server renders HTML but does not attach DOM event listeners. Stripping event handlers reduces the server bundle size.
+
+Source: transform.rs `should_emit_segment` (lines where `strip_ctx_name` and `strip_event_handlers` are evaluated)
+
+#### Example 1: Export Stubbing with Throwing Replacement (example_strip_exports_unused)
+
+This example shows `strip_exports` replacing an exported function with a throwing stub. The original `onGet` function references `mongodb`, but after stripping, the stub has no such dependency.
+
+**Input:**
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_test_component_LUXeXe0DQrg"),
+  "test_component_LUXeXe0DQrg"
+);
+
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+```
+
+Note: `qrl()` gets PURE (internal QRL factory), `componentQrl()` gets PURE (component declaration). If this component used `useTaskQrl()` or `useStylesQrl()` in its body, those calls would NOT have PURE annotations -- they are side-effectful registrations.
+
+#### Example: PURE on stripped exports with qrl() calls (example_strip_exports_unused)
+
+**Input:**
+
+```javascript
+import { component$ } from '@qwik.dev/core';
+import mongodb from 'mongodb';
+
+export const onGet = () => {
+  const data = mongodb.collection.whatever;
+  return {
+    body: {
+      data
+    }
+  }
+};
+
+export default component$(() => {
+  return <div>cmp</div>
+});
+```
+
+**Output (root module):**
+  return { body: { data } };
+};
+
+export default component$(() => {
+  return <div>cmp</div>;
+});
+```
+
+**Output (root module, with strip_exports: ["onGet"]):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg"
+  () => import("./test.tsx_test_component_LUXeXe0DQrg"),
+  "test_component_LUXeXe0DQrg"
+);
+
+export const onGet = () => {
+  throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
+};
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+```
+
+Key observations:
+- `onGet` retains its export name but its body is replaced with the throwing stub.
+- The `mongodb` import is removed from the root module because it is no longer referenced (the original function body that used it was replaced).
+- The component and its QRL extraction proceed normally -- `strip_exports` only affects the named exports in its filter list.
+
+#### Example 2: Segment Suppression via strip_ctx_name (example_strip_server_code)
+
+This example shows `strip_ctx_name: ["server"]` suppressing server-specific segments on a client build. The `server$()` and `serverLoader$()` segments become noop QRLs while non-server segments are extracted normally. This snapshot uses Dev mode, so `_noopQrlDEV` is used instead of `_noopQrl`.
+
+**Input:**
+```javascript
+import { component$, serverLoader$, serverStuff$, $, client$, useStore, useTask$ } from '@qwik.dev/core';
+import { isServer } from '@qwik.dev/core';
+import mongo from 'mongodb';
+import redis from 'redis';
+import { handler } from 'serverless';
+
+export const Parent = component$(() => {
+  const state = useStore({ text: '' });
+
+  useTask$(async () => {
+    if (!isServer) return;
+    state.text = await mongo.users();
+    redis.set(state.text);
+  });
+
+  serverStuff$(async () => {
+    const a = $(() => { /* from $(), should not be removed */ });
+    const b = client$(() => { /* from client$(), should not be removed */ });
+    return [a, b];
+  });
+
+  serverLoader$(handler);
+
+  useTask$(() => { /* Code */ });
+
+  return (
+    <div onClick$={() => console.log('parent')}>
+      {state.text}
+Note: Both `qrl()` and `componentQrl()` have PURE annotations. The `onGet` throwing stub does NOT get PURE -- it is a regular export, not a QRL factory call.
+
+**See also:** `impure_template_fns` (PURE on componentQrl, not on wrappers), `example_strip_exports_unused` (PURE on qrl() calls), `example_inlined_entry_strategy` (PURE on _noopQrl() in Hoist pattern), `example_noop_dev_mode` (PURE on _noopQrlDEV() calls)
+
+---
+
+### sync$ Serialization (CONV-13)
+
+The `sync$` marker function produces a synchronous QRL that keeps the function body inline (no segment extraction) while also providing a serialized string representation for runtime hydration. Unlike all other `$`-suffixed markers, `sync$` does NOT trigger the segment extraction pipeline -- the function remains in the same module.
+
+Source: transform.rs:697-733 (handle_sync_qrl), inlined_fn.rs:188-217 (render_expr)
+
+#### Behavioral Rules
+
+**Rule 1: Detection.** `sync$(fn)` is detected during the main QwikTransform pass when the callee identifier matches the `sync_qrl_fn` identifier (imported from `@qwik.dev/core`).
+
+**Rule 2: Argument validation.** The first argument must be an `ArrowExpr` or `FnExpr` (arrow function or function expression). If the argument is any other expression type, the call is passed through unchanged -- no transformation occurs.
+
+**Rule 3: Minified serialization.** The function expression is serialized to a minified JavaScript string using codegen with `Config::with_minify(true)` and no comments (transform.rs:704, inlined_fn.rs:194). The serialization process:
+
+1. Clones the expression AST
+2. Applies hygiene normalization (`hygiene_with_config`)
+3. Applies the fixer pass
+4. Emits the expression as a module statement via SWC's codegen with minification enabled
+5. Strips the trailing semicolon from the output string (`trim_end_matches(';')`)
+6. Comments inside the function body are removed during serialization (the codegen has `comments: None`)
+
+**Rule 4: Output format.** The `sync$` call is replaced with `_qrlSync(originalFn, "serializedString")`:
+
+```javascript
+// Input:
+sync$(fn_expr)
+
+// Output:
+_qrlSync(fn_expr, "minified_string_of_fn_expr")
+```
+
+Both the original function expression (preserving comments and formatting in the AST) AND the minified string representation are emitted. The `_qrlSync` function is imported from `@qwik.dev/core` via `ensure_core_import`.
+
+**Rule 5: No segment extraction.** Unlike other `$`-suffixed calls, `sync$` does NOT:
+- Extract the function body to a separate segment module
+- Generate a segment hash or canonical filename
+- Create a dynamic import reference
+- Produce segment metadata (SegmentAnalysis)
+
+The function stays inline in whichever module contains the `sync$` call (root or segment).
+
+**Rule 6: Import rewriting.** The `sync$` import is rewritten to `_qrlSync` (via `ensure_core_import`), and the `_qrlSync` import is added to the module's import declarations.
+
+#### Example: Three sync$ function forms (example_of_synchronous_qrl)
+
+**Input:**
+
+```javascript
+import { sync$, component$ } from "@qwik.dev/core";
+
+export default component$(() => {
+  return (
+    <>
+      <input onClick$={sync$(function(event, target) {
+        // comment should be removed
+        event.preventDefault();
+      })}/>
+      <input onClick$={sync$((event, target) => {
+        event.preventDefault();
+      })}/>
+      <input onClick$={sync$((event, target) => event.preventDefault())}/>
+    </>
+  );
+});
+```
+
+**Output (segment module -- test.tsx_test_component_LUXeXe0DQrg.js):**
+
+```javascript
+import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
+import { _jsxSorted } from "@qwik.dev/core";
+import { _qrlSync } from "@qwik.dev/core";
+
+export const test_component_LUXeXe0DQrg = () => {
+  return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+    /*#__PURE__*/ _jsxSorted("input", {
+      "q-e:click": _qrlSync(function(event, target) {
+        // comment should be removed
+        event.preventDefault();
+      }, "function(event,target){event.preventDefault();}")
+    }, null, null, 2, null),
+    /*#__PURE__*/ _jsxSorted("input", {
+      "q-e:click": _qrlSync((event, target) => {
+        event.preventDefault();
+      }, "(event,target)=>{event.preventDefault();}")
+    }, null, null, 2, null),
+    /*#__PURE__*/ _jsxSorted("input", {
+      "q-e:click": _qrlSync(
+        (event, target) => event.preventDefault(),
+        "(event,target)=>event.preventDefault()"
+      )
+    }, null, null, 2, null)
+  ], 1, "u6_0");
+};
+```
+
+Key observations:
+- **Function expression form:** `function(event, target) {...}` -- serialized as `"function(event,target){event.preventDefault();}"`. The comment in the AST expression is preserved, but the serialized string has no comments.
+- **Arrow block body:** `(event, target) => {...}` -- serialized as `"(event,target)=>{event.preventDefault();}"`.
+- **Arrow concise body:** `(event, target) => event.preventDefault()` -- serialized as `"(event,target)=>event.preventDefault()"`.
+- All three forms are valid inputs. The minified serialization removes whitespace and comments.
+
+**See also:** `example_of_synchronous_qrl` (all three function forms)
+
+---
+
+### Noop QRL Handling (CONV-14)
+
+Noop QRLs are lightweight placeholder QRL calls that replace callbacks whose segments should not be emitted. They serve two purposes: (1) replacing stripped segments (via `strip_ctx_name` or `strip_event_handlers`) with runtime-safe placeholders, and (2) providing the declaration pattern for the Hoist entry strategy's `.s()` registration mechanism.
+
+Source: transform.rs:3000-3027 (create_noop_qrl), transform.rs:1459-1608 (hoist_qrl_to_module_scope)
+
+#### Behavioral Rules
+
+**Rule 1: When noop QRLs are generated.** Noop QRLs appear in two contexts:
+
+| Context | Trigger | Source |
+|---------|---------|--------|
+| Stripped segments | `should_emit_segment()` returns false -- either `strip_ctx_name` prefix matches the segment's `ctx_name`, or `strip_event_handlers` is true and the segment's `ctx_kind` is `EventHandler` | transform.rs:2978-2996 |
+| Hoist strategy | `hoist_qrl_to_module_scope()` converts `inlinedQrl()` calls to `_noopQrl()` + `.s()` registration pattern | transform.rs:1482-1548 |
+
+**Rule 2: Mode-dependent noop QRL forms.** The function name and arguments differ by emit mode:
+
+| Mode | Function | Arguments | Example |
+|------|----------|-----------|---------|
+| Prod, Lib, Test | `_noopQrl` | `("symbolName")` | `_noopQrl("Child_component_9GyF01GDKqw")` |
+| Dev, Hmr | `_noopQrlDEV` | `("symbolName", { file: "...", lo: N, hi: N, displayName: "..." })` | `_noopQrlDEV("App_component_serverStuff_ebyHaP15ytQ", { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0, displayName: "test.tsx_App_component_serverStuff" })` |
+
+The Dev/Hmr form includes a source location object with:
+- `file`: The `dev_path` option if provided, otherwise the module's absolute path (via `path_data.abs_path.to_slash_lossy()`)
+- `lo`, `hi`: Source span byte offsets (0,0 for stripped segments whose original span is unavailable)
+- `displayName`: The segment's display name (origin + context path)
+
+Source: transform.rs:3011-3023 (mode check, get_qrl_dev_obj call)
+
+**Rule 3: All noop QRL calls receive PURE annotations.** The `create_noop_qrl` method calls `create_internal_call(fn_name, args, true)` where the third argument (`true`) is the `pure` flag. This enables bundlers to tree-shake unused noop QRL declarations. (Cross-reference: CONV-08 PURE Annotations.)
+
+**Rule 4: Captures preserved on noop QRLs.** Even when a segment is stripped, if the original function had captured variables, the capture array is emitted on the noop QRL call. The `create_noop_qrl` method calls `self.emit_captures(&segment_data.captures, &mut args)` (transform.rs:3025). At the call site, this produces the `.w([captures])` call chain:
+
+```javascript
+// Stripped segment with captures:
+serverStuffQrl(q_qrl_4294901760.w([stuff]));
+
+// Stripped segment without captures:
+serverStuffQrl(q_qrl_4294901762);
+```
+
+This preserves runtime scope tracking -- the framework can still inspect which variables were captured even when the segment body is not loaded.
+
+**Rule 5: Noop segment output modules.** When a segment is stripped (not emitted), its output module still appears in the transform output but contains only a null export with an empty source map:
+
+```javascript
+export const App_component_serverStuff_ebyHaP15ytQ = null;
+```
+
+Source map: `{"version":3,"sources":[],"names":[],"mappings":""}`
+
+The segment metadata (SegmentAnalysis) is still generated with correct `origin`, `displayName`, `hash`, `ctxKind`, `ctxName`, and `captures` fields. The `loc` field is `[0, 0]` for stripped segments.
+
+**Rule 6: Hoist strategy noop QRL pattern.** When the Hoist entry strategy is active, `hoist_qrl_to_module_scope()` (transform.rs:1459-1608) converts `inlinedQrl()` calls into a two-part pattern:
+
+1. **Top-level const declaration:** `const q_symbolName = /*#__PURE__*/ _noopQrl("symbolName");`
+2. **Registration call:** `q_symbolName.s(fnBody);` -- either at module scope (for global identifiers) or inline via comma expression `(q_X.s(value), q_X)` for non-global identifiers
+3. **Capture chain:** `.w([captures])` appended if the segment has captured variables
+
+The `.s()` call assigns the function body to the noop QRL at runtime, enabling the segment to be loaded lazily while keeping the QRL reference available synchronously.
+
+**Rule 7: Lib mode exception.** `hoist_qrl_to_module_scope()` returns the call expression unchanged when mode is Lib (transform.rs:1461-1463). No hoisting occurs in library mode.
+
+#### Example: Dev mode noop QRLs with stripped segments and captures (example_noop_dev_mode)
+
+**Input:**
+
+```javascript
+import { component$, useStore, serverStuff$, $ } from '@qwik.dev/core';
+
+export const App = component$(() => {
+  const stuff = useStore();
+  serverStuff$(async () => {
+    // should be removed but keep scope
+    console.log(stuff.count)
+  })
+  serverStuff$(async () => {
+    // should be removed
+  })
+
+  return (
+    <Cmp>
+      <p class="stuff"
+        shouldRemove$={() => stuff.count}
+        onClick$={() => console.log('warn')}
+      >
+        Hello Qwik
+      </p>
+    </Cmp>
+  );
+});
+```
+
+**Config:** `strip_ctx_name: ["server"]`, `strip_event_handlers: true`, `mode: Dev`
+
+**Output (root module):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrlDEV(
+  () => import("./test.tsx_App_component_ckEPmXZlub0"),
+  "App_component_ckEPmXZlub0",
+  { file: "/hello/from/dev/test.tsx", lo: 105, hi: 452, displayName: "test.tsx_App_component" }
+);
+
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Output (segment module -- test.tsx_App_component_ckEPmXZlub0.js):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+import { _noopQrlDEV } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+
+const q_qrl_4294901760 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_serverStuff_ebyHaP15ytQ",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_serverStuff" }
+);
+const q_qrl_4294901762 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_serverStuff_1_PQCqO0ANabY",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_serverStuff_1" }
+);
+const q_qrl_4294901764 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_Cmp_p_shouldRemove_uU0MG0jvQD4",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_Cmp_p_shouldRemove" }
+);
+const q_qrl_4294901766 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4",
+  { file: "/hello/from/dev/test.tsx", lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_Cmp_p_q_e_click" }
+);
+
+export const App_component_ckEPmXZlub0 = () => {
+  const stuff = useStore();
+  serverStuffQrl(q_qrl_4294901760.w([stuff]));
+  serverStuffQrl(q_qrl_4294901762);
+  return /*#__PURE__*/ _jsxSorted(Cmp, null, null,
+    /*#__PURE__*/ _jsxSorted("p", { "q:p": stuff }, {
+      class: "stuff",
+      shouldRemove$: q_qrl_4294901764,
+      "q-e:click": q_qrl_4294901766
+    }, "Hello Qwik", 7, null, { ... }), 1, "u6_0", { ... });
+};
+```
+
+Key observations:
+- All four stripped segments use `_noopQrlDEV` (Dev mode) with PURE annotations
+- `q_qrl_4294901760` has `.w([stuff])` -- the first `serverStuff$` captured the `stuff` variable; captures are preserved even though the segment is stripped
+- `q_qrl_4294901762` has no `.w()` -- the second `serverStuff$` had no captures
+- Stripped segment output modules contain `export const symbolName = null;` with empty source maps
+- `lo: 0, hi: 0` in the dev info because stripped segments lose their original source spans
+
+**Output (stripped segment module -- e.g., test.tsx_App_component_serverStuff_ebyHaP15ytQ.js):**
+
+```javascript
+export const App_component_serverStuff_ebyHaP15ytQ = null;
+```
+
+#### Example: Hoist strategy noop QRL with .s() registration (example_inlined_entry_strategy)
+
+**Input:**
+
+```javascript
+import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+export const Child = component$(() => {
+  useStyles$('somestring');
+  const state = useStore({ count: 0 });
+
+  useBrowserVisibleTask$(() => {
+    state.count = thing.doStuff() + import("./sibling");
+  });
+
+  return (
+    <div onClick$={() => console.log(mongodb)}>
+    </div>
+  );
+});
+```
+
+**Output (root module):**
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+
+const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(
+  () => import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo"
+);
+
+export const Parent = /*#__PURE__*/ componentQrl(q_s_0TaiDayHrlo);
+```
+
+**Output (stripped segment `test.tsx_Parent_component_serverStuff_r1qAHX7Opp0.js`):**
+```javascript
+export const s_r1qAHX7Opp0 = null;
+```
+
+**Output (component segment, showing noop QRLs for stripped segments):**
+```javascript
+import { _noopQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { serverLoaderQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+// ...
+
+const q_qrl_4294901766 = /*#__PURE__*/ _noopQrl("s_r1qAHX7Opp0");
+const q_qrl_4294901768 = /*#__PURE__*/ _noopQrl("s_ddV1irobfWI");
+// ... normal qrl() calls for non-stripped segments ...
+
+export const s_0TaiDayHrlo = () => {
+  const state = useStore({ text: '' });
+  useTaskQrl(q_s_gDH1EtUWqBU.w([state]));
+  serverStuffQrl(q_qrl_4294901766);       // noop QRL passed to wrapper
+  serverLoaderQrl(q_qrl_4294901768);      // noop QRL passed to wrapper
+  useTaskQrl(q_s_P8oRQhHsurk);
+  return /*#__PURE__*/ _jsxSorted("div", null, {
+    "q-e:click": q_s_zM9okM0TYrA
+  }, _wrapProp(state, "text"), 3, "u6_0");
+};
+```
+
+Key observations:
+- `serverStuff$` and `serverLoader$` segments are suppressed: their output modules contain only `export const symbolName = null;`.
+- In the component segment, the stripped segments' QRL variables use `_noopQrl("symbolName")` instead of `qrl(() => import(...))`.
+- Non-server segments (`$()`, `client$()`, `useTask$()`, `onClick$()`) are extracted normally with full function bodies.
+- The `serverStuffQrl(q_qrl_4294901766)` and `serverLoaderQrl(q_qrl_4294901768)` calls still appear -- the wrapper calls are preserved with noop QRLs as arguments. This maintains the component's API contract while making the server-only code a no-op.
+- The `mongo`, `redis`, and `handler` imports are removed from the root module since they are no longer referenced by any surviving code.
+
+**See also:** `example_strip_client_code` (Hoist pattern with stripped client segments and `.s()` registration), `example_strip_exports_used` (strip_exports when the stripped symbol is referenced by another segment)
+**Output (root module, Hoist strategy):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
+import { _captures } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+const q_Child_component_div_q_e_click_cROa4sult1s = /*#__PURE__*/ _noopQrl("Child_component_div_q_e_click_cROa4sult1s");
+const q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA = /*#__PURE__*/ _noopQrl("Child_component_useBrowserVisibleTask_0IGFPOyJmQA");
+const q_Child_component_useStyles_qBZTuFM0160 = /*#__PURE__*/ _noopQrl("Child_component_useStyles_qBZTuFM0160");
+
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.s(() => {
+  const state = _captures[0];
+  state.count = thing.doStuff() + import("./sibling");
+});
+q_Child_component_div_q_e_click_cROa4sult1s.s(() => console.log(mongodb));
+q_Child_component_9GyF01GDKqw.s(() => {
+  useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+  const state = useStore({ count: 0 });
+  useBrowserVisibleTaskQrl(q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.w([state]));
+  return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+Key observations:
+- All four QRL declarations use `_noopQrl` (Prod mode) with PURE annotations
+- Each `.s()` call registers the function body with its corresponding noop QRL
+- The `.s()` calls are emitted at module scope (after the `const` declarations) for globally-accessible identifiers
+- `useBrowserVisibleTaskQrl(...)` does NOT have PURE -- it is a side-effectful registration (cross-reference: CONV-08 anti-list)
+- `componentQrl(...)` DOES have PURE -- it is a tree-shakeable component declaration
+- `.w([state])` on the visible task QRL preserves capture tracking
+
+**See also:** `example_noop_dev_mode` (Dev mode noop QRLs with stripped segments), `example_strip_server_code` (Prod mode noop QRLs), `example_strip_client_code` (Hoist pattern with stripped client segments), `example_inlined_entry_strategy` (full Hoist strategy pattern)
+
+---
+
+## Entry Strategies
+
+Entry strategies control how segments are grouped into output files. The optimizer defines an `EntryPolicy` trait with a single method:
+
+```rust
+pub trait EntryPolicy: Send + Sync {
+    fn get_entry_for_sym(&self, context: &[String], segment: &SegmentData) -> Option<Atom>;
+}
+```
+
+- Returns `Some(group_key)` to group the segment into a shared output file named by the key.
+- Returns `None` to give the segment its own output file (maximum granularity).
+- `context` is the `stack_ctxt` -- the component context stack containing root component names from the enclosing scope.
+
+Source: entry_strategy.rs (124 LOC), parse.rs:83 (`parse_entry_strategy` dispatch)
+
+The `EntryStrategy` enum has 7 variants that map to 5 distinct `EntryPolicy` implementations via `parse_entry_strategy`:
+
+```rust
+pub enum EntryStrategy {
+    Inline,    // -> InlineStrategy
+    Hoist,     // -> InlineStrategy (same!)
+    Single,    // -> SingleStrategy
+    Hook,      // -> PerSegmentStrategy
+    Segment,   // -> PerSegmentStrategy (same!)
+    Component, // -> PerComponentStrategy
+    Smart,     // -> SmartStrategy
+}
+```
+
+### InlineStrategy (Inline, Hoist)
+
+Both the `Inline` and `Hoist` enum variants use the same `InlineStrategy` implementation. The grouping behavior is identical -- the difference is entirely in post-processing output patterns.
+
+**Grouping:** Returns `Some("entry_segments")` for all segments. All segments are grouped into a single virtual entry.
+
+**Inline variant** (`should_inline=true`): The function body is inlined directly as the first argument to `inlinedQrl()`. No separate segment modules are generated. The root module contains all code:
+
+```javascript
+// Inline: function body passed directly to inlinedQrl()
+export const App = /*#__PURE__*/ componentQrl(
+  /*#__PURE__*/ inlinedQrl(() => {
+    // ... component body is here, inline ...
+  }, "App_component_hash", [captures])
+);
+```
+
+**Hoist variant** (`should_inline=false`): Creates separate `Segment` entries, then `hoist_qrl_to_module_scope` converts each `inlinedQrl()` call into a `_noopQrl()` declaration plus `.s()` registration pattern. Segments become top-level `const` declarations:
+
+```javascript
+// Hoist: _noopQrl declaration + .s() registration
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+const q_Child_component_useStyles_qBZTuFM0160 = /*#__PURE__*/ _noopQrl("Child_component_useStyles_qBZTuFM0160");
+//
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_9GyF01GDKqw.s(() => {
+    useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+    const state = useStore({ count: 0 });
+    return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+The Hoist pattern has three parts:
+1. `const q_symbolName = /*#__PURE__*/ _noopQrl("symbolName")` -- top-level declaration with PURE annotation
+2. `q_symbolName.s(fnBody)` -- registration call that binds the function body to the QRL, emitted at module scope for globally-accessible identifiers or inline via comma expression `(q_X.s(value), q_X)` for non-global identifiers
+3. `.w([captures])` -- appended to the QRL reference at usage site if the segment has captures
+
+**Lib mode exception:** `hoist_qrl_to_module_scope` returns the call expression unchanged when mode is `Lib` -- no hoisting occurs in library mode. Library output uses `inlinedQrl()` throughout (cross-reference: Emit Modes, Lib Mode).
+
+**Post-processing difference:** For Inline/Hoist strategies, `SideEffectVisitor` runs after DCE (instead of Treeshaker clean) to re-add bare import statements for modules with side effects, preserving module evaluation order (cross-reference: CONV-09 DCE conditions table).
+
+#### Example: Hoist Strategy with Component and Nested QRLs (example_inlined_entry_strategy)
+
+**Input:**
+
+```javascript
+import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+export const Child = component$(() => {
+    useStyles$('somestring');
+    const state = useStore({ count: 0 });
+    useBrowserVisibleTask$(() => {
+        state.count = thing.doStuff() + import("./sibling");
+    });
+    return (
+        <div onClick$={() => console.log(mongodb)}></div>
+    );
+});
+```
+
+**Output (root module -- all code in single file, Hoist pattern):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
+import { _captures } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+//
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+const q_Child_component_div_q_e_click_cROa4sult1s = /*#__PURE__*/ _noopQrl("Child_component_div_q_e_click_cROa4sult1s");
+const q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA = /*#__PURE__*/ _noopQrl("Child_component_useBrowserVisibleTask_0IGFPOyJmQA");
+const q_Child_component_useStyles_qBZTuFM0160 = /*#__PURE__*/ _noopQrl("Child_component_useStyles_qBZTuFM0160");
+//
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.s(() => {
+    const state = _captures[0];
+    state.count = thing.doStuff() + import("./sibling");
+});
+q_Child_component_div_q_e_click_cROa4sult1s.s(() => console.log(mongodb));
+q_Child_component_9GyF01GDKqw.s(() => {
+    useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+    const state = useStore({ count: 0 });
+    useBrowserVisibleTaskQrl(q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.w([state]));
+    return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+Key observations:
+- All four QRL declarations use `_noopQrl` with PURE annotations
+- Each `.s()` call registers the function body with its corresponding noop QRL at module scope
+- Captures are injected as `_captures[N]` references within `.s()` bodies
+- `.w([state])` on the visible task QRL preserves capture tracking at the usage site
+- No separate segment files are generated -- everything is in the root module
+
+**See also:** `example_noop_dev_mode` (Dev mode Hoist pattern with `_noopQrlDEV`), `example_strip_client_code` (Hoist pattern with stripped segments)
+
+### SingleStrategy (Single)
+
+**Grouping:** Returns `Some("entry_segments")` for all segments. All segments are extracted to a single shared output file.
+
+Unlike Inline/Hoist, segments ARE extracted to separate module code (via `new_module`), but all land in one output file because they share the same entry key. This is a middle ground: code splitting at the module level but bundled together for deployment.
+
+No dedicated snapshot available -- the output structure is the same as per-segment extraction but with all segment modules concatenated into one file. The root module uses `qrl(() => import("./entry_segments"))` references pointing to the shared file.
+
+### PerSegmentStrategy (Hook, Segment)
+
+**Grouping:** Returns `None` for all segments. Each segment gets its own output file for maximum lazy-loading granularity.
+
+`Hook` and `Segment` are enum aliases -- both map to the same `PerSegmentStrategy` implementation with identical behavior. The `Segment` name is the modern alias; `Hook` is the legacy name preserved for backward compatibility.
+
+#### Example: Per-Segment Output with Stripped Server Code (example_strip_server_code)
+
+**Input:**
+
+```javascript
+import { component$, serverLoader$, serverStuff$, $, client$, useStore, useTask$ } from '@qwik.dev/core';
+import { isServer } from '@qwik.dev/core';
+import mongo from 'mongodb';
+import redis from 'redis';
+import { handler } from 'serverless';
+
+export const Parent = component$(() => {
+    const state = useStore({ text: '' });
+    useTask$(async () => {
+        if (!isServer) return;
+        state.text = await mongo.users();
+        redis.set(state.text);
+    });
+    serverStuff$(async () => { /* ... */ });
+    serverLoader$(handler);
+    useTask$(() => { /* Code */ });
+    return (
+        <div onClick$={() => console.log('parent')}>{state.text}</div>
+    );
+});
+```
+
+**Output (root module):**
+
+```javascript
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(
+    () => import("./test.tsx_Parent_component_0TaiDayHrlo"),
+    "s_0TaiDayHrlo"
+);
+//
+export const Parent = /*#__PURE__*/ componentQrl(q_s_0TaiDayHrlo);
+```
+
+**Output (segment -- `test.tsx_Parent_component_0TaiDayHrlo.js`, ENTRY POINT):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { _wrapProp } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { serverLoaderQrl } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+//
+const q_qrl_4294901766 = /*#__PURE__*/ _noopQrl("s_r1qAHX7Opp0");
+const q_qrl_4294901768 = /*#__PURE__*/ _noopQrl("s_ddV1irobfWI");
+// ... other QRL declarations ...
+export const s_0TaiDayHrlo = () => {
+    const state = useStore({ text: '' });
+    useTaskQrl(q_s_gDH1EtUWqBU.w([state]));
+    serverStuffQrl(q_qrl_4294901766);
+    serverLoaderQrl(q_qrl_4294901768);
+    useTaskQrl(q_s_P8oRQhHsurk);
+    return /*#__PURE__*/ _jsxSorted("div", null, {
+        "q-e:click": q_s_zM9okM0TYrA
+    }, _wrapProp(state, "text"), 3, "u6_0");
+};
+```
+
+**Output (stripped segment -- `test.tsx_Parent_component_serverStuff_r1qAHX7Opp0.js`):**
+
+```javascript
+export const s_r1qAHX7Opp0 = null;
+```
+
+Key observations:
+- Each segment gets its own file (per-segment strategy)
+- Stripped server segments (`serverStuff$`, `serverLoader$`) produce noop outputs with `export const symbolName = null`
+- Non-stripped segments retain full function bodies with resolved imports
+- The root module is minimal -- just a `componentQrl` wrapper with a dynamic import
+
+**See also:** `example_strip_client_code` (client-side stripping), `example_dead_code` (DCE with per-segment output)
+
+### PerComponentStrategy (Component)
+
+**Grouping:** Groups segments by their enclosing component. The grouping key is constructed from the component context stack:
+
+```rust
+fn get_entry_for_sym(&self, context: &[String], segment: &SegmentData) -> Option<Atom> {
+    context.first().map_or_else(
+        || Some(ENTRY_SEGMENTS.clone()),       // no component context -> "entry_segments"
+        |root| Some(Atom::from([&segment.origin, "_entry_", root].concat())),
+    )
+}
+```
+
+- If the `context` (component stack) has a root component name, segments are grouped under `"{origin}_entry_{root}"` -- e.g., `"app.tsx_entry_App"`.
+- If there is no component context (top-level QRLs outside any component), segments fall back to `"entry_segments"`.
+- All segments within the same component are loaded together when any one of them is needed. This is a practical middle ground between per-segment granularity and single-file bundling.
+
+### SmartStrategy (Smart)
+
+The default strategy. Uses conditional grouping to optimize for common usage patterns:
+
+```rust
+fn get_entry_for_sym(&self, context: &[String], segment: &SegmentData) -> Option<Atom> {
+    // Event handlers without scope variables -> own file
+    if segment.scoped_idents.is_empty()
+        && (segment.ctx_kind != SegmentKind::Function || &segment.ctx_name == "event$")
+    {
+        return None;
+    }
+    // Everything else -> grouped by component (like PerComponentStrategy)
+    context.first().map_or_else(
+        || None,  // top-level QRLs -> own file
+        |root| Some(Atom::from([&segment.origin, "_entry_", root].concat())),
+    )
+}
+```
+
+**Three grouping rules:**
+
+1. **Event handlers without captures get their own file** (`None`): When `scoped_idents.is_empty()` AND the segment is either NOT a `SegmentKind::Function` OR the context name is `"event$"`. This isolates leaf event handlers (like `onClick$`) for optimal lazy-loading -- they are often loaded on user interaction and should not pull in component state.
+
+2. **Top-level QRLs get their own file** (`None`): When `context` is empty (no enclosing component). These are standalone functions that should be independently loadable.
+
+3. **Everything else is grouped by component**: Like `PerComponentStrategy`, segments with captures or component-scoped functions are grouped under `"{origin}_entry_{root}"`. This means all stateful QRLs for a component are loaded together if any one is used, which is a pragmatic optimization since they likely share data dependencies.
+
+**Rationale:** Smart strategy balances granularity and request count. Leaf event handlers are the most common lazy-loading targets (user clicks, hovers) and benefit from isolation. Stateful functions (tasks, effects) with captures typically need shared context and benefit from co-location.
+
+### Summary Table
+
+| Strategy Enum | EntryPolicy Impl | Grouping Behavior | Output Pattern |
+|:---|:---|:---|:---|
+| **Inline** | InlineStrategy | `Some("entry_segments")` -- all grouped | `inlinedQrl(fn, "name", [captures])` inline in root module |
+| **Hoist** | InlineStrategy | `Some("entry_segments")` -- all grouped | `_noopQrl("name")` + `.s(fn)` registration in root module |
+| **Single** | SingleStrategy | `Some("entry_segments")` -- all grouped | Segments extracted but all in one output file |
+| **Hook** | PerSegmentStrategy | `None` -- each segment separate | `qrl(() => import("./segment"))` per segment |
+| **Segment** | PerSegmentStrategy | `None` -- each segment separate | Same as Hook (modern alias) |
+| **Component** | PerComponentStrategy | `Some("{origin}_entry_{root}")` or fallback | Segments grouped by enclosing component |
+| **Smart** | SmartStrategy | Conditional (see rules above) | Event handlers isolated; stateful code grouped by component |
+
+---
+
+## Emit Modes
+
+The optimizer supports 5 emit modes that control per-transformation behavioral variations across build contexts. Modes are defined by the `EmitMode` enum:
+
+```rust
+pub enum EmitMode {
+    Prod,
+    Lib,
+    Dev,
+    Test,
+    Hmr,
+}
+```
+
+Source: parse.rs:78-84 (enum definition), parse.rs:293-436 (mode-conditional pipeline branches)
+
+A key derived value is `is_dev`, computed at parse.rs:293:
+
+```rust
+let is_dev = matches!(config.mode, EmitMode::Dev | EmitMode::Hmr);
+```
+
+This boolean controls `isDev` const replacement, QRL dev variant selection, and JSX source location emission. Both Dev and Hmr modes are considered "development" contexts.
+
+### Mode x CONV Cross-Reference Table
+
+This table is the primary lookup for "what changes in this mode?" Each cell shows behavioral differences from the normal (Prod) pipeline. "Normal" means no mode-specific variation. Bold entries indicate significant deviations.
+
+| CONV | Prod | Dev | Lib | Test | Hmr |
+|:---|:---|:---|:---|:---|:---|
+| CONV-01 (Dollar Detection) | Normal | Normal | Normal | Normal | Normal |
+| CONV-02 (QRL Wrapping) | `qrl()`/`inlinedQrl()` | `qrlDEV()`/`inlinedQrlDEV()` with source location | **`inlinedQrl()` only (all inline)** | Same as Prod | Same as Dev |
+| CONV-03 (Capture Analysis) | Normal | Normal | Normal | Normal | Normal |
+| CONV-04 (Props Destructuring) | Normal | Normal | Normal (runs for all modes) | Normal | Normal |
+| CONV-05 (Segment Extraction) | Normal | Normal | **SKIPPED** (no segments extracted, all inline) | Normal | Normal |
+| CONV-06 (JSX Transform) | Normal | Adds JSX source location `{ fileName, lineNumber, columnNumber }` | Normal | Normal | Adds JSX source location info |
+| CONV-07 (Signal Optimization) | Normal | Normal | Normal | Normal | Normal |
+| CONV-08 (PURE Annotations) | Normal | Normal | Normal | Normal | Normal |
+| CONV-09 (DCE) | Full (simplifier + treeshaker) | Full | **SKIPPED** | Full | Full |
+| CONV-10 (Const Replacement) | `isServer=config`, `isDev=false` | `isServer=config`, `isDev=true` | **SKIPPED** | **SKIPPED** | `isServer=config`, `isDev=true` |
+| CONV-11 (Code Stripping) | Normal | Normal | Normal | Normal | Normal |
+| CONV-12 (Import Rewriting) | Normal | Adds `_qrlDEV`, `_inlinedQrlDEV`, `_noopQrlDEV` imports | Normal | Normal | Same as Dev |
+| CONV-13 (sync$ Serialization) | Normal | Normal | Normal | Normal | Normal |
+| CONV-14 (Noop QRL) | `_noopQrl()` | `_noopQrlDEV()` with source location | Normal | Normal | `_noopQrlDEV()` |
+| **Other** | | | | | |
+| Post-processing (DCE, treeshaker, var migration) | Normal | Normal | **ALL SKIPPED** | Normal | Normal |
+| HMR hook injection | No | No | No | No | **`_useHmr(devPath)` in component$ bodies** |
+| Segment dev imports | No | `_qrlDEV`, `_inlinedQrlDEV`, `_noopQrlDEV` added to segment explicit imports | No | No | Same as Dev |
+
+### Prod Mode
+
+Full pipeline with all transformations enabled. Const replacement sets `isDev=false`, `isServer`/`isBrowser` based on `config.is_server`. DCE runs to remove dead branches created by const replacement. No development wrappers or source location information in QRL calls. This is the standard production build output.
+
+### Dev Mode
+
+Uses development variants of QRL factory functions: `qrlDEV()`, `inlinedQrlDEV()`, and `_noopQrlDEV()`. Each includes a source location object as an additional argument:
+
+```javascript
+qrlDEV(() => import("./segment"), "symbolName", {
+    file: "/path/to/source.tsx",
+    lo: 88,       // start byte offset in source
+    hi: 200,      // end byte offset in source
+    displayName: "source.tsx_Component_component"
+});
+```
+
+Const replacement sets `isDev=true`. JSX elements receive source location information as `{ fileName, lineNumber, columnNumber }` objects (cross-reference: CONV-06). Segment modules get explicit imports for `_qrlDEV`, `_inlinedQrlDEV`, and `_noopQrlDEV` to ensure dev helpers are available in extracted code.
+
+**See also:** `example_dev_mode` (Dev mode with separate segments), `example_dev_mode_inlined` (Dev mode with Inline strategy)
+
+### Lib Mode
+
+Minimal processing for library pre-compilation. Output is a `.qwik.mjs` file that consumers will process further with their own optimizer configuration. Lib mode has the most extensive skip list of any mode:
+
+- **Props Destructuring (CONV-04):** RUNS -- the only transform guaranteed to run in all modes, so library output already has signal-forwarding destructuring applied
+- **QRL Wrapping (CONV-02):** All QRLs wrapped as `inlinedQrl()` (inline form), not extracted
+- **Segment Extraction (CONV-05):** SKIPPED -- no segments are extracted, all code stays in the root module
+- **Const Replacement (CONV-10):** SKIPPED -- `isServer`/`isBrowser`/`isDev` remain as identifiers so consumers can set them
+- **DCE (CONV-09):** SKIPPED -- no dead code elimination
+- **Post-processing:** ALL SKIPPED -- no treeshaker, no variable migration, no export cleanup
+- **Hoist:** `hoist_qrl_to_module_scope` returns early with the call expression unchanged -- no `_noopQrl()` + `.s()` conversion
+
+The net effect is that library output contains all QRLs inlined with `inlinedQrl()` calls, preserving the function bodies for downstream processing:
+
+```javascript
+// Lib mode output -- all inline, no segments
+export const Works = /*#__PURE__*/ componentQrl(
+    /*#__PURE__*/ inlinedQrl((props) => {
+        useStyleQrl(/*#__PURE__*/ inlinedQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg"));
+        const sig = useSignal('hola');
+        useTaskQrl(/*#__PURE__*/ inlinedQrl(() => {
+            const sig = _captures[0];
+            console.log(sig.value, 'hola');
+        }, "Works_component_useTask_pjo5U5Ikll0", [sig]));
+        return /*#__PURE__*/ _jsxSorted("div", { /* ... */ }, null, null, 2, "u6_0");
+    }, "Works_component_t45qL4vNGv0")
+);
+```
+
+**See also:** `example_lib_mode` (complete Lib mode output), `lib_mode_fn_signal` (Lib mode with signal optimization)
+
+### Test Mode
+
+Like Prod but skips const replacement (CONV-10). `isServer` and `isBrowser` remain as runtime identifiers rather than being replaced with boolean literals. This allows test code to configure the environment at runtime (e.g., `isServer = true` in a test setup) without being locked to a compile-time value. All other transformations run normally -- DCE, segment extraction, post-processing are all enabled.
+
+### Hmr Mode
+
+Like Dev plus Hot Module Replacement hook injection. The `_useHmr(devPath)` call is injected as the **first statement** inside `component$` function bodies only -- not inside other `$`-suffixed calls like `useTask$`, `server$`, etc. Only components detected via `is_qcomponent` during the QwikTransform pass receive HMR injection.
+
+The `devPath` argument is the development-time file path (e.g., `"/user/qwik/src/test.tsx"`), enabling the HMR runtime to track which file originated the component for hot reload.
+
+#### Example: HMR Hook Injection in Component (hmr)
+
+**Input:**
+
+```javascript
+import { component$, $ } from "@qwik.dev/core";
+
+export const TestGetsHmr = component$(() => {
+    return <div>Test</div>;
+});
+export const TestNoHmr = componentQrl($(() => {
+    return <div>Test</div>;
+}));
+```
+
+**Output (root module -- Hmr mode, uses qrlDEV):**
+
+```javascript
+import { componentQrl as componentQrl1 } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+//
+const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(
+    () => import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"),
+    "TestGetsHmr_component_jBUoou0sxX4",
+    { file: "/user/qwik/src/test.tsx", lo: 105, hi: 143,
+      displayName: "test.tsx_TestGetsHmr_component" }
+);
+// ...
+export const TestGetsHmr = /*#__PURE__*/ componentQrl1(q_TestGetsHmr_component_jBUoou0sxX4);
+export const TestNoHmr = componentQrl(q_TestNoHmr_componentQrl_Uqk3jGTNmYs);
+```
+
+**Output (segment -- `test.tsx_TestGetsHmr_component_jBUoou0sxX4.js`, ENTRY POINT):**
+
+```javascript
+import { _jsxSorted } from "@qwik.dev/core";
+import { _useHmr } from "@qwik.dev/core";
+//
+export const TestGetsHmr_component_jBUoou0sxX4 = () => {
+    _useHmr("/user/qwik/src/test.tsx");  // <-- HMR hook injected as first statement
+    return /*#__PURE__*/ _jsxSorted("div", null, null, "Test", 3, "u6_0", {
+        fileName: "test.tsx",
+        lineNumber: 5,
+        columnNumber: 11
+    });
+};
+```
+
+**Output (segment -- `test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs.js`, ENTRY POINT):**
+
+```javascript
+export const TestNoHmr_componentQrl_Uqk3jGTNmYs = () => {
+    // No _useHmr -- this was created via componentQrl($(...)), not component$()
+    return /*#__PURE__*/ _jsxSorted("div", null, null, "Test", 3, "u6_1", { /* ... */ });
+};
+```
+
+Key observations:
+- `TestGetsHmr` (created via `component$()`) receives `_useHmr` injection
+- `TestNoHmr` (created via `componentQrl($(...))`) does NOT receive `_useHmr` -- only `component$` triggers HMR
+- Both segments get JSX source location info (Dev-like behavior)
+- The root module uses `qrlDEV` (Dev-like QRL wrapping)
+
+**See also:** `example_dev_mode` (Dev mode without HMR for comparison)
+
+---
+
+## Transformation Pipeline
+
+This section formalizes the dependency relationships between all 20 pipeline steps. The [Pipeline Overview](#pipeline-overview) diagram (Stage 1) shows the sequential execution flow; this section shows **why** that ordering is required. Together, the sequential diagram and the dependency DAG below provide an implementer with both the execution order and the correctness constraints that mandate it.
+
+### Pipeline Dependency DAG
+
+The following Mermaid diagram shows the dependency relationships between pipeline steps. An arrow from step A to step B means "A must complete before B can begin." Steps without inbound arrows depend only on receiving the program AST from the prior stage boundary.
+
+```mermaid
+flowchart TD
+    subgraph Stage1["Stage 1: Parse"]
+        S1["Step 1: Parse source code"]
+        S2["Step 2: Strip exports<br/><i>if strip_exports configured</i>"]
+        S3["Step 3: TypeScript strip<br/><i>if transpile_ts && is_typescript</i>"]
+        S4["Step 4: JSX transpile<br/><i>if transpile_jsx && is_jsx</i>"]
+        S5["Step 5: Rename legacy imports"]
+        S6["Step 6: Resolver"]
+    end
+
+    subgraph Stage2["Stage 2: Collect"]
+        S7["Step 7: GlobalCollect"]
+    end
+
+    subgraph Stage3["Stage 3: Pre-Transforms"]
+        S8["Step 8: Props Destructuring<br/>(CONV-04)"]
+        S9["Step 9: Const Replacement<br/>(CONV-10)<br/><i>if mode != Lib && mode != Test</i>"]
+    end
+
+    subgraph Stage4["Stage 4: Core Transform"]
+        S10["Step 10: QwikTransform<br/>(CONV-01,02,03,05,06,07,08,12,13,14)"]
+    end
+
+    subgraph Stage5["Stage 5: Post-Transform"]
+        S11["Step 11: Treeshaker mark<br/><i>if minify != None && !is_server</i>"]
+        S12["Step 12: Simplifier DCE<br/>(CONV-09)<br/><i>if minify != None</i>"]
+        S13["Step 13: Side effect preservation<br/><i>if strategy == Inline|Hoist</i>"]
+        S14a["Step 14a: Treeshaker clean<br/><i>if minify != None && !is_server<br/>&& strategy != Inline|Hoist</i>"]
+        S14b["Step 14b: Second simplifier DCE<br/><i>if treeshaker.did_drop</i>"]
+        S15["Step 15: Variable migration<br/><i>if segments not empty</i>"]
+        S16["Step 16: Export cleanup<br/><i>if vars migrated</i>"]
+        S17["Step 17: Third DCE pass<br/><i>if vars migrated && minify != None</i>"]
+        S18["Step 18: Hygiene + Fixer"]
+    end
+
+    subgraph Stage6["Stage 6: Emit"]
+        S19["Step 19: Codegen root module"]
+        S20["Step 20: Build & codegen segment modules"]
+    end
+
+    %% Stage 1 internal dependencies (strictly sequential)
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+    S4 --> S5
+    S5 --> S6
+
+    %% Stage 1 -> Stage 2
+    S6 -->|"resolved AST with scope marks"| S7
+
+    %% Stage 2 -> Stage 3
+    S7 -->|"import/export metadata"| S8
+    S7 -->|"import/export metadata"| S9
+
+    %% Stage 3 internal
+    S8 -->|"restructured props change variable refs"| S9
+
+    %% Stage 3 -> Stage 4
+    S8 -->|"props transformed for signal tracking"| S10
+    S9 -->|"boolean literals replace env identifiers"| S10
+
+    %% Stage 4 -> Stage 5
+    S10 -->|"segments extracted, QRLs wrapped"| S11
+    S10 -->|"segments extracted, QRLs wrapped"| S12
+    S10 -->|"segments + global_collect"| S13
+    S10 -->|"segments extracted"| S15
+
+    %% Stage 5 internal dependencies
+    S11 -->|"side effects marked for removal"| S12
+    S12 -->|"dead code removed"| S13
+    S12 -->|"dead code removed"| S14a
+    S14a -->|"treeshaker dropped expressions"| S14b
+    S13 --> S18
+    S14b --> S18
+    S15 -->|"variables moved to segments"| S16
+    S16 -->|"exports removed"| S17
+    S17 --> S18
+
+    %% Stage 5 -> Stage 6
+    S18 -->|"final AST"| S19
+    S18 -->|"final AST + segments"| S20
+```
+
+Source: `parse.rs` `transform_code()` function (lines 240-450)
+
+**Reading the DAG:** An implementer can determine the correct execution order by topologically sorting this graph. Any topological ordering is valid, though the SWC implementation uses the specific linear order shown in the [Pipeline Overview](#pipeline-overview). The critical constraint is that no step executes before all its incoming dependencies are satisfied.
+
+**Note on step numbering:** Steps 14a/14b and 17 represent conditional paths that are mutually exclusive with step 13 (Side effect preservation runs for Inline/Hoist strategies; Treeshaker clean runs for all other strategies). The Pipeline Overview numbers these sequentially (11-20) for simplicity; this DAG shows the actual branching structure.
+
+### Ordering Constraints Table
+
+Each row documents one ordering dependency: the step that must run first (Before), the step that must run after (After), and the rationale for why violating this order produces incorrect output.
+
+| Constraint | Before Step | After Step | Rationale | Source |
+|------------|-------------|------------|-----------|--------|
+| **Strip before transforms** | 2. Strip exports | 8-10. All transforms | Throwing stubs must replace stripped export bodies before any transform reads them. Otherwise transforms process code that will be discarded, wasting work and potentially extracting segments from dead code. | `parse.rs:247-250` |
+| **TS strip before resolver** | 3. TypeScript strip | 6. Resolver | Type annotations contain identifiers that would receive scope marks from the resolver, creating phantom bindings. Stripping types first ensures the resolver only processes runtime code. | `parse.rs:254-256` |
+| **JSX before resolver** | 4. JSX transpile | 6. Resolver | JSX transpilation generates `jsx()`/`jsxs()` calls with synthetic identifiers that need scope marks. Running resolver first would miss these generated identifiers. | `parse.rs:259-275` |
+| **Rename before resolver** | 5. Rename legacy imports | 6. Resolver | Legacy `@builder.io/qwik` imports must be renamed to `@qwik.dev/core` before the resolver assigns marks, so that mark-based lookups in GlobalCollect find the correct module specifiers. | `parse.rs:278` |
+| **Resolver before GlobalCollect** | 6. Resolver | 7. GlobalCollect | GlobalCollect catalogs identifiers using their resolved (mark-qualified) names. Without resolver marks, identifiers from different scopes would collide in the metadata catalog. | `parse.rs:281-285, 287` |
+| **GlobalCollect before all CONVs** | 7. GlobalCollect | 8-10. All transforms | Every transformation reads import/export metadata from GlobalCollect. Props Destructuring checks for `@qwik.dev/core` imports; Const Replacement checks for `@qwik.dev/core/build` imports; QwikTransform queries imports for dollar detection, capture analysis, and import rewriting. | `parse.rs:287` |
+| **Props Destructuring before Capture Analysis** | 8. Props Destructuring (CONV-04) | 10. QwikTransform (CONV-03) | Props destructuring transforms `({count}) => ...` into `(_rawProps) => { count = _rawProps.count; ... }`, changing which variable identifiers appear in scope. Capture analysis must see the post-destructuring variable references to correctly determine captured bindings. | `parse.rs:299-303` |
+| **Props Destructuring before Const Replacement** | 8. Props Destructuring | 9. Const Replacement | Props destructuring mutates the GlobalCollect metadata (adds synthetic imports for `_rawProps` helpers). Const Replacement reads GlobalCollect to find `@qwik.dev/core/build` imports. Running them in reverse could miss imports added by destructuring. | `parse.rs:299-308` |
+| **Const Replacement before DCE** | 9. Const Replacement (CONV-10) | 12. Simplifier DCE (CONV-09) | Const replacement transforms `isServer` to `true`/`false`, creating dead branches (`if (true) { ... } else { dead }` or `if (false) { dead } else { ... }`). DCE removes these dead branches. Without prior const replacement, DCE has no dead branches to eliminate. | `parse.rs:308-312, 359-369` |
+| **QwikTransform before Treeshaker** | 10. QwikTransform | 11. Treeshaker mark | QwikTransform wraps calls with `qrl()`/`inlinedQrl()` and adds PURE annotations. The Treeshaker marks `new` and `call` expressions for removal on the client -- it must see the final call structure including QRL wrappers and PURE-annotated `componentQrl` calls. | `parse.rs:348, 352-356` |
+| **QwikTransform before Variable Migration** | 10. QwikTransform (CONV-05) | 15. Variable migration | Segment extraction occurs during QwikTransform, producing the segment list. Variable migration analyzes which root-level variables are exclusively used by a single segment and moves them into that segment. Segments must exist before migration can analyze them. | `parse.rs:348, 399-435` |
+| **Treeshaker mark before DCE** | 11. Treeshaker mark | 12. Simplifier DCE | The Treeshaker marker annotates client-side `new`/`call` expressions as side-effect-free (by wrapping in `/* @__PURE__ */` or equivalent). The subsequent DCE pass uses these annotations to determine what can be safely removed. | `parse.rs:353-356, 359-369` |
+| **DCE before Side Effect Preservation** | 12. Simplifier DCE | 13. Side effect preservation | For Inline/Hoist strategies, `SideEffectVisitor` re-adds bare import statements for modules with side effects. It must run after DCE so that it only preserves imports that survived dead code elimination, not imports from dead branches. | `parse.rs:359-378` |
+| **DCE before Treeshaker Clean** | 12. Simplifier DCE | 14a. Treeshaker clean | The Treeshaker cleaner removes expressions that the marker flagged. It runs after the first DCE pass to catch expressions that DCE simplified but did not fully remove (e.g., expressions reduced to stubs). | `parse.rs:380-394` |
+| **Treeshaker Clean before Second DCE** | 14a. Treeshaker clean | 14b. Second simplifier DCE | When the Treeshaker cleaner drops expressions (`did_drop == true`), a second DCE pass is needed to remove imports and declarations that became unused after the dropped expressions were removed. | `parse.rs:383-394` |
+| **Variable Migration before Export Cleanup** | 15. Variable migration | 16. Export cleanup | Variable migration moves root-level variables into segments, making their root-level export declarations dangling. Export cleanup (`remove_migrated_exports`) removes these now-invalid exports. Running cleanup before migration would have nothing to clean. | `parse.rs:402-415` |
+| **Export Cleanup before Third DCE** | 16. Export cleanup | 17. Third DCE pass | After migrating variables and removing their exports, some imports in the root module may become unused (they were only referenced by the migrated code). A final DCE pass removes these orphaned imports. | `parse.rs:417-430` |
+| **Hygiene before Codegen** | 18. Hygiene + Fixer | 19-20. Codegen | Hygiene renames identifiers to avoid scope collisions (e.g., two different `x` variables in nested scopes get distinct names). Fixer repairs AST invariants (parenthesization, expression contexts). Codegen must see the final, collision-free AST. | `parse.rs:438-439` |
+| **Root Codegen before Segment Build** | 19. Codegen root module | 20. Build & codegen segments | Segment modules are constructed from extracted expressions and resolved imports. While logically independent, the SWC implementation processes the root module first to finalize the comment map, then iterates over segments. | `parse.rs:441-448` |
+
+### Conditional Execution Summary
+
+Several pipeline steps execute conditionally based on build configuration. The following table summarizes which steps are conditional and when they are skipped.
+
+| Step | Condition | Skipped When | Config Fields |
+|------|-----------|--------------|---------------|
+| 2. Strip exports | `strip_exports` is `Some` | No `strip_exports` configured (most dev builds) | `strip_exports: Option<Vec<String>>` |
+| 3. TypeScript strip | `transpile_ts && is_type_script` | Non-TypeScript files, or `transpile_ts` disabled | `transpile_ts: bool` |
+| 4. JSX transpile | `transpile_jsx && is_jsx` | Non-JSX files, or `transpile_jsx` disabled | `transpile_jsx: bool` |
+| 9. Const Replacement | `mode != Lib && mode != Test` | Lib mode (library publishing) and Test mode (test environment) | `mode: EmitMode` |
+| 11. Treeshaker mark | `minify != None && !is_server` | Server builds, or minification disabled | `minify: MinifyMode`, `is_server: bool` |
+| 12. Simplifier DCE | `minify != None` | Minification disabled (some dev builds) | `minify: MinifyMode` |
+| 13. Side effect preservation | `strategy == Inline \|\| strategy == Hoist` | All other entry strategies (Hook, Segment, Component, Smart, Single) | `entry_strategy: EntryStrategy` |
+| 14a. Treeshaker clean | `minify != None && !is_server && strategy != Inline && strategy != Hoist` | Server builds, minification disabled, or Inline/Hoist strategies (which use step 13 instead) | `minify`, `is_server`, `entry_strategy` |
+| 14b. Second DCE | `treeshaker.cleaner.did_drop` | Treeshaker clean did not drop any expressions | Runtime condition |
+| 15. Variable migration | `!segments.is_empty() && mode != Lib` | Lib mode, or no segments extracted (no `$()` calls found) | `mode: EmitMode` |
+| 16. Export cleanup | `!migrated_ids.is_empty()` | No variables were migrated (all variables used by multiple segments or root) | Runtime condition |
+| 17. Third DCE pass | `!migrated_ids.is_empty() && minify != None` | No migration occurred, or minification disabled | Runtime + `minify` |
+
+**Unconditional steps:** Steps 1 (Parse), 5 (Rename), 6 (Resolver), 7 (GlobalCollect), 8 (Props Destructuring), 10 (QwikTransform), 18 (Hygiene + Fixer), 19 (Codegen root), and 20 (Codegen segments) always execute regardless of configuration. Note that Props Destructuring runs in all modes including Lib, because library `.qwik.mjs` output must already have props transformed for signal tracking.
+
+**Mutually exclusive paths:** Steps 13 and 14a are mutually exclusive -- Inline/Hoist strategies take the side-effect preservation path (step 13), while all other strategies take the treeshaker cleanup path (step 14a). An implementation may represent this as a branch rather than sequential conditional checks.
+
+---
+
+## Public API Types
+
+This section defines the complete public API type contract for the Qwik optimizer. These types form the interface between the optimizer core and its callers (NAPI bindings, WASM bindings, test harnesses). All types are documented as Rust struct definitions with doc comments per D-31, and each includes its JSON wire format for binding implementors.
+
+All structs use `#[serde(rename_all = "camelCase")]` to convert Rust snake_case field names to JavaScript camelCase in JSON serialization. All string fields use `String` (not SWC's `Atom`) for portability across binding layers.
+
+**SWC source of truth:** `packages/optimizer/core/src/lib.rs`, `parse.rs`, `transform.rs`, `entry_strategy.rs`, `utils.rs`, `errors.rs`
+
+### TransformModulesOptions
+
+The top-level configuration struct passed to `transform_modules()`. This is the entry point for all optimizer invocations -- every NAPI and WASM call deserializes a JSON object into this struct.
+
+The SWC implementation does not derive `Default` (all fields must be provided in the struct literal). The OXC implementation (Jack's) adds `#[serde(default)]` on individual fields for ergonomic JSON deserialization, allowing callers to omit optional fields. The spec documents sensible defaults for each field, which implementations should use when the field is absent from JSON input.
+
+```rust
+/// Top-level configuration for transforming one or more modules.
+///
+/// Passed as JSON from JavaScript callers via NAPI or WASM bindings.
+/// All string fields use `String` (not framework-specific atom types)
+/// for cross-binding portability.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformModulesOptions {
+    /// Root directory for resolving relative import paths between modules.
+    /// All input file paths are relative to this directory.
+    /// Required -- no default.
+    pub src_dir: String,
+
+    /// Optional override root directory for monorepo setups.
+    /// When present, used instead of `src_dir` for computing relative paths
+    /// in output modules. When `None`, `src_dir` is used.
+    pub root_dir: Option<String>,
+
+    /// List of input modules to transform. Each entry provides
+    /// a relative file path and its source code.
+    pub input: Vec<TransformModuleInput>,
+
+    /// Whether to generate source maps for output modules.
+    /// Default: `true`
+    pub source_maps: bool,
+
+    /// Minification mode controlling dead code elimination
+    /// and expression simplification.
+    /// Default: `MinifyMode::Simplify`
+    pub minify: MinifyMode,
+
+    /// Whether to strip TypeScript type annotations from output.
+    /// When `true` and the input is TypeScript, type annotations,
+    /// interfaces, and type-only imports are removed.
+    /// Default: `false`
+    pub transpile_ts: bool,
+
+    /// Whether to transpile JSX syntax to function calls.
+    /// When `true` and the input contains JSX, elements are
+    /// converted to `_jsxSorted`/`_jsxSplit` calls.
+    /// Default: `false`
+    pub transpile_jsx: bool,
+
+    /// Whether to preserve original filenames in output paths.
+    /// When `true`, output segment filenames include the full
+    /// original filename instead of a shortened form.
+    /// Default: `false`
+    pub preserve_filenames: bool,
+
+    /// Strategy for splitting extracted segments into output modules.
+    /// Controls how QRL segments are grouped into files.
+    /// Default: `EntryStrategy::Segment` (one file per segment)
+    /// See: Entry Strategies section for full behavioral documentation.
+    pub entry_strategy: EntryStrategy,
+
+    /// Whether to use explicit file extensions (`.js`, `.ts`) in
+    /// generated import paths. When `false`, imports use
+    /// extensionless paths (e.g., `./chunk_abc`).
+    /// Default: `false`
+    pub explicit_extensions: bool,
+
+    /// Output mode controlling which build target to emit for.
+    /// Affects QRL wrapper selection, const replacement, and
+    /// debug information inclusion.
+    /// Default: `EmitMode::Lib`
+    /// See: Emit Modes section for full behavioral documentation.
+    pub mode: EmitMode,
+
+    /// Optional scope prefix for segment hash computation.
+    /// When present, the scope string is mixed into the hash
+    /// to ensure uniqueness across different build scopes
+    /// (e.g., multiple micro-frontends on the same page).
+    pub scope: Option<String>,
+
+    /// Override the core module import path.
+    /// When `None`, defaults to `"@qwik.dev/core"` internally.
+    /// Used when Qwik is published under a different package name
+    /// or when testing against a local build.
+    pub core_module: Option<String>,
+
+    /// List of export names to strip from output.
+    /// Used for server/client-specific builds: e.g., stripping
+    /// server-only exports from client bundles.
+    /// When `None`, no exports are stripped.
+    pub strip_exports: Option<Vec<String>>,
+
+    /// List of `$`-suffixed context names whose segments should be
+    /// stripped from output. For example, `["useTask$"]` removes
+    /// all `useTask$` segments from the build.
+    /// When `None`, no context names are stripped.
+    pub strip_ctx_name: Option<Vec<String>>,
+
+    /// Whether to strip event handler registrations from output.
+    /// When `true`, all event handler segments (onClick$, onInput$, etc.)
+    /// are removed. Used for server-side builds that don't need
+    /// client-side event handlers.
+    /// Default: `false`
+    pub strip_event_handlers: bool,
+
+    /// List of context names to register for plugin coordination.
+    /// These names are tracked and reported in the output metadata
+    /// for downstream tools (e.g., Vite plugins) to consume.
+    /// When `None`, no additional context names are registered.
+    pub reg_ctx_name: Option<Vec<String>>,
+
+    /// Whether this build targets server-side rendering.
+    /// Affects treeshaker behavior (client-only code stripping
+    /// is disabled on server) and QRL generation.
+    /// When `None`, defaults to `true` (safe default: server mode
+    /// preserves all code; client mode strips aggressively).
+    pub is_server: Option<bool>,
+}
+```
+
+**Field count:** 18 fields total (16 configuration fields + `reg_ctx_name` + `is_server`).
+
+**Key behavioral notes:**
+- `is_server` defaults to `true` when `None` -- this is the safe default because server mode preserves all code, while client mode enables aggressive tree-shaking that could incorrectly remove code if the server/client boundary is unknown.
+- `core_module` defaults to `"@qwik.dev/core"` internally when `None`. The SWC implementation uses `BUILDER_IO_QWIK` constant (`words.rs`).
+- `strip_exports`, `strip_ctx_name`, and `reg_ctx_name` use `Vec<String>` in the OXC implementation. The SWC implementation uses `Vec<Atom>` but this is an internal detail -- the JSON wire format is identical.
+
+#### JSON Wire Format
+
+```json
+{
+  "srcDir": "src",
+  "rootDir": "/project/root",
+  "input": [
+    { "path": "components/header.tsx", "code": "import { component$ } from '@qwik.dev/core';\n..." }
+  ],
+  "sourceMaps": true,
+  "minify": "simplify",
+  "transpileTs": true,
+  "transpileJsx": true,
+  "preserveFilenames": false,
+  "entryStrategy": { "type": "smart" },
+  "explicitExtensions": false,
+  "mode": "prod",
+  "scope": null,
+  "coreModule": null,
+  "stripExports": null,
+  "stripCtxName": null,
+  "stripEventHandlers": false,
+  "regCtxName": null,
+  "isServer": true
+}
+```
+
+### TransformModuleInput
+
+A single input file to transform. Each entry in `TransformModulesOptions.input` is one of these.
+
+```rust
+/// A single input module to be transformed.
+///
+/// The `path` field is relative to `TransformModulesOptions.src_dir`.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformModuleInput {
+    /// Relative file path (relative to `src_dir`).
+    /// Used for hash computation, import path resolution,
+    /// and output filename generation.
+    pub path: String,
+
+    /// Optional development path override.
+    /// When present, used in dev/HMR mode for source mapping
+    /// and error messages instead of `path`.
+    pub dev_path: Option<String>,
+
+    /// The source code content of the module.
+    pub code: String,
+}
+```
+
+#### JSON Wire Format
+
+```json
+{
+  "path": "components/header.tsx",
+  "devPath": "/@fs/Users/dev/project/src/components/header.tsx",
+  "code": "import { component$ } from '@qwik.dev/core';\nexport const Header = component$(() => { return <h1>Hello</h1>; });"
+}
+```
+
+### EntryStrategy
+
+Controls how extracted segments are grouped into output modules. The SWC implementation serializes this as a bare string enum (`"inline"`, `"hoist"`, etc.), but the TypeScript contract in `types.ts` defines tagged object types (`{ type: "inline" }`, `{ type: "segment", manual?: Record<string, string> }`). The OXC implementation uses the tagged object form with `#[serde(tag = "type")]` to match the TypeScript contract.
+
+> **Implementation note:** The tagged object form is the correct wire format. Some SWC code paths accept the bare string form for backward compatibility, but new implementations should use the tagged form exclusively.
+
+```rust
+/// Controls how extracted segments are output and grouped.
+///
+/// Uses internally-tagged JSON representation: `{ "type": "inline" }`.
+/// This matches the TypeScript `EntryStrategy` union type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "camelCase")]
+pub enum EntryStrategy {
+    /// Each segment becomes a separate file with a lazy `import()`.
+    /// This is the default strategy and the recommended choice for
+    /// production builds -- provides maximum code-splitting granularity.
+    Segment,
+
+    /// All segments stay in the main module file using `inlinedQrl()`
+    /// wrappers. No separate segment files are created.
+    /// Used during development for fast rebuilds.
+    Inline,
+
+    /// Segments are hoisted to the top of the main module with
+    /// `const` declarations and `qrl()` references.
+    /// Similar to Inline but with named exports for each segment.
+    Hoist,
+
+    /// All segments go into a single shared output file.
+    /// The entry point file is named with an `entry_segments` key.
+    Single,
+
+    /// Group segments by their parent component.
+    /// All QRLs belonging to the same component share one file,
+    /// named `{origin}_entry_{rootComponent}`.
+    Component,
+
+    /// Automatically choose grouping based on usage patterns.
+    /// Event handlers without captured scope variables get their own file;
+    /// other QRLs are grouped by component. Top-level QRLs without a
+    /// component context get their own file.
+    Smart,
+
+    /// Deprecated alias for `Segment`. Produces identical behavior
+    /// (one file per segment via `PerSegmentStrategy`).
+    /// Retained for backward compatibility with older configurations.
+    Hook,
+}
+```
+
+**EntryPolicy trait:** Each strategy maps to an `EntryPolicy` implementation that determines segment grouping:
+
+| Strategy | EntryPolicy | Grouping Behavior |
+|----------|-------------|-------------------|
+| Inline | `InlineStrategy` | All segments in main module (returns `Some("entry_segments")`) |
+| Hoist | `InlineStrategy` | Same as Inline (shared policy) |
+| Single | `SingleStrategy` | All segments in one file (returns `Some("entry_segments")`) |
+| Hook | `PerSegmentStrategy` | One file per segment (returns `None`) |
+| Segment | `PerSegmentStrategy` | One file per segment (returns `None`) |
+| Component | `PerComponentStrategy` | Grouped by root component (returns `Some("{origin}_entry_{root}")`) |
+| Smart | `SmartStrategy` | Heuristic: pure event handlers get own file; others grouped by component |
+
+See: **Entry Strategies** section for full behavioral documentation of each strategy.
+
+#### JSON Wire Format
+
+Each variant serializes as a tagged object with `"type"` discriminator:
+
+```json
+{ "type": "segment" }
+{ "type": "inline" }
+{ "type": "hoist" }
+{ "type": "single" }
+{ "type": "component" }
+{ "type": "smart" }
+{ "type": "hook" }
+```
+
+### EmitMode
+
+Controls the build target output mode. Affects which transformations are applied and how QRL wrappers are generated.
+
+```rust
+/// Controls the build target output mode.
+///
+/// Each mode enables or disables specific transformations.
+/// See the Emit Modes section and the Mode x CONV interaction
+/// table for full behavioral documentation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum EmitMode {
+    /// Production mode -- optimized output with short `s_{hash}` symbol names.
+    /// Enables const replacement and full dead code elimination.
+    Prod,
+
+    /// Development mode -- includes debug information, uses development
+    /// QRL variants (`_qrlDev`, `_inlinedQrlDev`, `_noopQrlDev`) that
+    /// carry source location and display name metadata.
+    Dev,
+
+    /// Library mode -- standard output for publishing as an npm package.
+    /// Disables const replacement (leaves `isServer`/`isDev` as imports)
+    /// and variable migration so library consumers can tree-shake.
+    Lib,
+
+    /// Test mode -- for unit test environments.
+    /// Similar to Dev but disables const replacement so that
+    /// `isServer`/`isDev` remain as runtime values that tests can mock.
+    Test,
+
+    /// Hot Module Replacement mode -- development mode with HMR-specific
+    /// transforms. Uses development QRL variants like Dev mode.
+    Hmr,
+}
+```
+
+> **Note:** The TypeScript `types.ts` contract defines only 4 variants: `'dev' | 'prod' | 'lib' | 'hmr'`. The `Test` variant exists in the Rust implementation but is not exposed in the TypeScript types. Implementations must still support it for internal test tooling.
+
+#### JSON Wire Format
+
+```json
+"prod"
+"dev"
+"lib"
+"test"
+"hmr"
+```
+
+### MinifyMode
+
+Controls whether expression simplification and dead code elimination are applied during transformation.
+
+```rust
+/// Controls output minification behavior.
+///
+/// When `Simplify` is active, the SWC simplifier pass runs to
+/// fold constants, eliminate dead branches, and remove unused code.
+/// When `None`, simplification is skipped entirely.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum MinifyMode {
+    /// Apply simplification transforms: constant folding,
+    /// dead branch elimination, and unused code removal.
+    /// This is the default.
+    Simplify,
+
+    /// No simplification. Output preserves all expressions
+    /// regardless of reachability.
+    None,
+}
+```
+
+#### JSON Wire Format
+
+```json
+"simplify"
+"none"
+```
+
+### SegmentKind
+
+Classifies the context that created an extracted segment. Determines how the segment is treated by entry strategies and binding generation.
+
+```rust
+/// The kind of context that created a segment.
+///
+/// Used by entry strategies (especially `SmartStrategy`) to
+/// make grouping decisions -- event handlers without captures
+/// are split into separate files for optimal lazy loading.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SegmentKind {
+    /// General function context: `$()`, `component$()`, `useTask$()`,
+    /// `useVisibleTask$()`, and other non-event `$`-suffixed calls.
+    Function,
+
+    /// Event handler context: `onClick$()`, `onInput$()`, and other
+    /// `on`-prefixed `$`-suffixed calls.
+    EventHandler,
+
+    /// JSX prop expression context: inline expressions in JSX props
+    /// that are extracted as segments (e.g., signal optimization
+    /// creates segments for reactive prop expressions).
+    /// Present in the SWC Rust enum but not exposed in the TypeScript
+    /// `types.ts` contract (which only defines `'function' | 'eventHandler'`).
+    JSXProp,
+}
+```
+
+**Classification rules:** The SWC implementation classifies `SegmentKind` in `transform.rs` based on the callee name:
+- Names starting with `on` followed by an uppercase letter (e.g., `onClick$`, `onInput$`) are `EventHandler`
+- The `$` bare function and all other `$`-suffixed names (e.g., `component$`, `useTask$`) are `Function`
+- JSX prop expressions extracted during signal optimization are `JSXProp`
+
+**SmartStrategy interaction:** The `SmartStrategy` uses `SegmentKind` to decide grouping -- event handlers without captured scope variables (`scoped_idents.is_empty() && ctx_kind != Function`) get their own file, while `Function` segments (except `event$`) are grouped by component. See the **Entry Strategies** section for the complete decision logic.
+
+#### JSON Wire Format
+
+```json
+"function"
+"eventHandler"
+"jsxProp"
+```
+
+The TypeScript contract (`types.ts`) only declares `'eventHandler' | 'function'` for the `ctxKind` field of `SegmentAnalysis`. The `"jsxProp"` value may appear in Rust-to-Rust communication but is not part of the JavaScript-facing wire format in the current SWC implementation.
+
+### TransformOutput
+
+The top-level return type from `transform_modules()`. Contains all output modules (both transformed root modules and extracted segments), diagnostics, and metadata about the input.
+
+```rust
+/// Complete result of transforming one or more modules.
+///
+/// This is the top-level return type from `transform_modules()`.
+/// The `modules` vector contains both root modules (with their
+/// transformed code) and extracted segment modules. Modules are
+/// sorted by `TransformModule.order` before return.
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformOutput {
+    /// All output modules: transformed root modules + extracted segments.
+    /// Sorted by `TransformModule.order` (root modules first, then
+    /// segments in extraction order).
+    pub modules: Vec<TransformModule>,
+
+    /// Diagnostics (errors, warnings) accumulated during transformation.
+    /// Includes capture analysis errors (C02, C03), missing QRL
+    /// implementation errors (C05), and other warnings.
+    pub diagnostics: Vec<Diagnostic>,
+
+    /// Whether any input module was detected as TypeScript
+    /// (based on `.ts` or `.tsx` file extension).
+    pub is_type_script: bool,
+
+    /// Whether any input module contained JSX syntax
+    /// (based on `.jsx` or `.tsx` file extension).
+    pub is_jsx: bool,
+}
+```
+
+**Merging behavior:** When `transform_modules()` processes multiple input files, each file produces its own `TransformOutput`. These are merged via `TransformOutput::append()`, which concatenates `modules` and `diagnostics` vectors and ORs the boolean flags. After merging, the final `modules` vector is sorted by `order`.
+
+#### JSON Wire Format
+
+```json
+{
+  "modules": [
+    { "path": "components/header.tsx", "isEntry": false, "code": "...", "map": "...", "segment": null },
+    { "path": "components/header.tsx_renderHeader_zBbHWn4e8Cg.js", "isEntry": true, "code": "...", "map": "...", "segment": { "..." } }
+  ],
+  "diagnostics": [],
+  "isTypeScript": true,
+  "isJsx": true
+}
+```
+
+### TransformModule
+
+A single output module -- either the transformed root module or an extracted segment module.
+
+```rust
+/// A single output module.
+///
+/// For root modules: contains the transformed source with QRL wrappers
+/// replacing `$()` calls and extracted segment bodies removed.
+/// For segment modules: contains the extracted function body with
+/// resolved imports and captured variable parameters.
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformModule {
+    /// Output file path (relative to `src_dir`).
+    /// For root modules: same as input path (with possible extension change).
+    /// For segments: `{canonicalFilename}.{extension}` (e.g.,
+    /// `components/header.tsx_renderHeader_zBbHWn4e8Cg.js`).
+    pub path: String,
+
+    /// The generated JavaScript source code for this module.
+    pub code: String,
+
+    /// Optional source map as a JSON string.
+    /// Present when `source_maps: true` in the configuration.
+    /// For root modules: maps transformed code back to original source.
+    /// For segments: maps extracted code back to its position in the
+    /// original source file.
+    pub map: Option<String>,
+
+    /// Segment metadata, present only for extracted segment modules.
+    /// `None` for root modules (the original transformed file).
+    /// `Some(analysis)` for segment modules (extracted QRL bodies).
+    pub segment: Option<SegmentAnalysis>,
+
+    /// Whether this module is an entry point.
+    /// Segment modules are marked as entry points (`true`).
+    /// Root modules are not entry points (`false`).
+    pub is_entry: bool,
+
+    /// Internal sort order for deterministic output ordering.
+    /// Root modules get `order = 0`; segments get their extraction order.
+    ///
+    /// **Not included in JSON output** -- this field carries
+    /// `#[serde(skip_serializing)]` because it is an internal
+    /// implementation detail used only for sorting before return.
+    /// NAPI and WASM consumers never see this field.
+    #[serde(skip_serializing)]
+    pub order: u64,
+}
+```
+
+**Key behavioral notes:**
+- The `order` field has `#[serde(skip_serializing)]` in the SWC implementation -- it is used internally to sort `TransformOutput.modules` by extraction order but is never serialized to JSON. Binding consumers receive modules in sorted order without knowing about the sort key.
+- The `segment` field is the discriminator between root and segment modules: `None` means this is the transformed original file, `Some(...)` means this is an extracted segment.
+- Jack's OXC implementation adds an `orig_path: Option<String>` field not present in SWC. The TypeScript `types.ts` also declares `origPath: string | null`. Implementations may include this for debugging but it is not required for behavioral equivalence.
+
+#### JSON Wire Format
+
+Root module (no segment):
+```json
+{
+  "path": "components/header.tsx",
+  "code": "import { _jsxSorted } from '@qwik.dev/core';\nimport { renderHeader_zBbHWn4e8Cg } from './header.tsx_renderHeader_zBbHWn4e8Cg';\n...",
+  "map": "{\"version\":3,\"sources\":[\"header.tsx\"],\"mappings\":\"...\"}",
+  "segment": null,
+  "isEntry": false
+}
+```
+
+Segment module:
+```json
+{
+  "path": "components/header.tsx_renderHeader_zBbHWn4e8Cg.js",
+  "code": "import { _jsxSorted } from '@qwik.dev/core';\nexport const renderHeader_zBbHWn4e8Cg = () => { return _jsxSorted('h1', null, 'Hello'); };",
+  "map": "{\"version\":3,\"sources\":[\"header.tsx\"],\"mappings\":\"...\"}",
+  "segment": { "origin": "components/header.tsx", "name": "renderHeader_zBbHWn4e8Cg", "..." },
+  "isEntry": true
+}
+```
+
+### SegmentAnalysis
+
+Metadata about an extracted segment (a lazy-loadable code fragment). Attached to each `TransformModule` that represents an extracted segment.
+
+```rust
+/// Metadata about an extracted segment.
+///
+/// Contains all information needed to reconstruct import paths,
+/// validate segment identity, and implement entry strategy grouping.
+/// Serialized as part of `TransformModule` in the output JSON.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SegmentAnalysis {
+    /// Source file this segment was extracted from.
+    /// Relative path from `src_dir` (e.g., `"components/header.tsx"`).
+    pub origin: String,
+
+    /// Full segment symbol name including hash.
+    /// Format: `{displayName}_{hash}` (e.g., `"renderHeader_zBbHWn4e8Cg"`).
+    /// This is the exported name in the segment module.
+    pub name: String,
+
+    /// Entry point group name, if this segment belongs to a group.
+    /// Set by the EntryPolicy: `None` for per-segment strategies,
+    /// `Some("entry_segments")` for Inline/Single, or
+    /// `Some("{origin}_entry_{root}")` for Component/Smart.
+    pub entry: Option<String>,
+
+    /// Human-readable display name for debugging and dev mode.
+    /// Format: `{origin}_{functionName}` (e.g., `"header.tsx_renderHeader"`).
+    pub display_name: String,
+
+    /// The 11-character base64url hash of the segment.
+    /// Computed from the segment's content and path for cache-busting.
+    /// See: Hash Generation in the infrastructure section.
+    pub hash: String,
+
+    /// Canonical filename for the segment module (without extension).
+    /// Format: `{origin}_{functionName}_{hash}`
+    /// (e.g., `"header.tsx_renderHeader_zBbHWn4e8Cg"`).
+    pub canonical_filename: String,
+
+    /// Output path prefix (directory component of the output path).
+    /// Empty string `""` when the segment is in the same directory
+    /// as `src_dir`. For nested paths, includes the directory
+    /// (e.g., `"components/"`).
+    pub path: String,
+
+    /// File extension of the output module (e.g., `"js"`, `"tsx"`, `"ts"`).
+    /// Determined by the `transpile_ts` and `transpile_jsx` options.
+    pub extension: String,
+
+    /// Parent segment name, if this segment is nested inside another
+    /// `$()` call. `None` for top-level segments.
+    /// Used by the entry strategy to maintain parent-child relationships.
+    pub parent: Option<String>,
+
+    /// Context kind classifying how this segment was created.
+    /// See: SegmentKind enum documentation.
+    pub ctx_kind: SegmentKind,
+
+    /// The `$`-suffixed function name that created this segment.
+    /// Examples: `"$"`, `"component$"`, `"useTask$"`, `"onClick$"`.
+    pub ctx_name: String,
+
+    /// Whether this segment captures variables from its enclosing scope.
+    /// `true` when the segment body references identifiers declared
+    /// outside the segment that require serialization.
+    /// See: Capture Analysis section for the 8-category taxonomy.
+    pub captures: bool,
+
+    /// Source location as `[start_byte, end_byte]` byte offsets
+    /// of the original `$()` call expression in the source file.
+    /// Serializes as a JSON array `[start, end]` (Rust tuples
+    /// serialize as arrays with serde).
+    pub loc: (u32, u32),
+
+    /// Parameter names after props destructuring transformation.
+    /// Present only for `component$` segments with destructured props
+    /// (e.g., `["_rawProps"]`). `None` when no props destructuring
+    /// occurred or for non-component segments.
+    /// Omitted from JSON when `None` (`skip_serializing_if`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub param_names: Option<Vec<String>>,
+
+    /// Transformed names of captured scope variables.
+    /// Present only when `captures` is `true`. Lists the variable
+    /// names in the order they appear in the capture array.
+    /// Omitted from JSON when `None` (`skip_serializing_if`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capture_names: Option<Vec<String>>,
+}
+```
+
+**Field count:** 15 fields total.
+
+**Key behavioral notes:**
+- `loc` serializes as a JSON array `[start, end]` because Rust tuples serialize as arrays with serde. The values are byte offsets into the original source file.
+- `param_names` and `capture_names` use `#[serde(skip_serializing_if = "Option::is_none")]` -- they are omitted entirely from JSON output when `None`, not serialized as `null`.
+- `entry` and `parent` do NOT use `skip_serializing_if` -- they serialize as `null` when `None` to match the SWC golden output format.
+
+#### JSON Wire Format
+
+```json
+{
+  "origin": "components/header.tsx",
+  "name": "renderHeader_zBbHWn4e8Cg",
+  "entry": null,
+  "displayName": "header.tsx_renderHeader",
+  "hash": "zBbHWn4e8Cg",
+  "canonicalFilename": "header.tsx_renderHeader_zBbHWn4e8Cg",
+  "path": "components/",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": true,
+  "loc": [42, 195],
+  "paramNames": ["_rawProps"],
+  "captureNames": ["count", "setCount"]
+}
+```
+
+### Diagnostic
+
+A diagnostic message (error, warning, or source error) emitted during transformation. Diagnostics are accumulated in `TransformOutput.diagnostics` and returned to the caller.
+
+```rust
+/// A diagnostic message from the transformation process.
+///
+/// Diagnostics are non-fatal by default -- they are collected and
+/// returned alongside the (possibly partial) output. The caller
+/// decides how to handle them (e.g., fail the build on errors,
+/// log warnings).
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Diagnostic {
+    /// The diagnostic severity level.
+    pub category: DiagnosticCategory,
+
+    /// Machine-readable error code (e.g., `"C02"`, `"C03"`, `"C05"`).
+    /// `None` for warnings and diagnostics without a specific code.
+    pub code: Option<String>,
+
+    /// File path where the diagnostic originated.
+    /// Relative to `src_dir`.
+    pub file: String,
+
+    /// Human-readable error or warning message.
+    pub message: String,
+
+    /// Optional source code locations to highlight.
+    /// Used by IDE integrations and error reporters to underline
+    /// the relevant source code range.
+    pub highlights: Option<Vec<SourceLocation>>,
+
+    /// Optional fix suggestions as human-readable strings.
+    /// Example: `"Consider wrapping the variable in a store"`.
+    pub suggestions: Option<Vec<String>>,
+
+    /// Scope identifier. Always `DiagnosticScope::Optimizer`
+    /// in the current implementation -- all diagnostics originate
+    /// from the optimizer.
+    pub scope: DiagnosticScope,
+}
+```
+
+#### Complete JSON Example (C02 Error)
+
+```json
+{
+  "category": "error",
+  "code": "C02",
+  "file": "components/counter.tsx",
+  "message": "Reference to identifier 'handleClick' which is a function. Functions are not serializable by default. Use '$()' to wrap the function or move it to a separate module and import it.",
+  "highlights": [
+    {
+      "lo": 245,
+      "hi": 257,
+      "startLine": 12,
+      "startCol": 5,
+      "endLine": 12,
+      "endCol": 16
+    }
+  ],
+  "suggestions": [
+    "Wrap the function with $(): const handleClick = $(() => { ... })"
+  ],
+  "scope": "optimizer"
+}
+```
+
+### DiagnosticCategory
+
+Severity level of a diagnostic message.
+
+```rust
+/// Diagnostic severity level.
+///
+/// Determines how the diagnostic should be handled by the caller.
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum DiagnosticCategory {
+    /// A hard error. The transformation may have produced partial
+    /// output, but the result should not be used in production.
+    /// Typically triggers a build failure.
+    Error,
+
+    /// A non-fatal warning. The output is valid but may have
+    /// suboptimal behavior (e.g., unnecessary serialization).
+    Warning,
+
+    /// A source-context-sensitive error. Treated as `Error` for
+    /// source code within the project (files under `src_dir`),
+    /// but downgraded to `Warning` for code in `node_modules`.
+    ///
+    /// This dual behavior allows the optimizer to be strict about
+    /// project source while tolerating issues in third-party
+    /// dependencies that the developer cannot control.
+    SourceError,
+}
+```
+
+#### JSON Wire Format
+
+```json
+"error"
+"warning"
+"sourceError"
+```
+
+### SourceLocation
+
+A source code location used for diagnostic highlighting. Contains both byte offsets (for programmatic use) and line/column numbers (for human-readable display).
+
+```rust
+/// A source code location for diagnostic highlighting.
+///
+/// Contains both byte offsets and line/column positions.
+/// Used in `Diagnostic.highlights` to identify the relevant
+/// source code range.
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceLocation {
+    /// Starting byte offset (0-indexed, inclusive).
+    pub lo: usize,
+
+    /// Ending byte offset (0-indexed, exclusive).
+    pub hi: usize,
+
+    /// Starting line number (1-indexed).
+    pub start_line: usize,
+
+    /// Starting column (1-indexed, inclusive).
+    /// Computed as: SWC's 0-based `col_display + 1`.
+    pub start_col: usize,
+
+    /// Ending line number (1-indexed).
+    pub end_line: usize,
+
+    /// Ending column (0-indexed, display column).
+    /// Computed as: SWC's 0-based `col_display` (no adjustment).
+    ///
+    /// **Column indexing asymmetry:** `start_col` is 1-indexed
+    /// while `end_col` is 0-indexed. This is intentional -- the
+    /// SWC implementation applies `+1` to start but not to end
+    /// because SWC columns are 0-based exclusive, requiring
+    /// `+1` for inclusive start but `+0` for exclusive end
+    /// (the two adjustments cancel: exclusive→inclusive = -1,
+    /// 0-based→1-based = +1, net = 0).
+    pub end_col: usize,
+}
+```
+
+**Column indexing explanation (from SWC source, `utils.rs`):**
+
+The SWC source code contains this comment explaining the asymmetry:
+```
+// - SWC's columns are exclusive, ours are inclusive (column - 1)
+// - SWC has 0-based columns, ours are 1-based (column + 1)
+// = +-0
+```
+
+For `start_col`: the column is inclusive (this IS the column where the span starts), so `col_display + 1` converts from 0-based to 1-based.
+
+For `end_col`: the column is exclusive (this is one PAST the last character), so the two adjustments cancel out: `-1` for exclusive-to-inclusive and `+1` for 0-based-to-1-based = net `+0`, yielding just `col_display`.
+
+**Result:** `start_col` is 1-indexed inclusive, `end_col` is 0-indexed display column. Implementations must replicate this asymmetry for wire format compatibility.
+
+#### JSON Wire Format
+
+```json
+{
+  "lo": 42,
+  "hi": 58,
+  "startLine": 3,
+  "startCol": 5,
+  "endLine": 3,
+  "endCol": 20
+}
+```
+
+### Error Codes
+
+The optimizer defines 3 machine-readable error codes. Codes are sparse -- there is no C01 or C04. Each code maps to a specific transformation error condition.
+
+| Code | Enum Variant | Trigger Condition | Message Pattern |
+|------|-------------|-------------------|-----------------|
+| `C02` | `FunctionReference` | A captured identifier in a `$()` body references a function declaration that is not serializable. Functions cannot cross the serialization boundary unless wrapped with `$()`. | `"Reference to identifier '{name}' which is a function. Functions are not serializable by default. Use '$()' to wrap the function or move it to a separate module and import it."` |
+| `C03` | `CanNotCapture` | A captured identifier references a value that cannot be serialized (e.g., a class instance, a mutable binding that would lose its reference semantics). | `"Cannot capture '{name}' because it is not serializable. Only JSON-serializable values can be captured across the QRL boundary."` |
+| `C05` | `MissingQrlImplementation` | A `$`-suffixed function was called but the corresponding QRL implementation function is not available in the core module. This indicates a version mismatch or missing import. | `"Missing QRL implementation for '{name}'. Ensure '@qwik.dev/core' exports the required QRL wrapper."` |
+
+**Code generation (from `errors.rs`):**
+
+```rust
+pub enum Error {
+    FunctionReference = 2,  // C02
+    CanNotCapture,          // C03 (auto-increments to 3)
+    MissingQrlImplementation = 5,  // C05 (explicit jump)
+}
+
+pub fn get_diagnostic_id(err: Error) -> DiagnosticId {
+    let id = err as u32;
+    DiagnosticId::Error(format!("C{:02}", id))
+}
+```
+
+The discriminant values are explicit: `FunctionReference = 2`, `CanNotCapture` auto-increments to `3`, and `MissingQrlImplementation` jumps to `5`. The `format!("C{:02}", id)` produces zero-padded two-digit codes: `"C02"`, `"C03"`, `"C05"`.
+
+**DiagnosticScope:**
+
+```rust
+/// Scope identifier for diagnostic origin.
+///
+/// Currently only one variant -- all diagnostics come from
+/// the optimizer. This enum exists for forward compatibility
+/// if other diagnostic sources are added.
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum DiagnosticScope {
+    /// Diagnostic originated from the Qwik optimizer.
+    Optimizer,
+}
+```
+
+Serializes as `"optimizer"` in JSON.
+
+## Binding Contracts
+
+The Qwik optimizer exposes two FFI bindings: NAPI for Node.js and WASM for browser/edge environments. Both bindings wrap the same `qwik_core::transform_modules` function with platform-appropriate serialization and async behavior. These contracts are intentionally minimal -- they specify only what a JavaScript consumer sees at the FFI boundary.
+
+### NAPI Binding
+
+**Function Signature:**
+
+```rust
+#[js_function(1)]
+fn transform_modules(ctx: CallContext) -> Result<JsObject>
+```
+
+The NAPI binding is exported as `transform_modules` on the native module object. It accepts a single JS object argument (the `TransformModulesOptions` configuration) and returns a Promise that resolves to a `TransformOutput` JS object.
+
+**Serialization:**
+
+- **Input:** The JS object argument is deserialized to `TransformModulesOptions` via `ctx.env.from_js_value(opts)`, which uses napi's built-in serde integration. All fields follow the serde `rename_all = "camelCase"` convention, so JS consumers pass camelCase property names.
+- **Output:** The `TransformOutput` result is serialized back to a JS object via `ctx.env.to_js_value(&result)`. The same serde/napi integration handles the conversion, producing camelCase property names matching the TypeScript type definitions.
+
+**Async Behavior:**
+
+The NAPI binding returns a Promise to the JS caller. Internally, the SWC implementation uses `ctx.env.execute_tokio_future` with `tokio::task::spawn_blocking` to move the CPU-intensive transform onto a thread pool worker:
+
+```rust
+ctx.env.execute_tokio_future(
+    async move {
+        let result = task::spawn_blocking(move || qwik_core::transform_modules(config))
+            .await
+            .unwrap()
+            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        Ok(result)
+    },
+    |env, result| env.to_js_value(&result),
+)
+```
+
+This prevents blocking the Node.js event loop during compilation. The JS caller receives a standard Promise and can `await` it.
+
+**Error Handling:**
+
+Transform errors become a rejected Promise. The error message is the stringified Rust error (`e.to_string()`). There are no structured error types at the NAPI boundary -- all errors are string messages wrapped in `napi::Error::from_reason`. Callers should catch the rejected Promise and parse the message string if structured error information is needed.
+
+**Platform Notes:**
+
+On Windows, the SWC NAPI binding uses `mimalloc` as the global allocator for improved allocation performance:
+
+```rust
+#[cfg(windows)]
+#[global_allocator]
+static ALLOC: mimalloc::MiMalloc = mimalloc::MiMalloc;
+```
+
+This is transparent to JS consumers but affects binary size and memory behavior on Windows.
+
+### WASM Binding
+
+**Function Signature:**
+
+```rust
+#[wasm_bindgen]
+pub fn transform_modules(config_val: JsValue) -> Result<JsValue, JsValue>
+```
+
+The WASM binding is exported via `wasm_bindgen` as `transform_modules`. It accepts a `JsValue` (the configuration object) and returns a `Result<JsValue, JsValue>` -- either the serialized `TransformOutput` or a JS error.
+
+**Serialization:**
+
+- **Input:** Uses `serde_wasm_bindgen::from_value(config_val)` to deserialize the JS object into `TransformModulesOptions`. This follows the same serde `rename_all = "camelCase"` convention as the NAPI binding, so consumers use identical JS objects for both bindings.
+- **Output:** Uses a custom `Serializer` configuration:
+
+```rust
+let serializer = Serializer::new().serialize_maps_as_objects(true);
+result.serialize(&serializer).map_err(JsValue::from)
+```
+
+The `serialize_maps_as_objects(true)` setting ensures Rust `HashMap` keys become JavaScript object property names rather than Map entries. This is critical for fields like `TransformOutput.modules` where module paths are keys.
+
+**Synchronous Behavior:**
+
+The WASM binding is **synchronous** -- it blocks the calling thread for the entire duration of the transform. Unlike the NAPI binding, there is no worker thread pool available in the WASM environment.
+
+For large codebases, this blocks the browser main thread and can cause UI jank or "page unresponsive" warnings. **Production deployments should run the WASM binding in a Web Worker** to avoid blocking the main thread. The synchronous API remains correct for small inputs or non-interactive contexts (e.g., build tools running in Node.js with the WASM fallback).
+
+**Error Handling:**
+
+Errors are wrapped in `js_sys::Error` and returned as `JsValue`:
+
+```rust
+qwik_core::transform_modules(config)
+    .map_err(|e| Error::from(JsValue::from_str(&e.to_string())))?;
+```
+
+On the JS side, the error is a standard `Error` object with a `message` property containing the stringified Rust error. Unlike the NAPI binding (which rejects a Promise), the WASM binding throws synchronously -- callers should use try/catch.
+
+### NAPI v3 Migration Notes
+
+The SWC-era NAPI binding uses NAPI v2 patterns (`#[js_function(N)]`, `CallContext`, `execute_tokio_future`). An OXC-based implementation should target NAPI v3, which provides three key improvements:
+
+1. **No tokio dependency.** NAPI v3 provides native async support via `#[napi]` proc macro with `async fn`, eliminating the `tokio` runtime dependency. The binding simplifies to:
+
+```rust
+#[napi]
+pub async fn transform_modules(config: TransformModulesOptions) -> Result<TransformOutput> {
+    qwik_core::transform_modules(config)
+        .map_err(|e| napi::Error::from_reason(e.to_string()))
+}
+```
+
+2. **`wasm32-wasip1-threads` target support.** NAPI v3 can compile to WASM with threads, potentially allowing a single codebase to serve both NAPI and WASM bindings. This could unify the two binding implementations, though browser compatibility for `wasm32-wasip1-threads` requires validation (see Blockers in STATE.md).
+
+3. **`#[napi]` proc macro replaces `#[js_function(N)]` pattern.** The v3 proc macro handles argument extraction and type conversion automatically, reducing boilerplate. `CallContext` and manual `ctx.get::<T>(N)` calls are no longer needed.
+
+## Appendix A: OXC Migration Guide
+
+This appendix documents the six key pattern divergences between SWC and OXC that affect the Qwik optimizer implementation. Each pattern describes the SWC approach, the idiomatic OXC replacement, and why the difference matters for this specific optimizer. Code examples reference Scott's earlier OXC conversion (per D-07) for concrete patterns.
+
+This appendix is reference material for implementation time. It does **not** modify the behavioral specification in Phases 1-3 -- the transformation behaviors are identical regardless of whether SWC or OXC is used internally.
+
+### Migration Pattern 1: Fold/VisitMut to Traverse Trait
+
+**SWC pattern:** The optimizer implements `Fold` for its main transform struct. Each node type has a `fold_*` method that takes ownership of the node and returns a (possibly different) node:
+
+```rust
+// SWC: Fold takes ownership, returns new node
+impl Fold for QwikTransform {
+    fn fold_call_expr(&mut self, node: CallExpr) -> CallExpr {
+        // Analyze and potentially replace the call expression
+        let node = node.fold_children_with(self); // recurse first
+        if is_dollar_call(&node) {
+            self.handle_dollar(node) // returns replacement CallExpr
+        } else {
+            node
+        }
+    }
+}
+```
+
+**OXC pattern:** The optimizer implements `Traverse<'a>` with enter/exit hooks that receive mutable references. Replacement is done in-place via assignment:
+
+```rust
+// OXC: Traverse provides mutable references with TraverseCtx
+impl<'a> Traverse<'a> for TransformGenerator<'a> {
+    fn enter_call_expression(
+        &mut self,
+        node: &mut CallExpression<'a>,
+        ctx: &mut TraverseCtx<'a>,
+    ) {
+        if self.is_dollar_call(node) {
+            self.handle_dollar(node, ctx);
+        }
+    }
+
+    fn exit_program(&mut self, node: &mut Program<'a>, ctx: &mut TraverseCtx<'a>) {
+        // Insert accumulated imports at program level
+        if let Some(imports) = self.import_stack.pop() {
+            for import in imports {
+                node.body.insert(0, import.into_in(ctx.ast.allocator));
+            }
+        }
+    }
+}
+```
+
+**Why this matters for the optimizer:**
+
+- **Enter/exit hooks** give pre-children and post-children control. The optimizer uses `enter_call_expression` to detect dollar calls before visiting their bodies, and `exit_program` to insert accumulated imports after all transforms complete.
+- **`TraverseCtx`** is passed to every hook, providing scope queries (`ctx.scoping()`), AST construction (`ctx.ast`), and ancestor access (`ctx.ancestor(N)`). SWC's fold model requires storing this context manually on the transform struct.
+- **In-place mutation** means you cannot return a different node type from a hook. To replace a `CallExpression` with a different expression entirely, the replacement must happen at the parent level or via `*node = replacement` when the types match.
+- **Traversal order** is driven by the framework, not by explicit `fold_children_with` calls. The optimizer does not control when children are visited -- it can only act before (enter) or after (exit).
+
+### Migration Pattern 2: SyntaxContext to Scoping/SymbolId
+
+**SWC pattern:** Every identifier carries a `SyntaxContext` -- a u32 mark assigned by the resolver. Two identifiers refer to the same binding if and only if their `(name, SyntaxContext)` pair matches:
+
+```rust
+// SWC: Identity is a property of identifier nodes
+type Id = (Atom, SyntaxContext);
+
+fn is_same_binding(a: &Ident, b: &Ident) -> bool {
+    a.sym == b.sym && a.span.ctxt == b.span.ctxt
+}
+```
+
+**OXC pattern:** `SemanticBuilder` produces a `Scoping` side table with `SymbolId` for declarations and `ReferenceId` for references. Identity resolution goes through the side table:
+
+```rust
+// OXC: Identity is a side table keyed by AST node ID
+use oxc_semantic::{Scoping, SymbolId, ReferenceId, SemanticBuilder};
+
+// During setup
+let semantic_ret = SemanticBuilder::new().build(&program);
+let scoping: Scoping = semantic_ret.semantic.into_scoping();
+
+// During traversal -- resolve a reference to its declaration
+fn resolve_binding(scoping: &Scoping, ref_id: ReferenceId) -> Option<SymbolId> {
+    scoping.symbol_id_from_reference(ref_id)
+}
+```
+
+**Why this matters for the optimizer:**
+
+- **Capture analysis** (CONV-03) must determine which identifiers in a `$()` body refer to bindings declared outside the segment boundary. In SWC, this is a `SyntaxContext` comparison. In OXC, this requires `Scoping` lookups to resolve references to their declaring symbols and check scope containment.
+- **GlobalCollect replacement** (see Pattern 5) depends on identifier resolution to catalog imports and exports. OXC's `SemanticBuilder` provides this "for free" as part of its scope analysis.
+- **Staleness caveat:** After AST mutation, semantic information may become stale for mutated regions. The optimizer should complete all analysis (dollar detection, capture collection) before beginning AST mutations, or re-run `SemanticBuilder` if analysis is needed post-mutation.
+
+### Migration Pattern 3: Ownership Transfer to Arena Allocation
+
+**SWC pattern:** AST nodes are heap-allocated with `Box<Expr>`. Nodes can be freely moved between data structures. `std::mem::replace` swaps nodes in-place:
+
+```rust
+// SWC: Standard heap allocation, ownership transfer
+let old_expr: Box<Expr> = std::mem::replace(&mut node.arg, new_expr);
+// old_expr can be stored, moved to another module, cloned, etc.
+```
+
+**OXC pattern:** AST nodes live in a bump arena (`Box<'a, Expression<'a>>`). New nodes must be allocated through `AstBuilder` or `TraverseCtx::ast`. Nodes cannot be moved between arenas:
+
+```rust
+// OXC: Arena allocation, nodes tied to allocator lifetime
+let new_node = ctx.ast.expression_string_literal(SPAN, "replacement");
+let old = std::mem::replace(&mut *node, new_node); // works within same arena
+
+// CANNOT: move a node from one arena to another
+// CANNOT: store an arena-allocated node beyond the arena's lifetime
+```
+
+**Why this matters for the optimizer:**
+
+- **Segment construction** cannot be done by cloning AST nodes from the input module into a new output module (the segment lives in a different arena). See Pattern 4 for the solution.
+- **Node creation** during transforms (e.g., building a `qrl()` wrapper call, constructing `_jsxSorted` calls) must go through `ctx.ast` methods, not direct struct construction.
+- **`mem::replace`** still works for swapping nodes within the same arena, which covers most in-place transforms (QRL wrapping, signal optimization rewrites).
+
+### Migration Pattern 4: Code Move from AST Cloning to String Construction
+
+**SWC pattern:** The `code_move` module builds segment modules by cloning expression AST nodes from the main module and wrapping them in new `Module` nodes with import statements:
+
+```rust
+// SWC: Clone expression into new module AST
+fn create_segment_module(expr: Box<Expr>, imports: Vec<ImportDecl>) -> Module {
+    let mut body = Vec::new();
+    for import in imports {
+        body.push(ModuleItem::ModuleDecl(ModuleDecl::Import(import)));
+    }
+    body.push(ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. })));
+    Module { body, .. }
+}
+```
+
+**OXC pattern:** Segment body is extracted as a source string via span-based slicing from the original source. The segment module is built from string concatenation -- imports plus extracted body code:
+
+```rust
+// OXC: String-based segment construction
+fn build_segment_code(
+    source: &str,
+    body_span: Span,
+    imports: &[String],
+    export_name: &str,
+) -> String {
+    let body_source = &source[body_span.start as usize..body_span.end as usize];
+    let mut code = String::new();
+    for import in imports {
+        code.push_str(import);
+        code.push('\n');
+    }
+    code.push_str(&format!("export const {} = ", export_name));
+    code.push_str(body_source);
+    code.push_str(";\n");
+    code
+}
+```
+
+**Why this matters for the optimizer:**
+
+- This is arguably **simpler** than the SWC approach. String concatenation avoids all arena lifetime issues, cross-arena cloning constraints, and the complexity of manually constructing a valid AST for every segment module.
+- **Source map implications:** Span-based extraction preserves the original source positions. The segment's source map can reference the original file's source text directly.
+- **Correctness requirement:** The extracted span must cover the entire segment body expression, including any nested expressions. The span comes from the `$()` call's argument expression node.
+
+### Migration Pattern 5: GlobalCollect to SemanticBuilder + Collector
+
+**SWC pattern:** `GlobalCollect` is a custom visitor that manually walks the AST before transforms begin, cataloging all imports, exports, and root-scope declarations:
+
+```rust
+// SWC: Manual visitor for global scope collection
+struct GlobalCollect {
+    imports: HashMap<Id, ImportKind>,
+    exports: HashMap<String, Id>,
+    root_vars: HashSet<Id>,
+}
+
+impl Visit for GlobalCollect {
+    fn visit_import_decl(&mut self, node: &ImportDecl) { /* catalog import */ }
+    fn visit_export_named(&mut self, node: &ExportNamed) { /* catalog export */ }
+    fn visit_var_declarator(&mut self, node: &VarDeclarator) { /* catalog root var */ }
+}
+```
+
+**OXC pattern:** `SemanticBuilder` provides scope/symbol tables as a pre-pass. A separate collector gathers dollar-call-specific metadata:
+
+```rust
+// OXC: SemanticBuilder + supplemental collector
+// Step 1: SemanticBuilder gives scope resolution
+let semantic_ret = SemanticBuilder::new().build(&program);
+let scoping = semantic_ret.semantic.into_scoping();
+
+// Step 2: Collector gathers dollar-specific metadata
+let dollar_metadata = collector::collect(&program, &scoping);
+// -> dollar imports, call sites, display names, hoisted functions
+```
+
+**Why this matters for the optimizer:**
+
+- OXC's `SemanticBuilder` gives scope resolution "for free" -- the optimizer does not need to manually track which scope an identifier belongs to. This simplifies capture analysis significantly.
+- The supplemental collector pass is still needed because `SemanticBuilder` knows nothing about `$`-semantics. It cannot identify which calls are dollar calls, which imports are from `@qwik.dev/core`, or which functions need QRL wrapping. These are domain-specific concerns.
+- **Two-phase architecture:** The combination of SemanticBuilder (generic scope analysis) + Collector (domain-specific metadata) + Traverse (transforms) creates a clean three-phase pipeline: analyze scope, collect dollar metadata, transform.
+
+### Migration Pattern 6: Deferred Statement Insertion via exit_program
+
+**SWC pattern:** `fold_module` takes ownership of the entire module and can freely modify its body -- inserting, removing, or reordering statements:
+
+```rust
+// SWC: Direct module body modification
+impl Fold for QwikTransform {
+    fn fold_module(&mut self, mut module: Module) -> Module {
+        module = module.fold_children_with(self);
+        // After all transforms, insert new imports at top
+        for import in self.new_imports.drain(..) {
+            module.body.insert(0, ModuleItem::from(import));
+        }
+        module
+    }
+}
+```
+
+**OXC pattern:** During `enter_*` hooks, the parent's children vector is not accessible for insertion. The optimizer accumulates pending statements in `Vec`s and inserts them all in `exit_program`:
+
+```rust
+// OXC: Accumulate during traversal, flush at exit
+impl<'a> Traverse<'a> for TransformGenerator<'a> {
+    fn enter_call_expression(
+        &mut self,
+        node: &mut CallExpression<'a>,
+        ctx: &mut TraverseCtx<'a>,
+    ) {
+        if self.is_dollar_call(node) {
+            // Cannot insert import here -- accumulate for later
+            self.pending_imports.push(build_import(ctx));
+        }
+    }
+
+    fn exit_program(&mut self, node: &mut Program<'a>, ctx: &mut TraverseCtx<'a>) {
+        // Flush all accumulated imports
+        for import in self.import_stack.pop().unwrap_or_default() {
+            node.body.insert(0, import.into_in(ctx.ast.allocator));
+        }
+        // Flush hoisted function declarations
+        for decl in self.pending_hoisted.drain(..) {
+            node.body.push(decl);
+        }
+    }
+}
+```
+
+**Why this matters for the optimizer:**
+
+- **Import generation** (CONV-12) adds new import statements for QRL helpers (`qrl`, `inlinedQrl`, `_jsxSorted`, etc.). These cannot be inserted during `enter_call_expression` when the dollar call is detected -- they must be deferred.
+- **Hoisted declarations** (segment function exports in Hoist entry strategy) are accumulated during traversal and inserted at the module level in `exit_program`.
+- **Ordering matters:** Imports are inserted at position 0 (before all existing statements). Hoisted declarations are appended at the end. The `exit_program` hook guarantees all child traversal is complete, so all pending items have been collected.
+
+### Per-CONV Migration Summary
+
+This table maps each of the 14 optimizer transformations to the migration patterns most relevant to its OXC implementation:
+
+| CONV | Transformation | Key Migration Patterns |
+|------|---------------|----------------------|
+| CONV-01 (Dollar Detection) | Pattern 1 (Traverse enter hooks for call expression matching), Pattern 2 (SymbolId for resolving dollar imports) |
+| CONV-02 (QRL Wrapping) | Pattern 1 (in-place AST mutation to replace `$()` with `qrl()`), Pattern 3 (arena allocation for new wrapper nodes), Pattern 6 (deferred import insertion for QRL helpers) |
+| CONV-03 (Capture Analysis) | Pattern 2 (Scoping for scope containment checks), Pattern 5 (SemanticBuilder provides scope tree) |
+| CONV-04 (Props Destructuring) | Pattern 1 (enter hook for function parameter rewriting), Pattern 3 (arena-allocated new parameter nodes) |
+| CONV-05 (Segment Extraction) | Pattern 4 (string-based segment construction), Pattern 3 (cannot clone AST across arenas) |
+| CONV-06 (JSX Transform) | Pattern 1 (enter/exit hooks for nested JSX), Pattern 3 (arena allocation for `_jsxSorted`/`_jsxSplit` call construction) |
+| CONV-07 (Signal Optimization) | Pattern 1 (enter hooks for member expression detection), Pattern 3 (arena-allocated `_wrapProp`/`_fnSignal` calls) |
+| CONV-08 (PURE Annotations) | Pattern 6 (annotations accumulated and applied at statement level) |
+| CONV-09 (Dead Branch Elimination) | Pattern 1 (enter hooks for if-statement analysis), Pattern 3 (in-place replacement of dead branches) |
+| CONV-10 (Const Replacement) | Pattern 1 (enter hooks for identifier matching), Pattern 3 (arena-allocated boolean literal replacements) |
+| CONV-11 (Code Stripping) | Pattern 1 (enter hooks for statement removal), Pattern 6 (deferred removal to avoid iterator invalidation) |
+| CONV-12 (Import Rewriting) | Pattern 6 (deferred import insertion in exit_program), Pattern 5 (SemanticBuilder for import resolution) |
+| CONV-13 (sync$ Serialization) | Pattern 1 (enter hook for sync$ call detection), Pattern 3 (arena-allocated `_qrlSync` wrapper) |
+| CONV-14 (Noop QRL Handling) | Pattern 1 (enter hook for `_noopQrl` detection), Pattern 3 (arena-allocated dev mode replacement) |
+
+---
+
+## Appendix B: Representative Examples
+
+This appendix presents 24 curated input/output examples extracted from the 162+ SWC reference snapshots in Jack's `swc-snapshots/` test corpus. Each example shows:
+
+- **Input source code** as written by the developer
+- **Transform configuration** (entry strategy, mode) where relevant
+- **Expected output** for the root module and generated segments
+- **Key observations** highlighting specific transformation behaviors
+
+These examples complement the inline examples already present in each CONV section throughout the specification. Together they provide comprehensive coverage for verifying an optimizer implementation against all 14 transformation conventions.
+
+Snapshot names correspond to `.snap` files in the `swc-snapshots/` directory of the reference implementation.
+
+---
+
+### Example 1: Basic Dollar Detection and QRL Wrapping (`example_1`)
+
+**Demonstrates:** CONV-01 (Dollar Detection), CONV-02 (QRL Wrapping), CONV-05 (Segment Extraction)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component, onRender } from '@qwik.dev/core';
+
+export const renderHeader1 = $(() => {
+  return (
+    <div onClick={$((ctx) => console.log(ctx))}/>
+  );
+});
+const renderHeader2 = component($(() => {
+  console.log("mount");
+  return render;
+}));
+```
+
+**Expected Output (root module):**
+```js
+import { qrl } from "@qwik.dev/core";
+import { component } from '@qwik.dev/core';
+const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss"
+);
+const q_renderHeader2_component_Ay6ibkfFYsw = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw"
+);
+export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
+component(q_renderHeader2_component_Ay6ibkfFYsw);
+```
+
+**Expected Output (segments):**
+```js
+// test.tsx_renderHeader1_jMxQsjbyDss.tsx -- outer $() body
+import { qrl } from "@qwik.dev/core";
+const q_renderHeader1_div_onClick_USi8k1jUb40 = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_renderHeader1_div_onClick_USi8k1jUb40"),
+  "renderHeader1_div_onClick_USi8k1jUb40"
+);
+export const renderHeader1_jMxQsjbyDss = ()=>{
+    return <div onClick={q_renderHeader1_div_onClick_USi8k1jUb40}/>;
+};
+
+// test.tsx_renderHeader1_div_onClick_USi8k1jUb40.tsx -- nested onClick handler
+export const renderHeader1_div_onClick_USi8k1jUb40 = (ctx)=>console.log(ctx);
+
+// test.tsx_renderHeader2_component_Ay6ibkfFYsw.tsx -- component body
+export const renderHeader2_component_Ay6ibkfFYsw = ()=>{
+    console.log("mount");
+    return render;
+};
+```
+
+**Key observations:**
+- Three `$()` calls detected (CONV-01): the outer `$()`, the nested `onClick` handler, and the `component($(...))` wrapper
+- Each `$()` is replaced with a `qrl()` call pointing to a lazy-loaded segment (CONV-02)
+- The `$` import is removed from the root module; `qrl` is added
+- `component` is NOT a dollar function -- it remains as-is, wrapping the QRL argument
+- Nested segments (onClick inside renderHeader1) reference their parent via the segment metadata `parent` field
+- The `/*#__PURE__*/` annotation enables tree-shaking (CONV-08)
+- See CONV-01: Dollar Detection for the complete list of recognized dollar-suffixed functions
+
+---
+
+### Example 2: Component with useStore and Capture Analysis (`example_functional_component`)
+
+**Demonstrates:** CONV-01 (Dollar Detection), CONV-02 (QRL Wrapping), CONV-03 (Capture Analysis)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$, useStore } from '@qwik.dev/core';
+const Header = component$(() => {
+  const thing = useStore();
+  const {foo, bar} = foo();
+
+  return (
+    <div>{thing}</div>
+  );
+});
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { $, component$, useStore } from '@qwik.dev/core';
+const q_Header_component_J4uyIhaBNR4 = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Header_component_J4uyIhaBNR4"), "Header_component_J4uyIhaBNR4"
+);
+const Header = /*#__PURE__*/ componentQrl(q_Header_component_J4uyIhaBNR4);
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_Header_component_J4uyIhaBNR4.tsx
+import { useStore } from "@qwik.dev/core";
+export const Header_component_J4uyIhaBNR4 = ()=>{
+    const thing = useStore();
+    const { foo, bar } = foo();
+    return <div>{thing}</div>;
+};
+```
+
+**Key observations:**
+- `component$` is rewritten to `componentQrl` in the root module (CONV-02 dollar-to-Qrl suffix rule)
+- The segment has `captures: false` because all variables (`thing`, `foo`, `bar`) are declared *inside* the segment scope
+- `useStore` is an import capture -- it's re-imported in the segment module rather than captured via `_captures` (CONV-03 import capture category)
+- The original `component$` and `$` imports remain in the root (unused imports are not cleaned up by the optimizer)
+- See CONV-03: Capture Analysis for the 8-category capture taxonomy
+
+---
+
+### Example 3: Import Captures vs Self-Imports (`example_capture_imports`)
+
+**Demonstrates:** CONV-03 (Capture Analysis), CONV-12 (Import Rewriting)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$, useStyles$ } from '@qwik.dev/core';
+import css1 from './global.css';
+import css2 from './style.css';
+import css3 from './style.css';
+
+export const App = component$(() => {
+  useStyles$(`${css1}${css2}`);
+  useStyles$(css3);
+})
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0"
+);
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Expected Output (segments):**
+```js
+// test.tsx_App_component_ckEPmXZlub0.js -- component body
+import { qrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+const q_App_component_useStyles_t35nSa5UV7U = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_App_component_useStyles_t35nSa5UV7U"),
+  "App_component_useStyles_t35nSa5UV7U"
+);
+const q_style_css_TRu1FaIoUM0 = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_style_css_TRu1FaIoUM0"), "style_css_TRu1FaIoUM0"
+);
+export const App_component_ckEPmXZlub0 = ()=>{
+    useStylesQrl(q_App_component_useStyles_t35nSa5UV7U);
+    useStylesQrl(q_style_css_TRu1FaIoUM0);
+};
+
+// test.tsx_App_component_useStyles_t35nSa5UV7U.js -- useStyles$ expression
+import css1 from "./global.css";
+import css2 from "./style.css";
+export const App_component_useStyles_t35nSa5UV7U = `${css1}${css2}`;
+
+// test.tsx_style_css_TRu1FaIoUM0.js -- useStyles$ with css3
+import css3 from "./style.css";
+export const style_css_TRu1FaIoUM0 = css3;
+```
+
+**Key observations:**
+- `css1`, `css2`, `css3` are import captures -- they are re-imported in the segments that use them, not captured via `_captures` (CONV-03)
+- `useStyles$` becomes `useStylesQrl` and its argument becomes a separate lazy-loaded segment
+- The template literal `\`${css1}${css2}\`` becomes the export value of its segment
+- `css3` alone becomes a trivial segment that just re-exports the import
+- See CONV-03: Capture Analysis and CONV-12: Import Rewriting for import capture handling
+
+---
+
+### Example 4: Multiple Captured Variables (`example_multi_capture`)
+
+**Demonstrates:** CONV-03 (Capture Analysis)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$ } from '@qwik.dev/core';
+
+export const Foo = component$(({foo}) => {
+  const arg0 = 20;
+  return $(() => {
+    const fn = ({aaa}) => aaa;
+    return (
+      <div>
+        {foo}{fn()}{arg0}
+      </div>
+    )
+  });
+})
+
+export const Bar = component$(({bar}) => {
+  return $(() => {
+    return (
+      <div>
+        {bar}
+      </div>
+    )
+  });
+})
+```
+
+**Expected Output (key segment -- inner $() of Foo):**
+```js
+// test.tsx_Foo_component_1_DvU6FitWglY.jsx
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_1_DvU6FitWglY = ()=>{
+    const _rawProps = _captures[0];
+    const fn = ({ aaa })=>aaa;
+    return <div>
+        {_rawProps.foo}{fn()}{20}
+      </div>;
+};
+```
+
+**Expected Output (parent segment -- Foo component body):**
+```js
+// test.tsx_Foo_component_HTDRsvUbLiE.jsx
+import { qrl } from "@qwik.dev/core";
+const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY"
+);
+export const Foo_component_HTDRsvUbLiE = (_rawProps)=>{
+    return q_Foo_component_1_DvU6FitWglY.w([_rawProps]);
+};
+```
+
+**Key observations:**
+- Props destructuring `({foo})` is rewritten to `(_rawProps)` in the parent segment (CONV-04)
+- The inner `$()` captures `_rawProps` (the whole props object), not individual destructured fields
+- In the inner segment, `_rawProps` is restored from `_captures[0]` and accessed as `_rawProps.foo`
+- `arg0` (value `20`) is a constant -- it's inlined directly as `20` rather than captured (constant folding)
+- The `.w([_rawProps])` call on the QRL passes capture values at runtime
+- `captures: true` in the segment metadata indicates this segment reads from `_captures`
+- See CONV-03: Capture Analysis for capture vs. inline decisions, and CONV-04: Props Destructuring
+
+---
+
+### Example 5: Props Destructuring with Colon Syntax (`destructure_args_colon_props`)
+
+**Demonstrates:** CONV-04 (Props Destructuring)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$ } from "@qwik.dev/core";
+export default component$((props) => {
+  const { 'bind:value': bindValue } = props;
+  return (
+    <>
+    {bindValue}
+    </>
+  );
+});
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_test_component_LUXeXe0DQrg.js
+import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
+import { _jsxSorted } from "@qwik.dev/core";
+import { _wrapProp } from "@qwik.dev/core";
+export const test_component_LUXeXe0DQrg = (props)=>{
+    return /*#__PURE__*/ _jsxSorted(
+      _Fragment, null, null, _wrapProp(props, "bind:value"), 1, "u6_0"
+    );
+};
+```
+
+**Key observations:**
+- When `props` is used directly (not destructured in parameters), it passes through as-is
+- The `'bind:value'` destructuring with colon syntax is recognized by the optimizer
+- `_wrapProp(props, "bind:value")` creates a signal wrapper for the `bind:value` property (CONV-07)
+- The `Fragment` import is added for the JSX `<>...</>` shorthand (CONV-06)
+- See CONV-04: Props Destructuring for the complete props handling rules
+
+---
+
+### Example 6: Variable Migration into Segments (`example_segment_variable_migration`)
+
+**Demonstrates:** CONV-05 (Segment Extraction)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$ } from '@qwik.dev/core';
+
+const helperFn = (msg) => {
+  console.log('Helper: ' + msg);
+  return msg.toUpperCase();
+};
+
+const SHARED_CONFIG = { value: 42 };
+
+export const publicHelper = () => console.log('public');
+
+export const App = component$(() => {
+  const result = helperFn('hello');
+  return <div>{result} {SHARED_CONFIG.value}</div>;
+});
+
+export const Other = component$(() => {
+  return <div>{SHARED_CONFIG.value}</div>;
+});
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+// [QRL declarations for App and Other omitted for brevity]
+const SHARED_CONFIG = { value: 42 };
+export const publicHelper = ()=>console.log('public');
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+export const Other = /*#__PURE__*/ componentQrl(q_Other_component_C1my3EIdP1k);
+export { SHARED_CONFIG as _auto_SHARED_CONFIG };
+```
+
+**Expected Output (App segment):**
+```js
+// test.tsx_App_component_ckEPmXZlub0.tsx
+import { _auto_SHARED_CONFIG as SHARED_CONFIG } from "./test";
+const helperFn = (msg)=>{
+    console.log('Helper: ' + msg);
+    return msg.toUpperCase();
+};
+export const App_component_ckEPmXZlub0 = ()=>{
+    const result = helperFn('hello');
+    return <div>{result} {SHARED_CONFIG.value}</div>;
+};
+```
+
+**Key observations:**
+- `helperFn` is used only by App's segment, so it is **migrated** (moved entirely) into the App segment -- it no longer exists in the root module
+- `SHARED_CONFIG` is used by both App and Other segments, so it **stays in the root** and is re-exported as `_auto_SHARED_CONFIG`
+- Segments import shared variables via `_auto_` prefixed self-imports: `import { _auto_SHARED_CONFIG as SHARED_CONFIG } from "./test"`
+- `publicHelper` is an export, so it must remain in the root regardless of usage
+- The `_auto_` prefix convention prevents name collisions with user-defined exports
+- See CONV-05: Segment Extraction for the variable migration algorithm and self-import mechanism
+
+---
+
+### Example 7: JSX Transform Basics (`example_jsx`)
+
+**Demonstrates:** CONV-06 (JSX Transform)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$, h, Fragment } from '@qwik.dev/core';
+
+export const Lightweight = (props) => {
+  return (
+    <div>
+      <>
+        <div/>
+        <button {...props}/>
+      </>
+    </div>
+  )
+};
+
+export const Foo = component$((props) => {
+  return $(() => {
+    return (
+      <div>
+        <>
+          <div class="class"/>
+          <div class="class"></div>
+          <div class="class">12</div>
+        </>
+        {/* [truncated for brevity -- full output in swc-snapshots/example_jsx] */}
+      </div>
+    )
+  });
+}, { tagName: "my-foo" });
+```
+
+**Expected Output (root module, Lightweight function -- not a component$):**
+```js
+export const Lightweight = (props)=>{
+    return /*#__PURE__*/ _jsxSorted("div", null, null,
+      /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+        /*#__PURE__*/ _jsxSorted("div", null, null, null, 3, null),
+        /*#__PURE__*/ _jsxSplit("button", {
+            ..._getVarProps(props)
+        }, _getConstProps(props), null, 0, null)
+      ], 1, "u6_0"), 1, "u6_1");
+};
+```
+
+**Key observations:**
+- `_jsxSorted(tag, varProps, constProps, children, flags, key)` is the primary JSX call signature
+- Props are split into `varProps` (dynamic) and `constProps` (static/known at compile time) -- the 2nd and 3rd arguments
+- `<button {...props}/>` uses `_jsxSplit` instead of `_jsxSorted` because spread props require runtime splitting via `_getVarProps`/`_getConstProps`
+- Empty elements (`<div/>`) get `null` for all props and children, with flags `3` (immutable)
+- Fragment `<>...</>` becomes `_jsxSorted(_Fragment, ...)`
+- `tagName: "my-foo"` option is passed through to the `componentQrl` call
+- See CONV-06: JSX Transform for the complete `_jsxSorted` vs `_jsxSplit` decision rules and flag values
+
+---
+
+### Example 8: Event Handler JSX Transforms (`example_jsx_listeners`)
+
+**Demonstrates:** CONV-06 (JSX Transform)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$ } from '@qwik.dev/core';
+
+export const Foo = component$(() => {
+  return $(() => {
+    const handler = $(() => console.log('reused'));
+    return (
+      <div
+        onClick$={()=>console.log('onClick$')}
+        onDocumentScroll$={()=>console.log('onDocumentScroll')}
+        on-cLick$={()=>console.log('on-cLick$')}
+        host:onClick$={()=>console.log('host:onClick$')}
+        onKeyup$={handler}
+        onDocument:keyup$={handler}
+        onWindow:keyup$={handler}
+        custom$={()=>console.log('custom')}
+      />
+    )
+  });
+}, { tagName: "my-foo" });
+```
+
+**Expected Output (inner segment, showing event attribute mapping):**
+```js
+// test.tsx_Foo_component_1_DvU6FitWglY.js [truncated]
+export const Foo_component_1_DvU6FitWglY = ()=>{
+    const handler = q_Foo_component_handler_H10xZtD0e7w;
+    return /*#__PURE__*/ _jsxSorted("div", null, {
+        "q-e:click": q_..._YEa2A5ADUOg,
+        "q-e:documentscroll": q_..._0FSbGzUROso,
+        "q-e:c-lick": q_..._kX5SiYdz650,
+        "q-e:document--scroll": q_..._6qyBttefepU,
+        "host:onClick$": q_..._cPEH970JbEY,
+        "host:onDocumentScroll$": q_..._Zip7mifsjRY,
+        "q-e:keyup": handler,
+        "q-e:document:keyup": handler,
+        "q-e:window:keyup": handler,
+        custom$: q_..._pyHnxab17ms
+    }, null, 3, "u6_0");
+};
+```
+
+**Key observations:**
+- Event handlers with `$` suffix are extracted into separate segments (each `onClick$` arrow becomes its own segment)
+- `onClick$` becomes `"q-e:click"` in the const props (lowercased, `on` prefix stripped, prefixed with `q-e:`)
+- `onDocumentScroll$` becomes `"q-e:documentscroll"` (document scope, lowercased)
+- `on-cLick$` preserves the hyphen: `"q-e:c-lick"` (non-standard casing preserved)
+- `onDocument-sCroll$` becomes `"q-e:document--scroll"` (double hyphen separates scope from event name)
+- `host:` prefix is preserved as-is: `"host:onClick$"` stays `"host:onClick$"` in const props
+- `onKeyup$={handler}` where handler is already a QRL: the QRL reference is used directly without re-extraction
+- `onDocument:keyup$` and `onWindow:keyup$` use colon-separated scope syntax
+- `custom$` (not matching `on` prefix) stays as `custom$` key
+- See CONV-06: JSX Transform for the complete event handler attribute transformation rules
+
+---
+
+### Example 9: Signal Optimization (`example_derived_signals_cmp`)
+
+**Demonstrates:** CONV-07 (Signal Optimization)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$, useStore, mutable } from '@qwik.dev/core';
+import {dep} from './file';
+import {Cmp} from './cmp';
+
+export const App = component$(() => {
+  const signal = useSignal(0);
+  const store = useStore({});
+  return (
+    <Cmp
+      staticText="text"
+      staticNumber={1}
+      signal={signal}
+      signalValue={signal.value}
+      signalComputedValue={12 + signal.value}
+      store={store.address.city.name}
+      storeComputed={store.address.city.name ? 'true' : 'false'}
+      dep={dep}
+      depAccess={dep.thing}
+      noInline={signal.value()}
+      noInline2={signal.value + unknown()}
+      noInline3={mutable(signal)}
+      noInline4={signal.value + dep}
+    />
+  );
+});
+```
+
+**Expected Output (inlined, showing signal optimization):**
+```js
+// Hoisted signal computation functions
+const _hf0 = (p0)=>12 + p0.value;
+const _hf0_str = "12+p0.value";
+const _hf1 = (p0)=>p0.address.city.name;
+const _hf1_str = "p0.address.city.name";
+const _hf2 = (p0)=>p0.address.city.name ? 'true' : 'false';
+const _hf2_str = 'p0.address.city.name?"true":"false"';
+
+// In the JSX call:
+_jsxSorted(Cmp, {
+    // varProps -- dynamic, cannot be optimized
+    global: globalThing,
+    noInline: signal.value(),
+    noInline2: signal.value + unknown(),
+    noInline3: mutable(signal),
+    noInline4: signal.value + dep
+}, {
+    // constProps -- static or signal-optimizable
+    staticText: "text",
+    staticNumber: 1,
+    signal: signal,
+    signalValue: _wrapProp(signal),
+    signalComputedValue: _fnSignal(_hf0, [signal], _hf0_str),
+    store: _fnSignal(_hf1, [store], _hf1_str),
+    storeComputed: _fnSignal(_hf2, [store], _hf2_str),
+    dep: dep,
+    depAccess: dep.thing,
+    depComputed: dep.thing + 'stuff'
+}, null, 3, "u6_0");
+```
+
+**Key observations:**
+- `signal.value` (direct `.value` access) becomes `_wrapProp(signal)` -- simplest signal optimization
+- `12 + signal.value` (computed from signal) becomes `_fnSignal(_hf0, [signal], _hf0_str)` with a hoisted function
+- `store.address.city.name` (deep store access) also gets `_fnSignal` optimization
+- The `_hf*_str` strings are minified string representations of the computation for debugging/serialization
+- `signal.value()` (method call, not property access) is NOT optimizable -- goes to varProps
+- `signal.value + unknown()` (includes non-signal function call) is NOT optimizable
+- `mutable(signal)` (wrapped in mutable) is NOT optimizable
+- `signal.value + dep` (mixed signal and non-signal module import) is NOT optimizable
+- `dep.thing` (plain module import access, no signal) goes to constProps but without signal wrapping
+- See CONV-07: Signal Optimization for the full decision table of optimizable vs non-optimizable expressions
+
+---
+
+### Example 10: PURE Annotation on componentQrl (`example_functional_component_2`)
+
+**Demonstrates:** CONV-08 (PURE Annotations)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$, useStore } from '@qwik.dev/core';
+export const useCounter = () => {
+  return useStore({count: 0});
+}
+
+export const STEP = 1;
+
+export const App = component$((props) => {
+  const state = useCounter();
+  const thing = useStore({thing: 0});
+  const STEP_2 = 2;
+  const count2 = state.count * 2;
+  return (
+    <div onClick$={() => state.count+=count2 }>
+      <span>{state.count}</span>
+      {buttons.map(btn => (
+        <button
+          onClick$={() => state.count += btn.offset + thing + STEP + STEP_2 + props.step}
+        >
+          {btn.name}
+        </button>
+      ))}
+    </div>
+  );
+})
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0"
+);
+export const useCounter = ()=>{
+    return useStore({ count: 0 });
+};
+export const STEP = 1;
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Expected Output (button click handler segment -- showing complex captures):**
+```js
+// test.tsx_App_component_div_button_q_e_click_UB6Fs5a3bd8.js
+import { _captures } from "@qwik.dev/core";
+import { STEP } from "./test";
+export const App_component_div_button_q_e_click_UB6Fs5a3bd8 = (_, _1, btn)=>{
+    const props = _captures[0], state = _captures[1], thing = _captures[2];
+    return state.count += btn.offset + thing + STEP + 2 + props.step;
+};
+```
+
+**Key observations:**
+- `/*#__PURE__*/` appears on both the `qrl()` call and the `componentQrl()` call (CONV-08)
+- `useCounter` and `STEP` are exports, so they remain in the root module
+- The button handler captures `props`, `state`, and `thing` from the parent scope via `_captures` (CONV-03)
+- `STEP` is a module-level export, so it's imported (import capture) rather than runtime-captured
+- `STEP_2` (value `2`) is a constant and gets inlined directly as `2`
+- The handler receives `(_, _1, btn)` -- the first two params are event placeholders, `btn` comes from the `.map()` loop context (`q:p` binding)
+- See CONV-08: PURE Annotations for which functions receive the annotation
+
+---
+
+### Example 11: Dead Branch Elimination (`example_dead_code`)
+
+**Demonstrates:** CONV-09 (Dead Branch Elimination)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$ } from '@qwik.dev/core';
+import { deps } from 'deps';
+
+export const Foo = component$(({foo}) => {
+  useMount$(() => {
+    if (false) {
+      deps();
+    }
+  });
+  return (
+    <div />
+  );
+})
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_Foo_component_HTDRsvUbLiE.tsx
+export const Foo_component_HTDRsvUbLiE = (_rawProps)=>{
+    useMount$(()=>{});
+    return <div/>;
+};
+```
+
+**Key observations:**
+- The `if (false) { deps(); }` block is entirely eliminated -- the callback body becomes empty `()=>{}`
+- The `import { deps } from 'deps'` is also removed because `deps` is no longer referenced anywhere after dead code elimination
+- This happens during segment extraction: the inner `useMount$` callback's body is analyzed, and the dead branch is stripped
+- Props destructuring `({foo})` becomes `(_rawProps)` even though `foo` is never used (CONV-04 always applies)
+- See CONV-09: Dead Branch Elimination for the conditions under which branches are eliminated
+
+---
+
+### Example 12: isServer/isBrowser Const Replacement (`example_build_server`)
+
+**Demonstrates:** CONV-10 (Const Replacement)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "prod", isServer: true }`
+
+**Input:**
+```tsx
+import { component$, useStore, isDev, isServer as isServer2 } from '@qwik.dev/core';
+import { isServer, isBrowser as isb } from '@qwik.dev/core/build';
+import { mongodb } from 'mondodb';
+import { threejs } from 'threejs';
+import L from 'leaflet';
+
+export const functionThatNeedsWindow = () => {
+  if (isb) {
+    console.log('l', L);
+    window.alert('hey');
+  }
+};
+
+export const App = component$(() => {
+  useMount$(() => {
+    if (isServer) {
+      console.log('server', mongodb());
+    }
+    if (isb) {
+      console.log('browser', new threejs());
+    }
+  });
+  return (
+    <Cmp>
+      {isServer2 && <p>server</p>}
+      {isb && <p>server</p>}
+    </Cmp>
+  );
+});
+```
+
+**Expected Output (root module):**
+```js
+export const functionThatNeedsWindow = ()=>{};
+export const App = /*#__PURE__*/ componentQrl(q_s_ckEPmXZlub0);
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_App_component_ckEPmXZlub0.tsx
+import { mongodb } from "mondodb";
+export const s_ckEPmXZlub0 = ()=>{
+    useMount$(()=>{
+        console.log('server', mongodb());
+    });
+    return <Cmp>
+        {<p>server</p>}
+        {false}
+      </Cmp>;
+};
+```
+
+**Key observations:**
+- `isServer` (from `@qwik.dev/core/build`) is replaced with `true` in server mode, enabling dead code elimination
+- `isBrowser` (aliased as `isb`) is replaced with `false` in server mode
+- The entire `functionThatNeedsWindow` body is eliminated because `isb` evaluates to `false`, making the `if` block dead code -- the function becomes `()=>{}`
+- `import L from 'leaflet'` and `import { threejs } from 'threejs'` are removed since they were only used in browser-only code paths
+- In the segment, `isServer2` (from `@qwik.dev/core` main, not `/build`) is also replaced with `true`
+- `{isb && <p>server</p>}` becomes `{false}` (not removed entirely -- the JSX slot is preserved)
+- `import { mongodb } from "mondodb"` is kept because it's used in the surviving server code path
+- Segment names use short `s_` prefix in prod mode (CONV-02 prod naming convention)
+- See CONV-10: Const Replacement for the complete list of replaceable identifiers and mode-dependent values
