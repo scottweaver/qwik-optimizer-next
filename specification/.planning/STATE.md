@@ -61,6 +61,7 @@ Progress: [########░░] 77%
 | Phase 05 P06 | 14m | 2 tasks | 5 files |
 | Phase 05 P07 | 25m | 3 tasks | 9 files |
 | Phase 06 P03 | 3m | 2 tasks | 7 files |
+| Phase 06 P02 | 6m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Recent decisions affecting current work:
 - [Phase 05 P07]: 24 spec examples intentionally ignored (not part of 201 fixture corpus)
 - [Phase 06 P03]: D-39 WASM validation complete -- NAPI v3 unified WASM not viable, wasm-bindgen fallback adopted
 - [Phase 06 P03]: napi-build v2 compatible with napi v3 (v3 not published); async feature required for async fn
+- [Phase 06 P02]: HMR _useHmr injection via string-based prepend in code_move::inject_use_hmr
+- [Phase 06 P02]: Synthetic imports mechanism added to NewModuleCtx for segment-level import injection
 
 ### Pending Todos
 
