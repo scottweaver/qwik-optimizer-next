@@ -2,34 +2,16 @@
 //!
 //! Parse a single source file (JS/TS/JSX/TSX) into an OXC `Program` AST
 //! with semantic scoping from `SemanticBuilder`. Reports parse errors as
-//! `Diagnostic` values. Also provides path decomposition for input modules.
+//! `Diagnostic` values.
 //!
-//! Source type detection and output extension logic live in `source_path.rs`.
-
-use std::path::{Path, PathBuf};
+//! Source type detection, output extension, and path decomposition live in
+//! `source_path.rs`.
 
 use oxc::semantic::Scoping;
 
 use crate::errors;
 use crate::source_path::SourcePath;
 use crate::types::Diagnostic;
-
-/// Decomposed path data for a single input module.
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct PathData {
-    /// Filename without extension (e.g., "index" for "src/routes/index.tsx").
-    pub file_stem: String,
-
-    /// Filename with extension (e.g., "index.tsx").
-    pub file_name: String,
-
-    /// Directory portion of the relative path (e.g., "src/routes").
-    /// Empty PathBuf when the file is in the root.
-    pub rel_dir: PathBuf,
-
-    /// Absolute directory path = src_dir.join(rel_dir).
-    pub abs_dir: PathBuf,
-}
 
 /// Result of parsing a single source file.
 pub(crate) struct ParseResult<'a> {
@@ -46,51 +28,6 @@ impl std::fmt::Debug for ParseResult<'_> {
             .field("program.body.len", &self.program.body.len())
             .finish()
     }
-}
-
-
-/// Decompose a relative file path into its constituent parts.
-///
-/// `relative_path` is a slash-separated path relative to `src_dir`, e.g.
-/// `"src/routes/index.tsx"`. `src_dir` is the absolute root directory.
-///
-/// Returns a `PathData` with:
-/// - `file_stem`: filename without extension
-/// - `file_name`: filename with extension
-/// - `rel_dir`:   parent directory of relative_path (empty PathBuf when no parent)
-/// - `abs_dir`:   `src_dir.join(rel_dir)`
-pub(crate) fn parse_path(
-    relative_path: &str,
-    src_dir: &Path,
-) -> Result<PathData, anyhow::Error> {
-    let rel_path = Path::new(relative_path);
-
-    let file_name = rel_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .ok_or_else(|| anyhow::anyhow!("path has no filename: {relative_path}"))?
-        .to_string();
-
-    let file_stem = rel_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .ok_or_else(|| anyhow::anyhow!("path has no file stem: {relative_path}"))?
-        .to_string();
-
-    // rel_dir is the parent of the relative path, or empty if there is none.
-    let rel_dir = match rel_path.parent() {
-        Some(p) if p != Path::new("") => p.to_path_buf(),
-        _ => PathBuf::new(),
-    };
-
-    let abs_dir = src_dir.join(&rel_dir);
-
-    Ok(PathData {
-        file_stem,
-        file_name,
-        rel_dir,
-        abs_dir,
-    })
 }
 
 /// Parse a single source file into an OXC Program AST with semantic scoping.
@@ -155,7 +92,6 @@ pub(crate) fn parse_module<'a>(
 mod tests {
     use super::*;
     use oxc::allocator::Allocator;
-    use std::path::Path;
 
     // ---- parse_module tests -----------------------------------------------
 
@@ -285,39 +221,5 @@ const x = $(() => {
         let _scoping = &parsed.scoping;
     }
 
-    // source_type and output_extension tests live in source_path.rs
-
-    // ---- parse_path tests ------------------------------------------------
-
-    #[test]
-    fn test_parse_path_nested() {
-        let src_dir = Path::new("/project");
-        let result = parse_path("src/routes/index.tsx", src_dir).unwrap();
-        assert_eq!(result.file_stem, "index");
-        assert_eq!(result.file_name, "index.tsx");
-        assert_eq!(result.rel_dir, PathBuf::from("src/routes"));
-        assert_eq!(result.abs_dir, PathBuf::from("/project/src/routes"));
-    }
-
-    #[test]
-    fn test_parse_path_root_level() {
-        let src_dir = Path::new("/project");
-        let result = parse_path("component.tsx", src_dir).unwrap();
-        assert_eq!(result.file_stem, "component");
-        assert_eq!(result.file_name, "component.tsx");
-        assert_eq!(result.rel_dir, PathBuf::new());
-        assert_eq!(result.abs_dir, PathBuf::from("/project"));
-    }
-
-    #[test]
-    fn test_parse_path_one_level() {
-        let src_dir = Path::new("/app");
-        let result = parse_path("routes/index.ts", src_dir).unwrap();
-        assert_eq!(result.file_stem, "index");
-        assert_eq!(result.file_name, "index.ts");
-        assert_eq!(result.rel_dir, PathBuf::from("routes"));
-        assert_eq!(result.abs_dir, PathBuf::from("/app/routes"));
-    }
-
-    // output_extension tests live in source_path.rs
+    // source_type, output_extension, and path_data tests live in source_path.rs
 }

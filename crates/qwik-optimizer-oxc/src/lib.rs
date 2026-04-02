@@ -48,7 +48,7 @@ fn transform_code(
     dev_path: Option<&str>,
 ) -> TransformOutput {
     // Stage 0: Decompose path.
-    let path_data = match parse::parse_path(input_path, Path::new(&config.src_dir)) {
+    let path_data = match source_path::SourcePath(input_path).path_data(Path::new(&config.src_dir)) {
         Ok(pd) => pd,
         Err(_) => {
             return TransformOutput::default();

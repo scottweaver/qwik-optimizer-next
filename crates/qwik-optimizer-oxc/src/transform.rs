@@ -1875,11 +1875,10 @@ pub(crate) fn transform_code(
     );
 
     // Stage 5: Determine file metadata
-    let path_data = crate::parse::parse_path(
-        filename,
+    let path_data = crate::source_path::SourcePath(filename).path_data(
         std::path::Path::new(&config.src_dir),
     )
-    .unwrap_or_else(|_| crate::parse::PathData {
+    .unwrap_or_else(|_| crate::source_path::PathData {
         file_stem: "unknown".to_string(),
         file_name: filename.to_string(),
         rel_dir: std::path::PathBuf::new(),

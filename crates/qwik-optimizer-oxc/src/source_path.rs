@@ -5,7 +5,26 @@
 //! path-related logic out of `parse.rs` and leverages Rust's type system
 //! to distinguish "arbitrary string" from "a path to a source file."
 
+use std::path::{Path, PathBuf};
+
 use oxc::span::SourceType;
+
+/// Decomposed path data for a single input module.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct PathData {
+    /// Filename without extension (e.g., "index" for "src/routes/index.tsx").
+    pub file_stem: String,
+
+    /// Filename with extension (e.g., "index.tsx").
+    pub file_name: String,
+
+    /// Directory portion of the relative path (e.g., "src/routes").
+    /// Empty PathBuf when the file is in the root.
+    pub rel_dir: PathBuf,
+
+    /// Absolute directory path = src_dir.join(rel_dir).
+    pub abs_dir: PathBuf,
+}
 
 /// A borrowed reference to a source file path (e.g., `"src/routes/index.tsx"`).
 ///
@@ -80,6 +99,46 @@ impl<'a> SourcePath<'a> {
         }
     }
 
+    /// Decompose this source path into its constituent parts relative to `src_dir`.
+    ///
+    /// The inner string is treated as a slash-separated path relative to `src_dir`,
+    /// e.g. `"src/routes/index.tsx"`.
+    ///
+    /// Returns a `PathData` with:
+    /// - `file_stem`: filename without extension
+    /// - `file_name`: filename with extension
+    /// - `rel_dir`:   parent directory (empty PathBuf when no parent)
+    /// - `abs_dir`:   `src_dir.join(rel_dir)`
+    pub fn path_data(&self, src_dir: &Path) -> Result<PathData, anyhow::Error> {
+        let rel_path = Path::new(self.0);
+
+        let file_name = rel_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .ok_or_else(|| anyhow::anyhow!("path has no filename: {}", self.0))?
+            .to_string();
+
+        let file_stem = rel_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .ok_or_else(|| anyhow::anyhow!("path has no file stem: {}", self.0))?
+            .to_string();
+
+        let rel_dir = match rel_path.parent() {
+            Some(p) if p != Path::new("") => p.to_path_buf(),
+            _ => PathBuf::new(),
+        };
+
+        let abs_dir = src_dir.join(&rel_dir);
+
+        Ok(PathData {
+            file_stem,
+            file_name,
+            rel_dir,
+            abs_dir,
+        })
+    }
+
     /// Returns the inner path string.
     pub fn as_str(&self) -> &'a str {
         self.0
@@ -105,6 +164,40 @@ impl std::fmt::Display for SourcePath<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ---- path_data tests ---------------------------------------------------
+
+    #[test]
+    fn test_path_data_nested() {
+        let src_dir = Path::new("/project");
+        let result = SourcePath("src/routes/index.tsx").path_data(src_dir).unwrap();
+        assert_eq!(result.file_stem, "index");
+        assert_eq!(result.file_name, "index.tsx");
+        assert_eq!(result.rel_dir, PathBuf::from("src/routes"));
+        assert_eq!(result.abs_dir, PathBuf::from("/project/src/routes"));
+    }
+
+    #[test]
+    fn test_path_data_root_level() {
+        let src_dir = Path::new("/project");
+        let result = SourcePath("component.tsx").path_data(src_dir).unwrap();
+        assert_eq!(result.file_stem, "component");
+        assert_eq!(result.file_name, "component.tsx");
+        assert_eq!(result.rel_dir, PathBuf::new());
+        assert_eq!(result.abs_dir, PathBuf::from("/project"));
+    }
+
+    #[test]
+    fn test_path_data_one_level() {
+        let src_dir = Path::new("/app");
+        let result = SourcePath("routes/index.ts").path_data(src_dir).unwrap();
+        assert_eq!(result.file_stem, "index");
+        assert_eq!(result.file_name, "index.ts");
+        assert_eq!(result.rel_dir, PathBuf::from("routes"));
+        assert_eq!(result.abs_dir, PathBuf::from("/app/routes"));
+    }
+
+    // ---- source_type tests ------------------------------------------------
 
     #[test]
     fn test_source_type_tsx() {

@@ -46,3 +46,20 @@ This document tracks missteps made during AI-assisted development and the correc
 - Moved `output_extension()` -> `SourcePath::output_extension()`
 - Updated all call sites in `parse.rs`, `lib.rs`, and `transform.rs`
 - Moved corresponding tests from `parse.rs` to `source_path.rs`
+
+---
+
+## 004: Path decomposition function (`parse_path`) placed in parse.rs
+
+**Date:** 2026-04-02
+
+**What happened:** `parse_path()` and its return type `PathData` were defined in `parse.rs` alongside AST parsing logic. This function decomposes a source file path into stem, filename, relative directory, and absolute directory — purely path manipulation with no relation to AST parsing.
+
+**Why it was wrong:** Same root cause as #003 — `parse.rs` was accumulating unrelated path utilities. With `SourcePath` already established as the domain type for source file paths, `parse_path` was an obvious method on that type. Leaving it in `parse.rs` meant callers had to know to look in two different modules for path-related operations.
+
+**Corrective action:**
+- Moved `PathData` struct and `parse_path()` from `parse.rs` to `source_path.rs`
+- Renamed `parse_path()` to `SourcePath::path_data()` — called as `SourcePath("src/routes/index.tsx").path_data(src_dir)`
+- Updated all call sites in `lib.rs` and `transform.rs`
+- Moved corresponding tests from `parse.rs` to `source_path.rs`
+- `parse.rs` now contains only AST parsing logic (`parse_module`, `ParseResult`)
