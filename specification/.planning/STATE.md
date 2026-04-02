@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-04-02T00:41:00Z"
-last_activity: 2026-04-02 -- Phase 04 Plan 02 complete
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-04-02T00:51:00Z"
+last_activity: 2026-04-02 -- Phase 04 Plan 03 complete
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 13
-  percent: 62
+  completed_plans: 14
+  percent: 67
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** The specification must be comprehensive and precise enough that an OXC implementation can be built from it without referencing the SWC source code.
-**Current focus:** Phase 04 — public-api-bindings-cross-cutting-specification
+**Current focus:** Phase 04 — public-api-bindings-cross-cutting-specification (COMPLETE)
 
 ## Current Position
 
-Phase: 04 (public-api-bindings-cross-cutting-specification) — EXECUTING
-Plan: 2 of 3
-Status: Executing Phase 04
-Last activity: 2026-04-02 -- Completed 04-02
+Phase: 04 (public-api-bindings-cross-cutting-specification) — COMPLETE
+Plan: 3 of 3 (all complete)
+Status: Phase 04 complete, ready for Phase 05
+Last activity: 2026-04-02 -- Completed 04-03
 
-Progress: [######░░░░] 62%
+Progress: [######░░░░] 67%
 
 ## Performance Metrics
 
@@ -55,11 +55,7 @@ Progress: [######░░░░] 62%
 | Phase 01 P01 | 4m | 2 tasks | 1 files |
 | Phase 01 P03 | 5m | 2 tasks | 1 files |
 | Phase 01 P05 | 4m | 2 tasks | 1 files |
-| Phase 02 P03 | 3m | 1 tasks | 1 files |
-| Phase 03 P02 | 3m | 2 tasks | 1 files |
-| Phase 03 P03 | 4m | 2 tasks | 1 files |
-| Phase 03 P04 | 3m | 2 tasks | 1 files |
-| Phase 04 P02 | 4m | 2 tasks | 1 files |
+| Phase 04 P03 | 8m | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -74,10 +70,7 @@ Recent decisions affecting current work:
 - [Phase 01 P03]: Capture analysis uses 8-category taxonomy with self-import reclassification as first-class pattern
 - [Phase 01 P03]: All 16 capture edge cases documented as named spec test cases (CAPTURE-EDGE-01 through 16)
 - [Phase 01]: Variable Migration placed as top-level ## section per D-12; Source Map Generation uses ## Infrastructure: prefix matching existing convention
-- [Phase 02]: D-21: Signal optimization application boundaries documented as exhaustive decision table
-- [Phase 02]: D-22: Both _wrapProp and _fnSignal in same Signal Optimization section with clear subsection structure
-- [Phase 04 P02]: D-32: Binding contracts kept minimal (function signature, serialization, async behavior, error handling)
-- [Phase 04 P02]: D-29: OXC migration guide as dedicated Appendix A, not inline Phases 1-3 modifications
+- [Phase 04 P03]: D-30 fulfilled: 24 curated examples in Appendix B complementing inline CONV examples from Phases 1-3
 
 ### Pending Todos
 
@@ -90,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T00:41:00Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-04-02T00:51:00Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None

@@ -12,9 +12,9 @@ This roadmap delivers a comprehensive behavioral specification of the Qwik v2 op
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Core Pipeline Specification** - Specify dollar detection, QRL wrapping, capture analysis, segment extraction, import rewriting, and supporting infrastructure
-- [x] **Phase 2: JSX, Props & Signal Specification** - Specify the JSX transform subsystem, props destructuring, and signal optimization
-- [x] **Phase 3: Build Modes & Remaining Transforms Specification** - Specify PURE annotations, const replacement, DCE, code stripping, sync$, noop QRL, entry strategies, emit modes, and pipeline ordering
+- [ ] **Phase 1: Core Pipeline Specification** - Specify dollar detection, QRL wrapping, capture analysis, segment extraction, import rewriting, and supporting infrastructure
+- [ ] **Phase 2: JSX, Props & Signal Specification** - Specify the JSX transform subsystem, props destructuring, and signal optimization
+- [ ] **Phase 3: Build Modes & Remaining Transforms Specification** - Specify PURE annotations, const replacement, DCE, code stripping, sync$, noop QRL, entry strategies, emit modes, and pipeline ordering
 - [ ] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
 - [ ] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 162 behavioral tests with idiomatic OXC patterns
 - [ ] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
@@ -48,12 +48,7 @@ Plans:
   1. The spec document describes JSX transformation rules (`_jsxSorted`/`_jsxSplit` conversion, static/dynamic prop separation, class normalization, bind sugar, slot/ref/children/key handling) with input/output examples
   2. The spec document describes signal optimization rules (`_fnSignal` generation for inline JSX expressions, positional parameter creation) with examples showing when optimization applies vs when it does not
   3. The spec document describes props destructuring transformation (`_rawProps` access patterns, `_restProps()` handling) and explicitly states the pre-pass ordering requirement relative to capture analysis
-**Plans:** 3 plans
-
-Plans:
-- [ ] 02-01-PLAN.md — Props Destructuring (CONV-04): _rawProps, _restProps, pre-pass ordering
-- [x] 02-02-PLAN.md — JSX Transform (CONV-06): branch point, element types, prop classification, special attributes, children, keys, flags, spreads
-- [ ] 02-03-PLAN.md — Signal Optimization (CONV-07): _fnSignal, _wrapProp, decision table, hoisting
+**Plans**: TBD
 
 ### Phase 3: Build Modes & Remaining Transforms Specification
 **Goal**: The spec document contains complete behavioral descriptions for all remaining CONV transformations and the strategy/mode system that controls optimizer behavior across different build contexts
@@ -64,13 +59,7 @@ Plans:
   2. The spec document describes all 5 emit modes with per-transformation behavioral differences (especially dev mode QRL variants and test mode const replacement exceptions)
   3. The spec document describes the transformation pipeline ordering DAG — which CONVs run before/after which, and why ordering matters (e.g., const replacement before DCE, props destructuring before capture analysis)
   4. The spec document describes PURE annotations with the explicit whitelist (componentQrl only) and anti-list of side-effectful wrappers, const replacement, dead branch elimination, code stripping, sync$ serialization, and noop QRL handling
-**Plans:** 4 plans
-
-Plans:
-- [ ] 03-01-PLAN.md — Build Environment Transforms: Const Replacement (CONV-10), Dead Branch Elimination (CONV-09), Code Stripping (CONV-11)
-- [x] 03-02-PLAN.md — QRL Special Cases: PURE Annotations (CONV-08), sync$ Serialization (CONV-13), Noop QRL Handling (CONV-14)
-- [x] 03-03-PLAN.md — Entry Strategies (all 7) and Emit Modes (all 5 with Mode x CONV table)
-- [x] 03-04-PLAN.md — Transformation Pipeline: Mermaid DAG and ordering constraints table
+**Plans**: TBD
 
 ### Phase 4: Public API, Bindings & Cross-Cutting Specification
 **Goal**: The spec document is complete — all public-facing contracts are documented, OXC migration guidance is embedded per-transformation, and representative examples from Jack's 162 spec files are included as verification anchors
@@ -82,12 +71,7 @@ Plans:
   3. The spec document contains NAPI and WASM binding contracts (function signatures, serialization, async behavior) sufficient to implement bindings without referencing SWC source
   4. The spec document contains OXC migration notes per transformation section — explicitly calling out where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena)
   5. The spec document contains at least 20 representative input/output examples covering all 14 CONVs, extracted from Jack's 162 spec files
-**Plans:** 3 plans
-
-Plans:
-- [x] 04-01-PLAN.md — Public API Types: TransformModulesOptions, TransformOutput, SegmentAnalysis, Diagnostic, all enums
-- [x] 04-02-PLAN.md — Binding Contracts (NAPI/WASM) and Appendix A: OXC Migration Guide
-- [ ] 04-03-PLAN.md — Appendix B: Representative Examples (24 curated snapshots covering all 14 CONVs)
+**Plans**: TBD
 
 ### Phase 5: Core OXC Implementation
 **Goal**: A working qwik-core Rust crate implements all 14 CONV transformations using idiomatic OXC patterns, passing all 162 behavioral tests from Jack's spec corpus
@@ -119,8 +103,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
-| 2. JSX, Props & Signal Specification | 1/3 | In Progress | - |
-| 3. Build Modes & Remaining Transforms Specification | 3/4 | In Progress | - |
-| 4. Public API, Bindings & Cross-Cutting Specification | 2/3 | In Progress | - |
+| 2. JSX, Props & Signal Specification | 0/? | Not started | - |
+| 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
+| 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
 | 5. Core OXC Implementation | 0/? | Not started | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
