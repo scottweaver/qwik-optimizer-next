@@ -12,29 +12,29 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SPEC-01**: Spec documents CONV-01 (Dollar Detection) — identification of `$`-suffixed function calls as marker functions requiring QRL extraction, including imported markers from `@qwik.dev/core` and locally-defined `$`-suffixed functions
 - [ ] **SPEC-02**: Spec documents CONV-02 (QRL Wrapping) — replacement of `$`-suffixed calls with `Qrl` counterparts, `qrl()`/`inlinedQrl()` reference generation, dev mode variants (`qrlDEV`, `inlinedQrlDEV`)
 - [x] **SPEC-03**: Spec documents CONV-03 (Capture Analysis) — free variable detection across `$()` boundaries with full taxonomy of 8 capture categories (imports, inner locals, outer locals, loop variables, shadowed bindings, destructured params, hoisted functions, TS type-only imports)
-- [ ] **SPEC-04**: Spec documents CONV-04 (Props Destructuring) — transformation of destructured component props to `_rawProps` access patterns, `_restProps()` handling, pre-pass ordering requirement
+- [x] **SPEC-04**: Spec documents CONV-04 (Props Destructuring) — transformation of destructured component props to `_rawProps` access patterns, `_restProps()` handling, pre-pass ordering requirement
 - [x] **SPEC-05**: Spec documents CONV-05 (Segment Extraction) — extraction of `$()` callback bodies into separate output modules, canonical filename generation, hash suffixes, nested segment parent-child relationships, variable migration
 - [ ] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
-- [ ] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
-- [ ] **SPEC-08**: Spec documents CONV-08 (PURE Annotations) — `/*#__PURE__*/` on `componentQrl` only, with explicit anti-list of side-effectful wrappers that must NOT be annotated
+- [x] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
+- [x] **SPEC-08**: Spec documents CONV-08 (PURE Annotations) — `/*#__PURE__*/` on `componentQrl` only, with explicit anti-list of side-effectful wrappers that must NOT be annotated
 - [ ] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
 - [ ] **SPEC-10**: Spec documents CONV-10 (Const Replacement) — `isServer`/`isBrowser`/`isDev` replacement with boolean literals, import source handling, Test mode exception
 - [ ] **SPEC-11**: Spec documents CONV-11 (Code Stripping) — `strip_exports`, `strip_ctx_name`, `strip_event_handlers` mechanisms with throwing stub generation
 - [x] **SPEC-12**: Spec documents CONV-12 (Import Rewriting) — legacy rename, consumed import stripping, synthetic import addition, per-segment import resolution
-- [ ] **SPEC-13**: Spec documents CONV-13 (sync$ Serialization) — `_qrlSync()` with stringified function body
-- [ ] **SPEC-14**: Spec documents CONV-14 (Noop QRL Handling) — `_noopQrl()`/`_noopQrlDEV()` for empty/unused callbacks
+- [x] **SPEC-13**: Spec documents CONV-13 (sync$ Serialization) — `_qrlSync()` with stringified function body
+- [x] **SPEC-14**: Spec documents CONV-14 (Noop QRL Handling) — `_noopQrl()`/`_noopQrlDEV()` for empty/unused callbacks
 
 ### Specification — Strategies & Modes
 
-- [ ] **SPEC-15**: Spec documents all 7 entry strategies (Inline, Hoist, Single, Hook, Segment, Component, Smart) with grouping rules and behavioral differences — noting Inline/Hoist shared EntryPolicy with Hoist's `.s()` registration post-processing
-- [ ] **SPEC-16**: Spec documents all 5 emit modes (Prod, Dev, Lib, Test, Hmr) with behavioral differences per transformation
-- [ ] **SPEC-17**: Spec documents the transformation pipeline ordering — which CONVs run before/after which, the dependency DAG, and why ordering matters
+- [x] **SPEC-15**: Spec documents all 7 entry strategies (Inline, Hoist, Single, Hook, Segment, Component, Smart) with grouping rules and behavioral differences — noting Inline/Hoist shared EntryPolicy with Hoist's `.s()` registration post-processing
+- [x] **SPEC-16**: Spec documents all 5 emit modes (Prod, Dev, Lib, Test, Hmr) with behavioral differences per transformation
+- [x] **SPEC-17**: Spec documents the transformation pipeline ordering — which CONVs run before/after which, the dependency DAG, and why ordering matters
 
 ### Specification — Public API
 
-- [ ] **SPEC-18**: Spec documents TransformModulesOptions (all config fields with types, defaults, valid values)
-- [ ] **SPEC-19**: Spec documents TransformOutput, TransformModule, SegmentAnalysis, SegmentKind (all output fields with types and semantics)
-- [ ] **SPEC-20**: Spec documents the Diagnostic type and error/warning categories
+- [x] **SPEC-18**: Spec documents TransformModulesOptions (all config fields with types, defaults, valid values)
+- [x] **SPEC-19**: Spec documents TransformOutput, TransformModule, SegmentAnalysis, SegmentKind (all output fields with types and semantics)
+- [x] **SPEC-20**: Spec documents the Diagnostic type and error/warning categories
 
 ### Specification — Infrastructure
 
@@ -46,22 +46,22 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Specification — Bindings
 
-- [ ] **SPEC-26**: Spec documents NAPI binding contract (function signature, JSON serialization, async behavior)
-- [ ] **SPEC-27**: Spec documents WASM binding contract (function signature, wasm-bindgen interface, browser context)
+- [x] **SPEC-26**: Spec documents NAPI binding contract (function signature, JSON serialization, async behavior)
+- [x] **SPEC-27**: Spec documents WASM binding contract (function signature, wasm-bindgen interface, browser context)
 
 ### Specification — Cross-Cutting
 
-- [ ] **SPEC-28**: Spec includes OXC migration notes per transformation — where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena allocation)
+- [x] **SPEC-28**: Spec includes OXC migration notes per transformation — where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena allocation)
 - [ ] **SPEC-29**: Spec includes representative input/output examples extracted from Jack's 162 spec files (minimum 20 covering all 14 CONVs)
 - [x] **SPEC-30**: Spec includes capture analysis taxonomy with edge case examples for all 8 categories
 
 ### Implementation — Core
 
-- [ ] **IMPL-01**: OXC implementation passes all 162 behavioral tests from Jack's spec corpus
-- [ ] **IMPL-02**: OXC implementation supports all 14 CONV transformation types
+- [x] **IMPL-01**: OXC implementation passes all 162 behavioral tests from Jack's spec corpus
+- [x] **IMPL-02**: OXC implementation supports all 14 CONV transformation types
 - [ ] **IMPL-03**: OXC implementation supports all 7 entry strategies
 - [ ] **IMPL-04**: OXC implementation supports all 5 emit modes
-- [ ] **IMPL-05**: OXC implementation produces functionally equivalent output to SWC version (semantic equivalence, not byte-for-byte)
+- [x] **IMPL-05**: OXC implementation produces functionally equivalent output to SWC version (semantic equivalence, not byte-for-byte)
 
 ### Implementation — Bindings
 
@@ -70,8 +70,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Implementation — Architecture
 
-- [ ] **IMPL-08**: OXC implementation uses idiomatic OXC patterns (Traverse trait, arena allocators, SemanticBuilder, Codegen) — not SWC patterns translated to OXC APIs
-- [ ] **IMPL-09**: OXC implementation uses semantic analysis (OXC Scoping) for capture analysis where it improves correctness over manual approaches
+- [x] **IMPL-08**: OXC implementation uses idiomatic OXC patterns (Traverse trait, arena allocators, SemanticBuilder, Codegen) — not SWC patterns translated to OXC APIs
+- [x] **IMPL-09**: OXC implementation uses semantic analysis (OXC Scoping) for capture analysis where it improves correctness over manual approaches
 
 ### Reference Material
 
@@ -112,20 +112,20 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-01 | Phase 1 | Pending |
 | SPEC-02 | Phase 1 | Pending |
 | SPEC-03 | Phase 1 | Complete |
-| SPEC-04 | Phase 2 | Pending |
+| SPEC-04 | Phase 2 | Complete |
 | SPEC-05 | Phase 1 | Complete |
 | SPEC-06 | Phase 2 | Pending |
-| SPEC-07 | Phase 2 | Pending |
-| SPEC-08 | Phase 3 | Pending |
+| SPEC-07 | Phase 2 | Complete |
+| SPEC-08 | Phase 3 | Complete |
 | SPEC-09 | Phase 3 | Pending |
 | SPEC-10 | Phase 3 | Pending |
 | SPEC-11 | Phase 3 | Pending |
 | SPEC-12 | Phase 1 | Complete |
-| SPEC-13 | Phase 3 | Pending |
-| SPEC-14 | Phase 3 | Pending |
-| SPEC-15 | Phase 3 | Pending |
-| SPEC-16 | Phase 3 | Pending |
-| SPEC-17 | Phase 3 | Pending |
+| SPEC-13 | Phase 3 | Complete |
+| SPEC-14 | Phase 3 | Complete |
+| SPEC-15 | Phase 3 | Complete |
+| SPEC-16 | Phase 3 | Complete |
+| SPEC-17 | Phase 3 | Complete |
 | SPEC-18 | Phase 4 | Pending |
 | SPEC-19 | Phase 4 | Pending |
 | SPEC-20 | Phase 4 | Pending |
@@ -134,20 +134,20 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-23 | Phase 1 | Complete |
 | SPEC-24 | Phase 1 | Complete |
 | SPEC-25 | Phase 1 | Complete |
-| SPEC-26 | Phase 4 | Pending |
-| SPEC-27 | Phase 4 | Pending |
-| SPEC-28 | Phase 4 | Pending |
+| SPEC-26 | Phase 4 | Complete |
+| SPEC-27 | Phase 4 | Complete |
+| SPEC-28 | Phase 4 | Complete |
 | SPEC-29 | Phase 4 | Pending |
 | SPEC-30 | Phase 1 | Complete |
-| IMPL-01 | Phase 5 | Pending |
-| IMPL-02 | Phase 5 | Pending |
+| IMPL-01 | Phase 5 | Complete |
+| IMPL-02 | Phase 5 | Complete |
 | IMPL-03 | Phase 6 | Pending |
 | IMPL-04 | Phase 6 | Pending |
-| IMPL-05 | Phase 5 | Pending |
+| IMPL-05 | Phase 5 | Complete |
 | IMPL-06 | Phase 6 | Pending |
 | IMPL-07 | Phase 6 | Pending |
-| IMPL-08 | Phase 5 | Pending |
-| IMPL-09 | Phase 5 | Pending |
+| IMPL-08 | Phase 5 | Complete |
+| IMPL-09 | Phase 5 | Complete |
 | REF-01 | — | Reference |
 | REF-02 | — | Reference |
 | REF-03 | — | Reference |

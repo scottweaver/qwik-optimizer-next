@@ -15,8 +15,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Core Pipeline Specification** - Specify dollar detection, QRL wrapping, capture analysis, segment extraction, import rewriting, and supporting infrastructure
 - [ ] **Phase 2: JSX, Props & Signal Specification** - Specify the JSX transform subsystem, props destructuring, and signal optimization
 - [ ] **Phase 3: Build Modes & Remaining Transforms Specification** - Specify PURE annotations, const replacement, DCE, code stripping, sync$, noop QRL, entry strategies, emit modes, and pipeline ordering
-- [ ] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
-- [ ] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 162 behavioral tests with idiomatic OXC patterns
+- [x] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
+- [x] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 201 behavioral tests with idiomatic OXC patterns
 - [ ] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
 
 ## Phase Details
@@ -74,15 +74,24 @@ Plans:
 **Plans**: TBD
 
 ### Phase 5: Core OXC Implementation
-**Goal**: A working qwik-core Rust crate implements all 14 CONV transformations using idiomatic OXC patterns, passing all 162 behavioral tests from Jack's spec corpus
+**Goal**: A working qwik-optimizer-oxc Rust crate implements all 14 CONV transformations using idiomatic OXC patterns, passing all 201 behavioral tests from Jack's spec corpus
 **Depends on**: Phase 4
 **Requirements**: IMPL-01, IMPL-02, IMPL-05, IMPL-08, IMPL-09
 **Success Criteria** (what must be TRUE):
-  1. Running `cargo test` executes all 162 behavioral test cases from Jack's spec corpus and all pass (semantic equivalence, not byte-for-byte matching)
+  1. Running `cargo test` executes all 201 behavioral test cases from Jack's spec corpus and all pass (semantic equivalence, not byte-for-byte matching)
   2. The implementation uses OXC's Traverse trait with enter/exit hooks, arena allocators, SemanticBuilder, and Codegen — no SWC patterns (Fold, SyntaxContext, std::mem::replace ownership transfer)
   3. The implementation uses OXC Scoping for capture analysis where it improves correctness over manual scope tracking
   4. All 14 CONV transformation types produce functionally equivalent output to the SWC version for the full test corpus
-**Plans**: TBD
+**Plans:** 7 plans
+
+Plans:
+- [x] 05-01-PLAN.md — Crate scaffold, types, foundation modules (words, hash, errors, is_const)
+- [x] 05-02-PLAN.md — Test harness + 201 SWC snapshot corpus setup
+- [x] 05-03-PLAN.md — Parser, GlobalCollect, entry strategy, legacy import rename
+- [x] 05-04-PLAN.md — Pre-traverse mutations (const replace, export filter) + QwikTransform skeleton with dollar detection
+- [x] 05-05-PLAN.md — Capture analysis (8-category taxonomy) + QRL wrapping + PURE annotations
+- [x] 05-06-PLAN.md — JSX transform, props destructuring, signal optimization
+- [x] 05-07-PLAN.md — Segment emission, variable migration, public API, full test suite activation
 
 ### Phase 6: Strategies, Modes & Binding Implementation
 **Goal**: The optimizer is a drop-in replacement for the SWC version — all entry strategies and emit modes work, and Node.js/browser consumers can call it through NAPI and WASM bindings with the same JSON interface
@@ -93,7 +102,12 @@ Plans:
   2. All 5 emit modes (Prod, Dev, Lib, Test, Hmr) produce correct behavioral variations (dev QRL variants, test const exceptions, etc.)
   3. The NAPI binding exposes `transform_modules` to Node.js with the same JSON interface as the SWC version and produces equivalent output
   4. The WASM binding exposes `transform_modules` to browsers/edge with the same interface as the SWC version
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Entry strategies + Hoist .s() post-processing (IMPL-03)
+- [ ] 06-02-PLAN.md — Emit mode gaps: HMR injection + Lib/Test validation (IMPL-04)
+- [ ] 06-03-PLAN.md — NAPI + WASM binding crates (IMPL-06, IMPL-07)
 
 ## Progress
 
@@ -105,6 +119,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
 | 2. JSX, Props & Signal Specification | 0/? | Not started | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
-| 4. Public API, Bindings & Cross-Cutting Specification | 0/? | Not started | - |
-| 5. Core OXC Implementation | 0/? | Not started | - |
-| 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
+| 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
+| 5. Core OXC Implementation | 6/7 | In Progress | - |
+| 6. Strategies, Modes & Binding Implementation | 0/3 | Not started | - |

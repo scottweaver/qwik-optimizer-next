@@ -1,0 +1,571 @@
+//! Props destructuring transformation -- CONV-04.
+//!
+//! Rewrites destructured arrow function parameters to `_rawProps.propName` form.
+//! When a component-style arrow function has a single ObjectPattern parameter,
+//! this stage rewrites it to `(_rawProps) =>` with `const propName = _rawProps.propName;`
+//! declarations prepended to the body.
+//!
+//! **Ordering:** This MUST run as a pre-pass BEFORE capture analysis. The
+//! `_rawProps` identifier and generated const bindings must be visible to
+//! capture analysis so that `_rawProps` is correctly classified.
+//!
+//! Runs for ALL modes including `EmitMode::Lib`.
+
+use oxc::allocator::{Allocator, CloneIn, Vec as ArenaVec};
+use oxc::ast::AstBuilder;
+use oxc::ast::ast::*;
+use oxc::ast_visit::VisitMut;
+use oxc::span::SPAN;
+
+use crate::collector::{GlobalCollect, Import, ImportKind};
+use crate::is_const::is_const_expression;
+
+// ---------------------------------------------------------------------------
+// Public entry point
+// ---------------------------------------------------------------------------
+
+/// Transform destructured arrow function props to `_rawProps` form.
+///
+/// No mode gate -- runs for ALL modes including Lib.
+pub(crate) fn transform_props_destructuring<'a>(
+    program: &mut Program<'a>,
+    collect: &mut GlobalCollect,
+    core_module: &str,
+    allocator: &'a Allocator,
+) {
+    let ast = AstBuilder::new(allocator);
+    let mut visitor = PropsDestructurer {
+        ast,
+        allocator,
+        needs_rest_props_import: false,
+    };
+    visitor.visit_program(program);
+
+    if visitor.needs_rest_props_import {
+        collect.add_synthetic_import(
+            "_restProps".to_string(),
+            Import {
+                source: core_module.to_string(),
+                specifier: "_restProps".to_string(),
+                kind: ImportKind::Named,
+                synthetic: true,
+            },
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PropsDestructurer visitor
+// ---------------------------------------------------------------------------
+
+struct PropsDestructurer<'a> {
+    ast: AstBuilder<'a>,
+    allocator: &'a Allocator,
+    needs_rest_props_import: bool,
+}
+
+impl<'a> VisitMut<'a> for PropsDestructurer<'a> {
+    fn visit_arrow_function_expression(&mut self, node: &mut ArrowFunctionExpression<'a>) {
+        // Walk children FIRST: transform nested arrows before outer ones.
+        oxc::ast_visit::walk_mut::walk_arrow_function_expression(self, node);
+
+        // Must have exactly 1 parameter.
+        if node.params.items.len() != 1 {
+            return;
+        }
+
+        // Body must qualify (expression body, or block body with return).
+        if !qualifies(&node.body, node.expression) {
+            return;
+        }
+
+        // Skip pre-compiled lib bodies: first stmt is `const x = _captures[N]`.
+        if is_precompiled_lib_body(&node.body) {
+            return;
+        }
+
+        // Extract the single param's ObjectPattern.
+        let obj_pattern = match &node.params.items[0].pattern {
+            BindingPattern::ObjectPattern(obj) => obj,
+            _ => return,
+        };
+
+        // Collect prop info.
+        struct PropInfo {
+            key_name: String,
+            local_name: String,
+            has_default: bool,
+        }
+
+        let mut props: Vec<PropInfo> = Vec::new();
+
+        for prop in &obj_pattern.properties {
+            let key_name = match &prop.key {
+                PropertyKey::StaticIdentifier(id) => id.name.as_str().to_string(),
+                PropertyKey::StringLiteral(s) => s.value.as_str().to_string(),
+                _ => return, // Computed keys not supported.
+            };
+
+            match &prop.value {
+                BindingPattern::BindingIdentifier(id) => {
+                    props.push(PropInfo {
+                        key_name,
+                        local_name: id.name.as_str().to_string(),
+                        has_default: false,
+                    });
+                }
+                BindingPattern::AssignmentPattern(assign) => {
+                    if !is_const_expression(&assign.right) {
+                        return; // Non-const default -- skip entire arrow.
+                    }
+                    let local_name = match &assign.left {
+                        BindingPattern::BindingIdentifier(id) => id.name.as_str().to_string(),
+                        _ => return,
+                    };
+                    props.push(PropInfo {
+                        key_name,
+                        local_name,
+                        has_default: true,
+                    });
+                }
+                _ => return, // Nested destructuring not supported at top level.
+            }
+        }
+
+        // Extract rest element name if present.
+        let rest_name: Option<String> = obj_pattern.rest.as_ref().and_then(|rest| match &rest.argument {
+            BindingPattern::BindingIdentifier(id) => Some(id.name.as_str().to_string()),
+            _ => None,
+        });
+
+        // Build the statements to prepend.
+        let mut new_stmts: ArenaVec<'a, Statement<'a>> = ArenaVec::new_in(self.allocator);
+
+        // Step 1: Rest element handling.
+        if let Some(ref rest_local) = rest_name {
+            let excluded: Vec<String> = props.iter().map(|p| p.key_name.clone()).collect();
+            let rest_stmt = self.build_rest_props_stmt(rest_local, &excluded);
+            new_stmts.push(rest_stmt);
+            self.needs_rest_props_import = true;
+        }
+
+        // Step 2: Collect defaults from the param list (take the expression).
+        let defaults: Vec<Option<Expression<'a>>> = node
+            .params
+            .items
+            .iter_mut()
+            .next()
+            .map(|param| {
+                if let BindingPattern::ObjectPattern(obj) = &mut param.pattern {
+                    let mut defs = Vec::new();
+                    for p in obj.properties.iter_mut() {
+                        match &mut p.value {
+                            BindingPattern::AssignmentPattern(assign) => {
+                                let dummy = self.ast.expression_boolean_literal(SPAN, false);
+                                let default_expr = std::mem::replace(&mut assign.right, dummy);
+                                defs.push(Some(default_expr));
+                            }
+                            _ => defs.push(None),
+                        }
+                    }
+                    defs
+                } else {
+                    Vec::new()
+                }
+            })
+            .unwrap_or_default();
+
+        // Build const declarations for each prop.
+        for (i, prop_info) in props.iter().enumerate() {
+            let default = defaults.get(i).and_then(|d| d.as_ref());
+            let stmt = self.build_prop_const_stmt(
+                &prop_info.key_name,
+                &prop_info.local_name,
+                prop_info.has_default,
+                default,
+            );
+            new_stmts.push(stmt);
+        }
+
+        // Step 3: Replace the parameter with `_rawProps`.
+        let raw_props_binding = self.ast.binding_pattern_binding_identifier(SPAN, "_rawProps");
+        let decorators: ArenaVec<'a, Decorator<'a>> = ArenaVec::new_in(self.allocator);
+        let new_param = self.ast.formal_parameter(
+            SPAN,
+            decorators,
+            raw_props_binding,
+            None::<TSTypeAnnotation<'a>>,
+            None::<Expression<'a>>,
+            false,
+            None,
+            false,
+            false,
+        );
+        node.params.items[0] = new_param;
+
+        // Step 4: Prepend new_stmts to body.statements.
+        let existing_stmts = std::mem::replace(
+            &mut node.body.statements,
+            ArenaVec::new_in(self.allocator),
+        );
+
+        if node.expression {
+            node.expression = false;
+            for stmt in new_stmts {
+                node.body.statements.push(stmt);
+            }
+            for stmt in existing_stmts {
+                match stmt {
+                    Statement::ExpressionStatement(expr_stmt) => {
+                        let ret_stmt = self.ast.statement_return(
+                            expr_stmt.span,
+                            Some(expr_stmt.unbox().expression),
+                        );
+                        node.body.statements.push(ret_stmt);
+                    }
+                    other => node.body.statements.push(other),
+                }
+            }
+        } else {
+            for stmt in new_stmts {
+                node.body.statements.push(stmt);
+            }
+            for stmt in existing_stmts {
+                node.body.statements.push(stmt);
+            }
+        }
+    }
+}
+
+impl<'a> PropsDestructurer<'a> {
+    /// Build `const local = _rawProps.key;` or `const local = _rawProps.key ?? default;`
+    fn build_prop_const_stmt(
+        &self,
+        key_name: &str,
+        local_name: &str,
+        has_default: bool,
+        default_expr: Option<&Expression<'a>>,
+    ) -> Statement<'a> {
+        // Allocate strings in the arena so they get lifetime 'a.
+        let key_arena: &'a str = self.allocator.alloc_str(key_name);
+        let local_arena: &'a str = self.allocator.alloc_str(local_name);
+
+        // Build `_rawProps.key` or `_rawProps["key"]` for non-identifier keys.
+        let raw_props = self.ast.expression_identifier(SPAN, "_rawProps");
+        let member = if is_valid_identifier(key_name) {
+            let key_ident = self.ast.identifier_name(SPAN, key_arena);
+            Expression::StaticMemberExpression(
+                self.ast.alloc_static_member_expression(SPAN, raw_props, key_ident, false),
+            )
+        } else {
+            let key_str = self.ast.expression_string_literal(SPAN, key_arena, None);
+            Expression::ComputedMemberExpression(
+                self.ast.alloc_computed_member_expression(SPAN, raw_props, key_str, false),
+            )
+        };
+
+        // Build init expression: member access or member ?? default.
+        let init = if has_default {
+            if let Some(default) = default_expr {
+                let cloned_default = default.clone_in(self.allocator);
+                Expression::LogicalExpression(self.ast.alloc(self.ast.logical_expression(
+                    SPAN,
+                    member,
+                    LogicalOperator::Coalesce,
+                    cloned_default,
+                )))
+            } else {
+                member
+            }
+        } else {
+            member
+        };
+
+        // Build `const local = init;`
+        let binding = self.ast.binding_pattern_binding_identifier(SPAN, local_arena);
+        let mut declarators: ArenaVec<'a, VariableDeclarator<'a>> = ArenaVec::new_in(self.allocator);
+        declarators.push(self.ast.variable_declarator(
+            SPAN,
+            VariableDeclarationKind::Const,
+            binding,
+            None::<TSTypeAnnotation<'a>>,
+            Some(init),
+            false,
+        ));
+        Statement::VariableDeclaration(
+            self.ast.alloc_variable_declaration(
+                SPAN,
+                VariableDeclarationKind::Const,
+                declarators,
+                false,
+            ),
+        )
+    }
+
+    /// Build `const rest = _restProps(_rawProps, ["key1", "key2", ...])`.
+    fn build_rest_props_stmt(&self, rest_name: &str, excluded_keys: &[String]) -> Statement<'a> {
+        let rest_arena: &'a str = self.allocator.alloc_str(rest_name);
+        let callee = self.ast.expression_identifier(SPAN, "_restProps");
+
+        let mut args: ArenaVec<'a, Argument<'a>> = ArenaVec::new_in(self.allocator);
+
+        // First arg: _rawProps
+        args.push(Argument::Identifier(
+            self.ast.alloc_identifier_reference(SPAN, "_rawProps"),
+        ));
+
+        // Second arg (only if there are excluded keys): array of string literals.
+        if !excluded_keys.is_empty() {
+            let mut elements: ArenaVec<'a, ArrayExpressionElement<'a>> =
+                ArenaVec::new_in(self.allocator);
+            for key in excluded_keys {
+                let key_arena: &'a str = self.allocator.alloc_str(key);
+                elements.push(ArrayExpressionElement::StringLiteral(
+                    self.ast.alloc_string_literal(SPAN, key_arena, None),
+                ));
+            }
+            let arr = self.ast.expression_array(SPAN, elements);
+            args.push(Argument::ArrayExpression(match arr {
+                Expression::ArrayExpression(boxed) => boxed,
+                _ => unreachable!(),
+            }));
+        }
+
+        let call_expr = self.ast.expression_call(
+            SPAN,
+            callee,
+            None::<TSTypeParameterInstantiation<'a>>,
+            args,
+            false,
+        );
+
+        let binding = self.ast.binding_pattern_binding_identifier(SPAN, rest_arena);
+        let mut declarators: ArenaVec<'a, VariableDeclarator<'a>> = ArenaVec::new_in(self.allocator);
+        declarators.push(self.ast.variable_declarator(
+            SPAN,
+            VariableDeclarationKind::Const,
+            binding,
+            None::<TSTypeAnnotation<'a>>,
+            Some(call_expr),
+            false,
+        ));
+        Statement::VariableDeclaration(
+            self.ast.alloc_variable_declaration(
+                SPAN,
+                VariableDeclarationKind::Const,
+                declarators,
+                false,
+            ),
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helper functions
+// ---------------------------------------------------------------------------
+
+/// Returns true if the string is a valid JavaScript identifier.
+fn is_valid_identifier(s: &str) -> bool {
+    if s.is_empty() {
+        return false;
+    }
+    let mut chars = s.chars();
+    let first = chars.next().unwrap();
+    if !first.is_ascii_alphabetic() && first != '_' && first != '$' {
+        return false;
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+}
+
+/// Returns true if the arrow body qualifies for props destructuring.
+fn qualifies(body: &FunctionBody<'_>, is_expression: bool) -> bool {
+    if is_expression {
+        return true;
+    }
+    body.statements
+        .iter()
+        .any(|stmt| matches!(stmt, Statement::ReturnStatement(_)))
+}
+
+/// Returns true if the first statement is `const x = _captures[N]`.
+fn is_precompiled_lib_body(body: &FunctionBody<'_>) -> bool {
+    let Some(first) = body.statements.first() else {
+        return false;
+    };
+    let Statement::VariableDeclaration(var_decl) = first else {
+        return false;
+    };
+    if var_decl.kind != VariableDeclarationKind::Const {
+        return false;
+    }
+    let Some(declarator) = var_decl.declarations.first() else {
+        return false;
+    };
+    let Some(init) = &declarator.init else {
+        return false;
+    };
+    if let Expression::ComputedMemberExpression(member) = init {
+        if let Expression::Identifier(obj) = &member.object {
+            return obj.name.as_str() == "_captures";
+        }
+    }
+    false
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::collector::global_collect;
+    use oxc::allocator::Allocator;
+    use oxc::codegen::Codegen;
+    use oxc::parser::Parser;
+    use oxc::span::SourceType;
+
+    fn transform(src: &str) -> (String, GlobalCollect) {
+        let allocator = Allocator::default();
+        let source_type = SourceType::tsx();
+        let ret = Parser::new(&allocator, src, source_type).parse();
+        let mut program = ret.program;
+        let mut collect = global_collect(&program);
+        transform_props_destructuring(&mut program, &mut collect, "@qwik.dev/core", &allocator);
+        let code = Codegen::new().build(&program).code;
+        (code, collect)
+    }
+
+    #[test]
+    fn props_destructuring_basic() {
+        let (code, _) = transform(r#"({ foo, bar }) => { return foo; }"#);
+        assert!(code.contains("_rawProps"), "Expected _rawProps in: {code}");
+        assert!(
+            code.contains("_rawProps.foo"),
+            "Expected _rawProps.foo in: {code}"
+        );
+        assert!(
+            code.contains("_rawProps.bar"),
+            "Expected _rawProps.bar in: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_rest_pattern() {
+        let (code, collect) = transform(r#"({ foo, ...rest }) => { return rest; }"#);
+        assert!(code.contains("_rawProps"), "Expected _rawProps in: {code}");
+        assert!(
+            code.contains("_restProps"),
+            "Expected _restProps call in: {code}"
+        );
+        assert!(
+            collect
+                .synthetic
+                .iter()
+                .any(|(name, _)| name == "_restProps"),
+            "Expected _restProps in synthetic imports"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_rest_only() {
+        let (code, collect) = transform(r#"({ ...rest }) => { return rest; }"#);
+        assert!(
+            code.contains("_restProps(_rawProps)"),
+            "Expected _restProps single arg in: {code}"
+        );
+        assert!(
+            collect
+                .synthetic
+                .iter()
+                .any(|(name, _)| name == "_restProps"),
+            "Expected _restProps in synthetic imports"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_non_const_default_skip() {
+        let (code, _) = transform(r#"({ foo = someFunc() }) => { return foo; }"#);
+        assert!(
+            !code.contains("_rawProps"),
+            "Non-const default should skip transform, got: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_const_default() {
+        let (code, _) = transform(r#"({ foo = 42 }) => { return foo; }"#);
+        assert!(code.contains("_rawProps"), "Expected _rawProps in: {code}");
+        assert!(
+            code.contains("??"),
+            "Expected ?? (nullish coalesce) in: {code}"
+        );
+        assert!(code.contains("42"), "Expected default value 42 in: {code}");
+    }
+
+    #[test]
+    fn props_destructuring_precompiled_skip() {
+        let src = r#"({ foo }) => { const x = _captures[0]; return foo; }"#;
+        let (code, _) = transform(src);
+        assert!(
+            !code.contains("_rawProps"),
+            "Pre-compiled body should skip transform, got: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_renamed_prop() {
+        let (code, _) = transform(r#"({ count: c }) => { return c; }"#);
+        assert!(code.contains("_rawProps"), "Expected _rawProps in: {code}");
+        assert!(
+            code.contains("_rawProps.count"),
+            "Expected _rawProps.count (key) in: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_string_key() {
+        let (code, _) = transform(r#"({ "foo-bar": x }) => { return x; }"#);
+        assert!(code.contains("_rawProps"), "Expected _rawProps in: {code}");
+        assert!(
+            code.contains(r#"_rawProps["foo-bar"]"#),
+            "Expected computed access in: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_non_object_skip() {
+        let (code, _) = transform(r#"(props) => { return props; }"#);
+        assert!(
+            !code.contains("_rawProps"),
+            "Plain identifier param should not be rewritten, got: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_two_params_skip() {
+        let (code, _) = transform(r#"({ a }, { b }) => { return a; }"#);
+        assert!(
+            !code.contains("_rawProps"),
+            "Two params should skip transform, got: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_no_return_skip() {
+        let (code, _) = transform(r#"({ foo }) => { foo; }"#);
+        assert!(
+            !code.contains("_rawProps"),
+            "No return should skip transform, got: {code}"
+        );
+    }
+
+    #[test]
+    fn props_destructuring_expression_body() {
+        let (code, _) = transform(r#"({ foo }) => someCall(foo)"#);
+        assert!(
+            code.contains("_rawProps"),
+            "Expression call body should trigger transform, got: {code}"
+        );
+    }
+}

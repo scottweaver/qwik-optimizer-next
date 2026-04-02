@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-04-01T18:59:34.340Z"
-last_activity: 2026-04-01
+status: completed
+stopped_at: Phase 6 context gathered
+last_updated: "2026-04-02T16:51:01.222Z"
+last_activity: 2026-04-02
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 5
-  completed_plans: 4
-  percent: 40
+  completed_phases: 5
+  total_plans: 22
+  completed_plans: 22
+  percent: 77
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** The specification must be comprehensive and precise enough that an OXC implementation can be built from it without referencing the SWC source code.
-**Current focus:** Phase 1 — Core Pipeline Specification
+**Current focus:** Phase 05 — core-oxc-implementation
 
 ## Current Position
 
-Phase: 2 of 6 (jsx, props & signal specification)
+Phase: 6
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-01
+Status: Phase complete
+Last activity: 2026-04-02
 
-Progress: [####░░░░░░] 40%
+Progress: [########░░] 77%
 
 ## Performance Metrics
 
@@ -55,6 +55,11 @@ Progress: [####░░░░░░] 40%
 | Phase 01 P01 | 4m | 2 tasks | 1 files |
 | Phase 01 P03 | 5m | 2 tasks | 1 files |
 | Phase 01 P05 | 4m | 2 tasks | 1 files |
+| Phase 04 P03 | 8m | 2 tasks | 1 files |
+| Phase 05 P03 | 7m | 2 tasks | 6 files |
+| Phase 05 P05 | 14m | 2 tasks | 1 files |
+| Phase 05 P06 | 14m | 2 tasks | 5 files |
+| Phase 05 P07 | 25m | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -69,6 +74,16 @@ Recent decisions affecting current work:
 - [Phase 01 P03]: Capture analysis uses 8-category taxonomy with self-import reclassification as first-class pattern
 - [Phase 01 P03]: All 16 capture edge cases documented as named spec test cases (CAPTURE-EDGE-01 through 16)
 - [Phase 01]: Variable Migration placed as top-level ## section per D-12; Source Map Generation uses ## Infrastructure: prefix matching existing convention
+- [Phase 04 P03]: D-30 fulfilled: 24 curated examples in Appendix B complementing inline CONV examples from Phases 1-3
+- [Phase 05]: OXC 0.123 uses Str type (from oxc_str) instead of Atom for arena strings; SegmentData added as internal type to types.rs
+- [Phase 05 P05]: Capture analysis uses decl_stack manual scope tracking (D-09 compliant) with IdentCollector Visit trait
+- [Phase 05 P05]: Arena string allocation via ctx.ast.allocator.alloc_str for dynamic names in QRL AST nodes
+- [Phase 05 P06]: Props destructuring implemented as VisitMut pre-pass before Traverse
+- [Phase 05 P06]: JSX transform integrated into exit_expression via take-and-replace pattern
+- [Phase 05 P06]: Signal optimization uses string-based rendering for _fnSignal construction
+- [Phase 05 P07]: Span-based body extraction for segment construction (slice source at recorded spans, not AST cloning)
+- [Phase 05 P07]: String assembly then re-parse pattern for normalized codegen output
+- [Phase 05 P07]: 24 spec examples intentionally ignored (not part of 201 fixture corpus)
 
 ### Pending Todos
 
@@ -81,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T18:53:07.794Z
-Stopped at: Completed 01-05-PLAN.md
-Resume file: None
+Last session: 2026-04-02T16:51:01.219Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-strategies-modes-binding-implementation/06-CONTEXT.md
