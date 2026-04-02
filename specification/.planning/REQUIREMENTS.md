@@ -57,11 +57,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Implementation — Core
 
-- [ ] **IMPL-01**: OXC implementation passes all 162 behavioral tests from Jack's spec corpus
-- [ ] **IMPL-02**: OXC implementation supports all 14 CONV transformation types
+- [x] **IMPL-01**: OXC implementation passes all 162 behavioral tests from Jack's spec corpus
+- [x] **IMPL-02**: OXC implementation supports all 14 CONV transformation types
 - [ ] **IMPL-03**: OXC implementation supports all 7 entry strategies
 - [ ] **IMPL-04**: OXC implementation supports all 5 emit modes
-- [ ] **IMPL-05**: OXC implementation produces functionally equivalent output to SWC version (semantic equivalence, not byte-for-byte)
+- [x] **IMPL-05**: OXC implementation produces functionally equivalent output to SWC version (semantic equivalence, not byte-for-byte)
 
 ### Implementation — Bindings
 
@@ -139,11 +139,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-28 | Phase 4 | Complete |
 | SPEC-29 | Phase 4 | Pending |
 | SPEC-30 | Phase 1 | Complete |
-| IMPL-01 | Phase 5 | Pending |
-| IMPL-02 | Phase 5 | Pending |
+| IMPL-01 | Phase 5 | Complete |
+| IMPL-02 | Phase 5 | Complete |
 | IMPL-03 | Phase 6 | Pending |
 | IMPL-04 | Phase 6 | Pending |
-| IMPL-05 | Phase 5 | Pending |
+| IMPL-05 | Phase 5 | Complete |
 | IMPL-06 | Phase 6 | Pending |
 | IMPL-07 | Phase 6 | Pending |
 | IMPL-08 | Phase 5 | Complete |

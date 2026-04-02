@@ -91,7 +91,7 @@ Plans:
 - [x] 05-04-PLAN.md — Pre-traverse mutations (const replace, export filter) + QwikTransform skeleton with dollar detection
 - [x] 05-05-PLAN.md — Capture analysis (8-category taxonomy) + QRL wrapping + PURE annotations
 - [x] 05-06-PLAN.md — JSX transform, props destructuring, signal optimization
-- [ ] 05-07-PLAN.md — Segment emission, variable migration, public API, full test suite activation
+- [x] 05-07-PLAN.md — Segment emission, variable migration, public API, full test suite activation
 
 ### Phase 6: Strategies, Modes & Binding Implementation
 **Goal**: The optimizer is a drop-in replacement for the SWC version — all entry strategies and emit modes work, and Node.js/browser consumers can call it through NAPI and WASM bindings with the same JSON interface
