@@ -5659,3 +5659,481 @@ pub enum SegmentKind {
 ```
 
 The TypeScript contract (`types.ts`) only declares `'eventHandler' | 'function'` for the `ctxKind` field of `SegmentAnalysis`. The `"jsxProp"` value may appear in Rust-to-Rust communication but is not part of the JavaScript-facing wire format in the current SWC implementation.
+
+### TransformOutput
+
+The top-level return type from `transform_modules()`. Contains all output modules (both transformed root modules and extracted segments), diagnostics, and metadata about the input.
+
+```rust
+/// Complete result of transforming one or more modules.
+///
+/// This is the top-level return type from `transform_modules()`.
+/// The `modules` vector contains both root modules (with their
+/// transformed code) and extracted segment modules. Modules are
+/// sorted by `TransformModule.order` before return.
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformOutput {
+    /// All output modules: transformed root modules + extracted segments.
+    /// Sorted by `TransformModule.order` (root modules first, then
+    /// segments in extraction order).
+    pub modules: Vec<TransformModule>,
+
+    /// Diagnostics (errors, warnings) accumulated during transformation.
+    /// Includes capture analysis errors (C02, C03), missing QRL
+    /// implementation errors (C05), and other warnings.
+    pub diagnostics: Vec<Diagnostic>,
+
+    /// Whether any input module was detected as TypeScript
+    /// (based on `.ts` or `.tsx` file extension).
+    pub is_type_script: bool,
+
+    /// Whether any input module contained JSX syntax
+    /// (based on `.jsx` or `.tsx` file extension).
+    pub is_jsx: bool,
+}
+```
+
+**Merging behavior:** When `transform_modules()` processes multiple input files, each file produces its own `TransformOutput`. These are merged via `TransformOutput::append()`, which concatenates `modules` and `diagnostics` vectors and ORs the boolean flags. After merging, the final `modules` vector is sorted by `order`.
+
+#### JSON Wire Format
+
+```json
+{
+  "modules": [
+    { "path": "components/header.tsx", "isEntry": false, "code": "...", "map": "...", "segment": null },
+    { "path": "components/header.tsx_renderHeader_zBbHWn4e8Cg.js", "isEntry": true, "code": "...", "map": "...", "segment": { "..." } }
+  ],
+  "diagnostics": [],
+  "isTypeScript": true,
+  "isJsx": true
+}
+```
+
+### TransformModule
+
+A single output module -- either the transformed root module or an extracted segment module.
+
+```rust
+/// A single output module.
+///
+/// For root modules: contains the transformed source with QRL wrappers
+/// replacing `$()` calls and extracted segment bodies removed.
+/// For segment modules: contains the extracted function body with
+/// resolved imports and captured variable parameters.
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformModule {
+    /// Output file path (relative to `src_dir`).
+    /// For root modules: same as input path (with possible extension change).
+    /// For segments: `{canonicalFilename}.{extension}` (e.g.,
+    /// `components/header.tsx_renderHeader_zBbHWn4e8Cg.js`).
+    pub path: String,
+
+    /// The generated JavaScript source code for this module.
+    pub code: String,
+
+    /// Optional source map as a JSON string.
+    /// Present when `source_maps: true` in the configuration.
+    /// For root modules: maps transformed code back to original source.
+    /// For segments: maps extracted code back to its position in the
+    /// original source file.
+    pub map: Option<String>,
+
+    /// Segment metadata, present only for extracted segment modules.
+    /// `None` for root modules (the original transformed file).
+    /// `Some(analysis)` for segment modules (extracted QRL bodies).
+    pub segment: Option<SegmentAnalysis>,
+
+    /// Whether this module is an entry point.
+    /// Segment modules are marked as entry points (`true`).
+    /// Root modules are not entry points (`false`).
+    pub is_entry: bool,
+
+    /// Internal sort order for deterministic output ordering.
+    /// Root modules get `order = 0`; segments get their extraction order.
+    ///
+    /// **Not included in JSON output** -- this field carries
+    /// `#[serde(skip_serializing)]` because it is an internal
+    /// implementation detail used only for sorting before return.
+    /// NAPI and WASM consumers never see this field.
+    #[serde(skip_serializing)]
+    pub order: u64,
+}
+```
+
+**Key behavioral notes:**
+- The `order` field has `#[serde(skip_serializing)]` in the SWC implementation -- it is used internally to sort `TransformOutput.modules` by extraction order but is never serialized to JSON. Binding consumers receive modules in sorted order without knowing about the sort key.
+- The `segment` field is the discriminator between root and segment modules: `None` means this is the transformed original file, `Some(...)` means this is an extracted segment.
+- Jack's OXC implementation adds an `orig_path: Option<String>` field not present in SWC. The TypeScript `types.ts` also declares `origPath: string | null`. Implementations may include this for debugging but it is not required for behavioral equivalence.
+
+#### JSON Wire Format
+
+Root module (no segment):
+```json
+{
+  "path": "components/header.tsx",
+  "code": "import { _jsxSorted } from '@qwik.dev/core';\nimport { renderHeader_zBbHWn4e8Cg } from './header.tsx_renderHeader_zBbHWn4e8Cg';\n...",
+  "map": "{\"version\":3,\"sources\":[\"header.tsx\"],\"mappings\":\"...\"}",
+  "segment": null,
+  "isEntry": false
+}
+```
+
+Segment module:
+```json
+{
+  "path": "components/header.tsx_renderHeader_zBbHWn4e8Cg.js",
+  "code": "import { _jsxSorted } from '@qwik.dev/core';\nexport const renderHeader_zBbHWn4e8Cg = () => { return _jsxSorted('h1', null, 'Hello'); };",
+  "map": "{\"version\":3,\"sources\":[\"header.tsx\"],\"mappings\":\"...\"}",
+  "segment": { "origin": "components/header.tsx", "name": "renderHeader_zBbHWn4e8Cg", "..." },
+  "isEntry": true
+}
+```
+
+### SegmentAnalysis
+
+Metadata about an extracted segment (a lazy-loadable code fragment). Attached to each `TransformModule` that represents an extracted segment.
+
+```rust
+/// Metadata about an extracted segment.
+///
+/// Contains all information needed to reconstruct import paths,
+/// validate segment identity, and implement entry strategy grouping.
+/// Serialized as part of `TransformModule` in the output JSON.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SegmentAnalysis {
+    /// Source file this segment was extracted from.
+    /// Relative path from `src_dir` (e.g., `"components/header.tsx"`).
+    pub origin: String,
+
+    /// Full segment symbol name including hash.
+    /// Format: `{displayName}_{hash}` (e.g., `"renderHeader_zBbHWn4e8Cg"`).
+    /// This is the exported name in the segment module.
+    pub name: String,
+
+    /// Entry point group name, if this segment belongs to a group.
+    /// Set by the EntryPolicy: `None` for per-segment strategies,
+    /// `Some("entry_segments")` for Inline/Single, or
+    /// `Some("{origin}_entry_{root}")` for Component/Smart.
+    pub entry: Option<String>,
+
+    /// Human-readable display name for debugging and dev mode.
+    /// Format: `{origin}_{functionName}` (e.g., `"header.tsx_renderHeader"`).
+    pub display_name: String,
+
+    /// The 11-character base64url hash of the segment.
+    /// Computed from the segment's content and path for cache-busting.
+    /// See: Hash Generation in the infrastructure section.
+    pub hash: String,
+
+    /// Canonical filename for the segment module (without extension).
+    /// Format: `{origin}_{functionName}_{hash}`
+    /// (e.g., `"header.tsx_renderHeader_zBbHWn4e8Cg"`).
+    pub canonical_filename: String,
+
+    /// Output path prefix (directory component of the output path).
+    /// Empty string `""` when the segment is in the same directory
+    /// as `src_dir`. For nested paths, includes the directory
+    /// (e.g., `"components/"`).
+    pub path: String,
+
+    /// File extension of the output module (e.g., `"js"`, `"tsx"`, `"ts"`).
+    /// Determined by the `transpile_ts` and `transpile_jsx` options.
+    pub extension: String,
+
+    /// Parent segment name, if this segment is nested inside another
+    /// `$()` call. `None` for top-level segments.
+    /// Used by the entry strategy to maintain parent-child relationships.
+    pub parent: Option<String>,
+
+    /// Context kind classifying how this segment was created.
+    /// See: SegmentKind enum documentation.
+    pub ctx_kind: SegmentKind,
+
+    /// The `$`-suffixed function name that created this segment.
+    /// Examples: `"$"`, `"component$"`, `"useTask$"`, `"onClick$"`.
+    pub ctx_name: String,
+
+    /// Whether this segment captures variables from its enclosing scope.
+    /// `true` when the segment body references identifiers declared
+    /// outside the segment that require serialization.
+    /// See: Capture Analysis section for the 8-category taxonomy.
+    pub captures: bool,
+
+    /// Source location as `[start_byte, end_byte]` byte offsets
+    /// of the original `$()` call expression in the source file.
+    /// Serializes as a JSON array `[start, end]` (Rust tuples
+    /// serialize as arrays with serde).
+    pub loc: (u32, u32),
+
+    /// Parameter names after props destructuring transformation.
+    /// Present only for `component$` segments with destructured props
+    /// (e.g., `["_rawProps"]`). `None` when no props destructuring
+    /// occurred or for non-component segments.
+    /// Omitted from JSON when `None` (`skip_serializing_if`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub param_names: Option<Vec<String>>,
+
+    /// Transformed names of captured scope variables.
+    /// Present only when `captures` is `true`. Lists the variable
+    /// names in the order they appear in the capture array.
+    /// Omitted from JSON when `None` (`skip_serializing_if`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capture_names: Option<Vec<String>>,
+}
+```
+
+**Field count:** 15 fields total.
+
+**Key behavioral notes:**
+- `loc` serializes as a JSON array `[start, end]` because Rust tuples serialize as arrays with serde. The values are byte offsets into the original source file.
+- `param_names` and `capture_names` use `#[serde(skip_serializing_if = "Option::is_none")]` -- they are omitted entirely from JSON output when `None`, not serialized as `null`.
+- `entry` and `parent` do NOT use `skip_serializing_if` -- they serialize as `null` when `None` to match the SWC golden output format.
+
+#### JSON Wire Format
+
+```json
+{
+  "origin": "components/header.tsx",
+  "name": "renderHeader_zBbHWn4e8Cg",
+  "entry": null,
+  "displayName": "header.tsx_renderHeader",
+  "hash": "zBbHWn4e8Cg",
+  "canonicalFilename": "header.tsx_renderHeader_zBbHWn4e8Cg",
+  "path": "components/",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": true,
+  "loc": [42, 195],
+  "paramNames": ["_rawProps"],
+  "captureNames": ["count", "setCount"]
+}
+```
+
+### Diagnostic
+
+A diagnostic message (error, warning, or source error) emitted during transformation. Diagnostics are accumulated in `TransformOutput.diagnostics` and returned to the caller.
+
+```rust
+/// A diagnostic message from the transformation process.
+///
+/// Diagnostics are non-fatal by default -- they are collected and
+/// returned alongside the (possibly partial) output. The caller
+/// decides how to handle them (e.g., fail the build on errors,
+/// log warnings).
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Diagnostic {
+    /// The diagnostic severity level.
+    pub category: DiagnosticCategory,
+
+    /// Machine-readable error code (e.g., `"C02"`, `"C03"`, `"C05"`).
+    /// `None` for warnings and diagnostics without a specific code.
+    pub code: Option<String>,
+
+    /// File path where the diagnostic originated.
+    /// Relative to `src_dir`.
+    pub file: String,
+
+    /// Human-readable error or warning message.
+    pub message: String,
+
+    /// Optional source code locations to highlight.
+    /// Used by IDE integrations and error reporters to underline
+    /// the relevant source code range.
+    pub highlights: Option<Vec<SourceLocation>>,
+
+    /// Optional fix suggestions as human-readable strings.
+    /// Example: `"Consider wrapping the variable in a store"`.
+    pub suggestions: Option<Vec<String>>,
+
+    /// Scope identifier. Always `DiagnosticScope::Optimizer`
+    /// in the current implementation -- all diagnostics originate
+    /// from the optimizer.
+    pub scope: DiagnosticScope,
+}
+```
+
+#### Complete JSON Example (C02 Error)
+
+```json
+{
+  "category": "error",
+  "code": "C02",
+  "file": "components/counter.tsx",
+  "message": "Reference to identifier 'handleClick' which is a function. Functions are not serializable by default. Use '$()' to wrap the function or move it to a separate module and import it.",
+  "highlights": [
+    {
+      "lo": 245,
+      "hi": 257,
+      "startLine": 12,
+      "startCol": 5,
+      "endLine": 12,
+      "endCol": 16
+    }
+  ],
+  "suggestions": [
+    "Wrap the function with $(): const handleClick = $(() => { ... })"
+  ],
+  "scope": "optimizer"
+}
+```
+
+### DiagnosticCategory
+
+Severity level of a diagnostic message.
+
+```rust
+/// Diagnostic severity level.
+///
+/// Determines how the diagnostic should be handled by the caller.
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum DiagnosticCategory {
+    /// A hard error. The transformation may have produced partial
+    /// output, but the result should not be used in production.
+    /// Typically triggers a build failure.
+    Error,
+
+    /// A non-fatal warning. The output is valid but may have
+    /// suboptimal behavior (e.g., unnecessary serialization).
+    Warning,
+
+    /// A source-context-sensitive error. Treated as `Error` for
+    /// source code within the project (files under `src_dir`),
+    /// but downgraded to `Warning` for code in `node_modules`.
+    ///
+    /// This dual behavior allows the optimizer to be strict about
+    /// project source while tolerating issues in third-party
+    /// dependencies that the developer cannot control.
+    SourceError,
+}
+```
+
+#### JSON Wire Format
+
+```json
+"error"
+"warning"
+"sourceError"
+```
+
+### SourceLocation
+
+A source code location used for diagnostic highlighting. Contains both byte offsets (for programmatic use) and line/column numbers (for human-readable display).
+
+```rust
+/// A source code location for diagnostic highlighting.
+///
+/// Contains both byte offsets and line/column positions.
+/// Used in `Diagnostic.highlights` to identify the relevant
+/// source code range.
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceLocation {
+    /// Starting byte offset (0-indexed, inclusive).
+    pub lo: usize,
+
+    /// Ending byte offset (0-indexed, exclusive).
+    pub hi: usize,
+
+    /// Starting line number (1-indexed).
+    pub start_line: usize,
+
+    /// Starting column (1-indexed, inclusive).
+    /// Computed as: SWC's 0-based `col_display + 1`.
+    pub start_col: usize,
+
+    /// Ending line number (1-indexed).
+    pub end_line: usize,
+
+    /// Ending column (0-indexed, display column).
+    /// Computed as: SWC's 0-based `col_display` (no adjustment).
+    ///
+    /// **Column indexing asymmetry:** `start_col` is 1-indexed
+    /// while `end_col` is 0-indexed. This is intentional -- the
+    /// SWC implementation applies `+1` to start but not to end
+    /// because SWC columns are 0-based exclusive, requiring
+    /// `+1` for inclusive start but `+0` for exclusive end
+    /// (the two adjustments cancel: exclusive→inclusive = -1,
+    /// 0-based→1-based = +1, net = 0).
+    pub end_col: usize,
+}
+```
+
+**Column indexing explanation (from SWC source, `utils.rs`):**
+
+The SWC source code contains this comment explaining the asymmetry:
+```
+// - SWC's columns are exclusive, ours are inclusive (column - 1)
+// - SWC has 0-based columns, ours are 1-based (column + 1)
+// = +-0
+```
+
+For `start_col`: the column is inclusive (this IS the column where the span starts), so `col_display + 1` converts from 0-based to 1-based.
+
+For `end_col`: the column is exclusive (this is one PAST the last character), so the two adjustments cancel out: `-1` for exclusive-to-inclusive and `+1` for 0-based-to-1-based = net `+0`, yielding just `col_display`.
+
+**Result:** `start_col` is 1-indexed inclusive, `end_col` is 0-indexed display column. Implementations must replicate this asymmetry for wire format compatibility.
+
+#### JSON Wire Format
+
+```json
+{
+  "lo": 42,
+  "hi": 58,
+  "startLine": 3,
+  "startCol": 5,
+  "endLine": 3,
+  "endCol": 20
+}
+```
+
+### Error Codes
+
+The optimizer defines 3 machine-readable error codes. Codes are sparse -- there is no C01 or C04. Each code maps to a specific transformation error condition.
+
+| Code | Enum Variant | Trigger Condition | Message Pattern |
+|------|-------------|-------------------|-----------------|
+| `C02` | `FunctionReference` | A captured identifier in a `$()` body references a function declaration that is not serializable. Functions cannot cross the serialization boundary unless wrapped with `$()`. | `"Reference to identifier '{name}' which is a function. Functions are not serializable by default. Use '$()' to wrap the function or move it to a separate module and import it."` |
+| `C03` | `CanNotCapture` | A captured identifier references a value that cannot be serialized (e.g., a class instance, a mutable binding that would lose its reference semantics). | `"Cannot capture '{name}' because it is not serializable. Only JSON-serializable values can be captured across the QRL boundary."` |
+| `C05` | `MissingQrlImplementation` | A `$`-suffixed function was called but the corresponding QRL implementation function is not available in the core module. This indicates a version mismatch or missing import. | `"Missing QRL implementation for '{name}'. Ensure '@qwik.dev/core' exports the required QRL wrapper."` |
+
+**Code generation (from `errors.rs`):**
+
+```rust
+pub enum Error {
+    FunctionReference = 2,  // C02
+    CanNotCapture,          // C03 (auto-increments to 3)
+    MissingQrlImplementation = 5,  // C05 (explicit jump)
+}
+
+pub fn get_diagnostic_id(err: Error) -> DiagnosticId {
+    let id = err as u32;
+    DiagnosticId::Error(format!("C{:02}", id))
+}
+```
+
+The discriminant values are explicit: `FunctionReference = 2`, `CanNotCapture` auto-increments to `3`, and `MissingQrlImplementation` jumps to `5`. The `format!("C{:02}", id)` produces zero-padded two-digit codes: `"C02"`, `"C03"`, `"C05"`.
+
+**DiagnosticScope:**
+
+```rust
+/// Scope identifier for diagnostic origin.
+///
+/// Currently only one variant -- all diagnostics come from
+/// the optimizer. This enum exists for forward compatibility
+/// if other diagnostic sources are added.
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum DiagnosticScope {
+    /// Diagnostic originated from the Qwik optimizer.
+    Optimizer,
+}
+```
+
+Serializes as `"optimizer"` in JSON.
