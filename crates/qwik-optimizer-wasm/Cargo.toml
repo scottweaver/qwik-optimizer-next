@@ -1,0 +1,14 @@
+[package]
+name = "qwik-optimizer-wasm"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = "0.3"
+qwik-optimizer-oxc = { path = "../qwik-optimizer-oxc" }
+serde = "1"
+serde-wasm-bindgen = "0.6"
+wasm-bindgen = "0.2"
