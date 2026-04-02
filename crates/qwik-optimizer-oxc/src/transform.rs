@@ -55,8 +55,8 @@ pub(crate) enum IdentType {
     Class,
 }
 
-/// A `(name, type)` pair from the declaration stack.
-pub(crate) type IdPlusType = (String, IdentType);
+/// A named binding with its declaration type, used in the declaration stack.
+pub(crate) type TypedId = (String, IdentType);
 
 // ---------------------------------------------------------------------------
 // IdentCollector -- read-only visitor that harvests IdentifierReference names
@@ -175,7 +175,7 @@ impl<'a> Visit<'a> for IdentCollector {
 /// Returns `(sorted_names, is_const)`.
 pub(crate) fn compute_scoped_idents(
     all_idents: &HashSet<String>,
-    all_decl: &[IdPlusType],
+    all_decl: &[TypedId],
 ) -> (Vec<String>, bool) {
     let mut matched: HashSet<String> = HashSet::new();
     let mut is_const = true;
@@ -406,7 +406,7 @@ pub(crate) struct QwikTransform {
     /// Scope frames. Each function/arrow body gets a new frame.
     /// Each frame contains the (name, IdentType) bindings declared in it.
     /// Initialized with one empty root frame.
-    pub(crate) decl_stack: Vec<Vec<IdPlusType>>,
+    pub(crate) decl_stack: Vec<Vec<TypedId>>,
 
     /// Diagnostics accumulated during the traversal.
     pub(crate) diagnostics: Vec<crate::types::Diagnostic>,
@@ -503,7 +503,7 @@ impl QwikTransform {
 
         // Build initial decl_stack from module-level declarations
         // Root scope frame includes all top-level var/fn/class declarations
-        let mut root_frame: Vec<IdPlusType> = Vec::new();
+        let mut root_frame: Vec<TypedId> = Vec::new();
         for (name, _span) in &collect.root {
             // Module-level declarations: we add them to decl_stack so they CAN
             // be found during compute_scoped_idents, but then reclassify them
@@ -821,7 +821,7 @@ impl QwikTransform {
         }
 
         // Category 8: Check for fn/class declarations in decl_stack referenced by segment
-        let all_decl: Vec<IdPlusType> = self
+        let all_decl: Vec<TypedId> = self
             .decl_stack
             .iter()
             .flat_map(|frame| frame.iter().cloned())
@@ -1111,7 +1111,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         self.stack_ctxt.pop();
 
         // --- Flatten decl_stack for Var entries ---
-        let all_decl: Vec<IdPlusType> = self
+        let all_decl: Vec<TypedId> = self
             .decl_stack
             .iter()
             .flat_map(|frame| frame.iter().cloned())
@@ -1697,7 +1697,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 // Helper: collect formal params into decl_stack frame
 // ---------------------------------------------------------------------------
 
-fn collect_formal_params_to_decl(formal: &FormalParameters<'_>, frame: &mut Vec<IdPlusType>) {
+fn collect_formal_params_to_decl(formal: &FormalParameters<'_>, frame: &mut Vec<TypedId>) {
     for param in &formal.items {
         collect_binding_to_decl(&param.pattern, frame, false);
     }
@@ -1708,7 +1708,7 @@ fn collect_formal_params_to_decl(formal: &FormalParameters<'_>, frame: &mut Vec<
 
 /// Collect binding names from a pattern into a decl_stack frame.
 /// Handles all 4 BindingPattern variants exhaustively (no wildcards per Pitfall 3).
-fn collect_binding_to_decl(pat: &BindingPattern<'_>, frame: &mut Vec<IdPlusType>, is_const: bool) {
+fn collect_binding_to_decl(pat: &BindingPattern<'_>, frame: &mut Vec<TypedId>, is_const: bool) {
     match pat {
         BindingPattern::BindingIdentifier(id) => {
             frame.push((id.name.as_str().to_string(), if is_const { IdentType::Const } else { IdentType::Let }));
@@ -2365,7 +2365,7 @@ mod tests {
         idents.insert("y".to_string());
         idents.insert("z".to_string());
 
-        let decl: Vec<IdPlusType> = vec![
+        let decl: Vec<TypedId> = vec![
             ("x".to_string(), IdentType::Const),
             ("y".to_string(), IdentType::Let),
             ("w".to_string(), IdentType::Const),
@@ -2386,7 +2386,7 @@ mod tests {
         idents.insert("myClass".to_string());
         idents.insert("myVar".to_string());
 
-        let decl: Vec<IdPlusType> = vec![
+        let decl: Vec<TypedId> = vec![
             ("myFn".to_string(), IdentType::Fn),
             ("myClass".to_string(), IdentType::Class),
             ("myVar".to_string(), IdentType::Const),
