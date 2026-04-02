@@ -60,7 +60,7 @@ fn transform_code(
     let source_in_arena: &str = allocator.alloc_str(input_code);
 
     let (is_type_script, is_jsx, mut program, diagnostics) =
-        match parse::parse_module(&allocator, source_in_arena, input_path) {
+        match parse::parse(&allocator, source_in_arena, input_path) {
             Ok((parse_result, diags)) => {
                 let is_ts = parse_result.source_type.is_typescript();
                 let is_jsx = parse_result.source_type.is_jsx();

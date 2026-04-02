@@ -37,7 +37,7 @@ impl std::fmt::Debug for ParseResult<'_> {
 /// (unrecoverable error with empty AST). For recoverable parse errors,
 /// the partial AST is returned along with diagnostics (OXC guarantees a
 /// structurally valid AST even with syntax errors when `panicked == false`).
-pub(crate) fn parse_module<'a>(
+pub(crate) fn parse<'a>(
     allocator: &'a oxc::allocator::Allocator,
     source: &'a str,
     filename: &str,
@@ -99,7 +99,7 @@ mod tests {
     fn test_parse_simple_const() {
         let allocator = Allocator::default();
         let source = "const x = 1;";
-        let result = parse_module(&allocator, source, "test.js");
+        let result = parse(&allocator, source, "test.js");
         assert!(result.is_ok(), "Expected successful parse");
         let (parsed, diags) = result.unwrap();
         assert!(diags.is_empty());
@@ -110,7 +110,7 @@ mod tests {
     fn test_parse_import_produces_ast() {
         let allocator = Allocator::default();
         let source = r#"import { $ } from '@qwik.dev/core';"#;
-        let result = parse_module(&allocator, source, "test.tsx");
+        let result = parse(&allocator, source, "test.tsx");
         assert!(result.is_ok());
         let (parsed, _) = result.unwrap();
         assert!(!parsed.program.body.is_empty());
@@ -120,7 +120,7 @@ mod tests {
     fn test_parse_export_const() {
         let allocator = Allocator::default();
         let source = "export const Foo = 1;";
-        let result = parse_module(&allocator, source, "test.tsx");
+        let result = parse(&allocator, source, "test.tsx");
         assert!(result.is_ok());
         let (parsed, _) = result.unwrap();
         assert_eq!(parsed.program.body.len(), 1);
@@ -134,7 +134,7 @@ export const App = component$(() => {
     return <div>Hello</div>;
 });"#;
 
-        let result = parse_module(&allocator, source, "app.tsx");
+        let result = parse(&allocator, source, "app.tsx");
         assert!(result.is_ok(), "Expected successful parse of TSX source");
 
         let (parsed, diags) = result.unwrap();
@@ -149,7 +149,7 @@ export const App = component$(() => {
         let allocator = Allocator::default();
         let source = r#"const x: number = 42;"#;
 
-        let result = parse_module(&allocator, source, "utils.ts");
+        let result = parse(&allocator, source, "utils.ts");
         assert!(result.is_ok());
 
         let (parsed, _diags) = result.unwrap();
@@ -163,7 +163,7 @@ export const App = component$(() => {
         let allocator = Allocator::default();
         let source = r#"export const App = () => <div>Hello</div>;"#;
 
-        let result = parse_module(&allocator, source, "app.jsx");
+        let result = parse(&allocator, source, "app.jsx");
         assert!(result.is_ok());
 
         let (parsed, _diags) = result.unwrap();
@@ -176,7 +176,7 @@ export const App = component$(() => {
         let allocator = Allocator::default();
         let source = r#"export const x = 1;"#;
 
-        let result = parse_module(&allocator, source, "utils.js");
+        let result = parse(&allocator, source, "utils.js");
         assert!(result.is_ok());
 
         let (parsed, _diags) = result.unwrap();
@@ -189,7 +189,7 @@ export const App = component$(() => {
         // Syntax error: const without initializer, but recoverable
         let source = r#"const x = 1; const = ; const y = 2;"#;
 
-        let result = parse_module(&allocator, source, "bad.tsx");
+        let result = parse(&allocator, source, "bad.tsx");
         // Should succeed with partial AST (recoverable error)
         // OR fail with panicked (unrecoverable) -- depends on OXC
         match result {
@@ -214,7 +214,7 @@ const x = $(() => {
 });
 "#;
 
-        let result = parse_module(&allocator, source, "test.tsx");
+        let result = parse(&allocator, source, "test.tsx");
         assert!(result.is_ok());
         let (parsed, _diags) = result.unwrap();
         // Just verify we can access the scoping -- if this compiles and runs, scoping is valid

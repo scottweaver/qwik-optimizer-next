@@ -1834,7 +1834,7 @@ pub(crate) fn transform_code(
 
     // Stage 1: Parse
     let (parse_result, parse_diagnostics) =
-        match crate::parse::parse_module(&allocator, source_in_arena, filename) {
+        match crate::parse::parse(&allocator, source_in_arena, filename) {
             Ok(result) => result,
             Err(diagnostics) => {
                 return crate::types::TransformOutput {
