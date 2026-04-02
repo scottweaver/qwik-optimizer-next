@@ -9,6 +9,7 @@ pub mod hash;
 pub mod errors;
 pub mod is_const;
 pub(crate) mod parse;
+pub(crate) mod source_path;
 pub(crate) mod collector;
 pub(crate) mod entry_strategy;
 pub(crate) mod rename_imports;
@@ -175,7 +176,7 @@ fn transform_code(
 
     // Compute output path.
     let output_path = if did_transform && !config.preserve_filenames {
-        let ext = parse::output_extension(input_path, config.transpile_ts, config.transpile_jsx);
+        let ext = source_path::SourcePath(input_path).output_extension(config.transpile_ts, config.transpile_jsx);
         let stem = &path_data.file_stem;
         let new_filename = format!("{stem}.{ext}");
         if path_data.rel_dir == std::path::PathBuf::new() {
@@ -219,7 +220,7 @@ fn transform_code(
 
     // --- Segment module generation ---
     let mut segment_modules: Vec<TransformModule> = Vec::new();
-    let record_extension = parse::output_extension(input_path, config.transpile_ts, config.transpile_jsx);
+    let record_extension = source_path::SourcePath(input_path).output_extension(config.transpile_ts, config.transpile_jsx);
 
     // HMR: compute effective dev_path for _useHmr injection (D-41).
     // Defaults to abs_dir/file_name when dev_path is not provided.

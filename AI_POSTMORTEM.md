@@ -29,3 +29,20 @@ This document tracks missteps made during AI-assisted development and the correc
 
 **Corrective action:**
 - Replaced all `snap.input` references with calls to a new `first_input_code(&snap)` helper that safely accesses `snap.inputs[0].code`
+
+---
+
+## 003: Path utility functions placed in parse.rs instead of leveraging Rust's type system
+
+**Date:** 2026-04-02
+
+**What happened:** `source_type_from_filename()` and `output_extension()` were implemented as free functions in `parse.rs`, taking raw `&str` arguments. These functions operate on source file paths, not on parsing logic, making `parse.rs` a grab-bag of loosely related utilities.
+
+**Why it was wrong:** Raw `&str` parameters provide no type-level distinction between "a source file path" and "any arbitrary string." This misses an opportunity to use Rust's type system to make the domain model explicit. It also violates single-responsibility — `parse.rs` should focus on parsing, not filename-to-extension mapping.
+
+**Corrective action:**
+- Created `source_path.rs` with a `SourcePath<'a>(&'a str)` newtype wrapper
+- Moved `source_type_from_filename()` -> `SourcePath::source_type()`
+- Moved `output_extension()` -> `SourcePath::output_extension()`
+- Updated all call sites in `parse.rs`, `lib.rs`, and `transform.rs`
+- Moved corresponding tests from `parse.rs` to `source_path.rs`

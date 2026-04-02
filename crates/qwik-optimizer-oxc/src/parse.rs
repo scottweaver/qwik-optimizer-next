@@ -1,15 +1,17 @@
 //! Module parsing.
 //!
 //! Parse a single source file (JS/TS/JSX/TSX) into an OXC `Program` AST
-//! with semantic scoping from `SemanticBuilder`. Handles source type detection
-//! from filename extension and reports parse errors as `Diagnostic` values.
-//! Also provides path decomposition and output extension computation.
+//! with semantic scoping from `SemanticBuilder`. Reports parse errors as
+//! `Diagnostic` values. Also provides path decomposition for input modules.
+//!
+//! Source type detection and output extension logic live in `source_path.rs`.
 
 use std::path::{Path, PathBuf};
 
 use oxc::semantic::Scoping;
 
 use crate::errors;
+use crate::source_path::SourcePath;
 use crate::types::Diagnostic;
 
 /// Decomposed path data for a single input module.
@@ -46,28 +48,6 @@ impl std::fmt::Debug for ParseResult<'_> {
     }
 }
 
-/// Detect `SourceType` from a filename extension.
-///
-/// - `.tsx` -> TSX (TypeScript + JSX)
-/// - `.ts`  -> TypeScript with JSX enabled (Qwik allows JSX in .ts files)
-/// - `.jsx` -> JSX (JavaScript + JSX)
-/// - `.js` / `.mjs` / `.cjs` -> ESM module (JavaScript)
-/// - Default: ESM module
-pub(crate) fn source_type_from_filename(filename: &str) -> oxc::span::SourceType {
-    if filename.ends_with(".tsx") {
-        oxc::span::SourceType::tsx()
-    } else if filename.ends_with(".ts") {
-        // Qwik allows JSX in .ts files, so enable JSX
-        oxc::span::SourceType::ts().with_jsx(true)
-    } else if filename.ends_with(".jsx") {
-        oxc::span::SourceType::jsx()
-    } else if filename.ends_with(".js") || filename.ends_with(".mjs") || filename.ends_with(".cjs")
-    {
-        oxc::span::SourceType::mjs()
-    } else {
-        oxc::span::SourceType::mjs()
-    }
-}
 
 /// Decompose a relative file path into its constituent parts.
 ///
@@ -113,49 +93,6 @@ pub(crate) fn parse_path(
     })
 }
 
-/// Map (transpile_ts, transpile_jsx, input extension) to the correct output extension.
-///
-/// Rules per SPEC.md:
-/// - `.tsx` + transpile_ts + transpile_jsx -> `"js"`
-/// - `.tsx` + transpile_ts + !transpile_jsx -> `"jsx"`
-/// - `.tsx` + !transpile_ts + transpile_jsx -> `"ts"`  (strip JSX, keep TS)
-/// - `.ts`  + transpile_ts  -> `"js"`
-/// - `.jsx` + transpile_jsx -> `"js"`
-/// - Everything else -> preserve original extension
-pub(crate) fn output_extension(
-    input_path: &str,
-    transpile_ts: bool,
-    transpile_jsx: bool,
-) -> &'static str {
-    let ext = input_path.rsplit('.').next().unwrap_or("");
-    match ext {
-        "tsx" => match (transpile_ts, transpile_jsx) {
-            (true, true) => "js",
-            (true, false) => "jsx",
-            (false, true) => "ts",
-            (false, false) => "tsx",
-        },
-        "ts" => {
-            if transpile_ts {
-                "js"
-            } else {
-                "ts"
-            }
-        }
-        "jsx" => {
-            if transpile_jsx {
-                "js"
-            } else {
-                "jsx"
-            }
-        }
-        "js" => "js",
-        "mjs" => "mjs",
-        "cjs" => "cjs",
-        _ => "js", // unknown: default to js
-    }
-}
-
 /// Parse a single source file into an OXC Program AST with semantic scoping.
 ///
 /// The `source` must have lifetime `'a` tied to the allocator so the AST
@@ -168,7 +105,7 @@ pub(crate) fn parse_module<'a>(
     source: &'a str,
     filename: &str,
 ) -> Result<(ParseResult<'a>, Vec<Diagnostic>), Vec<Diagnostic>> {
-    let source_type = source_type_from_filename(filename);
+    let source_type = SourcePath(filename).source_type();
 
     // Parse source into AST
     let ret = oxc::parser::Parser::new(allocator, source, source_type).parse();
@@ -348,24 +285,7 @@ const x = $(() => {
         let _scoping = &parsed.scoping;
     }
 
-    #[test]
-    fn test_source_type_detection() {
-        assert!(source_type_from_filename("app.tsx").is_typescript());
-        assert!(source_type_from_filename("app.tsx").is_jsx());
-
-        assert!(source_type_from_filename("app.ts").is_typescript());
-        assert!(source_type_from_filename("app.ts").is_jsx());
-
-        assert!(!source_type_from_filename("app.jsx").is_typescript());
-        assert!(source_type_from_filename("app.jsx").is_jsx());
-
-        assert!(!source_type_from_filename("app.js").is_typescript());
-        assert!(!source_type_from_filename("app.mjs").is_typescript());
-        assert!(!source_type_from_filename("app.cjs").is_typescript());
-
-        // Unknown extension defaults to mjs
-        assert!(!source_type_from_filename("app.txt").is_typescript());
-    }
+    // source_type and output_extension tests live in source_path.rs
 
     // ---- parse_path tests ------------------------------------------------
 
@@ -399,46 +319,5 @@ const x = $(() => {
         assert_eq!(result.abs_dir, PathBuf::from("/app/routes"));
     }
 
-    // ---- output_extension tests ------------------------------------------
-
-    #[test]
-    fn test_output_extension_tsx_both_transpile() {
-        assert_eq!(output_extension("test.tsx", true, true), "js");
-    }
-
-    #[test]
-    fn test_output_extension_tsx_ts_only() {
-        assert_eq!(output_extension("test.tsx", true, false), "jsx");
-    }
-
-    #[test]
-    fn test_output_extension_tsx_jsx_only() {
-        assert_eq!(output_extension("test.tsx", false, true), "ts");
-    }
-
-    #[test]
-    fn test_output_extension_tsx_no_transpile() {
-        assert_eq!(output_extension("test.tsx", false, false), "tsx");
-    }
-
-    #[test]
-    fn test_output_extension_ts_transpile_ts() {
-        assert_eq!(output_extension("test.ts", true, true), "js");
-    }
-
-    #[test]
-    fn test_output_extension_ts_no_transpile() {
-        assert_eq!(output_extension("test.ts", false, true), "ts");
-    }
-
-    #[test]
-    fn test_output_extension_jsx_transpile_jsx() {
-        assert_eq!(output_extension("test.jsx", false, true), "js");
-    }
-
-    #[test]
-    fn test_output_extension_js_unchanged() {
-        assert_eq!(output_extension("test.js", true, true), "js");
-        assert_eq!(output_extension("test.js", false, false), "js");
-    }
+    // output_extension tests live in source_path.rs
 }

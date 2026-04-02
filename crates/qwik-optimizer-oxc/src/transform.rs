@@ -1886,8 +1886,7 @@ pub(crate) fn transform_code(
         abs_dir: std::path::PathBuf::from(&config.src_dir),
     });
 
-    let extension = crate::parse::output_extension(
-        filename,
+    let extension = crate::source_path::SourcePath(filename).output_extension(
         config.transpile_ts,
         config.transpile_jsx,
     );
