@@ -65,8 +65,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Implementation — Bindings
 
-- [ ] **IMPL-06**: NAPI binding exposes `transform_modules` to Node.js with same JSON interface as SWC version
-- [ ] **IMPL-07**: WASM binding exposes `transform_modules` to browsers/edge with same interface as SWC version
+- [x] **IMPL-06**: NAPI binding exposes `transform_modules` to Node.js with same JSON interface as SWC version
+- [x] **IMPL-07**: WASM binding exposes `transform_modules` to browsers/edge with same interface as SWC version
 
 ### Implementation — Architecture
 
@@ -144,8 +144,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | IMPL-03 | Phase 6 | Pending |
 | IMPL-04 | Phase 6 | Pending |
 | IMPL-05 | Phase 5 | Complete |
-| IMPL-06 | Phase 6 | Pending |
-| IMPL-07 | Phase 6 | Pending |
+| IMPL-06 | Phase 6 | Complete |
+| IMPL-07 | Phase 6 | Complete |
 | IMPL-08 | Phase 5 | Complete |
 | IMPL-09 | Phase 5 | Complete |
 | REF-01 | — | Reference |
