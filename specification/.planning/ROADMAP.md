@@ -90,7 +90,7 @@ Plans:
 - [x] 05-03-PLAN.md — Parser, GlobalCollect, entry strategy, legacy import rename
 - [x] 05-04-PLAN.md — Pre-traverse mutations (const replace, export filter) + QwikTransform skeleton with dollar detection
 - [x] 05-05-PLAN.md — Capture analysis (8-category taxonomy) + QRL wrapping + PURE annotations
-- [ ] 05-06-PLAN.md — JSX transform, props destructuring, signal optimization
+- [x] 05-06-PLAN.md — JSX transform, props destructuring, signal optimization
 - [ ] 05-07-PLAN.md — Segment emission, variable migration, public API, full test suite activation
 
 ### Phase 6: Strategies, Modes & Binding Implementation
@@ -115,5 +115,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. JSX, Props & Signal Specification | 0/? | Not started | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
-| 5. Core OXC Implementation | 5/7 | In Progress | - |
+| 5. Core OXC Implementation | 6/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
