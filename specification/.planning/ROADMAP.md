@@ -86,7 +86,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Public API Types: TransformModulesOptions, TransformOutput, SegmentAnalysis, Diagnostic, all enums
-- [ ] 04-02-PLAN.md — Binding Contracts (NAPI/WASM) and Appendix A: OXC Migration Guide
+- [x] 04-02-PLAN.md — Binding Contracts (NAPI/WASM) and Appendix A: OXC Migration Guide
 - [ ] 04-03-PLAN.md — Appendix B: Representative Examples (24 curated snapshots covering all 14 CONVs)
 
 ### Phase 5: Core OXC Implementation
@@ -121,6 +121,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
 | 2. JSX, Props & Signal Specification | 1/3 | In Progress | - |
 | 3. Build Modes & Remaining Transforms Specification | 3/4 | In Progress | - |
-| 4. Public API, Bindings & Cross-Cutting Specification | 1/3 | In Progress | - |
+| 4. Public API, Bindings & Cross-Cutting Specification | 2/3 | In Progress | - |
 | 5. Core OXC Implementation | 0/? | Not started | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |

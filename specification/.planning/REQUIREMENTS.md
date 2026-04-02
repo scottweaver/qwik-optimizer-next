@@ -46,12 +46,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Specification — Bindings
 
-- [ ] **SPEC-26**: Spec documents NAPI binding contract (function signature, JSON serialization, async behavior)
-- [ ] **SPEC-27**: Spec documents WASM binding contract (function signature, wasm-bindgen interface, browser context)
+- [x] **SPEC-26**: Spec documents NAPI binding contract (function signature, JSON serialization, async behavior)
+- [x] **SPEC-27**: Spec documents WASM binding contract (function signature, wasm-bindgen interface, browser context)
 
 ### Specification — Cross-Cutting
 
-- [ ] **SPEC-28**: Spec includes OXC migration notes per transformation — where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena allocation)
+- [x] **SPEC-28**: Spec includes OXC migration notes per transformation — where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena allocation)
 - [ ] **SPEC-29**: Spec includes representative input/output examples extracted from Jack's 162 spec files (minimum 20 covering all 14 CONVs)
 - [x] **SPEC-30**: Spec includes capture analysis taxonomy with edge case examples for all 8 categories
 
@@ -134,9 +134,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-23 | Phase 1 | Complete |
 | SPEC-24 | Phase 1 | Complete |
 | SPEC-25 | Phase 1 | Complete |
-| SPEC-26 | Phase 4 | Pending |
-| SPEC-27 | Phase 4 | Pending |
-| SPEC-28 | Phase 4 | Pending |
+| SPEC-26 | Phase 4 | Complete |
+| SPEC-27 | Phase 4 | Complete |
+| SPEC-28 | Phase 4 | Complete |
 | SPEC-29 | Phase 4 | Pending |
 | SPEC-30 | Phase 1 | Complete |
 | IMPL-01 | Phase 5 | Pending |
