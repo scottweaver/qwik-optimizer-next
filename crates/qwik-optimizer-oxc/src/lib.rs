@@ -15,6 +15,7 @@ pub(crate) mod entry_strategy;
 pub(crate) mod rename_imports;
 pub(crate) mod const_replace;
 pub(crate) mod filter_exports;
+pub(crate) mod transform;
 
 // Re-export all public types
 pub use types::*;
