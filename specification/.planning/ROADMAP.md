@@ -102,7 +102,12 @@ Plans:
   2. All 5 emit modes (Prod, Dev, Lib, Test, Hmr) produce correct behavioral variations (dev QRL variants, test const exceptions, etc.)
   3. The NAPI binding exposes `transform_modules` to Node.js with the same JSON interface as the SWC version and produces equivalent output
   4. The WASM binding exposes `transform_modules` to browsers/edge with the same interface as the SWC version
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Entry strategies + Hoist .s() post-processing (IMPL-03)
+- [ ] 06-02-PLAN.md — Emit mode gaps: HMR injection + Lib/Test validation (IMPL-04)
+- [ ] 06-03-PLAN.md — NAPI + WASM binding crates (IMPL-06, IMPL-07)
 
 ## Progress
 
@@ -116,4 +121,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
 | 5. Core OXC Implementation | 6/7 | In Progress | - |
-| 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
+| 6. Strategies, Modes & Binding Implementation | 0/3 | Not started | - |
