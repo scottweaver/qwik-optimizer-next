@@ -6137,3 +6137,116 @@ pub enum DiagnosticScope {
 ```
 
 Serializes as `"optimizer"` in JSON.
+
+## Binding Contracts
+
+The Qwik optimizer exposes two FFI bindings: NAPI for Node.js and WASM for browser/edge environments. Both bindings wrap the same `qwik_core::transform_modules` function with platform-appropriate serialization and async behavior. These contracts are intentionally minimal -- they specify only what a JavaScript consumer sees at the FFI boundary.
+
+### NAPI Binding
+
+**Function Signature:**
+
+```rust
+#[js_function(1)]
+fn transform_modules(ctx: CallContext) -> Result<JsObject>
+```
+
+The NAPI binding is exported as `transform_modules` on the native module object. It accepts a single JS object argument (the `TransformModulesOptions` configuration) and returns a Promise that resolves to a `TransformOutput` JS object.
+
+**Serialization:**
+
+- **Input:** The JS object argument is deserialized to `TransformModulesOptions` via `ctx.env.from_js_value(opts)`, which uses napi's built-in serde integration. All fields follow the serde `rename_all = "camelCase"` convention, so JS consumers pass camelCase property names.
+- **Output:** The `TransformOutput` result is serialized back to a JS object via `ctx.env.to_js_value(&result)`. The same serde/napi integration handles the conversion, producing camelCase property names matching the TypeScript type definitions.
+
+**Async Behavior:**
+
+The NAPI binding returns a Promise to the JS caller. Internally, the SWC implementation uses `ctx.env.execute_tokio_future` with `tokio::task::spawn_blocking` to move the CPU-intensive transform onto a thread pool worker:
+
+```rust
+ctx.env.execute_tokio_future(
+    async move {
+        let result = task::spawn_blocking(move || qwik_core::transform_modules(config))
+            .await
+            .unwrap()
+            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        Ok(result)
+    },
+    |env, result| env.to_js_value(&result),
+)
+```
+
+This prevents blocking the Node.js event loop during compilation. The JS caller receives a standard Promise and can `await` it.
+
+**Error Handling:**
+
+Transform errors become a rejected Promise. The error message is the stringified Rust error (`e.to_string()`). There are no structured error types at the NAPI boundary -- all errors are string messages wrapped in `napi::Error::from_reason`. Callers should catch the rejected Promise and parse the message string if structured error information is needed.
+
+**Platform Notes:**
+
+On Windows, the SWC NAPI binding uses `mimalloc` as the global allocator for improved allocation performance:
+
+```rust
+#[cfg(windows)]
+#[global_allocator]
+static ALLOC: mimalloc::MiMalloc = mimalloc::MiMalloc;
+```
+
+This is transparent to JS consumers but affects binary size and memory behavior on Windows.
+
+### WASM Binding
+
+**Function Signature:**
+
+```rust
+#[wasm_bindgen]
+pub fn transform_modules(config_val: JsValue) -> Result<JsValue, JsValue>
+```
+
+The WASM binding is exported via `wasm_bindgen` as `transform_modules`. It accepts a `JsValue` (the configuration object) and returns a `Result<JsValue, JsValue>` -- either the serialized `TransformOutput` or a JS error.
+
+**Serialization:**
+
+- **Input:** Uses `serde_wasm_bindgen::from_value(config_val)` to deserialize the JS object into `TransformModulesOptions`. This follows the same serde `rename_all = "camelCase"` convention as the NAPI binding, so consumers use identical JS objects for both bindings.
+- **Output:** Uses a custom `Serializer` configuration:
+
+```rust
+let serializer = Serializer::new().serialize_maps_as_objects(true);
+result.serialize(&serializer).map_err(JsValue::from)
+```
+
+The `serialize_maps_as_objects(true)` setting ensures Rust `HashMap` keys become JavaScript object property names rather than Map entries. This is critical for fields like `TransformOutput.modules` where module paths are keys.
+
+**Synchronous Behavior:**
+
+The WASM binding is **synchronous** -- it blocks the calling thread for the entire duration of the transform. Unlike the NAPI binding, there is no worker thread pool available in the WASM environment.
+
+For large codebases, this blocks the browser main thread and can cause UI jank or "page unresponsive" warnings. **Production deployments should run the WASM binding in a Web Worker** to avoid blocking the main thread. The synchronous API remains correct for small inputs or non-interactive contexts (e.g., build tools running in Node.js with the WASM fallback).
+
+**Error Handling:**
+
+Errors are wrapped in `js_sys::Error` and returned as `JsValue`:
+
+```rust
+qwik_core::transform_modules(config)
+    .map_err(|e| Error::from(JsValue::from_str(&e.to_string())))?;
+```
+
+On the JS side, the error is a standard `Error` object with a `message` property containing the stringified Rust error. Unlike the NAPI binding (which rejects a Promise), the WASM binding throws synchronously -- callers should use try/catch.
+
+### NAPI v3 Migration Notes
+
+The SWC-era NAPI binding uses NAPI v2 patterns (`#[js_function(N)]`, `CallContext`, `execute_tokio_future`). An OXC-based implementation should target NAPI v3, which provides three key improvements:
+
+1. **No tokio dependency.** NAPI v3 provides native async support via `#[napi]` proc macro with `async fn`, eliminating the `tokio` runtime dependency. The binding simplifies to:
+
+```rust
+#[napi]
+pub async fn transform_modules(config: TransformModulesOptions) -> Result<TransformOutput> {
+    qwik_core::transform_modules(config)
+        .map_err(|e| napi::Error::from_reason(e.to_string()))
+}
+```
+
+2. **`wasm32-wasip1-threads` target support.** NAPI v3 can compile to WASM with threads, potentially allowing a single codebase to serve both NAPI and WASM bindings. This could unify the two binding implementations, though browser compatibility for `wasm32-wasip1-threads` requires validation (see Blockers in STATE.md).
+
+3. **`#[napi]` proc macro replaces `#[js_function(N)]` pattern.** The v3 proc macro handles argument extraction and type conversion automatically, reducing boilerplate. `CallContext` and manual `ctx.get::<T>(N)` calls are no longer needed.
