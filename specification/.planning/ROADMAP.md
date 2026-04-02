@@ -86,8 +86,8 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md — Crate scaffold, types, foundation modules (words, hash, errors, is_const)
-- [ ] 05-02-PLAN.md — Test harness + 201 SWC snapshot corpus setup
-- [ ] 05-03-PLAN.md — Parser, GlobalCollect, entry strategy, legacy import rename
+- [x] 05-02-PLAN.md — Test harness + 201 SWC snapshot corpus setup
+- [x] 05-03-PLAN.md — Parser, GlobalCollect, entry strategy, legacy import rename
 - [ ] 05-04-PLAN.md — Pre-traverse mutations (const replace, export filter) + QwikTransform skeleton with dollar detection
 - [ ] 05-05-PLAN.md — Capture analysis (8-category taxonomy) + QRL wrapping + PURE annotations
 - [ ] 05-06-PLAN.md — JSX transform, props destructuring, signal optimization

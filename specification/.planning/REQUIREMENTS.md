@@ -70,8 +70,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Implementation — Architecture
 
-- [ ] **IMPL-08**: OXC implementation uses idiomatic OXC patterns (Traverse trait, arena allocators, SemanticBuilder, Codegen) — not SWC patterns translated to OXC APIs
-- [ ] **IMPL-09**: OXC implementation uses semantic analysis (OXC Scoping) for capture analysis where it improves correctness over manual approaches
+- [x] **IMPL-08**: OXC implementation uses idiomatic OXC patterns (Traverse trait, arena allocators, SemanticBuilder, Codegen) — not SWC patterns translated to OXC APIs
+- [x] **IMPL-09**: OXC implementation uses semantic analysis (OXC Scoping) for capture analysis where it improves correctness over manual approaches
 
 ### Reference Material
 
@@ -146,8 +146,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | IMPL-05 | Phase 5 | Pending |
 | IMPL-06 | Phase 6 | Pending |
 | IMPL-07 | Phase 6 | Pending |
-| IMPL-08 | Phase 5 | Pending |
-| IMPL-09 | Phase 5 | Pending |
+| IMPL-08 | Phase 5 | Complete |
+| IMPL-09 | Phase 5 | Complete |
 | REF-01 | — | Reference |
 | REF-02 | — | Reference |
 | REF-03 | — | Reference |
