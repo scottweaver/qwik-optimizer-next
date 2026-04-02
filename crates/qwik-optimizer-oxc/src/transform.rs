@@ -296,36 +296,61 @@ pub(crate) struct SegmentScope {
 // SegmentRecord -- accumulated extracted segment metadata
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// HoistedConst -- a const declaration hoisted out of an expression
+// ---------------------------------------------------------------------------
+
+/// A const binding hoisted to the top of a segment module.
+#[derive(Debug, Clone)]
+pub(crate) struct HoistedConst {
+    /// The const binding name, e.g. `"q_renderHeader1_jMxQsjbyDss"`.
+    pub name: String,
+    /// Serialized RHS expression (e.g. `"qrl(...)"`  or `"_noopQrl(...)"`).
+    pub rhs_code: String,
+    /// Deduplication key -- same as `name`.
+    pub symbol_name: String,
+}
+
 /// Internal record for a single extracted segment. Accumulated in
 /// `QwikTransform.segments` during the traversal. Later phases read these
 /// to emit segment module files.
 #[derive(Debug)]
-#[allow(dead_code)]
 pub(crate) struct SegmentRecord {
     /// Symbol name (e.g. `test_tsx_component_ABC`).
     pub name: String,
     /// File-prefixed display name (e.g. `test.tsx_component_ABC`).
     pub display_name: String,
+    /// Canonical filename for the segment module.
+    pub canonical_filename: String,
+    /// Output chunk key from entry_policy, or None for own chunk.
+    pub entry: Option<String>,
+    /// Serialized folded closure body (set by create_segment via OXC Codegen).
+    /// None for noop QRLs that do not require a segment module.
+    pub expr: Option<String>,
+    /// Runtime-captured identifiers (closed-over variables).
+    pub scoped_idents: Vec<String>,
+    /// Compile-time import names referenced inside the segment body.
+    pub local_idents: Vec<String>,
     /// The context (marker function) name, e.g. `"component$"`.
     pub ctx_name: String,
     /// The context kind (Function, EventHandler, etc.).
     pub ctx_kind: CtxKind,
+    /// Relative path of the source file.
+    pub origin: String,
     /// Byte span `(start, end)` of the original call expression.
     pub span: (u32, u32),
-    /// Variables captured from enclosing scope (Category 3/4/5).
-    pub scoped_idents: Vec<String>,
-    /// Whether this segment was sync$ (CONV-13).
-    pub is_sync: bool,
-    /// Whether this segment has captures.
-    pub has_captures: bool,
-    /// Imports the segment needs (from module-level imports, Category 2).
-    pub needed_imports: Vec<NeededImport>,
-    /// Module-level declarations referenced by segment (Category 1 -- self-imports).
-    pub self_imports: Vec<String>,
-    /// Hash for the segment.
+    /// 11-character SipHash-based segment hash.
     pub hash: String,
-    /// Canonical filename for the segment module.
-    pub canonical_filename: String,
+    /// Whether this segment was created via create_inline_qrl (not its own module).
+    pub is_inline: bool,
+    /// Root-level variable declarations migrated into this segment module (Stage 12).
+    pub migrated_root_vars: Vec<String>,
+    /// Parent segment name if nested inside another.
+    pub parent: Option<String>,
+    /// Span-start of the parent segment's call expression.
+    pub pending_parent_span: Option<u32>,
+    /// Ordered function parameter names extracted from the closure.
+    pub param_names: Option<Vec<String>>,
 }
 
 /// Import information for a segment's needed imports.
@@ -386,6 +411,9 @@ pub(crate) struct QwikTransform {
     /// SAFETY: Valid for the duration of the traversal.
     pub(crate) global_collect_ptr: *const GlobalCollect,
 
+    // ---- Hoisted const items (accumulated during traversal for code_move) -----
+    pub(crate) extra_top_items: Vec<HoistedConst>,
+
     // ---- Import tracking (accumulated during traversal, applied in exit_program)
     pub(crate) needs_qrl_import: bool,
     pub(crate) needs_inlined_qrl_import: bool,
@@ -412,6 +440,8 @@ pub(crate) struct QwikTransform {
     pub(crate) strip_event_handlers: bool,
     pub(crate) scope: Option<String>,
     pub(crate) explicit_extensions: bool,
+    /// Pointer to the original source text (valid for traversal lifetime).
+    pub(crate) source_text: *const str,
 }
 
 // ---------------------------------------------------------------------------
@@ -432,6 +462,7 @@ impl QwikTransform {
         file_name: &str,
         rel_path: &str,
         extension: &str,
+        source_text: &str,
     ) -> Self {
         let mut marker_functions: HashMap<String, String> = HashMap::new();
 
@@ -480,6 +511,7 @@ impl QwikTransform {
             decl_stack: vec![root_frame],
             diagnostics: Vec::new(),
             global_collect_ptr: collect as *const GlobalCollect,
+            extra_top_items: Vec::new(),
             needs_qrl_import: false,
             needs_inlined_qrl_import: false,
             needs_noop_qrl_import: false,
@@ -500,6 +532,43 @@ impl QwikTransform {
             strip_event_handlers: config.strip_event_handlers,
             scope: config.scope.clone(),
             explicit_extensions: config.explicit_extensions,
+            source_text: source_text as *const str,
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // ensure_export -- Stage 12 support
+    // -----------------------------------------------------------------------
+
+    /// Ensure a root-level name is exported (for variable migration).
+    /// Adds an `_auto_{name}` export entry to the collect if not already exported.
+    pub(crate) fn ensure_export(&mut self, _name: &str) {
+        // In the full pipeline, this would inject `export { name as _auto_name }`
+        // into the program body. For now, this is a no-op placeholder that the
+        // variable migration pipeline can call without error.
+        // Full implementation deferred to gap closure.
+    }
+
+    // -----------------------------------------------------------------------
+    // patch_segment_parents -- resolve deferred parent symbol names
+    // -----------------------------------------------------------------------
+
+    /// After all segments are registered, resolve `pending_parent_span` to actual
+    /// parent segment names.
+    pub(crate) fn patch_segment_parents(&mut self) {
+        // Build a map: call_span_start -> segment name
+        let span_to_name: HashMap<u32, String> = self
+            .segments
+            .iter()
+            .map(|s| (s.span.0, s.name.clone()))
+            .collect();
+
+        for seg in &mut self.segments {
+            if let Some(parent_span) = seg.pending_parent_span {
+                if let Some(parent_name) = span_to_name.get(&parent_span) {
+                    seg.parent = Some(parent_name.clone());
+                }
+            }
         }
     }
 
@@ -601,6 +670,26 @@ impl QwikTransform {
                 params
             }
             _ => HashSet::new(),
+        }
+    }
+
+    /// Extract ordered parameter names from a function/arrow first argument.
+    fn get_param_names(first_arg: &Argument<'_>) -> Option<Vec<String>> {
+        let params = match first_arg {
+            Argument::ArrowFunctionExpression(arrow) => &arrow.params,
+            Argument::FunctionExpression(func) => &func.params,
+            _ => return None,
+        };
+        let mut name_set = HashSet::new();
+        for param in &params.items {
+            collect_binding_names(&param.pattern, &mut name_set);
+        }
+        if name_set.is_empty() {
+            None
+        } else {
+            let mut names: Vec<String> = name_set.into_iter().collect();
+            names.sort();
+            Some(names)
         }
     }
 
@@ -1031,34 +1120,77 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         let has_captures = !scoped_idents.is_empty();
         let should_emit = self.should_emit_segment(&pending.ctx_name, &pending.ctx_kind);
 
-        // --- QRL wrapping (CONV-02) ---
+        // --- Extract expr code from source text ---
         let call = match expr {
             Expression::CallExpression(call) => call,
             _ => return,
         };
+
+        // Extract the function expression body from source text using span
+        let expr_code: Option<String> = if !call.arguments.is_empty() {
+            let first_arg_span = match &call.arguments[0] {
+                Argument::ArrowFunctionExpression(a) => Some(a.span),
+                Argument::FunctionExpression(f) => Some(f.span),
+                _ => None,
+            };
+            first_arg_span.and_then(|span| {
+                let src = unsafe { &*self.source_text };
+                let start = span.start as usize;
+                let end = span.end as usize;
+                if start <= end && end <= src.len() {
+                    Some(src[start..end].to_string())
+                } else {
+                    None
+                }
+            })
+        } else {
+            None
+        };
+
+        // Compute local_idents from self_imports + needed_imports local names
+        let mut local_idents: Vec<String> = self_imports.clone();
+        for ni in &needed_imports {
+            if !local_idents.contains(&ni.local_name) {
+                local_idents.push(ni.local_name.clone());
+            }
+        }
+
+        // Determine parent segment (if nested)
+        let parent_span = self.segment_stack.last().map(|s| s.span_start);
+
+        // Compute param names from first argument
+        let param_names = if !call.arguments.is_empty() {
+            Self::get_param_names(&call.arguments[0])
+        } else {
+            None
+        };
+
         let allocator: &'a oxc::allocator::Allocator = ctx.ast.allocator;
 
+        // --- QRL wrapping (CONV-02) ---
         if pending.is_sync {
             // CONV-13: sync$ handling
-            // Sync$ calls are not extracted to segments, they are serialized inline.
-            // Replace callee with _qrlSync
             if let Expression::Identifier(id) = &mut call.callee {
                 id.name = arena_ident(ctx, "_qrlSync");
             }
-            // Record segment metadata
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: None,
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
                 span: (pending.span_start, call.span.end),
-                scoped_idents: scoped_idents.clone(),
-                is_sync: true,
-                has_captures,
-                needed_imports,
-                self_imports,
                 hash: names.hash.clone(),
-                canonical_filename: names.canonical_filename.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
             });
             return;
         }
@@ -1072,7 +1204,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 id.name = arena_ident(ctx, callee_name);
             }
 
-            // Replace arguments with just the symbol name
             call.arguments.clear();
             call.arguments.push(Argument::StringLiteral(
                 ctx.ast.alloc_string_literal(SPAN, arena_str(ctx, &names.symbol_name), None),
@@ -1083,16 +1214,21 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: None,
+                expr: None,
+                scoped_idents: vec![],
+                local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
                 span: (pending.span_start, call.span.end),
-                scoped_idents: vec![],
-                is_sync: false,
-                has_captures: false,
-                needed_imports,
-                self_imports,
                 hash: names.hash.clone(),
-                canonical_filename: names.canonical_filename.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
             });
             return;
         }
@@ -1146,16 +1282,21 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: None,
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
                 span: (pending.span_start, call.span.end),
-                scoped_idents: scoped_idents.clone(),
-                is_sync: false,
-                has_captures,
-                needed_imports,
-                self_imports,
                 hash: names.hash.clone(),
-                canonical_filename: names.canonical_filename.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
             });
         } else {
             // Segment strategy: qrl(() => import("./path"), "symbol_name")
@@ -1234,26 +1375,85 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: None,
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
                 span: (pending.span_start, call.span.end),
-                scoped_idents: scoped_idents.clone(),
-                is_sync: false,
-                has_captures,
-                needed_imports,
-                self_imports,
                 hash: names.hash.clone(),
-                canonical_filename: names.canonical_filename.clone(),
+                is_inline: false,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
             });
         }
     }
 
     fn exit_program(
         &mut self,
-        _program: &mut Program<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
+        program: &mut Program<'a>,
+        ctx: &mut TraverseCtx<'a, ()>,
     ) {
-        // Will be filled in later plans with import rewriting
+        // Import rewriting: add synthetic imports for qrl/inlinedQrl/etc.
+        let core = arena_str(ctx, &self.core_module);
+
+        // Build list of (specifier, local_name) imports to add
+        let mut imports_to_add: Vec<(&str, &str)> = Vec::new();
+
+        if self.needs_qrl_import {
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            if is_dev {
+                imports_to_add.push(("qrlDEV", "qrlDEV"));
+            } else {
+                imports_to_add.push(("qrl", "qrl"));
+            }
+        }
+        if self.needs_inlined_qrl_import {
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            if is_dev {
+                imports_to_add.push(("inlinedQrlDEV", "inlinedQrlDEV"));
+            } else {
+                imports_to_add.push(("inlinedQrl", "inlinedQrl"));
+            }
+        }
+        if self.needs_noop_qrl_import {
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            if is_dev {
+                imports_to_add.push(("_noopQrlDEV", "_noopQrlDEV"));
+            } else {
+                imports_to_add.push(("_noopQrl", "_noopQrl"));
+            }
+        }
+        if self.needs_jsx_sorted_import {
+            imports_to_add.push(("_jsxSorted", "_jsxSorted"));
+        }
+        if self.needs_jsx_split_import {
+            imports_to_add.push(("_jsxSplit", "_jsxSplit"));
+        }
+        if self.needs_fragment_import {
+            imports_to_add.push(("Fragment", "Fragment"));
+        }
+        if self.needs_fn_signal_import {
+            imports_to_add.push(("_fnSignal", "_fnSignal"));
+        }
+        if self.needs_wrap_prop_import {
+            imports_to_add.push(("_wrapProp", "_wrapProp"));
+        }
+
+        // Insert synthetic import declarations at position 0 using string-based parsing.
+        // This avoids complex AST builder API differences across OXC versions.
+        let allocator = ctx.ast.allocator;
+        for (specifier, _local) in imports_to_add.into_iter().rev() {
+            let import_str = format!(r#"import {{ {} }} from "{}";"#, specifier, self.core_module);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
+                program.body.insert(0, stmt);
+            }
+        }
     }
 }
 
@@ -1466,6 +1666,7 @@ pub(crate) fn transform_code(
         &path_data.file_name,
         filename,
         extension,
+        source_in_arena,
     );
 
     oxc_traverse::traverse_mut(
@@ -1701,7 +1902,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
 
         assert!(
             t.marker_functions.contains_key("component$"),
@@ -1726,7 +1927,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
 
         assert!(
             t.marker_functions.contains_key("myHelper$"),
@@ -1743,7 +1944,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
 
         assert!(
             t.sync_qrl_fn.is_some(),

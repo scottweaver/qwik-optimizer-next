@@ -140,6 +140,19 @@ impl GlobalCollect {
         self.exports.contains_key(sym)
     }
 
+    /// Resolve the exported name for a given identifier.
+    /// Looks for `_auto_` prefixed exports first, then direct exports.
+    pub(crate) fn resolve_export_for_id(&self, sym: &str) -> Option<String> {
+        let auto_name = format!("_auto_{}", sym);
+        if self.exports.contains_key(&auto_name) {
+            return Some(auto_name);
+        }
+        if self.exports.contains_key(sym) {
+            return Some(sym.to_string());
+        }
+        None
+    }
+
     /// Register a synthetic import binding.
     ///
     /// Inserts into `imports`, `rev_imports`, AND `synthetic`.
