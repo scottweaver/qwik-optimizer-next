@@ -6250,3 +6250,280 @@ pub async fn transform_modules(config: TransformModulesOptions) -> Result<Transf
 2. **`wasm32-wasip1-threads` target support.** NAPI v3 can compile to WASM with threads, potentially allowing a single codebase to serve both NAPI and WASM bindings. This could unify the two binding implementations, though browser compatibility for `wasm32-wasip1-threads` requires validation (see Blockers in STATE.md).
 
 3. **`#[napi]` proc macro replaces `#[js_function(N)]` pattern.** The v3 proc macro handles argument extraction and type conversion automatically, reducing boilerplate. `CallContext` and manual `ctx.get::<T>(N)` calls are no longer needed.
+
+## Appendix A: OXC Migration Guide
+
+This appendix documents the six key pattern divergences between SWC and OXC that affect the Qwik optimizer implementation. Each pattern describes the SWC approach, the idiomatic OXC replacement, and why the difference matters for this specific optimizer. Code examples reference Scott's earlier OXC conversion (per D-07) for concrete patterns.
+
+This appendix is reference material for implementation time. It does **not** modify the behavioral specification in Phases 1-3 -- the transformation behaviors are identical regardless of whether SWC or OXC is used internally.
+
+### Migration Pattern 1: Fold/VisitMut to Traverse Trait
+
+**SWC pattern:** The optimizer implements `Fold` for its main transform struct. Each node type has a `fold_*` method that takes ownership of the node and returns a (possibly different) node:
+
+```rust
+// SWC: Fold takes ownership, returns new node
+impl Fold for QwikTransform {
+    fn fold_call_expr(&mut self, node: CallExpr) -> CallExpr {
+        // Analyze and potentially replace the call expression
+        let node = node.fold_children_with(self); // recurse first
+        if is_dollar_call(&node) {
+            self.handle_dollar(node) // returns replacement CallExpr
+        } else {
+            node
+        }
+    }
+}
+```
+
+**OXC pattern:** The optimizer implements `Traverse<'a>` with enter/exit hooks that receive mutable references. Replacement is done in-place via assignment:
+
+```rust
+// OXC: Traverse provides mutable references with TraverseCtx
+impl<'a> Traverse<'a> for TransformGenerator<'a> {
+    fn enter_call_expression(
+        &mut self,
+        node: &mut CallExpression<'a>,
+        ctx: &mut TraverseCtx<'a>,
+    ) {
+        if self.is_dollar_call(node) {
+            self.handle_dollar(node, ctx);
+        }
+    }
+
+    fn exit_program(&mut self, node: &mut Program<'a>, ctx: &mut TraverseCtx<'a>) {
+        // Insert accumulated imports at program level
+        if let Some(imports) = self.import_stack.pop() {
+            for import in imports {
+                node.body.insert(0, import.into_in(ctx.ast.allocator));
+            }
+        }
+    }
+}
+```
+
+**Why this matters for the optimizer:**
+
+- **Enter/exit hooks** give pre-children and post-children control. The optimizer uses `enter_call_expression` to detect dollar calls before visiting their bodies, and `exit_program` to insert accumulated imports after all transforms complete.
+- **`TraverseCtx`** is passed to every hook, providing scope queries (`ctx.scoping()`), AST construction (`ctx.ast`), and ancestor access (`ctx.ancestor(N)`). SWC's fold model requires storing this context manually on the transform struct.
+- **In-place mutation** means you cannot return a different node type from a hook. To replace a `CallExpression` with a different expression entirely, the replacement must happen at the parent level or via `*node = replacement` when the types match.
+- **Traversal order** is driven by the framework, not by explicit `fold_children_with` calls. The optimizer does not control when children are visited -- it can only act before (enter) or after (exit).
+
+### Migration Pattern 2: SyntaxContext to Scoping/SymbolId
+
+**SWC pattern:** Every identifier carries a `SyntaxContext` -- a u32 mark assigned by the resolver. Two identifiers refer to the same binding if and only if their `(name, SyntaxContext)` pair matches:
+
+```rust
+// SWC: Identity is a property of identifier nodes
+type Id = (Atom, SyntaxContext);
+
+fn is_same_binding(a: &Ident, b: &Ident) -> bool {
+    a.sym == b.sym && a.span.ctxt == b.span.ctxt
+}
+```
+
+**OXC pattern:** `SemanticBuilder` produces a `Scoping` side table with `SymbolId` for declarations and `ReferenceId` for references. Identity resolution goes through the side table:
+
+```rust
+// OXC: Identity is a side table keyed by AST node ID
+use oxc_semantic::{Scoping, SymbolId, ReferenceId, SemanticBuilder};
+
+// During setup
+let semantic_ret = SemanticBuilder::new().build(&program);
+let scoping: Scoping = semantic_ret.semantic.into_scoping();
+
+// During traversal -- resolve a reference to its declaration
+fn resolve_binding(scoping: &Scoping, ref_id: ReferenceId) -> Option<SymbolId> {
+    scoping.symbol_id_from_reference(ref_id)
+}
+```
+
+**Why this matters for the optimizer:**
+
+- **Capture analysis** (CONV-03) must determine which identifiers in a `$()` body refer to bindings declared outside the segment boundary. In SWC, this is a `SyntaxContext` comparison. In OXC, this requires `Scoping` lookups to resolve references to their declaring symbols and check scope containment.
+- **GlobalCollect replacement** (see Pattern 5) depends on identifier resolution to catalog imports and exports. OXC's `SemanticBuilder` provides this "for free" as part of its scope analysis.
+- **Staleness caveat:** After AST mutation, semantic information may become stale for mutated regions. The optimizer should complete all analysis (dollar detection, capture collection) before beginning AST mutations, or re-run `SemanticBuilder` if analysis is needed post-mutation.
+
+### Migration Pattern 3: Ownership Transfer to Arena Allocation
+
+**SWC pattern:** AST nodes are heap-allocated with `Box<Expr>`. Nodes can be freely moved between data structures. `std::mem::replace` swaps nodes in-place:
+
+```rust
+// SWC: Standard heap allocation, ownership transfer
+let old_expr: Box<Expr> = std::mem::replace(&mut node.arg, new_expr);
+// old_expr can be stored, moved to another module, cloned, etc.
+```
+
+**OXC pattern:** AST nodes live in a bump arena (`Box<'a, Expression<'a>>`). New nodes must be allocated through `AstBuilder` or `TraverseCtx::ast`. Nodes cannot be moved between arenas:
+
+```rust
+// OXC: Arena allocation, nodes tied to allocator lifetime
+let new_node = ctx.ast.expression_string_literal(SPAN, "replacement");
+let old = std::mem::replace(&mut *node, new_node); // works within same arena
+
+// CANNOT: move a node from one arena to another
+// CANNOT: store an arena-allocated node beyond the arena's lifetime
+```
+
+**Why this matters for the optimizer:**
+
+- **Segment construction** cannot be done by cloning AST nodes from the input module into a new output module (the segment lives in a different arena). See Pattern 4 for the solution.
+- **Node creation** during transforms (e.g., building a `qrl()` wrapper call, constructing `_jsxSorted` calls) must go through `ctx.ast` methods, not direct struct construction.
+- **`mem::replace`** still works for swapping nodes within the same arena, which covers most in-place transforms (QRL wrapping, signal optimization rewrites).
+
+### Migration Pattern 4: Code Move from AST Cloning to String Construction
+
+**SWC pattern:** The `code_move` module builds segment modules by cloning expression AST nodes from the main module and wrapping them in new `Module` nodes with import statements:
+
+```rust
+// SWC: Clone expression into new module AST
+fn create_segment_module(expr: Box<Expr>, imports: Vec<ImportDecl>) -> Module {
+    let mut body = Vec::new();
+    for import in imports {
+        body.push(ModuleItem::ModuleDecl(ModuleDecl::Import(import)));
+    }
+    body.push(ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. })));
+    Module { body, .. }
+}
+```
+
+**OXC pattern:** Segment body is extracted as a source string via span-based slicing from the original source. The segment module is built from string concatenation -- imports plus extracted body code:
+
+```rust
+// OXC: String-based segment construction
+fn build_segment_code(
+    source: &str,
+    body_span: Span,
+    imports: &[String],
+    export_name: &str,
+) -> String {
+    let body_source = &source[body_span.start as usize..body_span.end as usize];
+    let mut code = String::new();
+    for import in imports {
+        code.push_str(import);
+        code.push('\n');
+    }
+    code.push_str(&format!("export const {} = ", export_name));
+    code.push_str(body_source);
+    code.push_str(";\n");
+    code
+}
+```
+
+**Why this matters for the optimizer:**
+
+- This is arguably **simpler** than the SWC approach. String concatenation avoids all arena lifetime issues, cross-arena cloning constraints, and the complexity of manually constructing a valid AST for every segment module.
+- **Source map implications:** Span-based extraction preserves the original source positions. The segment's source map can reference the original file's source text directly.
+- **Correctness requirement:** The extracted span must cover the entire segment body expression, including any nested expressions. The span comes from the `$()` call's argument expression node.
+
+### Migration Pattern 5: GlobalCollect to SemanticBuilder + Collector
+
+**SWC pattern:** `GlobalCollect` is a custom visitor that manually walks the AST before transforms begin, cataloging all imports, exports, and root-scope declarations:
+
+```rust
+// SWC: Manual visitor for global scope collection
+struct GlobalCollect {
+    imports: HashMap<Id, ImportKind>,
+    exports: HashMap<String, Id>,
+    root_vars: HashSet<Id>,
+}
+
+impl Visit for GlobalCollect {
+    fn visit_import_decl(&mut self, node: &ImportDecl) { /* catalog import */ }
+    fn visit_export_named(&mut self, node: &ExportNamed) { /* catalog export */ }
+    fn visit_var_declarator(&mut self, node: &VarDeclarator) { /* catalog root var */ }
+}
+```
+
+**OXC pattern:** `SemanticBuilder` provides scope/symbol tables as a pre-pass. A separate collector gathers dollar-call-specific metadata:
+
+```rust
+// OXC: SemanticBuilder + supplemental collector
+// Step 1: SemanticBuilder gives scope resolution
+let semantic_ret = SemanticBuilder::new().build(&program);
+let scoping = semantic_ret.semantic.into_scoping();
+
+// Step 2: Collector gathers dollar-specific metadata
+let dollar_metadata = collector::collect(&program, &scoping);
+// -> dollar imports, call sites, display names, hoisted functions
+```
+
+**Why this matters for the optimizer:**
+
+- OXC's `SemanticBuilder` gives scope resolution "for free" -- the optimizer does not need to manually track which scope an identifier belongs to. This simplifies capture analysis significantly.
+- The supplemental collector pass is still needed because `SemanticBuilder` knows nothing about `$`-semantics. It cannot identify which calls are dollar calls, which imports are from `@qwik.dev/core`, or which functions need QRL wrapping. These are domain-specific concerns.
+- **Two-phase architecture:** The combination of SemanticBuilder (generic scope analysis) + Collector (domain-specific metadata) + Traverse (transforms) creates a clean three-phase pipeline: analyze scope, collect dollar metadata, transform.
+
+### Migration Pattern 6: Deferred Statement Insertion via exit_program
+
+**SWC pattern:** `fold_module` takes ownership of the entire module and can freely modify its body -- inserting, removing, or reordering statements:
+
+```rust
+// SWC: Direct module body modification
+impl Fold for QwikTransform {
+    fn fold_module(&mut self, mut module: Module) -> Module {
+        module = module.fold_children_with(self);
+        // After all transforms, insert new imports at top
+        for import in self.new_imports.drain(..) {
+            module.body.insert(0, ModuleItem::from(import));
+        }
+        module
+    }
+}
+```
+
+**OXC pattern:** During `enter_*` hooks, the parent's children vector is not accessible for insertion. The optimizer accumulates pending statements in `Vec`s and inserts them all in `exit_program`:
+
+```rust
+// OXC: Accumulate during traversal, flush at exit
+impl<'a> Traverse<'a> for TransformGenerator<'a> {
+    fn enter_call_expression(
+        &mut self,
+        node: &mut CallExpression<'a>,
+        ctx: &mut TraverseCtx<'a>,
+    ) {
+        if self.is_dollar_call(node) {
+            // Cannot insert import here -- accumulate for later
+            self.pending_imports.push(build_import(ctx));
+        }
+    }
+
+    fn exit_program(&mut self, node: &mut Program<'a>, ctx: &mut TraverseCtx<'a>) {
+        // Flush all accumulated imports
+        for import in self.import_stack.pop().unwrap_or_default() {
+            node.body.insert(0, import.into_in(ctx.ast.allocator));
+        }
+        // Flush hoisted function declarations
+        for decl in self.pending_hoisted.drain(..) {
+            node.body.push(decl);
+        }
+    }
+}
+```
+
+**Why this matters for the optimizer:**
+
+- **Import generation** (CONV-12) adds new import statements for QRL helpers (`qrl`, `inlinedQrl`, `_jsxSorted`, etc.). These cannot be inserted during `enter_call_expression` when the dollar call is detected -- they must be deferred.
+- **Hoisted declarations** (segment function exports in Hoist entry strategy) are accumulated during traversal and inserted at the module level in `exit_program`.
+- **Ordering matters:** Imports are inserted at position 0 (before all existing statements). Hoisted declarations are appended at the end. The `exit_program` hook guarantees all child traversal is complete, so all pending items have been collected.
+
+### Per-CONV Migration Summary
+
+This table maps each of the 14 optimizer transformations to the migration patterns most relevant to its OXC implementation:
+
+| CONV | Transformation | Key Migration Patterns |
+|------|---------------|----------------------|
+| CONV-01 (Dollar Detection) | Pattern 1 (Traverse enter hooks for call expression matching), Pattern 2 (SymbolId for resolving dollar imports) |
+| CONV-02 (QRL Wrapping) | Pattern 1 (in-place AST mutation to replace `$()` with `qrl()`), Pattern 3 (arena allocation for new wrapper nodes), Pattern 6 (deferred import insertion for QRL helpers) |
+| CONV-03 (Capture Analysis) | Pattern 2 (Scoping for scope containment checks), Pattern 5 (SemanticBuilder provides scope tree) |
+| CONV-04 (Props Destructuring) | Pattern 1 (enter hook for function parameter rewriting), Pattern 3 (arena-allocated new parameter nodes) |
+| CONV-05 (Segment Extraction) | Pattern 4 (string-based segment construction), Pattern 3 (cannot clone AST across arenas) |
+| CONV-06 (JSX Transform) | Pattern 1 (enter/exit hooks for nested JSX), Pattern 3 (arena allocation for `_jsxSorted`/`_jsxSplit` call construction) |
+| CONV-07 (Signal Optimization) | Pattern 1 (enter hooks for member expression detection), Pattern 3 (arena-allocated `_wrapProp`/`_fnSignal` calls) |
+| CONV-08 (PURE Annotations) | Pattern 6 (annotations accumulated and applied at statement level) |
+| CONV-09 (Dead Branch Elimination) | Pattern 1 (enter hooks for if-statement analysis), Pattern 3 (in-place replacement of dead branches) |
+| CONV-10 (Const Replacement) | Pattern 1 (enter hooks for identifier matching), Pattern 3 (arena-allocated boolean literal replacements) |
+| CONV-11 (Code Stripping) | Pattern 1 (enter hooks for statement removal), Pattern 6 (deferred removal to avoid iterator invalidation) |
+| CONV-12 (Import Rewriting) | Pattern 6 (deferred import insertion in exit_program), Pattern 5 (SemanticBuilder for import resolution) |
+| CONV-13 (sync$ Serialization) | Pattern 1 (enter hook for sync$ call detection), Pattern 3 (arena-allocated `_qrlSync` wrapper) |
+| CONV-14 (Noop QRL Handling) | Pattern 1 (enter hook for `_noopQrl` detection), Pattern 3 (arena-allocated dev mode replacement) |
