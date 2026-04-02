@@ -1355,7 +1355,7 @@ pub(crate) fn transform_code(
     crate::rename_imports::rename_imports(&mut program, &allocator);
 
     // Stage 3: GlobalCollect
-    let collect = crate::collector::global_collect(&program);
+    let mut collect = crate::collector::global_collect(&program);
 
     // Stage 4: Pre-traverse mutations
     crate::const_replace::replace_build_constants(&mut program, config, &collect, &allocator);
@@ -1364,6 +1364,14 @@ pub(crate) fn transform_code(
         &mut program,
         &config.strip_ctx_name,
         config.strip_event_handlers,
+        &allocator,
+    );
+
+    // Stage 4b: Props destructuring (CONV-04) -- MUST run before capture analysis
+    crate::props_destructuring::transform_props_destructuring(
+        &mut program,
+        &mut collect,
+        &config.core_module,
         &allocator,
     );
 
