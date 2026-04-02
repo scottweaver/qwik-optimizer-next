@@ -1,3 +1,7 @@
+[workspace]
+members = ["crates/qwik-optimizer-oxc"]
+resolver = "3"
+
 [package]
 name = "qwik-optimizer-next"
 version = "0.1.0"
