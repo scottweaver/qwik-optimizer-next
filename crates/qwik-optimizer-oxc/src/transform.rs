@@ -17,7 +17,8 @@ use oxc::span::Ident;
 use oxc_traverse::{Traverse, TraverseCtx};
 
 use crate::collector::{GlobalCollect, ImportKind};
-use crate::types::{CtxKind, EmitMode, EntryStrategy, TransformCodeOptions};
+use crate::entry_strategy::EntryPolicy;
+use crate::types::{CtxKind, EmitMode, EntryStrategy, SegmentData, TransformCodeOptions};
 use crate::words;
 
 /// Default span for generated AST nodes.
@@ -414,6 +415,12 @@ pub(crate) struct QwikTransform {
     // ---- Hoisted const items (accumulated during traversal for code_move) -----
     pub(crate) extra_top_items: Vec<HoistedConst>,
 
+    // ---- Hoist strategy ref_assignments (module-scope .s() calls) -----
+    /// Module-scope `.s(fn_body)` expression statements for the Hoist entry
+    /// strategy. These are emitted in `exit_program` AFTER `extra_top_items`
+    /// const declarations but BEFORE export statements.
+    pub(crate) ref_assignments: Vec<String>,
+
     // ---- Import tracking (accumulated during traversal, applied in exit_program)
     pub(crate) needs_qrl_import: bool,
     pub(crate) needs_inlined_qrl_import: bool,
@@ -427,6 +434,9 @@ pub(crate) struct QwikTransform {
     // ---- JSX state -----------------------------------------------------------
     /// Counter for deterministic JSX key generation.
     pub(crate) jsx_key_counter: u32,
+
+    // ---- Entry policy (for segment grouping) --------------------------------
+    pub(crate) entry_policy: Box<dyn EntryPolicy>,
 
     // ---- Config (owned copies) --------------------------------------------
     pub(crate) mode: EmitMode,
@@ -499,6 +509,8 @@ impl QwikTransform {
             root_frame.push((name.clone(), IdentType::Var(true)));
         }
 
+        let entry_policy = crate::entry_strategy::parse_entry_strategy(&config.entry_strategy);
+
         QwikTransform {
             marker_functions,
             qsegment_fn,
@@ -512,6 +524,8 @@ impl QwikTransform {
             diagnostics: Vec::new(),
             global_collect_ptr: collect as *const GlobalCollect,
             extra_top_items: Vec::new(),
+            ref_assignments: Vec::new(),
+            entry_policy,
             needs_qrl_import: false,
             needs_inlined_qrl_import: false,
             needs_noop_qrl_import: false,
@@ -534,6 +548,50 @@ impl QwikTransform {
             explicit_extensions: config.explicit_extensions,
             source_text: source_text as *const str,
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // compute_entry -- compute entry key for a segment via EntryPolicy
+    // -----------------------------------------------------------------------
+
+    /// Compute the output chunk entry key for a segment via the configured
+    /// `EntryPolicy`. Returns `Some(key)` for grouped segments or `None` for
+    /// own-chunk segments.
+    fn compute_entry(
+        &self,
+        ctx_kind: &CtxKind,
+        ctx_name: &str,
+        scoped_idents: &[String],
+        hash: &str,
+        symbol_name: &str,
+    ) -> Option<String> {
+        let seg_data = SegmentData {
+            origin: self.rel_path.clone(),
+            ctx_kind: ctx_kind.clone(),
+            ctx_name: ctx_name.to_string(),
+            scoped_idents: scoped_idents.to_vec(),
+            display_name: String::new(),
+            hash: hash.to_string(),
+            name: symbol_name.to_string(),
+            extension: self.extension.clone(),
+            span: (0, 0),
+            parent: None,
+            captures: !scoped_idents.is_empty(),
+            capture_names: scoped_idents.to_vec(),
+        };
+        self.entry_policy.get_entry_for_sym(&self.stack_ctxt, &seg_data)
+    }
+
+    // -----------------------------------------------------------------------
+    // global_collect accessor
+    // -----------------------------------------------------------------------
+
+    /// Returns a reference to the `GlobalCollect` via the raw pointer.
+    ///
+    /// SAFETY: Only valid during the traversal lifetime (between `new()` and
+    /// the end of `traverse_mut`).
+    fn global_collect(&self) -> &GlobalCollect {
+        unsafe { &*self.global_collect_ptr }
     }
 
     // -----------------------------------------------------------------------
@@ -1120,6 +1178,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         let has_captures = !scoped_idents.is_empty();
         let should_emit = self.should_emit_segment(&pending.ctx_name, &pending.ctx_kind);
 
+        // --- Compute entry key from EntryPolicy ---
+        let entry = self.compute_entry(
+            &pending.ctx_kind,
+            &pending.ctx_name,
+            &scoped_idents,
+            &names.hash,
+            &names.symbol_name,
+        );
+
         // --- Extract expr code from source text ---
         let call = match expr {
             Expression::CallExpression(call) => call,
@@ -1165,7 +1232,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             None
         };
 
-        let allocator: &'a oxc::allocator::Allocator = ctx.ast.allocator;
+        // Save span end before branches that may reassign *expr (breaks borrow)
+        let call_span_end = call.span.end;
+        let _allocator: &'a oxc::allocator::Allocator = ctx.ast.allocator;
 
         // --- QRL wrapping (CONV-02) ---
         if pending.is_sync {
@@ -1177,14 +1246,14 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
                 canonical_filename: names.canonical_filename.clone(),
-                entry: None,
+                entry: entry.clone(),
                 expr: expr_code.clone(),
                 scoped_idents: scoped_idents.clone(),
                 local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
                 origin: self.rel_path.clone(),
-                span: (pending.span_start, call.span.end),
+                span: (pending.span_start, call_span_end),
                 hash: names.hash.clone(),
                 is_inline: true,
                 migrated_root_vars: Vec::new(),
@@ -1215,14 +1284,14 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
                 canonical_filename: names.canonical_filename.clone(),
-                entry: None,
+                entry: entry.clone(),
                 expr: None,
                 scoped_idents: vec![],
                 local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
                 origin: self.rel_path.clone(),
-                span: (pending.span_start, call.span.end),
+                span: (pending.span_start, call_span_end),
                 hash: names.hash.clone(),
                 is_inline: true,
                 migrated_root_vars: Vec::new(),
@@ -1247,10 +1316,144 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         // calls need it. For now, we note it in the SegmentRecord.
         let _needs_pure = qrl_wrapper_name == "componentQrl";
 
-        if is_inline {
+        // Check for Hoist strategy (separate path from Inline)
+        let is_hoist = matches!(self.entry_strategy, EntryStrategy::Hoist)
+            && !matches!(self.mode, EmitMode::Lib);
+
+        if is_hoist {
+            // ---------------------------------------------------------------
+            // Hoist strategy: _noopQrl const + .s() registration (CONV-14/D-40)
+            // ---------------------------------------------------------------
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
+            let ident_name = format!("q_{}", names.symbol_name);
+
+            // 1. Build _noopQrl("sym") as a HoistedConst
+            //    For dev mode: _noopQrlDEV("sym", { file: ..., lo: ..., hi: ..., displayName: ... })
+            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
+
+            // Deduplicate by symbol_name
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code: noop_rhs,
+                    symbol_name: names.symbol_name.clone(),
+                });
+            }
+
+            // 2. Extract fn_body code from source text for .s()
+            let fn_body_code: Option<String> = if !call.arguments.is_empty() {
+                let first_arg_span = match &call.arguments[0] {
+                    Argument::ArrowFunctionExpression(a) => Some(a.span),
+                    Argument::FunctionExpression(f) => Some(f.span),
+                    _ => None,
+                };
+                first_arg_span.and_then(|span| {
+                    let src = unsafe { &*self.source_text };
+                    let start = span.start as usize;
+                    let end = span.end as usize;
+                    if start <= end && end <= src.len() {
+                        Some(src[start..end].to_string())
+                    } else {
+                        None
+                    }
+                })
+            } else {
+                // Non-function argument (e.g., useStyles$('string'))
+                let first_arg_span = match &call.arguments[0] {
+                    Argument::StringLiteral(s) => Some(s.span),
+                    _ => None,
+                };
+                first_arg_span.and_then(|span| {
+                    let src = unsafe { &*self.source_text };
+                    let start = span.start as usize;
+                    let end = span.end as usize;
+                    if start <= end && end <= src.len() {
+                        Some(src[start..end].to_string())
+                    } else {
+                        None
+                    }
+                })
+            };
+
+            // 3. Determine if fn_body ident is global (for .s() placement)
+            //    Check: is the fn_body a reference to a known global-scope ident?
+            //    For Hoist strategy nested QRLs, the fn_body is a function expression
+            //    (not an ident), so it is NOT a hoisted segment ident.
+            //    The SWC code checks if fn_body_expr is an Ident in
+            //    hoisted_segment_idents -- that case arises when an inner $-call
+            //    was already hoisted and its fn_body was replaced with q_X ident.
+            //    For now, all .s() calls go to ref_assignments (module scope) since
+            //    the fn_body is typically a function/arrow expression (globally accessible).
+            if let Some(ref body_code) = fn_body_code {
+                let s_call = format!("{}.s({});", ident_name, body_code);
+                self.ref_assignments.push(s_call);
+            }
+
+            // 4. Build the replacement expression
+            //    Base: q_{sym} identifier
+            //    If captures: q_{sym}.w([cap1, cap2, ...])
+            let allocator = ctx.ast.allocator;
+
+            let replacement = if has_captures {
+                // Build: q_sym.w([cap1, cap2, ...])
+                let caps_str = scoped_idents.join(", ");
+                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+                // Parse this expression
+                let expr_stmt = format!("{};", w_expr_code);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
+                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                        es.unbox().expression
+                    } else {
+                        ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+                    }
+                } else {
+                    ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+                }
+            } else {
+                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+            };
+
+            // 5. Wrap in wrapperQrl(replacement) -- e.g., componentQrl(q_sym)
+            let wrapper_call_code = format!("{}(0)", qrl_wrapper_name);
+            let wrapper_stmt = format!("{};", wrapper_call_code);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_stmt, allocator) {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    let mut wrapper_expr = es.unbox().expression;
+                    if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
+                        // Replace the dummy 0 arg with our replacement
+                        wrapper_call.arguments.clear();
+                        wrapper_call.arguments.push(expr_to_argument(replacement));
+                    }
+                    *expr = wrapper_expr;
+                }
+            }
+
+            self.needs_noop_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: pending.ctx_name.clone(),
+                ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (pending.span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+        } else if is_inline {
             // Inline strategy: inlinedQrl(fn_expr, "symbol_name"[, captures])
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
+            let _inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
 
             // Replace callee with inlinedQrl wrapper
             // The first arg stays as the function expression
@@ -1269,28 +1472,20 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 call.arguments.push(expr_to_argument(captures_array));
             }
 
-            // Now wrap: the original call becomes:
-            //   wrapper_Qrl(inlinedQrl(fn_expr, symbol, [caps]))
-            // But for now we do inline replacement: replace the entire call
-            // Note: For inline mode, the callee should be inlinedQrl, wrapping the fn
-            // and the outer call should be wrapperQrl(inlinedQrl(...))
-            // This is a simplification; full implementation would restructure the AST.
-            // For this plan, we focus on the metadata tracking.
-
             self.needs_inlined_qrl_import = true;
 
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
                 canonical_filename: names.canonical_filename.clone(),
-                entry: None,
+                entry: entry.clone(),
                 expr: expr_code.clone(),
                 scoped_idents: scoped_idents.clone(),
                 local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
                 origin: self.rel_path.clone(),
-                span: (pending.span_start, call.span.end),
+                span: (pending.span_start, call_span_end),
                 hash: names.hash.clone(),
                 is_inline: true,
                 migrated_root_vars: Vec::new(),
@@ -1376,14 +1571,14 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
                 canonical_filename: names.canonical_filename.clone(),
-                entry: None,
+                entry: entry.clone(),
                 expr: expr_code.clone(),
                 scoped_idents: scoped_idents.clone(),
                 local_idents: local_idents.clone(),
                 ctx_name: pending.ctx_name.clone(),
                 ctx_kind: pending.ctx_kind.clone(),
                 origin: self.rel_path.clone(),
-                span: (pending.span_start, call.span.end),
+                span: (pending.span_start, call_span_end),
                 hash: names.hash.clone(),
                 is_inline: false,
                 migrated_root_vars: Vec::new(),
@@ -1400,7 +1595,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         ctx: &mut TraverseCtx<'a, ()>,
     ) {
         // Import rewriting: add synthetic imports for qrl/inlinedQrl/etc.
-        let core = arena_str(ctx, &self.core_module);
+        let _core = arena_str(ctx, &self.core_module);
 
         // Build list of (specifier, local_name) imports to add
         let mut imports_to_add: Vec<(&str, &str)> = Vec::new();
@@ -1452,6 +1647,44 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             let import_str = format!(r#"import {{ {} }} from "{}";"#, specifier, self.core_module);
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
                 program.body.insert(0, stmt);
+            }
+        }
+
+        // Hoist strategy: emit extra_top_items const declarations and
+        // ref_assignments (.s() calls) into the root module.
+        //
+        // Ordering (critical per Pitfall 1):
+        //   1. Import declarations (already inserted above)
+        //   2. const q_sym = _noopQrl("sym") declarations (extra_top_items)
+        //   3. q_sym.s(fn_body) expression statements (ref_assignments)
+        //   4. Original module body (exports, etc.)
+        if matches!(self.entry_strategy, EntryStrategy::Hoist)
+            && !matches!(self.mode, EmitMode::Lib)
+        {
+            // Find the insertion point: after imports, before everything else.
+            let first_non_import = program.body.iter().position(|stmt| {
+                !matches!(
+                    stmt,
+                    oxc::ast::ast::Statement::ImportDeclaration(_)
+                )
+            }).unwrap_or(program.body.len());
+
+            // Insert ref_assignments (in reverse to maintain order at same position)
+            let ref_stmts: Vec<String> = self.ref_assignments.drain(..).collect();
+            for s_call in ref_stmts.into_iter().rev() {
+                // Use JSX-aware parser since fn_body may contain JSX elements
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement_jsx(&s_call, allocator) {
+                    program.body.insert(first_non_import, stmt);
+                }
+            }
+
+            // Insert const declarations for extra_top_items (in reverse)
+            let extra_items: Vec<HoistedConst> = self.extra_top_items.clone();
+            for item in extra_items.into_iter().rev() {
+                let const_decl = format!("const {} = {};", item.name, item.rhs_code);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&const_decl, allocator) {
+                    program.body.insert(first_non_import, stmt);
+                }
             }
         }
     }

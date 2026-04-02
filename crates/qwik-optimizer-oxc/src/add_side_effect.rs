@@ -101,6 +101,24 @@ pub(crate) fn parse_single_statement<'a>(src: &str, allocator: &'a Allocator) ->
     program.body.into_iter().next()
 }
 
+/// Like `parse_single_statement` but uses JSX-aware source type (`.tsx`).
+/// Needed for Hoist strategy `.s()` calls whose body may contain JSX.
+pub(crate) fn parse_single_statement_jsx<'a>(src: &str, allocator: &'a Allocator) -> Option<Statement<'a>> {
+    use oxc::parser::Parser;
+    use oxc::span::SourceType;
+
+    let src_arena: &str = allocator.alloc_str(src);
+    let source_type = SourceType::tsx();
+    let ret = Parser::new(allocator, src_arena, source_type).parse();
+    if ret.panicked || ret.program.body.is_empty() {
+        return None;
+    }
+    let program: oxc::ast::ast::Program<'a> = unsafe {
+        std::mem::transmute(ret.program)
+    };
+    program.body.into_iter().next()
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
