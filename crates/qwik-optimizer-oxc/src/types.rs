@@ -451,6 +451,33 @@ pub struct SourceLocation {
 // Internal Types (used by transform stages, not part of public API)
 // ---------------------------------------------------------------------------
 
+/// Per-module options derived from TransformModulesOptions.
+/// Passed to individual module transformations.
+///
+/// SPEC name: TransformCodeOptions
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub(crate) struct TransformCodeOptions {
+    pub src_dir: String,
+    pub root_dir: Option<String>,
+    pub source_maps: bool,
+    pub minify: MinifyMode,
+    pub transpile_ts: bool,
+    pub transpile_jsx: bool,
+    pub preserve_filenames: bool,
+    pub entry_strategy: EntryStrategy,
+    pub explicit_extensions: bool,
+    pub mode: EmitMode,
+    pub scope: Option<String>,
+    /// Resolved to actual value, not Option (defaults to "@qwik.dev/core").
+    pub core_module: String,
+    pub strip_exports: Vec<String>,
+    pub strip_ctx_name: Vec<String>,
+    pub strip_event_handlers: bool,
+    pub reg_ctx_name: Vec<String>,
+    pub is_server: bool,
+}
+
 /// Intermediate segment representation recorded during the transform pass.
 /// This gets converted to SegmentAnalysis + a segment Program during code_move.
 #[derive(Debug, Clone)]

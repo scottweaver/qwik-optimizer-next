@@ -13,6 +13,8 @@ pub(crate) mod parse;
 pub(crate) mod collector;
 pub(crate) mod entry_strategy;
 pub(crate) mod rename_imports;
+pub(crate) mod const_replace;
+pub(crate) mod filter_exports;
 
 // Re-export all public types
 pub use types::*;
