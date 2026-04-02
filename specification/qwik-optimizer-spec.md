@@ -5252,3 +5252,410 @@ Several pipeline steps execute conditionally based on build configuration. The f
 **Mutually exclusive paths:** Steps 13 and 14a are mutually exclusive -- Inline/Hoist strategies take the side-effect preservation path (step 13), while all other strategies take the treeshaker cleanup path (step 14a). An implementation may represent this as a branch rather than sequential conditional checks.
 
 ---
+
+## Public API Types
+
+This section defines the complete public API type contract for the Qwik optimizer. These types form the interface between the optimizer core and its callers (NAPI bindings, WASM bindings, test harnesses). All types are documented as Rust struct definitions with doc comments per D-31, and each includes its JSON wire format for binding implementors.
+
+All structs use `#[serde(rename_all = "camelCase")]` to convert Rust snake_case field names to JavaScript camelCase in JSON serialization. All string fields use `String` (not SWC's `Atom`) for portability across binding layers.
+
+**SWC source of truth:** `packages/optimizer/core/src/lib.rs`, `parse.rs`, `transform.rs`, `entry_strategy.rs`, `utils.rs`, `errors.rs`
+
+### TransformModulesOptions
+
+The top-level configuration struct passed to `transform_modules()`. This is the entry point for all optimizer invocations -- every NAPI and WASM call deserializes a JSON object into this struct.
+
+The SWC implementation does not derive `Default` (all fields must be provided in the struct literal). The OXC implementation (Jack's) adds `#[serde(default)]` on individual fields for ergonomic JSON deserialization, allowing callers to omit optional fields. The spec documents sensible defaults for each field, which implementations should use when the field is absent from JSON input.
+
+```rust
+/// Top-level configuration for transforming one or more modules.
+///
+/// Passed as JSON from JavaScript callers via NAPI or WASM bindings.
+/// All string fields use `String` (not framework-specific atom types)
+/// for cross-binding portability.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformModulesOptions {
+    /// Root directory for resolving relative import paths between modules.
+    /// All input file paths are relative to this directory.
+    /// Required -- no default.
+    pub src_dir: String,
+
+    /// Optional override root directory for monorepo setups.
+    /// When present, used instead of `src_dir` for computing relative paths
+    /// in output modules. When `None`, `src_dir` is used.
+    pub root_dir: Option<String>,
+
+    /// List of input modules to transform. Each entry provides
+    /// a relative file path and its source code.
+    pub input: Vec<TransformModuleInput>,
+
+    /// Whether to generate source maps for output modules.
+    /// Default: `true`
+    pub source_maps: bool,
+
+    /// Minification mode controlling dead code elimination
+    /// and expression simplification.
+    /// Default: `MinifyMode::Simplify`
+    pub minify: MinifyMode,
+
+    /// Whether to strip TypeScript type annotations from output.
+    /// When `true` and the input is TypeScript, type annotations,
+    /// interfaces, and type-only imports are removed.
+    /// Default: `false`
+    pub transpile_ts: bool,
+
+    /// Whether to transpile JSX syntax to function calls.
+    /// When `true` and the input contains JSX, elements are
+    /// converted to `_jsxSorted`/`_jsxSplit` calls.
+    /// Default: `false`
+    pub transpile_jsx: bool,
+
+    /// Whether to preserve original filenames in output paths.
+    /// When `true`, output segment filenames include the full
+    /// original filename instead of a shortened form.
+    /// Default: `false`
+    pub preserve_filenames: bool,
+
+    /// Strategy for splitting extracted segments into output modules.
+    /// Controls how QRL segments are grouped into files.
+    /// Default: `EntryStrategy::Segment` (one file per segment)
+    /// See: Entry Strategies section for full behavioral documentation.
+    pub entry_strategy: EntryStrategy,
+
+    /// Whether to use explicit file extensions (`.js`, `.ts`) in
+    /// generated import paths. When `false`, imports use
+    /// extensionless paths (e.g., `./chunk_abc`).
+    /// Default: `false`
+    pub explicit_extensions: bool,
+
+    /// Output mode controlling which build target to emit for.
+    /// Affects QRL wrapper selection, const replacement, and
+    /// debug information inclusion.
+    /// Default: `EmitMode::Lib`
+    /// See: Emit Modes section for full behavioral documentation.
+    pub mode: EmitMode,
+
+    /// Optional scope prefix for segment hash computation.
+    /// When present, the scope string is mixed into the hash
+    /// to ensure uniqueness across different build scopes
+    /// (e.g., multiple micro-frontends on the same page).
+    pub scope: Option<String>,
+
+    /// Override the core module import path.
+    /// When `None`, defaults to `"@qwik.dev/core"` internally.
+    /// Used when Qwik is published under a different package name
+    /// or when testing against a local build.
+    pub core_module: Option<String>,
+
+    /// List of export names to strip from output.
+    /// Used for server/client-specific builds: e.g., stripping
+    /// server-only exports from client bundles.
+    /// When `None`, no exports are stripped.
+    pub strip_exports: Option<Vec<String>>,
+
+    /// List of `$`-suffixed context names whose segments should be
+    /// stripped from output. For example, `["useTask$"]` removes
+    /// all `useTask$` segments from the build.
+    /// When `None`, no context names are stripped.
+    pub strip_ctx_name: Option<Vec<String>>,
+
+    /// Whether to strip event handler registrations from output.
+    /// When `true`, all event handler segments (onClick$, onInput$, etc.)
+    /// are removed. Used for server-side builds that don't need
+    /// client-side event handlers.
+    /// Default: `false`
+    pub strip_event_handlers: bool,
+
+    /// List of context names to register for plugin coordination.
+    /// These names are tracked and reported in the output metadata
+    /// for downstream tools (e.g., Vite plugins) to consume.
+    /// When `None`, no additional context names are registered.
+    pub reg_ctx_name: Option<Vec<String>>,
+
+    /// Whether this build targets server-side rendering.
+    /// Affects treeshaker behavior (client-only code stripping
+    /// is disabled on server) and QRL generation.
+    /// When `None`, defaults to `true` (safe default: server mode
+    /// preserves all code; client mode strips aggressively).
+    pub is_server: Option<bool>,
+}
+```
+
+**Field count:** 18 fields total (16 configuration fields + `reg_ctx_name` + `is_server`).
+
+**Key behavioral notes:**
+- `is_server` defaults to `true` when `None` -- this is the safe default because server mode preserves all code, while client mode enables aggressive tree-shaking that could incorrectly remove code if the server/client boundary is unknown.
+- `core_module` defaults to `"@qwik.dev/core"` internally when `None`. The SWC implementation uses `BUILDER_IO_QWIK` constant (`words.rs`).
+- `strip_exports`, `strip_ctx_name`, and `reg_ctx_name` use `Vec<String>` in the OXC implementation. The SWC implementation uses `Vec<Atom>` but this is an internal detail -- the JSON wire format is identical.
+
+#### JSON Wire Format
+
+```json
+{
+  "srcDir": "src",
+  "rootDir": "/project/root",
+  "input": [
+    { "path": "components/header.tsx", "code": "import { component$ } from '@qwik.dev/core';\n..." }
+  ],
+  "sourceMaps": true,
+  "minify": "simplify",
+  "transpileTs": true,
+  "transpileJsx": true,
+  "preserveFilenames": false,
+  "entryStrategy": { "type": "smart" },
+  "explicitExtensions": false,
+  "mode": "prod",
+  "scope": null,
+  "coreModule": null,
+  "stripExports": null,
+  "stripCtxName": null,
+  "stripEventHandlers": false,
+  "regCtxName": null,
+  "isServer": true
+}
+```
+
+### TransformModuleInput
+
+A single input file to transform. Each entry in `TransformModulesOptions.input` is one of these.
+
+```rust
+/// A single input module to be transformed.
+///
+/// The `path` field is relative to `TransformModulesOptions.src_dir`.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransformModuleInput {
+    /// Relative file path (relative to `src_dir`).
+    /// Used for hash computation, import path resolution,
+    /// and output filename generation.
+    pub path: String,
+
+    /// Optional development path override.
+    /// When present, used in dev/HMR mode for source mapping
+    /// and error messages instead of `path`.
+    pub dev_path: Option<String>,
+
+    /// The source code content of the module.
+    pub code: String,
+}
+```
+
+#### JSON Wire Format
+
+```json
+{
+  "path": "components/header.tsx",
+  "devPath": "/@fs/Users/dev/project/src/components/header.tsx",
+  "code": "import { component$ } from '@qwik.dev/core';\nexport const Header = component$(() => { return <h1>Hello</h1>; });"
+}
+```
+
+### EntryStrategy
+
+Controls how extracted segments are grouped into output modules. The SWC implementation serializes this as a bare string enum (`"inline"`, `"hoist"`, etc.), but the TypeScript contract in `types.ts` defines tagged object types (`{ type: "inline" }`, `{ type: "segment", manual?: Record<string, string> }`). The OXC implementation uses the tagged object form with `#[serde(tag = "type")]` to match the TypeScript contract.
+
+> **Implementation note:** The tagged object form is the correct wire format. Some SWC code paths accept the bare string form for backward compatibility, but new implementations should use the tagged form exclusively.
+
+```rust
+/// Controls how extracted segments are output and grouped.
+///
+/// Uses internally-tagged JSON representation: `{ "type": "inline" }`.
+/// This matches the TypeScript `EntryStrategy` union type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "camelCase")]
+pub enum EntryStrategy {
+    /// Each segment becomes a separate file with a lazy `import()`.
+    /// This is the default strategy and the recommended choice for
+    /// production builds -- provides maximum code-splitting granularity.
+    Segment,
+
+    /// All segments stay in the main module file using `inlinedQrl()`
+    /// wrappers. No separate segment files are created.
+    /// Used during development for fast rebuilds.
+    Inline,
+
+    /// Segments are hoisted to the top of the main module with
+    /// `const` declarations and `qrl()` references.
+    /// Similar to Inline but with named exports for each segment.
+    Hoist,
+
+    /// All segments go into a single shared output file.
+    /// The entry point file is named with an `entry_segments` key.
+    Single,
+
+    /// Group segments by their parent component.
+    /// All QRLs belonging to the same component share one file,
+    /// named `{origin}_entry_{rootComponent}`.
+    Component,
+
+    /// Automatically choose grouping based on usage patterns.
+    /// Event handlers without captured scope variables get their own file;
+    /// other QRLs are grouped by component. Top-level QRLs without a
+    /// component context get their own file.
+    Smart,
+
+    /// Deprecated alias for `Segment`. Produces identical behavior
+    /// (one file per segment via `PerSegmentStrategy`).
+    /// Retained for backward compatibility with older configurations.
+    Hook,
+}
+```
+
+**EntryPolicy trait:** Each strategy maps to an `EntryPolicy` implementation that determines segment grouping:
+
+| Strategy | EntryPolicy | Grouping Behavior |
+|----------|-------------|-------------------|
+| Inline | `InlineStrategy` | All segments in main module (returns `Some("entry_segments")`) |
+| Hoist | `InlineStrategy` | Same as Inline (shared policy) |
+| Single | `SingleStrategy` | All segments in one file (returns `Some("entry_segments")`) |
+| Hook | `PerSegmentStrategy` | One file per segment (returns `None`) |
+| Segment | `PerSegmentStrategy` | One file per segment (returns `None`) |
+| Component | `PerComponentStrategy` | Grouped by root component (returns `Some("{origin}_entry_{root}")`) |
+| Smart | `SmartStrategy` | Heuristic: pure event handlers get own file; others grouped by component |
+
+See: **Entry Strategies** section for full behavioral documentation of each strategy.
+
+#### JSON Wire Format
+
+Each variant serializes as a tagged object with `"type"` discriminator:
+
+```json
+{ "type": "segment" }
+{ "type": "inline" }
+{ "type": "hoist" }
+{ "type": "single" }
+{ "type": "component" }
+{ "type": "smart" }
+{ "type": "hook" }
+```
+
+### EmitMode
+
+Controls the build target output mode. Affects which transformations are applied and how QRL wrappers are generated.
+
+```rust
+/// Controls the build target output mode.
+///
+/// Each mode enables or disables specific transformations.
+/// See the Emit Modes section and the Mode x CONV interaction
+/// table for full behavioral documentation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum EmitMode {
+    /// Production mode -- optimized output with short `s_{hash}` symbol names.
+    /// Enables const replacement and full dead code elimination.
+    Prod,
+
+    /// Development mode -- includes debug information, uses development
+    /// QRL variants (`_qrlDev`, `_inlinedQrlDev`, `_noopQrlDev`) that
+    /// carry source location and display name metadata.
+    Dev,
+
+    /// Library mode -- standard output for publishing as an npm package.
+    /// Disables const replacement (leaves `isServer`/`isDev` as imports)
+    /// and variable migration so library consumers can tree-shake.
+    Lib,
+
+    /// Test mode -- for unit test environments.
+    /// Similar to Dev but disables const replacement so that
+    /// `isServer`/`isDev` remain as runtime values that tests can mock.
+    Test,
+
+    /// Hot Module Replacement mode -- development mode with HMR-specific
+    /// transforms. Uses development QRL variants like Dev mode.
+    Hmr,
+}
+```
+
+> **Note:** The TypeScript `types.ts` contract defines only 4 variants: `'dev' | 'prod' | 'lib' | 'hmr'`. The `Test` variant exists in the Rust implementation but is not exposed in the TypeScript types. Implementations must still support it for internal test tooling.
+
+#### JSON Wire Format
+
+```json
+"prod"
+"dev"
+"lib"
+"test"
+"hmr"
+```
+
+### MinifyMode
+
+Controls whether expression simplification and dead code elimination are applied during transformation.
+
+```rust
+/// Controls output minification behavior.
+///
+/// When `Simplify` is active, the SWC simplifier pass runs to
+/// fold constants, eliminate dead branches, and remove unused code.
+/// When `None`, simplification is skipped entirely.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum MinifyMode {
+    /// Apply simplification transforms: constant folding,
+    /// dead branch elimination, and unused code removal.
+    /// This is the default.
+    Simplify,
+
+    /// No simplification. Output preserves all expressions
+    /// regardless of reachability.
+    None,
+}
+```
+
+#### JSON Wire Format
+
+```json
+"simplify"
+"none"
+```
+
+### SegmentKind
+
+Classifies the context that created an extracted segment. Determines how the segment is treated by entry strategies and binding generation.
+
+```rust
+/// The kind of context that created a segment.
+///
+/// Used by entry strategies (especially `SmartStrategy`) to
+/// make grouping decisions -- event handlers without captures
+/// are split into separate files for optimal lazy loading.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SegmentKind {
+    /// General function context: `$()`, `component$()`, `useTask$()`,
+    /// `useVisibleTask$()`, and other non-event `$`-suffixed calls.
+    Function,
+
+    /// Event handler context: `onClick$()`, `onInput$()`, and other
+    /// `on`-prefixed `$`-suffixed calls.
+    EventHandler,
+
+    /// JSX prop expression context: inline expressions in JSX props
+    /// that are extracted as segments (e.g., signal optimization
+    /// creates segments for reactive prop expressions).
+    /// Present in the SWC Rust enum but not exposed in the TypeScript
+    /// `types.ts` contract (which only defines `'function' | 'eventHandler'`).
+    JSXProp,
+}
+```
+
+**Classification rules:** The SWC implementation classifies `SegmentKind` in `transform.rs` based on the callee name:
+- Names starting with `on` followed by an uppercase letter (e.g., `onClick$`, `onInput$`) are `EventHandler`
+- The `$` bare function and all other `$`-suffixed names (e.g., `component$`, `useTask$`) are `Function`
+- JSX prop expressions extracted during signal optimization are `JSXProp`
+
+**SmartStrategy interaction:** The `SmartStrategy` uses `SegmentKind` to decide grouping -- event handlers without captured scope variables (`scoped_idents.is_empty() && ctx_kind != Function`) get their own file, while `Function` segments (except `event$`) are grouped by component. See the **Entry Strategies** section for the complete decision logic.
+
+#### JSON Wire Format
+
+```json
+"function"
+"eventHandler"
+"jsxProp"
+```
+
+The TypeScript contract (`types.ts`) only declares `'eventHandler' | 'function'` for the `ctxKind` field of `SegmentAnalysis`. The `"jsxProp"` value may appear in Rust-to-Rust communication but is not part of the JavaScript-facing wire format in the current SWC implementation.
