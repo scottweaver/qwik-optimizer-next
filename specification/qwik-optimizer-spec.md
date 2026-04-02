@@ -7280,3 +7280,812 @@ export const s_ckEPmXZlub0 = ()=>{
 - `import { mongodb } from "mondodb"` is kept because it's used in the surviving server code path
 - Segment names use short `s_` prefix in prod mode (CONV-02 prod naming convention)
 - See CONV-10: Const Replacement for the complete list of replaceable identifiers and mode-dependent values
+
+---
+
+### Example 13: Code Stripping -- strip_exports (`example_strip_client_code`)
+
+**Demonstrates:** CONV-11 (Code Stripping)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "lib", strip_exports: ["useClientMount$"] }`
+
+**Input:**
+```tsx
+import { component$, useClientMount$, useStore, useTask$ } from '@qwik.dev/core';
+import mongo from 'mongodb';
+import redis from 'redis';
+import threejs from 'threejs';
+import { a } from './keep';
+import { b } from '../keep2';
+import { c } from '../../remove';
+
+export const Parent = component$(() => {
+  const state = useStore({ text: '' });
+
+  useClientMount$(async () => {
+    state.text = await mongo.users();
+    redis.set(state.text, a, b, c);
+  });
+
+  useTask$(() => {
+    // Code
+  });
+
+  return (
+    <div
+      shouldRemove$={() => state.text}
+      onClick$={() => console.log('parent', state, threejs)}
+    >
+      <Div
+        onClick$={() => console.log('keep')}
+        render$={() => state.text}
+      />
+      {state.text}
+    </div>
+  );
+});
+```
+
+**Expected Output (stripped segments):**
+```js
+// Segments for stripped functions become null exports:
+export const Parent_component_useClientMount_Yn2kIDABoYw = null;
+export const Parent_component_div_shouldRemove_EBj69wTX1do = null;
+export const Parent_component_div_q_e_click_oqNnfO6ubjU = null;
+```
+
+**Key observations:**
+- `useClientMount$` is in the `strip_exports` list, so its segment body is replaced with `null`
+- `shouldRemove$` and the div `onClick$` are also stripped (their segment bodies become `null`)
+- The `import './keep'` and `import '../keep2'` are preserved even though they were used in a stripped function
+- `import '../../remove'` is dropped because it was only used in stripped code
+- `import mongo`, `import redis`, `import threejs` are all dropped -- only used in stripped paths
+- The component body (`useTask$`, `render$`, inner `onClick$` on Div) is preserved
+- Source maps for stripped segments have empty mappings
+- See CONV-11: Code Stripping for the strip_exports and strip_ctx_name mechanisms
+
+---
+
+### Example 14: Server Code Stripping (`example_strip_server_code`)
+
+**Demonstrates:** CONV-11 (Code Stripping)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib", strip_ctx_name: ["serverLoader$", "serverStuff$"] }`
+
+**Input:**
+```tsx
+import { component$, serverLoader$, serverStuff$, $, client$, useStore, useTask$ } from '@qwik.dev/core';
+import { isServer } from '@qwik.dev/core';
+import mongo from 'mongodb';
+import redis from 'redis';
+import { handler } from 'serverless';
+
+export const Parent = component$(() => {
+  const state = useStore({ text: '' });
+
+  useTask$(async () => {
+    if (!isServer) return;
+    state.text = await mongo.users();
+    redis.set(state.text);
+  });
+
+  serverStuff$(async () => {
+    const a = $(() => { /* from $(), should not be removed */ });
+    const b = client$(() => { /* from client$(), should not be removed */ });
+    return [a,b];
+  })
+
+  serverLoader$(handler);
+
+  useTask$(() => { /* Code */ });
+
+  return (
+    <div onClick$={() => console.log('parent')}>
+      {state.text}
+    </div>
+  );
+});
+```
+
+**Expected Output (stripped segments):**
+```js
+// Server-stripped segments become null:
+export const s_r1qAHX7Opp0 = null;   // serverStuff$ body
+export const s_ddV1irobfWI = null;    // serverLoader$ handler
+
+// But nested $() and client$() inside serverStuff$ are preserved:
+export const s_2ca3HLDC7yc = ()=>{
+  // from $(), should not be removed
+};
+export const s_v9qawr2Inkk = ()=>{
+  // from client$(), should not be removed
+};
+```
+
+**Key observations:**
+- `serverStuff$` and `serverLoader$` are in `strip_ctx_name`, so their segment bodies become `null`
+- Crucially, `$()` and `client$()` nested *inside* `serverStuff$` are NOT stripped -- only the `serverStuff$` wrapper is
+- This preserves client-side code even when it's defined inside a server function
+- `useTask$` segments are preserved (not in the strip list) even though one uses `isServer`
+- The `import mongo` and `import redis` remain because `useTask$` still references them
+- See CONV-11: Code Stripping for the strip_ctx_name vs strip_exports distinction
+
+---
+
+### Example 15: Legacy Import Rewriting (`rename_builder_io`)
+
+**Demonstrates:** CONV-12 (Import Rewriting)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$ } from "@builder.io/qwik";
+import { isDev } from "@builder.io/qwik/build";
+import { stuff } from "@builder.io/qwik-city";
+import { moreStuff } from "@builder.io/qwik-city/more/here";
+import { qwikify$ } from "@builder.io/qwik-react";
+import sdk from "@builder.io/sdk";
+
+export const Foo = qwikify$(MyReactComponent);
+export const Bar = $("a thing");
+export const App = component$(() => {
+  sdk.hello();
+  if (isDev) { stuff() } else { moreStuff() }
+  return "hi";
+});
+```
+
+**Expected Output (root module):**
+```js
+import { qwikifyQrl } from "@qwik.dev/react";
+import { qrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+// [QRL declarations omitted for brevity]
+export const Foo = qwikifyQrl(q_Foo_qwikify_0Yoy9qA0SC0);
+export const Bar = q_Bar_GXXnVUtURSw;
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Expected Output (App segment):**
+```js
+// test.tsx_App_component_ckEPmXZlub0.ts
+import { isDev } from "@qwik.dev/core/build";
+import { moreStuff } from "@qwik.dev/router/more/here";
+import sdk from "@builder.io/sdk";
+import { stuff } from "@qwik.dev/router";
+export const App_component_ckEPmXZlub0 = ()=>{
+    sdk.hello();
+    if (isDev) stuff();
+    else moreStuff();
+    return "hi";
+};
+```
+
+**Key observations:**
+- `@builder.io/qwik` is rewritten to `@qwik.dev/core`
+- `@builder.io/qwik/build` is rewritten to `@qwik.dev/core/build`
+- `@builder.io/qwik-city` is rewritten to `@qwik.dev/router`
+- `@builder.io/qwik-city/more/here` becomes `@qwik.dev/router/more/here` (subpath preserved)
+- `@builder.io/qwik-react` is rewritten to `@qwik.dev/react`
+- `@builder.io/sdk` is NOT rewritten -- it's not a Qwik package
+- `qwikify$` becomes `qwikifyQrl` (same dollar-to-Qrl suffix rule as other dollar functions)
+- See CONV-12: Import Rewriting for the complete mapping table
+
+---
+
+### Example 16: sync$ Serialization (`example_of_synchronous_qrl`)
+
+**Demonstrates:** CONV-13 (sync$ Serialization)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { sync$, component$ } from "@qwik.dev/core";
+
+export default component$(() => {
+  return (
+    <>
+      <input onClick$={sync$(function(event, target) {
+        // comment should be removed
+        event.preventDefault();
+      })}/>
+      <input onClick$={sync$((event, target) => {
+        event.preventDefault();
+      })}/>
+      <input onClick$={sync$((event, target) => event.preventDefault())}/>
+    </>
+  );
+});
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_test_component_LUXeXe0DQrg.js
+import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
+import { _jsxSorted } from "@qwik.dev/core";
+import { _qrlSync } from "@qwik.dev/core";
+export const test_component_LUXeXe0DQrg = ()=>{
+    return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [
+        /*#__PURE__*/ _jsxSorted("input", {
+            "q-e:click": _qrlSync(function(event, target) {
+                event.preventDefault();
+            }, "function(event,target){event.preventDefault();}")
+        }, null, null, 2, null),
+        /*#__PURE__*/ _jsxSorted("input", {
+            "q-e:click": _qrlSync((event, target)=>{
+                event.preventDefault();
+            }, "(event,target)=>{event.preventDefault();}")
+        }, null, null, 2, null),
+        /*#__PURE__*/ _jsxSorted("input", {
+            "q-e:click": _qrlSync(
+              (event, target)=>event.preventDefault(),
+              "(event,target)=>event.preventDefault()")
+        }, null, null, 2, null)
+    ], 1, "u6_0");
+};
+```
+
+**Key observations:**
+- `sync$` is NOT extracted into a separate segment like other dollar functions -- it becomes `_qrlSync` inline
+- `_qrlSync` takes two arguments: the function and a minified string serialization of that function
+- Comments are stripped from the serialized string representation but the function body is preserved in the runtime argument
+- Both `function` declarations and arrow functions are supported
+- The serialized string uses minified formatting (no whitespace, no comments)
+- `sync$` handlers stay in varProps (not constProps) with flags `2` indicating they have event handlers
+- See CONV-13: sync$ Serialization for the complete serialization format
+
+---
+
+### Example 17: Noop QRL Handling -- _noopQrlDEV (`example_noop_dev_mode`)
+
+**Demonstrates:** CONV-14 (Noop QRL Handling)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "dev", isServer: true, strip_ctx_name: ["serverStuff$"] }`
+
+**Input:**
+```tsx
+import { component$, useStore, serverStuff$, $ } from '@qwik.dev/core';
+
+export const App = component$(() => {
+  const stuff = useStore();
+  serverStuff$(async () => {
+    console.log(stuff.count)
+  })
+  serverStuff$(async () => {
+    // should be removed
+  })
+
+  return (
+    <Cmp>
+      <p class="stuff"
+        shouldRemove$={() => stuff.count}
+        onClick$={() => console.log('warn')}
+      >
+        Hello Qwik
+      </p>
+    </Cmp>
+  );
+});
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrlDEV(
+  ()=>import("./test.tsx_App_component_ckEPmXZlub0"),
+  "App_component_ckEPmXZlub0", {
+    file: "/hello/from/dev/test.tsx",
+    lo: 105, hi: 452,
+    displayName: "test.tsx_App_component"
+  }
+);
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_App_component_ckEPmXZlub0.js
+import { _noopQrlDEV } from "@qwik.dev/core";
+// ... other imports ...
+const q_qrl_4294901760 = /*#__PURE__*/ _noopQrlDEV(
+  "App_component_serverStuff_ebyHaP15ytQ", {
+    file: "/hello/from/dev/test.tsx",
+    lo: 0, hi: 0,
+    displayName: "test.tsx_App_component_serverStuff"
+  }
+);
+// ... additional _noopQrlDEV declarations for stripped segments ...
+export const App_component_ckEPmXZlub0 = ()=>{
+    const stuff = useStore();
+    serverStuffQrl(q_qrl_4294901760.w([stuff]));
+    serverStuffQrl(q_qrl_4294901762);
+    return /*#__PURE__*/ _jsxSorted(Cmp, null, null,
+      /*#__PURE__*/ _jsxSorted("p", { "q:p": stuff }, {
+        class: "stuff",
+        shouldRemove$: q_qrl_4294901764,
+        "q-e:click": q_qrl_4294901766
+      }, "Hello Qwik", 7, null, {
+        fileName: "/hello/from/dev/test.tsx",
+        lineNumber: 16, columnNumber: 4
+      }), 1, "u6_0", {
+        fileName: "/hello/from/dev/test.tsx",
+        lineNumber: 15, columnNumber: 3
+      });
+};
+```
+
+**Key observations:**
+- In dev mode, `qrl()` becomes `qrlDEV()` with additional debug metadata (file, lo, hi, displayName)
+- Stripped segments use `_noopQrlDEV()` instead of `_noopQrl()` -- includes dev metadata with `lo: 0, hi: 0`
+- JSX elements receive `fileName`, `lineNumber`, `columnNumber` debug info as an extra argument
+- The sentinel value `4294901760` (0xFFFF0000) in QRL names indicates a stripped/noop segment index
+- `q:p` in varProps passes the `stuff` store reference for loop context binding
+- Flags value `7` indicates both const props and event handlers present with mutable children
+- See CONV-14: Noop QRL Handling for the complete dev vs prod noop behavior
+
+---
+
+### Example 18: Inline Entry Strategy (`example_inlined_entry_strategy`)
+
+**Demonstrates:** CONV-02 (QRL Wrapping), CONV-05 (Segment Extraction)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+export const Child = component$(() => {
+  useStyles$('somestring');
+  const state = useStore({ count: 0 });
+  useBrowserVisibleTask$(() => {
+    state.count = thing.doStuff() + import("./sibling");
+  });
+  return (
+    <div onClick$={() => console.log(mongodb)}>
+    </div>
+  );
+});
+```
+
+**Expected Output (single file -- all segments inlined):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
+import { _captures } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+// ... additional _noopQrl declarations ...
+
+q_Child_component_useStyles_qBZTuFM0160.s('somestring');
+q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.s(()=>{
+    const state = _captures[0];
+    state.count = thing.doStuff() + import("./sibling");
+});
+q_Child_component_div_q_e_click_cROa4sult1s.s(()=>console.log(mongodb));
+q_Child_component_9GyF01GDKqw.s(()=>{
+    useStylesQrl(q_Child_component_useStyles_qBZTuFM0160);
+    const state = useStore({ count: 0 });
+    useBrowserVisibleTaskQrl(q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.w([state]));
+    return <div q-e:click={q_Child_component_div_q_e_click_cROa4sult1s}></div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+```
+
+**Key observations:**
+- With `inline` entry strategy, NO separate segment files are generated -- everything stays in one file
+- `_noopQrl("symbolName")` creates a placeholder QRL, then `.s(fn)` attaches the function body inline
+- Segment bodies are assigned via `.s()` calls rather than `import()` dynamic imports
+- `useStyles$('somestring')` becomes `q_...useStyles.s('somestring')` -- the string literal is the segment value
+- `_captures` is imported at the module level for use by any segment that has captures
+- Event handler attributes use `q-e:click` directly (no `_jsxSorted` wrapper) in the inline JSX
+- Compare with Example 1 (segment strategy) where each `$()` produces a separate file
+- See CONV-02: QRL Wrapping for how entry strategy affects output structure
+
+---
+
+### Example 19: Dev Mode QRL Variants (`example_dev_mode`)
+
+**Demonstrates:** CONV-02 (QRL Wrapping)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "dev" }`
+
+**Input:**
+```tsx
+import { component$, useStore } from '@qwik.dev/core';
+
+export const App = component$(() => {
+  return (
+    <Cmp>
+      <p class="stuff" onClick$={() => console.log('warn')}>Hello Qwik</p>
+    </Cmp>
+  );
+});
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrlDEV(
+  ()=>import("./test.tsx_App_component_ckEPmXZlub0"),
+  "App_component_ckEPmXZlub0", {
+    file: "/user/qwik/src/test.tsx",
+    lo: 88, hi: 200,
+    displayName: "test.tsx_App_component"
+  }
+);
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_App_component_ckEPmXZlub0.js
+import { _jsxSorted } from "@qwik.dev/core";
+import { qrlDEV } from "@qwik.dev/core";
+const q_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4 = /*#__PURE__*/ qrlDEV(
+  ()=>import("./test.tsx_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4"),
+  "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4", {
+    file: "/user/qwik/src/test.tsx",
+    lo: 144, hi: 169,
+    displayName: "test.tsx_App_component_Cmp_p_q_e_click"
+  }
+);
+export const App_component_ckEPmXZlub0 = ()=>{
+    return /*#__PURE__*/ _jsxSorted(Cmp, null, null,
+      /*#__PURE__*/ _jsxSorted("p", null, {
+        class: "stuff",
+        "q-e:click": q_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4
+      }, "Hello Qwik", 3, null, {
+        fileName: "test.tsx", lineNumber: 7, columnNumber: 4
+      }), 3, "u6_0", {
+        fileName: "test.tsx", lineNumber: 6, columnNumber: 3
+      });
+};
+```
+
+**Key observations:**
+- `qrl()` becomes `qrlDEV()` in dev mode -- includes `file`, `lo` (start offset), `hi` (end offset), `displayName`
+- Both root module and segment QRL references use `qrlDEV`
+- JSX elements receive extra `{ fileName, lineNumber, columnNumber }` arguments for React DevTools-style debugging
+- The `lo`/`hi` values are byte offsets into the original source file
+- Display names follow the pattern `{origin}_{scope_chain}` for debugging
+- See CONV-02: QRL Wrapping for the qrl vs qrlDEV selection logic
+
+---
+
+### Example 20: Prod Mode Short Names (`example_prod_node`)
+
+**Demonstrates:** CONV-02 (QRL Wrapping)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "prod" }`
+
+**Input:**
+```tsx
+import { component$ } from '@qwik.dev/core';
+
+export const Foo = component$(() => {
+  return (
+    <div>
+      <div onClick$={() => console.log('first')}/>
+      <div onClick$={() => console.log('second')}/>
+      <div onClick$={() => console.log('third')}/>
+    </div>
+  );
+});
+```
+
+**Expected Output (root module):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+const q_s_HTDRsvUbLiE = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "s_HTDRsvUbLiE"
+);
+export const Foo = /*#__PURE__*/ componentQrl(q_s_HTDRsvUbLiE);
+```
+
+**Expected Output (segment):**
+```js
+// test.tsx_Foo_component_HTDRsvUbLiE.tsx
+import { qrl } from "@qwik.dev/core";
+const q_s_VSoqbTjzr4w = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_div_div_q_e_click_1_VSoqbTjzr4w"), "s_VSoqbTjzr4w"
+);
+const q_s_n19LdlqL6To = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_div_div_q_e_click_2_n19LdlqL6To"), "s_n19LdlqL6To"
+);
+const q_s_vKrX4PmH2aM = /*#__PURE__*/ qrl(
+  ()=>import("./test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM"), "s_vKrX4PmH2aM"
+);
+export const s_HTDRsvUbLiE = ()=>{
+    return <div>
+        <div q-e:click={q_s_vKrX4PmH2aM}/>
+        <div q-e:click={q_s_VSoqbTjzr4w}/>
+        <div q-e:click={q_s_n19LdlqL6To}/>
+      </div>;
+};
+```
+
+**Key observations:**
+- In prod mode, exported symbol names use the `s_` prefix + hash: `s_HTDRsvUbLiE` instead of `Foo_component_HTDRsvUbLiE`
+- The QRL symbol name (2nd argument to `qrl()`) uses the short `s_` form
+- The import path (1st argument) still uses the full descriptive filename for file system compatibility
+- Local variable names also use `q_s_` prefix convention
+- This minimizes runtime string size -- the hash is sufficient for QRL resolution
+- Compare with Example 1 (lib mode) where full descriptive names are used
+- See CONV-02: QRL Wrapping for the mode-dependent naming conventions
+
+---
+
+### Example 21: bind:value and bind:checked Sugar (`example_input_bind`)
+
+**Demonstrates:** CONV-06 (JSX Transform)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$, $ } from '@qwik.dev/core';
+
+export const Greeter = component$(() => {
+  const value = useSignal(0);
+  const checked = useSignal(false);
+  const stuff = useSignal();
+  return (
+    <>
+      <input bind:value={value} />
+      <input bind:checked={checked} />
+      <input bind:stuff={stuff} />
+      <div>{value}</div>
+      <div>{value.value}</div>
+    </>
+  )
+});
+```
+
+**Expected Output (inlined):**
+```js
+// bind:value desugars to value prop + inlined _val handler:
+_jsxSorted("input", null, {
+    "value": value,
+    "q-e:input": inlinedQrl(_val, "_val", [value])
+}, null, 3, null),
+
+// bind:checked desugars to checked prop + inlined _chk handler:
+_jsxSorted("input", null, {
+    "checked": checked,
+    "q-e:input": inlinedQrl(_chk, "_chk", [checked])
+}, null, 3, null),
+
+// bind:stuff (unknown binding) passes through as-is:
+_jsxSorted("input", null, {
+    "bind:stuff": stuff
+}, null, 3, null),
+
+// Signal as child: passed directly
+_jsxSorted("div", null, null, value, 3, null),
+
+// signal.value as child: wrapped with _wrapProp
+_jsxSorted("div", null, null, _wrapProp(value), 3, null)
+```
+
+**Key observations:**
+- `bind:value` is syntactic sugar that desugars to a `value` const prop + an `input` event handler using `_val`
+- `bind:checked` similarly desugars to a `checked` const prop + an `input` event handler using `_chk`
+- `bind:stuff` (not `value` or `checked`) is NOT desugared -- it passes through as `"bind:stuff"` in const props
+- Only `bind:value` and `bind:checked` are recognized as special two-way binding sugar
+- `{value}` (signal as child) passes the signal object directly -- framework handles rendering
+- `{value.value}` (explicit `.value` access) gets `_wrapProp(value)` -- signal optimization applies
+- `inlinedQrl` is used instead of `qrl` for inline entry strategy
+- See CONV-06: JSX Transform for the bind: attribute desugaring rules
+
+---
+
+### Example 22: Loop Capture Edge Case (`should_transform_nested_loops`)
+
+**Demonstrates:** CONV-03 (Capture Analysis)
+**Config:** `{ entryStrategy: { type: "segment" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { component$, useSignal, Signal } from '@qwik.dev/core';
+const Foo = component$(function() {
+  const data = useSignal<Signal<any>[]>([]);
+  const data2 = useSignal<Signal<any>[]>([]);
+  return <div>
+    {data.value.map(row => (
+      <div onClick$={() => console.log(row.value.id)}>
+        {data2.value.map(item => (
+          <p onClick$={() => console.log(row.value.id, item.value.id)}>
+            {row.value.id}-{item.value.id}
+          </p>
+        ))}
+      </div>
+    ))}
+  </div>;
+})
+```
+
+**Expected Output (outer onClick handler):**
+```js
+// test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM.js
+export const Foo_component_div_div_q_e_click_vKrX4PmH2aM = (_, _1, row)=>
+  console.log(row.value.id);
+```
+
+**Expected Output (inner onClick handler -- nested loop):**
+```js
+// test.tsx_Foo_component_div_div_p_q_e_click_PjMbeUzoAMk.js
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = (_, _1, item)=>{
+    const row = _captures[0];
+    return console.log(row.value.id, item.value.id);
+};
+```
+
+**Expected Output (component body showing loop capture wiring):**
+```js
+// [inside component segment]
+return /*#__PURE__*/ _jsxSorted("div", null, null,
+  data.value.map((row)=>{
+    // QRL for inner handler, scoped per-iteration with row captured
+    const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk =
+      q_Foo_component_div_div_p_q_e_click_PjMbeUzoAMk.w([row]);
+    return /*#__PURE__*/ _jsxSorted("div", {
+        "q-e:click": q_Foo_component_div_div_q_e_click_vKrX4PmH2aM,
+        "q:p": row
+    }, null, data2.value.map((item)=>
+      /*#__PURE__*/ _jsxSorted("p", {
+          "q-e:click": Foo_component_div_div_p_q_e_click_PjMbeUzoAMk,
+          "q:p": item
+      }, null, [
+          _fnSignal(_hf0, [row], _hf0_str),
+          "-",
+          _fnSignal(_hf0, [item], _hf0_str)
+      ], 4, "u6_0")
+    ), 4, "u6_1");
+  }), 1, "u6_2");
+```
+
+**Key observations:**
+- `row` in the outer loop is passed via `"q:p": row` (loop context parameter) to the outer click handler
+- The outer handler receives `row` as the 3rd parameter `(_, _1, row)` -- `_` and `_1` are event and element
+- The inner handler captures `row` from the outer loop via `_captures` AND receives `item` as `q:p` parameter
+- Per-iteration `.w([row])` call creates a new QRL instance for each `row`, binding the capture
+- `_fnSignal(_hf0, [row], _hf0_str)` is used for `{row.value.id}` in text interpolation (signal optimization)
+- The same `_hf0` function is reused for both `row.value.id` and `item.value.id` since the access pattern is identical
+- See CONV-03: Capture Analysis for loop capture scoping rules and the `q:p` binding mechanism
+
+---
+
+### Example 23: Lib Mode -- No Const Replacement (`example_lib_mode`)
+
+**Demonstrates:** CONV-10 (Const Replacement)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "lib" }`
+
+**Input:**
+```tsx
+import { $, component$, server$, useStyle$, useTask$, useSignal } from '@qwik.dev/core';
+
+export const Works = component$((props) => {
+  useStyle$(STYLES);
+  const text = 'hola';
+  const sig = useSignal('hola');
+  useTask$(() => {
+    console.log(sig.value, text);
+  });
+  return (
+    <div onClick$={server$(() => console.log('in server', sig.value, text))}></div>
+  );
+});
+
+const STYLES = '.class {}';
+```
+
+**Expected Output (inlined):**
+```js
+const STYLES = '.class {}';
+export const Works = /*#__PURE__*/ componentQrl(
+  /*#__PURE__*/ inlinedQrl((props)=>{
+    useStyleQrl(/*#__PURE__*/ inlinedQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg"));
+    const sig = useSignal('hola');
+    useTaskQrl(/*#__PURE__*/ inlinedQrl(()=>{
+        const sig = _captures[0];
+        console.log(sig.value, 'hola');
+    }, "Works_component_useTask_pjo5U5Ikll0", [sig]));
+    return /*#__PURE__*/ _jsxSorted("div", {
+        "q-e:click": serverQrl(/*#__PURE__*/ inlinedQrl(()=>{
+            const sig = _captures[0];
+            return console.log('in server', sig.value, 'hola');
+        }, "Works_component_div_q_e_click_server_q39lOt7xGrI", [sig]))
+    }, null, null, 2, "u6_0");
+  }, "Works_component_t45qL4vNGv0")
+);
+```
+
+**Key observations:**
+- In `lib` mode, `isServer`/`isBrowser` are NOT replaced with constants -- they would flow through as-is (not present in this example but documented behavior)
+- Lib mode means the code could run in either context, so const replacement is skipped (CONV-10)
+- `const text = 'hola'` is a string constant that gets inlined directly as `'hola'` in segments
+- `server$` becomes `serverQrl` with the function body inlined (inline entry strategy)
+- `useStyle$(STYLES)` becomes `inlinedQrl(STYLES, ...)` -- the style string itself is the QRL value
+- Captures (`sig`) use `_captures[0]` restoration pattern inside `inlinedQrl` callbacks
+- Compare with Example 12 (prod/server mode) where `isServer` is replaced with `true`
+- See CONV-10: Const Replacement for which modes enable/disable const replacement
+
+---
+
+### Example 24: preserve_filenames Config Effect (`example_preserve_filenames`)
+
+**Demonstrates:** CONV-05 (Segment Extraction)
+**Config:** `{ entryStrategy: { type: "inline" }, mode: "lib", preserve_filenames: true }`
+
+**Input:**
+```tsx
+import { component$, useStore } from '@qwik.dev/core';
+
+export const App = component$((props) => {
+  return (
+    <Cmp>
+      <p class="stuff" onClick$={() => console.log('warn')}>Hello Qwik</p>
+    </Cmp>
+  );
+});
+```
+
+**Expected Output (inlined):**
+```js
+import { componentQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+const q_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4 = /*#__PURE__*/ _noopQrl(
+  "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4"
+);
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl(
+  "App_component_ckEPmXZlub0"
+);
+q_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4.s(()=>console.log('warn'));
+q_App_component_ckEPmXZlub0.s((props)=>{
+    return /*#__PURE__*/ _jsxSorted(Cmp, null, null,
+      /*#__PURE__*/ _jsxSorted("p", null, {
+        class: "stuff",
+        "q-e:click": q_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4
+      }, "Hello Qwik", 3, null), 3, "u6_0");
+});
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+```
+
+**Key observations:**
+- With `preserve_filenames: true`, segment canonical filenames use the full descriptive name even in prod mode
+- This example uses inline strategy, so the impact is on the QRL symbol names used in `_noopQrl()` calls
+- In segment strategy, `preserve_filenames` would affect the actual output file names
+- This flag is useful during development and testing when human-readable file names aid debugging
+- Without this flag in prod mode, symbol names would use the `s_` prefix + hash shorthand (see Example 20)
+- See CONV-05: Segment Extraction for how `preserve_filenames` interacts with entry strategy and mode
+
+---
+
+### CONV Coverage Summary
+
+| CONV | Name | Examples | Coverage |
+|------|------|----------|----------|
+| CONV-01 | Dollar Detection | #1, #2 | Basic `$()` + `component$` |
+| CONV-02 | QRL Wrapping | #1, #2, #18, #19, #20 | Segment + inline + dev + prod modes |
+| CONV-03 | Capture Analysis | #2, #3, #4, #22 | Import captures + multi-capture + loop scoping |
+| CONV-04 | Props Destructuring | #5, #4 | Colon syntax + `_rawProps` rewrite |
+| CONV-05 | Segment Extraction | #1, #6, #18, #24 | Basic + variable migration + inline strategy + preserve_filenames |
+| CONV-06 | JSX Transform | #7, #8, #21 | `_jsxSorted`/`_jsxSplit` + event handlers + `bind:` sugar |
+| CONV-07 | Signal Optimization | #9, #5 | `_wrapProp` + `_fnSignal` + non-optimizable cases |
+| CONV-08 | PURE Annotations | #10, #1, #2 | `componentQrl` + `qrl()` annotations |
+| CONV-09 | Dead Branch Elimination | #11 | `if (false)` removal + unused import cleanup |
+| CONV-10 | Const Replacement | #12, #23 | Server mode replacement + lib mode passthrough |
+| CONV-11 | Code Stripping | #13, #14 | `strip_exports` + `strip_ctx_name` + nested preservation |
+| CONV-12 | Import Rewriting | #3, #15 | Self-imports + `@builder.io` to `@qwik.dev` mapping |
+| CONV-13 | sync$ Serialization | #16 | `_qrlSync` with function + string serialization |
+| CONV-14 | Noop QRL Handling | #17 | `_noopQrlDEV` with dev metadata |
+
+All 14 CONVs are covered. Several CONVs have multiple examples demonstrating different modes, strategies, and edge cases.
+
+These 24 examples, combined with the inline examples in each CONV section throughout the specification, provide comprehensive coverage for implementation verification. The full 162+ snapshot corpus in `swc-snapshots/` serves as the exhaustive behavioral test suite -- these curated examples represent the most instructive subset for understanding the optimizer's behavior across all transformation types.
