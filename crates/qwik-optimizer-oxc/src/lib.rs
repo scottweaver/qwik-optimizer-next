@@ -817,6 +817,153 @@ export const App = component$(() => {
     }
 
     #[test]
+    fn test_entry_policy_smart_strategy_separates_pure_event_handlers() {
+        let code = r#"import { component$, $ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return <div onClick$={() => console.log("click")}></div>;
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            entry_strategy: EntryStrategy::Smart,
+            mode: EmitMode::Prod,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        // Smart strategy: pure event handlers (no captures) get their own chunk
+        let segment_modules: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
+        assert!(
+            !segment_modules.is_empty(),
+            "Smart strategy should produce segments"
+        );
+        // At least one segment should have is_entry=true (own chunk -- the click handler)
+        let has_own_chunk = segment_modules.iter().any(|m| m.is_entry);
+        assert!(
+            has_own_chunk,
+            "Smart strategy should give pure event handler its own chunk (is_entry=true)"
+        );
+    }
+
+    #[test]
+    fn test_entry_policy_hook_strategy_each_own_chunk() {
+        let code = r#"import { component$, $ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return $(() => "hello");
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            entry_strategy: EntryStrategy::Hook,
+            mode: EmitMode::Prod,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        // Hook strategy: each segment gets its own chunk (same as Segment)
+        let segment_modules: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
+        for m in &segment_modules {
+            assert!(
+                m.is_entry,
+                "Hook strategy should set is_entry=true (entry=None), got is_entry={} for {}",
+                m.is_entry, m.path
+            );
+        }
+    }
+
+    #[test]
+    fn test_hoist_strategy_spec_example_inlined_entry_strategy() {
+        // Test from spec example_inlined_entry_strategy
+        let code = r#"import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from '@qwik.dev/core';
+import { thing } from './sibling';
+import mongodb from 'mongodb';
+
+export const Child = component$(() => {
+    useStyles$('somestring');
+    const state = useStore({ count: 0 });
+    useBrowserVisibleTask$(() => {
+        state.count = thing.doStuff() + import("./sibling");
+    });
+    return (
+        <div onClick$={() => console.log(mongodb)}>
+        </div>
+    );
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            entry_strategy: EntryStrategy::Hoist,
+            mode: EmitMode::Prod,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+
+        // Verify key patterns from spec
+        assert!(
+            root.code.contains("_noopQrl("),
+            "Hoist spec example should contain _noopQrl, got:\n{}",
+            root.code
+        );
+        assert!(
+            root.code.contains("componentQrl("),
+            "Hoist spec example should contain componentQrl, got:\n{}",
+            root.code
+        );
+        assert!(
+            root.code.contains(".s("),
+            "Hoist spec example should contain .s() registrations, got:\n{}",
+            root.code
+        );
+        // Verify multiple _noopQrl const declarations exist (component + inner segments)
+        let noop_count = root.code.matches("_noopQrl(").count();
+        assert!(
+            noop_count >= 1,
+            "Hoist spec example should have at least 1 _noopQrl declaration, found {}, got:\n{}",
+            noop_count, root.code
+        );
+    }
+
+    #[test]
+    fn test_all_seven_entry_strategies_produce_output() {
+        let code = r#"import { component$, $ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return $(() => "hello");
+});"#;
+        let strategies = vec![
+            ("Segment", EntryStrategy::Segment),
+            ("Inline", EntryStrategy::Inline),
+            ("Hoist", EntryStrategy::Hoist),
+            ("Single", EntryStrategy::Single),
+            ("Component", EntryStrategy::Component),
+            ("Smart", EntryStrategy::Smart),
+            ("Hook", EntryStrategy::Hook),
+        ];
+        for (name, strategy) in strategies {
+            let opts = TransformModulesOptions {
+                src_dir: "/project".to_string(),
+                input: vec![make_input(code, "test.tsx")],
+                source_maps: false,
+                entry_strategy: strategy,
+                mode: EmitMode::Prod,
+                ..TransformModulesOptions::default()
+            };
+            let result = transform_modules(opts);
+            assert!(
+                !result.modules.is_empty(),
+                "{} strategy should produce at least one module",
+                name
+            );
+            assert!(
+                result.diagnostics.is_empty(),
+                "{} strategy should produce no diagnostics, got: {:?}",
+                name, result.diagnostics
+            );
+        }
+    }
+
+    #[test]
     fn test_entry_policy_single_strategy_groups_all() {
         let code = r#"import { component$, $ } from "@qwik.dev/core";
 export const App = component$(() => {
