@@ -448,6 +448,53 @@ pub struct SourceLocation {
 }
 
 // ---------------------------------------------------------------------------
+// Internal Types (used by transform stages, not part of public API)
+// ---------------------------------------------------------------------------
+
+/// Intermediate segment representation recorded during the transform pass.
+/// This gets converted to SegmentAnalysis + a segment Program during code_move.
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub(crate) struct SegmentData {
+    /// The display name (e.g., "test.tsx_Header_component").
+    pub display_name: String,
+
+    /// The computed hash (e.g., "J4uyIhaBNR4").
+    pub hash: String,
+
+    /// The full segment name (e.g., "Header_component_J4uyIhaBNR4").
+    pub name: String,
+
+    /// The callee that created this segment (e.g., "$", "component$").
+    pub ctx_name: String,
+
+    /// Context kind (function or event handler).
+    pub ctx_kind: CtxKind,
+
+    /// Source file origin.
+    pub origin: String,
+
+    /// File extension.
+    pub extension: String,
+
+    /// Span of the original $-call expression.
+    pub span: (u32, u32),
+
+    /// Parent segment name, if nested.
+    pub parent: Option<String>,
+
+    /// Variables from the enclosing scope that are referenced inside this segment.
+    /// Used by `SmartStrategy` to decide whether the segment is "pure" (no captures).
+    pub scoped_idents: Vec<String>,
+
+    /// Whether the segment body captures outer scope variables.
+    pub captures: bool,
+
+    /// Names of captured variables (for inlinedQrl's capture array).
+    pub capture_names: Vec<String>,
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 

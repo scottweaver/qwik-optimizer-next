@@ -11,6 +11,8 @@ pub mod errors;
 pub mod is_const;
 pub(crate) mod parse;
 pub(crate) mod collector;
+pub(crate) mod entry_strategy;
+pub(crate) mod rename_imports;
 
 // Re-export all public types
 pub use types::*;
