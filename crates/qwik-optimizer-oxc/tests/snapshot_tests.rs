@@ -64,7 +64,11 @@ struct FixtureConfig {
 struct FixtureInput {
     path: String,
     dev_path: Option<String>,
-    code: String,
+}
+
+/// Helper: get the first input's code from a SnapshotData (convenience for single-input tests).
+fn first_input_code(snap: &SnapshotData) -> &str {
+    snap.inputs.first().map(|i| i.code.as_str()).unwrap_or("")
 }
 
 // ============================================================================
@@ -72,9 +76,17 @@ struct FixtureInput {
 // ============================================================================
 
 #[derive(Debug, Clone)]
+struct SnapshotInput {
+    /// File path from the ==INPUT== header (empty for single-input snapshots)
+    path: String,
+    /// The input source code
+    code: String,
+}
+
+#[derive(Debug, Clone)]
 struct SnapshotData {
-    /// The input source code from the ==INPUT== section
-    input: String,
+    /// Input source code(s) from the ==INPUT== section(s)
+    inputs: Vec<SnapshotInput>,
     /// Extracted segment modules (entry points with code + metadata)
     segments: Vec<SegmentSnapshot>,
     /// The root (transformed main) module
@@ -117,12 +129,12 @@ fn parse_snapshot(content: &str) -> SnapshotData {
     let content = skip_frontmatter(content);
 
     // Split on the major section markers
-    let input = extract_input_section(&content);
+    let inputs = extract_input_sections(&content);
     let diagnostics = extract_diagnostics_section(&content);
     let (segments, root_module) = extract_module_sections(&content);
 
     SnapshotData {
-        input,
+        inputs,
         segments,
         root_module,
         diagnostics,
@@ -148,23 +160,56 @@ fn skip_frontmatter(content: &str) -> String {
     lines[end_idx..].join("\n")
 }
 
-/// Extract the content between `==INPUT==` and the first `========` section header.
-fn extract_input_section(content: &str) -> String {
+/// Extract input sections from the snapshot.
+///
+/// Supports two formats:
+/// - Single input: `==INPUT==\n[code]` (path left empty, comes from fixtures.json)
+/// - Multi-input:  `==INPUT== path\n[code]\n==INPUT== path2\n[code2]`
+fn extract_input_sections(content: &str) -> Vec<SnapshotInput> {
     let input_marker = "==INPUT==";
-    let Some(start) = content.find(input_marker) else {
-        return String::new();
-    };
-    let after_marker = start + input_marker.len();
-    let rest = &content[after_marker..];
 
-    // Find the next section header (starts with "=====")
-    let end = rest
-        .find("\n========")
-        .unwrap_or(rest.find("\n== DIAGNOSTICS ==").unwrap_or(rest.len()));
+    // Find all ==INPUT== positions
+    let mut positions: Vec<usize> = Vec::new();
+    let mut search_from = 0;
+    while let Some(pos) = content[search_from..].find(input_marker) {
+        positions.push(search_from + pos);
+        search_from = search_from + pos + input_marker.len();
+    }
 
-    let section = &rest[..end];
-    // Trim leading/trailing newlines but preserve internal formatting
-    section.trim_matches('\n').to_string()
+    if positions.is_empty() {
+        return Vec::new();
+    }
+
+    let mut inputs = Vec::new();
+
+    for (idx, &pos) in positions.iter().enumerate() {
+        let after_marker = pos + input_marker.len();
+        let header_rest = &content[after_marker..];
+
+        // Extract path from the same line (if any): ==INPUT== path\n
+        let line_end = header_rest.find('\n').unwrap_or(header_rest.len());
+        let path = header_rest[..line_end].trim().to_string();
+
+        // Code starts after the header line
+        let code_start = after_marker + line_end;
+        let rest = &content[code_start..];
+
+        // Code ends at the next ==INPUT==, next ======== section, or == DIAGNOSTICS ==
+        let end = if idx + 1 < positions.len() {
+            // Next ==INPUT== position relative to code_start
+            positions[idx + 1] - code_start
+        } else {
+            // Find next module section or diagnostics
+            rest.find("\n========")
+                .unwrap_or(rest.find("\n== DIAGNOSTICS ==").unwrap_or(rest.len()))
+        };
+
+        let code = rest[..end].trim_matches('\n').to_string();
+
+        inputs.push(SnapshotInput { path, code });
+    }
+
+    inputs
 }
 
 /// Extract the diagnostics JSON from the `== DIAGNOSTICS ==` section.
@@ -405,11 +450,15 @@ mod parser_smoke_tests {
 
         // Verify input was extracted
         assert!(
-            snap.input.contains("import { $, component, onRender }"),
+            !snap.inputs.is_empty(),
+            "Should have at least one input"
+        );
+        assert!(
+            snap.inputs[0].code.contains("import { $, component, onRender }"),
             "Input should contain the import statement"
         );
         assert!(
-            snap.input.contains("renderHeader1"),
+            snap.inputs[0].code.contains("renderHeader1"),
             "Input should contain renderHeader1"
         );
 
@@ -460,7 +509,7 @@ mod parser_smoke_tests {
         let snap = load_snapshot("example_invalid_segment_expr1");
 
         assert!(
-            !snap.input.is_empty(),
+            !first_input_code(&snap).is_empty(),
             "Input should not be empty"
         );
 
@@ -487,7 +536,7 @@ mod parser_smoke_tests {
         let snap = load_snapshot("example_dead_code");
 
         // Should have input with the dead if(false) branch
-        assert!(snap.input.contains("if (false)"));
+        assert!(first_input_code(&snap).contains("if (false)"));
 
         // Root module should have componentQrl
         let root = snap.root_module.as_ref().expect("Should have root module");
@@ -513,7 +562,7 @@ mod parser_smoke_tests {
     fn test_parse_skip_transform_snapshot() {
         // example_skip_transform: non-standard transform, may have different structure
         let snap = load_snapshot("example_skip_transform");
-        assert!(!snap.input.is_empty(), "Should have input");
+        assert!(!first_input_code(&snap).is_empty(), "Should have input");
         // This snapshot has a root module but may not have entry point segments
         // (since it skips the dollar transform)
         assert!(snap.diagnostics.trim() == "[]");
@@ -543,7 +592,6 @@ mod parser_smoke_tests {
         assert!(example_1.is_server.is_none());
         assert_eq!(example_1.inputs.len(), 1);
         assert_eq!(example_1.inputs[0].path, "test.tsx");
-        assert!(example_1.inputs[0].code.contains("renderHeader1"));
     }
 
     #[test]
@@ -590,7 +638,7 @@ mod parser_smoke_tests {
 
             // Snapshots with multiple inputs (e.g., relative_paths) may not have
             // an ==INPUT== section -- the input is in fixtures.json instead.
-            if snap.input.is_empty() && config.inputs.len() <= 1 {
+            if first_input_code(&snap).is_empty() && config.inputs.len() <= 1 {
                 parse_errors.push(format!("{}: empty input section", name));
             }
 
@@ -623,8 +671,8 @@ mod snapshot_transform_tests {
         TransformModulesOptions, TransformModuleInput, EntryStrategy, EmitMode, MinifyMode,
     };
 
-    /// Convert a FixtureConfig to TransformModulesOptions.
-    fn fixture_to_options(config: &FixtureConfig) -> TransformModulesOptions {
+    /// Convert a FixtureConfig + SnapshotData inputs into TransformModulesOptions.
+    fn fixture_to_options(config: &FixtureConfig, snap_inputs: &[SnapshotInput]) -> TransformModulesOptions {
         let entry_strategy = match config.entry_strategy.as_str() {
             "Segment" => EntryStrategy::Segment,
             "Inline" => EntryStrategy::Inline,
@@ -651,15 +699,31 @@ mod snapshot_transform_tests {
             _ => MinifyMode::Simplify,
         };
 
-        let inputs: Vec<TransformModuleInput> = config
-            .inputs
-            .iter()
-            .map(|i| TransformModuleInput {
-                code: i.code.clone(),
-                path: i.path.clone(),
-                dev_path: i.dev_path.clone(),
-            })
-            .collect();
+        // Combine path/dev_path from fixtures.json with code from .snap ==INPUT== sections.
+        let inputs: Vec<TransformModuleInput> = if snap_inputs.len() == 1 && snap_inputs[0].path.is_empty() {
+            // Single-input: snap has no path, pair with the single fixture input
+            config.inputs.iter().map(|fi| TransformModuleInput {
+                code: snap_inputs[0].code.clone(),
+                path: fi.path.clone(),
+                dev_path: fi.dev_path.clone(),
+            }).collect()
+        } else {
+            // Multi-input: match by path from ==INPUT== headers
+            config.inputs.iter().map(|fi| {
+                let code = snap_inputs.iter()
+                    .find(|si| si.path == fi.path)
+                    .unwrap_or_else(|| panic!(
+                        "No ==INPUT== section found for path '{}' in snapshot",
+                        fi.path
+                    ))
+                    .code.clone();
+                TransformModuleInput {
+                    code,
+                    path: fi.path.clone(),
+                    dev_path: fi.dev_path.clone(),
+                }
+            }).collect()
+        };
 
         TransformModulesOptions {
             src_dir: config.src_dir.clone(),
@@ -699,7 +763,7 @@ mod snapshot_transform_tests {
         config: &FixtureConfig,
         expected: &SnapshotData,
     ) -> (bool, String) {
-        let opts = fixture_to_options(config);
+        let opts = fixture_to_options(config, &expected.inputs);
         let result = qwik_optimizer_oxc::transform_modules(opts);
 
         let mut issues: Vec<String> = Vec::new();
@@ -785,7 +849,7 @@ mod snapshot_transform_tests {
                     .unwrap_or_else(|| panic!("No fixture config for '{}'", fixture_name));
                 let expected = load_snapshot(fixture_name);
 
-                let opts = fixture_to_options(config);
+                let opts = fixture_to_options(config, &expected.inputs);
 
                 // The test passes if transform_modules doesn't panic.
                 // We compare output but accept cosmetic differences.
