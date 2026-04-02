@@ -82,7 +82,12 @@ Plans:
   3. The spec document contains NAPI and WASM binding contracts (function signatures, serialization, async behavior) sufficient to implement bindings without referencing SWC source
   4. The spec document contains OXC migration notes per transformation section — explicitly calling out where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena)
   5. The spec document contains at least 20 representative input/output examples covering all 14 CONVs, extracted from Jack's 162 spec files
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Public API Types: TransformModulesOptions, TransformOutput, SegmentAnalysis, Diagnostic, all enums
+- [ ] 04-02-PLAN.md — Binding Contracts (NAPI/WASM) and Appendix A: OXC Migration Guide
+- [ ] 04-03-PLAN.md — Appendix B: Representative Examples (24 curated snapshots covering all 14 CONVs)
 
 ### Phase 5: Core OXC Implementation
 **Goal**: A working qwik-core Rust crate implements all 14 CONV transformations using idiomatic OXC patterns, passing all 162 behavioral tests from Jack's spec corpus
@@ -116,6 +121,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Core Pipeline Specification | 1/5 | In Progress|  |
 | 2. JSX, Props & Signal Specification | 1/3 | In Progress | - |
 | 3. Build Modes & Remaining Transforms Specification | 3/4 | In Progress | - |
-| 4. Public API, Bindings & Cross-Cutting Specification | 0/? | Not started | - |
+| 4. Public API, Bindings & Cross-Cutting Specification | 0/3 | Planned | - |
 | 5. Core OXC Implementation | 0/? | Not started | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |
