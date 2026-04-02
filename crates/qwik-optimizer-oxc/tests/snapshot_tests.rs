@@ -1007,3 +1007,209 @@ mod snapshot_transform_tests {
     snapshot_test!(ternary_prop);
     snapshot_test!(transform_qrl_in_regular_prop);
 }
+
+// ============================================================================
+// Emit mode integration tests (06-02: validate all 5 modes)
+// ============================================================================
+
+#[cfg(test)]
+mod emit_mode_tests {
+    use qwik_optimizer_oxc::{
+        EmitMode, EntryStrategy, MinifyMode, TransformModuleInput, TransformModulesOptions,
+    };
+
+    fn make_opts(code: &str, mode: EmitMode) -> TransformModulesOptions {
+        TransformModulesOptions {
+            src_dir: "/user/qwik/src/".to_string(),
+            input: vec![TransformModuleInput {
+                code: code.to_string(),
+                path: "test.tsx".to_string(),
+                dev_path: None,
+            }],
+            source_maps: false,
+            mode,
+            minify: MinifyMode::None,
+            ..TransformModulesOptions::default()
+        }
+    }
+
+    const COMPONENT_CODE: &str = r#"import { component$, $ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return <div>Hello</div>;
+});
+export const handler = $(() => "clicked");"#;
+
+    // -----------------------------------------------------------------------
+    // HMR mode: _useHmr injection
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn hmr_mode_component_segment_has_use_hmr() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Hmr));
+        let component_seg = result.modules.iter().find(|m| {
+            m.segment.as_ref().map_or(false, |s| s.ctx_name == "component$")
+        });
+        assert!(component_seg.is_some(), "Should produce component$ segment");
+        let seg = component_seg.unwrap();
+        assert!(
+            seg.code.contains("_useHmr("),
+            "HMR component$ segment must contain _useHmr(), got:\n{}",
+            seg.code
+        );
+        assert!(
+            seg.code.contains("import { _useHmr }"),
+            "HMR component$ segment must import _useHmr, got:\n{}",
+            seg.code
+        );
+    }
+
+    #[test]
+    fn hmr_mode_bare_dollar_segment_no_use_hmr() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Hmr));
+        let dollar_seg = result.modules.iter().find(|m| {
+            m.segment.as_ref().map_or(false, |s| s.ctx_name == "$")
+        });
+        assert!(dollar_seg.is_some(), "Should produce bare $ segment");
+        assert!(
+            !dollar_seg.unwrap().code.contains("_useHmr"),
+            "HMR bare $ segment must NOT contain _useHmr"
+        );
+    }
+
+    #[test]
+    fn hmr_mode_root_uses_qrl_dev() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Hmr));
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("qrlDEV"),
+            "HMR root module should use qrlDEV, got:\n{}",
+            root.code
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Lib mode: no separate segments, uses inlinedQrl
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn lib_mode_no_separate_segments() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Lib));
+        let segments: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
+        assert!(
+            segments.is_empty(),
+            "Lib mode should produce 0 segment modules, got {}",
+            segments.len()
+        );
+    }
+
+    #[test]
+    fn lib_mode_root_uses_inlined_qrl() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Lib));
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("inlinedQrl"),
+            "Lib mode root should use inlinedQrl, got:\n{}",
+            root.code
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Test mode: preserves build constants
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_mode_preserves_build_constants() {
+        let code = r#"import { isServer, isBrowser, isDev } from "@qwik.dev/core/build";
+console.log(isServer, isBrowser, isDev);"#;
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(code, EmitMode::Test));
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("isServer") && root.code.contains("isBrowser") && root.code.contains("isDev"),
+            "Test mode must preserve all build constant identifiers, got:\n{}",
+            root.code
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Dev mode: uses qrlDEV/inlinedQrlDEV
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn dev_mode_root_uses_qrl_dev() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Dev));
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("qrlDEV"),
+            "Dev mode root should use qrlDEV, got:\n{}",
+            root.code
+        );
+    }
+
+    #[test]
+    fn dev_mode_segments_exist() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Dev));
+        let segments: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
+        assert!(
+            !segments.is_empty(),
+            "Dev mode should produce segment modules"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Prod mode: uses standard qrl (not qrlDEV)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn prod_mode_root_uses_standard_qrl() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Prod));
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("qrl("),
+            "Prod mode should use qrl(), got:\n{}",
+            root.code
+        );
+        assert!(
+            !root.code.contains("qrlDEV"),
+            "Prod mode should NOT use qrlDEV, got:\n{}",
+            root.code
+        );
+    }
+
+    #[test]
+    fn prod_mode_segments_exist() {
+        let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, EmitMode::Prod));
+        let segments: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
+        assert!(
+            !segments.is_empty(),
+            "Prod mode should produce segment modules"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // All 5 modes produce output without errors
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn all_five_modes_produce_output_without_errors() {
+        let modes = vec![
+            ("Lib", EmitMode::Lib),
+            ("Prod", EmitMode::Prod),
+            ("Dev", EmitMode::Dev),
+            ("Hmr", EmitMode::Hmr),
+            ("Test", EmitMode::Test),
+        ];
+        for (name, mode) in modes {
+            let result = qwik_optimizer_oxc::transform_modules(make_opts(COMPONENT_CODE, mode));
+            assert!(
+                !result.modules.is_empty(),
+                "{} mode should produce at least one module",
+                name
+            );
+            assert!(
+                result.diagnostics.is_empty(),
+                "{} mode should produce no error diagnostics, got: {:?}",
+                name, result.diagnostics
+            );
+        }
+    }
+}

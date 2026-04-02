@@ -93,6 +93,38 @@ pub(crate) fn read_captures(scoped_idents: &[String]) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// inject_use_hmr -- HMR hook injection (D-41)
+// ---------------------------------------------------------------------------
+
+/// Inject `_useHmr("dev_path");` as the first statement in a component$
+/// function body for HMR mode.
+///
+/// Only called for `component$` segments when `EmitMode::Hmr` is active.
+/// The injection statement is prepended after the opening brace of the
+/// function/arrow body.
+pub(crate) fn inject_use_hmr(expr_code: &str, dev_path: &str) -> String {
+    let hmr_stmt = format!("\n_useHmr(\"{}\");\n", dev_path);
+
+    // Try arrow function with block body first: () => { ... }
+    if let Some(arrow_pos) = expr_code.find("=>") {
+        let after_arrow = expr_code[arrow_pos + 2..].trim_start();
+        if after_arrow.starts_with('{') {
+            return prepend_into_block_arrow(expr_code, &hmr_stmt);
+        }
+        // Concise arrow: () => expr -- wrap in block with _useHmr + return
+        let body_expr = after_arrow;
+        let params_code = extract_arrow_params(expr_code);
+        return format!(
+            "({}) => {{\n_useHmr(\"{}\");\nreturn {};\n}}",
+            params_code, dev_path, body_expr
+        );
+    }
+
+    // Try function expression: function(...) { ... }
+    prepend_into_function_body(expr_code, &hmr_stmt)
+}
+
+// ---------------------------------------------------------------------------
 // transform_function_expr
 // ---------------------------------------------------------------------------
 
@@ -788,6 +820,8 @@ pub(crate) struct NewModuleCtx<'a> {
     pub explicit_extensions: bool,
     pub extra_top_items: &'a [HoistedConst],
     pub migrated_root_vars: &'a [String],
+    /// Additional synthetic import statements to prepend (e.g., HMR _useHmr import).
+    pub synthetic_imports: &'a [String],
 }
 
 /// Build a complete segment module string from the 13-step pipeline.
@@ -899,6 +933,10 @@ pub(crate) fn new_module(ctx: NewModuleCtx<'_>) -> String {
     let mut all_items: Vec<String> = Vec::new();
     all_items.extend(header_items);
     all_items.extend(import_stmts);
+    // Synthetic imports (e.g., HMR _useHmr)
+    for si in ctx.synthetic_imports {
+        all_items.push(si.clone());
+    }
     all_items.extend(extra_imports);
     all_items.extend(sorted_items.into_iter().map(|(_sym, code)| code));
     let deduped = dedup_by_sym(all_items);
@@ -994,6 +1032,7 @@ mod tests {
             explicit_extensions: false,
             extra_top_items: &[],
             migrated_root_vars: &[],
+            synthetic_imports: &[],
         };
         let result = new_module(ctx);
         assert!(result.contains("export const s_test"));
@@ -1014,6 +1053,7 @@ mod tests {
             explicit_extensions: false,
             extra_top_items: &[],
             migrated_root_vars: &[],
+            synthetic_imports: &[],
         };
         let result = new_module(ctx);
         assert!(result.contains(r#"import { _captures } from "@qwik.dev/core";"#));
