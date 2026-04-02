@@ -963,6 +963,212 @@ export const App = component$(() => {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Emit mode tests (06-02: HMR, Lib, Test, Dev, Prod)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_hmr_mode_injects_use_hmr_in_component_segment() {
+        let code = r#"import { component$ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return <div>Hello</div>;
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/user/qwik/src/".to_string(),
+            input: vec![TransformModuleInput {
+                code: code.to_string(),
+                path: "test.tsx".to_string(),
+                dev_path: None,
+            }],
+            source_maps: false,
+            mode: EmitMode::Hmr,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let segment = result.modules.iter().find(|m| {
+            m.segment.as_ref().map_or(false, |s| s.ctx_name == "component$")
+        });
+        assert!(segment.is_some(), "Should have a component$ segment module");
+        let seg = segment.unwrap();
+        assert!(
+            seg.code.contains("_useHmr("),
+            "HMR mode component$ segment should contain _useHmr() call, got:\n{}",
+            seg.code
+        );
+        // The import should also be present
+        assert!(
+            seg.code.contains("_useHmr"),
+            "Segment should import _useHmr, got:\n{}",
+            seg.code
+        );
+    }
+
+    #[test]
+    fn test_hmr_mode_does_not_inject_use_hmr_in_bare_dollar_segment() {
+        let code = r#"import { $, component$ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return $(() => "hello");
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/user/qwik/src/".to_string(),
+            input: vec![TransformModuleInput {
+                code: code.to_string(),
+                path: "test.tsx".to_string(),
+                dev_path: None,
+            }],
+            source_maps: false,
+            mode: EmitMode::Hmr,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        // Find the bare $ segment (not the component$ segment)
+        let bare_dollar_seg = result.modules.iter().find(|m| {
+            m.segment.as_ref().map_or(false, |s| s.ctx_name == "$")
+        });
+        assert!(bare_dollar_seg.is_some(), "Should have a bare $ segment");
+        let seg = bare_dollar_seg.unwrap();
+        assert!(
+            !seg.code.contains("_useHmr("),
+            "HMR mode bare $ segment should NOT contain _useHmr(), got:\n{}",
+            seg.code
+        );
+    }
+
+    #[test]
+    fn test_hmr_mode_does_not_inject_use_hmr_in_use_task_segment() {
+        let code = r#"import { component$, useTask$ } from "@qwik.dev/core";
+export const App = component$(() => {
+    useTask$(() => { console.log("task"); });
+    return <div>Hello</div>;
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/user/qwik/src/".to_string(),
+            input: vec![TransformModuleInput {
+                code: code.to_string(),
+                path: "test.tsx".to_string(),
+                dev_path: None,
+            }],
+            source_maps: false,
+            mode: EmitMode::Hmr,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let use_task_seg = result.modules.iter().find(|m| {
+            m.segment.as_ref().map_or(false, |s| s.ctx_name == "useTask$")
+        });
+        assert!(use_task_seg.is_some(), "Should have a useTask$ segment");
+        let seg = use_task_seg.unwrap();
+        assert!(
+            !seg.code.contains("_useHmr("),
+            "HMR mode useTask$ segment should NOT contain _useHmr(), got:\n{}",
+            seg.code
+        );
+    }
+
+    #[test]
+    fn test_lib_mode_produces_no_separate_segments() {
+        let code = r#"import { component$, $ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return $(() => "hello");
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            mode: EmitMode::Lib,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let segment_modules: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
+        assert!(
+            segment_modules.is_empty(),
+            "Lib mode should produce no separate segment modules, got {} segments",
+            segment_modules.len()
+        );
+        // Root module should contain inlinedQrl (inline path)
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("inlinedQrl"),
+            "Lib mode root should use inlinedQrl, got:\n{}",
+            root.code
+        );
+    }
+
+    #[test]
+    fn test_test_mode_preserves_is_server_identifier() {
+        let code = r#"import { isServer } from "@qwik.dev/core/build";
+console.log(isServer);"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            mode: EmitMode::Test,
+            is_server: Some(true),
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("isServer"),
+            "Test mode should preserve isServer as identifier, got:\n{}",
+            root.code
+        );
+        assert!(
+            !root.code.contains("console.log(true)"),
+            "Test mode should NOT replace isServer with true, got:\n{}",
+            root.code
+        );
+    }
+
+    #[test]
+    fn test_dev_mode_uses_qrl_dev() {
+        let code = r#"import { component$ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return <div>Hello</div>;
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            mode: EmitMode::Dev,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("qrlDEV"),
+            "Dev mode root should use qrlDEV, got:\n{}",
+            root.code
+        );
+    }
+
+    #[test]
+    fn test_prod_mode_uses_standard_qrl() {
+        let code = r#"import { component$ } from "@qwik.dev/core";
+export const App = component$(() => {
+    return <div>Hello</div>;
+});"#;
+        let opts = TransformModulesOptions {
+            src_dir: "/project".to_string(),
+            input: vec![make_input(code, "test.tsx")],
+            source_maps: false,
+            mode: EmitMode::Prod,
+            ..TransformModulesOptions::default()
+        };
+        let result = transform_modules(opts);
+        let root = result.modules.iter().find(|m| m.segment.is_none()).unwrap();
+        assert!(
+            root.code.contains("qrl("),
+            "Prod mode root should use qrl (not qrlDEV), got:\n{}",
+            root.code
+        );
+        assert!(
+            !root.code.contains("qrlDEV"),
+            "Prod mode root should NOT use qrlDEV, got:\n{}",
+            root.code
+        );
+    }
+
     #[test]
     fn test_entry_policy_single_strategy_groups_all() {
         let code = r#"import { component$, $ } from "@qwik.dev/core";
