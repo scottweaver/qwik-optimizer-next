@@ -85,7 +85,7 @@ Plans:
 **Plans:** 7 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Crate scaffold, types, foundation modules (words, hash, errors, is_const)
+- [x] 05-01-PLAN.md — Crate scaffold, types, foundation modules (words, hash, errors, is_const)
 - [ ] 05-02-PLAN.md — Test harness + 201 SWC snapshot corpus setup
 - [ ] 05-03-PLAN.md — Parser, GlobalCollect, entry strategy, legacy import rename
 - [ ] 05-04-PLAN.md — Pre-traverse mutations (const replace, export filter) + QwikTransform skeleton with dollar detection
@@ -115,5 +115,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. JSX, Props & Signal Specification | 0/? | Not started | - |
 | 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
-| 5. Core OXC Implementation | 0/7 | Not started | - |
+| 5. Core OXC Implementation | 1/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 0/? | Not started | - |

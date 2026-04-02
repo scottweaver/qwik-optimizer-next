@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 ## Current Position
 
 Phase: 5
-Plan: Not started
-Status: Phase 04 complete, ready for Phase 05
+Plan: 05-01 complete
+Status: Phase 05 in progress -- foundation modules done
 Last activity: 2026-04-02
 
-Progress: [######░░░░] 67%
+Progress: [######░░░░] 71%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [######░░░░] 67%
 | Phase 01 P03 | 5m | 2 tasks | 1 files |
 | Phase 01 P05 | 4m | 2 tasks | 1 files |
 | Phase 04 P03 | 8m | 2 tasks | 1 files |
+| Phase 05 P01 | 5m | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - [Phase 01 P03]: All 16 capture edge cases documented as named spec test cases (CAPTURE-EDGE-01 through 16)
 - [Phase 01]: Variable Migration placed as top-level ## section per D-12; Source Map Generation uses ## Infrastructure: prefix matching existing convention
 - [Phase 04 P03]: D-30 fulfilled: 24 curated examples in Appendix B complementing inline CONV examples from Phases 1-3
+- [Phase 05 P01]: OXC 0.123.0 pinned with codegen/semantic/serialize/ast_visit features; SipHash 1-3 seed (0,0) for deterministic hashing; edition 2024
 
 ### Pending Todos
 
@@ -83,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T13:30:46.955Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-core-oxc-implementation/05-CONTEXT.md
+Last session: 2026-04-02T14:10:30Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: .planning/phases/05-core-oxc-implementation/05-01-SUMMARY.md
