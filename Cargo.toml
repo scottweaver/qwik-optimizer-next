@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/qwik-optimizer-oxc"]
+members = ["crates/qwik-optimizer-oxc", "crates/qwik-optimizer-napi"]
 resolver = "3"
 
 [package]
