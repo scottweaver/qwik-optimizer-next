@@ -390,6 +390,15 @@ pub(crate) struct QwikTransform {
     pub(crate) needs_qrl_import: bool,
     pub(crate) needs_inlined_qrl_import: bool,
     pub(crate) needs_noop_qrl_import: bool,
+    pub(crate) needs_jsx_sorted_import: bool,
+    pub(crate) needs_jsx_split_import: bool,
+    pub(crate) needs_fragment_import: bool,
+    pub(crate) needs_fn_signal_import: bool,
+    pub(crate) needs_wrap_prop_import: bool,
+
+    // ---- JSX state -----------------------------------------------------------
+    /// Counter for deterministic JSX key generation.
+    pub(crate) jsx_key_counter: u32,
 
     // ---- Config (owned copies) --------------------------------------------
     pub(crate) mode: EmitMode,
@@ -474,6 +483,12 @@ impl QwikTransform {
             needs_qrl_import: false,
             needs_inlined_qrl_import: false,
             needs_noop_qrl_import: false,
+            needs_jsx_sorted_import: false,
+            needs_jsx_split_import: false,
+            needs_fragment_import: false,
+            needs_fn_signal_import: false,
+            needs_wrap_prop_import: false,
+            jsx_key_counter: 0,
             mode: config.mode.clone(),
             entry_strategy: config.entry_strategy.clone(),
             is_server: config.is_server,
@@ -873,6 +888,57 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         expr: &mut Expression<'a>,
         ctx: &mut TraverseCtx<'a, ()>,
     ) {
+        // --- CONV-06: JSX Transform ---
+        // Transform JSXElement and JSXFragment expressions into _jsxSorted/_jsxSplit calls.
+        // We take the expression, transform it, and replace in-place.
+        let is_jsx_element = matches!(expr, Expression::JSXElement(_));
+        let is_jsx_fragment = matches!(expr, Expression::JSXFragment(_));
+
+        if is_jsx_element || is_jsx_fragment {
+            let allocator: &'a oxc::allocator::Allocator = ctx.ast.allocator;
+            // Replace expr with a dummy null literal, take ownership of the original.
+            let taken = std::mem::replace(expr, ctx.ast.expression_null_literal(SPAN));
+            let is_root = self.segment_stack.is_empty();
+
+            let (new_expr, needs) = if is_jsx_element {
+                if let Expression::JSXElement(el) = taken {
+                    crate::jsx_transform::transform_jsx_element(
+                        el.unbox(),
+                        &mut self.jsx_key_counter,
+                        is_root,
+                        allocator,
+                    )
+                } else {
+                    unreachable!()
+                }
+            } else {
+                if let Expression::JSXFragment(frag) = taken {
+                    crate::jsx_transform::transform_jsx_fragment(
+                        frag.unbox(),
+                        &mut self.jsx_key_counter,
+                        is_root,
+                        allocator,
+                    )
+                } else {
+                    unreachable!()
+                }
+            };
+
+            if needs.needs_jsx_sorted {
+                self.needs_jsx_sorted_import = true;
+            }
+            if needs.needs_jsx_split {
+                self.needs_jsx_split_import = true;
+            }
+            if needs.needs_fragment {
+                self.needs_fragment_import = true;
+            }
+
+            *expr = new_expr;
+            return;
+        }
+
+        // --- CONV-02: QRL Wrapping ---
         // Check if this expression is a CallExpression that matches a pending SegmentScope
         let call_span_start = match expr {
             Expression::CallExpression(call) => call.span.start,
@@ -2062,6 +2128,113 @@ mod tests {
         assert!(
             !code.contains("import("),
             "Inline mode should not have dynamic import, got: {}",
+            code
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // JSX transform integration tests (CONV-06)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn jsx_element_transformed_to_jsx_sorted() {
+        let src = r#"<div class="hello">text</div>"#;
+        let config = make_config();
+        let output = transform_code(src, "test.tsx", &config);
+        let code = &output.modules[0].code;
+        assert!(
+            code.contains("_jsxSorted"),
+            "JSX element should produce _jsxSorted call, got: {}",
+            code
+        );
+        assert!(
+            !code.contains("<div"),
+            "JSX syntax should be removed, got: {}",
+            code
+        );
+    }
+
+    #[test]
+    fn jsx_spread_uses_jsx_split() {
+        let src = r#"<div {...props}>text</div>"#;
+        let config = make_config();
+        let output = transform_code(src, "test.tsx", &config);
+        let code = &output.modules[0].code;
+        assert!(
+            code.contains("_jsxSplit"),
+            "Spread props should produce _jsxSplit call, got: {}",
+            code
+        );
+    }
+
+    #[test]
+    fn jsx_classname_normalized_to_class() {
+        let src = r#"<div className="foo">text</div>"#;
+        let config = make_config();
+        let output = transform_code(src, "test.tsx", &config);
+        let code = &output.modules[0].code;
+        // className should be normalized to class in the output
+        assert!(
+            !code.contains("className"),
+            "className should be normalized to class, got: {}",
+            code
+        );
+    }
+
+    #[test]
+    fn jsx_component_gets_key() {
+        let src = r#"<Header title="hello" />"#;
+        let config = make_config();
+        let output = transform_code(src, "test.tsx", &config);
+        let code = &output.modules[0].code;
+        assert!(
+            code.contains("_jsxSorted"),
+            "Component should produce _jsxSorted, got: {}",
+            code
+        );
+        // Component elements should get a key (non-null last arg)
+        assert!(
+            code.contains("Header"),
+            "Component name should appear as identifier, got: {}",
+            code
+        );
+    }
+
+    #[test]
+    fn jsx_key_extracted_from_props() {
+        let src = r#"<div key="my-key">text</div>"#;
+        let config = make_config();
+        let output = transform_code(src, "test.tsx", &config);
+        let code = &output.modules[0].code;
+        assert!(
+            code.contains("my-key"),
+            "Extracted key should appear in output, got: {}",
+            code
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Props destructuring integration test (CONV-04)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn props_destructuring_in_component_pipeline() {
+        // In Inline mode, the function body stays in the root module,
+        // so we can see the _rawProps transformation.
+        let src = r#"
+            import { component$ } from "@qwik.dev/core";
+            export const App = component$(({ name, age }) => {
+                return <div>{name} is {age}</div>;
+            });
+        "#;
+        let mut config = make_config();
+        config.entry_strategy = EntryStrategy::Inline;
+        let output = transform_code(src, "test.tsx", &config);
+        let code = &output.modules[0].code;
+        // Props destructuring should have run (pre-pass)
+        assert!(
+            code.contains("_rawProps"),
+            "Props destructuring should produce _rawProps, got: {}",
             code
         );
     }

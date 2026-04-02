@@ -15,6 +15,8 @@ pub(crate) mod entry_strategy;
 pub(crate) mod rename_imports;
 pub(crate) mod const_replace;
 pub(crate) mod filter_exports;
+pub(crate) mod inlined_fn;
+pub(crate) mod jsx_transform;
 pub(crate) mod props_destructuring;
 pub(crate) mod transform;
 
