@@ -32,9 +32,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Specification — Public API
 
-- [ ] **SPEC-18**: Spec documents TransformModulesOptions (all config fields with types, defaults, valid values)
-- [ ] **SPEC-19**: Spec documents TransformOutput, TransformModule, SegmentAnalysis, SegmentKind (all output fields with types and semantics)
-- [ ] **SPEC-20**: Spec documents the Diagnostic type and error/warning categories
+- [x] **SPEC-18**: Spec documents TransformModulesOptions (all config fields with types, defaults, valid values)
+- [x] **SPEC-19**: Spec documents TransformOutput, TransformModule, SegmentAnalysis, SegmentKind (all output fields with types and semantics)
+- [x] **SPEC-20**: Spec documents the Diagnostic type and error/warning categories
 
 ### Specification — Infrastructure
 
