@@ -42,15 +42,7 @@ pathdiff = "0.2"
 # Cross-platform path normalization (consistent / separators).
 path-slash = "0.2"
 
-# Parallel module transformation.
-# Only included when "parallel" feature is active.
-rayon = { version = "1", optional = true }
-
 [dev-dependencies]
 # Snapshot testing for comparing output against golden spec files.
 insta = { version = "1", features = ["json"] }
-
-[features]
-default = []
-parallel = ["rayon"]
 
