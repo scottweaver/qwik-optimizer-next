@@ -14,7 +14,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SPEC-03**: Spec documents CONV-03 (Capture Analysis) — free variable detection across `$()` boundaries with full taxonomy of 8 capture categories (imports, inner locals, outer locals, loop variables, shadowed bindings, destructured params, hoisted functions, TS type-only imports)
 - [x] **SPEC-04**: Spec documents CONV-04 (Props Destructuring) — transformation of destructured component props to `_rawProps` access patterns, `_restProps()` handling, pre-pass ordering requirement
 - [x] **SPEC-05**: Spec documents CONV-05 (Segment Extraction) — extraction of `$()` callback bodies into separate output modules, canonical filename generation, hash suffixes, nested segment parent-child relationships, variable migration
-- [ ] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
+- [x] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
 - [x] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
 - [x] **SPEC-08**: Spec documents CONV-08 (PURE Annotations) — `/*#__PURE__*/` on `componentQrl` only, with explicit anti-list of side-effectful wrappers that must NOT be annotated
 - [x] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
@@ -59,8 +59,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **IMPL-01**: OXC implementation passes all 162 behavioral tests from Jack's spec corpus
 - [x] **IMPL-02**: OXC implementation supports all 14 CONV transformation types
-- [ ] **IMPL-03**: OXC implementation supports all 7 entry strategies
-- [ ] **IMPL-04**: OXC implementation supports all 5 emit modes
+- [x] **IMPL-03**: OXC implementation supports all 7 entry strategies
+- [x] **IMPL-04**: OXC implementation supports all 5 emit modes
 - [x] **IMPL-05**: OXC implementation produces functionally equivalent output to SWC version (semantic equivalence, not byte-for-byte)
 
 ### Implementation — Bindings
@@ -114,7 +114,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-03 | Phase 1 | Complete |
 | SPEC-04 | Phase 2 | Complete |
 | SPEC-05 | Phase 1 | Complete |
-| SPEC-06 | Phase 9 (gap closure) | Pending |
+| SPEC-06 | Phase 2 | Complete |
 | SPEC-07 | Phase 2 | Complete |
 | SPEC-08 | Phase 3 | Complete |
 | SPEC-09 | Phase 7 (gap closure) | Complete |
@@ -126,9 +126,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-15 | Phase 3 | Complete |
 | SPEC-16 | Phase 3 | Complete |
 | SPEC-17 | Phase 3 | Complete |
-| SPEC-18 | Phase 9 (gap closure) | Pending |
-| SPEC-19 | Phase 9 (gap closure) | Pending |
-| SPEC-20 | Phase 9 (gap closure) | Pending |
+| SPEC-18 | Phase 4 | Complete |
+| SPEC-19 | Phase 4 | Complete |
+| SPEC-20 | Phase 4 | Complete |
 | SPEC-21 | Phase 1 | Complete |
 | SPEC-22 | Phase 1 | Complete |
 | SPEC-23 | Phase 1 | Complete |
@@ -141,8 +141,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-30 | Phase 1 | Complete |
 | IMPL-01 | Phase 5 | Complete |
 | IMPL-02 | Phase 8 (gap closure) | Complete |
-| IMPL-03 | Phase 9 (gap closure) | Pending |
-| IMPL-04 | Phase 9 (gap closure) | Pending |
+| IMPL-03 | Phase 6 | Complete |
+| IMPL-04 | Phase 6 | Complete |
 | IMPL-05 | Phase 8 (gap closure) | Complete |
 | IMPL-06 | Phase 6 | Complete |
 | IMPL-07 | Phase 6 | Complete |
@@ -168,4 +168,4 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-03 after Phase 7 gap closure execution*
+*Last updated: 2026-04-03 after Phase 9 metadata cleanup*

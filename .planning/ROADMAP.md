@@ -14,12 +14,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Core Pipeline Specification** - Specify dollar detection, QRL wrapping, capture analysis, segment extraction, import rewriting, and supporting infrastructure
 - [ ] **Phase 2: JSX, Props & Signal Specification** - Specify the JSX transform subsystem, props destructuring, and signal optimization
-- [ ] **Phase 3: Build Modes & Remaining Transforms Specification** - Specify PURE annotations, const replacement, DCE, code stripping, sync$, noop QRL, entry strategies, emit modes, and pipeline ordering
+- [x] **Phase 3: Build Modes & Remaining Transforms Specification** - Specify PURE annotations, const replacement, DCE, code stripping, sync$, noop QRL, entry strategies, emit modes, and pipeline ordering
 - [x] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
 - [x] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 201 behavioral tests with idiomatic OXC patterns
 - [x] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
 - [x] **Phase 7: Spec Gap Closure** - Write missing CONV-01/02 spec sections, verify CONV-09/10/11, add representative examples (completed 2026-04-03)
-- [ ] **Phase 8: Implementation Gap Closure** - Wire CONV-07/CONV-08, inject PURE annotations, improve SWC parity
+- [x] **Phase 8: Implementation Gap Closure** - Wire CONV-07/CONV-08, inject PURE annotations, improve SWC parity
 - [ ] **Phase 9: Metadata & Verification Cleanup** - Update checkboxes, write missing VERIFICATIONs, fix parallel feature
 
 ## Phase Details
