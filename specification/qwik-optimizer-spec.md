@@ -3883,6 +3883,20 @@ export const App = component$(() => {
       {isServer2 && <p>server</p>}
       {isb && <p>server</p>}
     </Cmp>
+  );
+});
+```
+
+**Key Observations:**
+- `isServer` (from `@qwik.dev/core/build`) and `isServer2` (aliased from `@qwik.dev/core`) are both `true` on a server build — the `{isServer2 && <p>server</p>}` JSX expression evaluates to `<p>server</p>` in the segment output.
+- `isBrowser` (aliased as `isb`) becomes `false` — the `if (isb) {...}` block in `functionThatNeedsWindow` is removed entirely, leaving an empty arrow function `() => {}`.
+- The `threejs` and `leaflet` imports are removed from the root module because they were only referenced in dead branches. The `mongodb` import is preserved in the segment module because it is still used after const replacement.
+- `isDev` is imported but not used as a build constant in this snippet — it passes through to the segment as a captured import.
+
+**See also:** `example_dead_code` (DCE removing unused imports after branch elimination), Appendix B Example 12 (isServer/isBrowser Const Replacement — full annotated walkthrough).
+
+---
+
 ## Stage 6: QRL Special Cases
 
 Three independent behaviors modify how QRLs are generated or annotated. PURE annotations control bundler tree-shaking eligibility, sync$ serialization bypasses the segment extraction pipeline entirely, and noop QRL handling replaces stripped segments with lightweight placeholders. These transforms operate during the main QwikTransform pass (Step 10) but address distinct concerns that do not depend on each other.
