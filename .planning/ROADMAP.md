@@ -171,8 +171,8 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md — Investigate requirements, update REQUIREMENTS.md + ROADMAP.md, remove parallel feature
-- [ ] 09-02-PLAN.md — Write VERIFICATION.md for phases 3, 4, 5
-- [ ] 09-03-PLAN.md — Write VERIFICATION.md for phases 6, 7
+- [x] 09-02-PLAN.md — Write VERIFICATION.md for phases 3, 4, 5
+- [x] 09-03-PLAN.md — Write VERIFICATION.md for phases 6, 7
 
 ## Progress
 
