@@ -72,13 +72,13 @@ pub(crate) type TypedId = (String, IdentType);
 /// - Object literal property keys
 pub(crate) struct IdentCollector {
     pub idents: HashSet<String>,
-    /// Stack tracking expr vs skip context for nested visits.
-    expr_ctxt: Vec<ExprOrSkip>,
+    /// Stack tracking whether nested visits should collect identifiers or skip them.
+    tracking: Vec<Tracking>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
-enum ExprOrSkip {
-    Expr,
+enum Tracking {
+    Track,
     Skip,
 }
 
@@ -90,7 +90,7 @@ impl IdentCollector {
     pub(crate) fn collect(expr: &Expression<'_>) -> HashSet<String> {
         let mut collector = Self {
             idents: HashSet::new(),
-            expr_ctxt: vec![ExprOrSkip::Expr],
+            tracking: vec![Tracking::Track],
         };
         collector.visit_expression(expr);
         collector.idents
@@ -100,7 +100,7 @@ impl IdentCollector {
 impl<'a> Visit<'a> for IdentCollector {
     fn visit_identifier_reference(&mut self, id: &IdentifierReference<'a>) {
         // Only collect in expression context
-        if self.expr_ctxt.last() == Some(&ExprOrSkip::Expr) {
+        if self.tracking.last() == Some(&Tracking::Track) {
             let name = id.name.as_str();
             if !GLOBAL_BUILTINS.contains(&name) {
                 self.idents.insert(name.to_string());
@@ -109,23 +109,23 @@ impl<'a> Visit<'a> for IdentCollector {
     }
 
     fn visit_expression(&mut self, expr: &Expression<'a>) {
-        self.expr_ctxt.push(ExprOrSkip::Expr);
+        self.tracking.push(Tracking::Track);
         // For member expressions, visit the object but skip the property
         if let Expression::StaticMemberExpression(member) = expr {
             self.visit_expression(&member.object);
             // Skip member.property (it's an IdentifierName, not a reference)
-            self.expr_ctxt.pop();
+            self.tracking.pop();
             return;
         }
         if let Expression::ComputedMemberExpression(member) = expr {
             self.visit_expression(&member.object);
             self.visit_expression(&member.expression);
-            self.expr_ctxt.pop();
+            self.tracking.pop();
             return;
         }
         // Default: walk all children
         walk::walk_expression(self, expr);
-        self.expr_ctxt.pop();
+        self.tracking.pop();
     }
 
     fn visit_object_property(&mut self, prop: &ObjectProperty<'a>) {
