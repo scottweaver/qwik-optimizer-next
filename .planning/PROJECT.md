@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A comprehensive behavioral specification of the Qwik v2 optimizer (build/v2 branch), derived from the existing SWC-based Rust implementation and Jack Shelton's 162 OXC spec files. The spec serves as the authoritative reference for building a feature-complete, idiomatic OXC-based Qwik optimizer. This project lives in the `specification/` subdirectory of the `qwik-optimizer-next` Rust workspace.
+A comprehensive behavioral specification and feature-complete OXC implementation of the Qwik v2 optimizer, derived from the SWC-based Rust implementation and validated against 201 behavioral test fixtures. The specification lives in `specification/` and the implementation in `crates/` of the `qwik-optimizer-next` Rust workspace.
 
 ## Core Value
 
@@ -23,7 +23,9 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 ### Active
 
-(All v0.1.0 requirements validated — see Validated section above)
+- [ ] Improve SWC parity from 57/201 (28%) to 150+/201 (75%+) — remaining mismatches are structural (import ordering, whitespace, comment placement)
+- [ ] Performance benchmarking: OXC optimizer vs SWC optimizer on representative Qwik applications
+- [ ] Parallel module processing via rayon (feature-gated behind `parallel`)
 
 ### Out of Scope
 
@@ -34,10 +36,15 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 ## Context
 
+**Current state (v0.1.0 shipped 2026-04-03):**
+- ~190K LOC Rust across 3 crates (qwik-optimizer-oxc, qwik-optimizer-napi, qwik-optimizer-wasm)
+- 444 tests passing (211 snapshot fixtures + 233 unit tests)
+- 57/201 SWC root module parity (28%)
+- Comprehensive spec document covering all 14 CONVs with 24+ examples
+
 **Source material:**
 - SWC-based Qwik v2 optimizer: `/Users/scottweaver/Projects/qwik/packages/optimizer` (~18.5k LOC Rust, 18 modules)
 - Jack Shelton's OXC conversion: `/Users/scottweaver/Projects/qwik-oxc-optimizer` (96% complete, 13k LOC, 162 spec files)
-- Jack's AI-generated spec: referenced in README but currently inaccessible (Hashnode 403)
 
 **Key architectural insight from Jack's work:** OXC requires a two-phase approach (analyze-then-emit) unlike SWC's ownership-based fold model. Semantic analysis must complete before any AST mutation to avoid scope/symbol invalidation.
 
@@ -78,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after initialization*
+*Last updated: 2026-04-03 after v0.1.0 milestone*

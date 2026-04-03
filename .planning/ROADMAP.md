@@ -1,192 +1,38 @@
 # Roadmap: Qwik Optimizer Specification & OXC Implementation
 
-## Overview
+## Milestones
 
-This roadmap delivers a comprehensive behavioral specification of the Qwik v2 optimizer followed by a feature-complete OXC implementation. The spec is built incrementally across four phases — starting with the core QRL pipeline and capture taxonomy (the hardest part), then layering JSX and props transforms, build mode machinery, and finally the public API contract with binding specs. Two implementation phases follow: first the core transform engine validated against Jack's 162 spec files, then entry strategies, emit modes, and NAPI/WASM bindings. Every spec phase adds sections to a single comprehensive markdown document; every implementation phase builds on the spec as its authoritative reference.
+- ✅ **v0.1.0 — Qwik Optimizer Spec & OXC Implementation** — Phases 1-9 (shipped 2026-04-03)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>✅ v0.1.0 (Phases 1-9) — SHIPPED 2026-04-03</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
+- [x] Phase 1: Core Pipeline Specification (5/5 plans) — completed 2026-04-02
+- [x] Phase 2: JSX, Props & Signal Specification (3/3 plans) — completed 2026-04-02
+- [x] Phase 3: Build Modes & Remaining Transforms Specification (4/4 plans) — completed 2026-04-02
+- [x] Phase 4: Public API, Bindings & Cross-Cutting Specification (3/3 plans) — completed 2026-04-02
+- [x] Phase 5: Core OXC Implementation (7/7 plans) — completed 2026-04-02
+- [x] Phase 6: Strategies, Modes & Binding Implementation (3/3 plans) — completed 2026-04-02
+- [x] Phase 7: Spec Gap Closure (2/2 plans) — completed 2026-04-03
+- [x] Phase 8: Implementation Gap Closure (5/5 plans) — completed 2026-04-03
+- [x] Phase 9: Metadata & Verification Cleanup (3/3 plans) — completed 2026-04-03
 
-- [ ] **Phase 1: Core Pipeline Specification** - Specify dollar detection, QRL wrapping, capture analysis, segment extraction, import rewriting, and supporting infrastructure
-- [ ] **Phase 2: JSX, Props & Signal Specification** - Specify the JSX transform subsystem, props destructuring, and signal optimization
-- [x] **Phase 3: Build Modes & Remaining Transforms Specification** - Specify PURE annotations, const replacement, DCE, code stripping, sync$, noop QRL, entry strategies, emit modes, and pipeline ordering
-- [x] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
-- [x] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 201 behavioral tests with idiomatic OXC patterns
-- [x] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
-- [x] **Phase 7: Spec Gap Closure** - Write missing CONV-01/02 spec sections, verify CONV-09/10/11, add representative examples (completed 2026-04-03)
-- [x] **Phase 8: Implementation Gap Closure** - Wire CONV-07/CONV-08, inject PURE annotations, improve SWC parity
-- [x] **Phase 9: Metadata & Verification Cleanup** - Update checkboxes, write missing VERIFICATIONs, fix parallel feature
+Full details: [v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md)
 
-## Phase Details
-
-### Phase 1: Core Pipeline Specification
-**Goal**: The spec document contains complete behavioral descriptions of the core QRL extraction pipeline — the transformations that every other feature depends on — plus the capture analysis taxonomy that is the single highest-risk area of the entire project
-**Depends on**: Nothing (first phase)
-**Requirements**: SPEC-01, SPEC-02, SPEC-03, SPEC-05, SPEC-12, SPEC-21, SPEC-22, SPEC-23, SPEC-24, SPEC-25, SPEC-30
-**Success Criteria** (what must be TRUE):
-  1. The spec document describes dollar detection rules such that a reader can determine whether any given function call triggers QRL extraction without consulting SWC source
-  2. The spec document contains the complete 8-category capture analysis taxonomy with edge case examples for each category, including the self-import reclassification behavior for module-level declarations
-  3. The spec document describes segment extraction behavior — filename generation, hash computation, nested segment relationships, and variable migration — with input/output examples
-  4. The spec document describes import rewriting rules (consumed import stripping, synthetic import addition, per-segment resolution) with before/after examples
-  5. The spec document describes source map generation contracts for both root and segment modules
-**Plans:** 3/5 plans executed
-
-Plans:
-- [x] 01-01-PLAN.md — Pipeline Overview, GlobalCollect, Hash Generation, Path Resolution (infrastructure)
-- [ ] 01-02-PLAN.md — Dollar Detection (CONV-01), QRL Wrapping (CONV-02)
-- [x] 01-03-PLAN.md — Capture Analysis (CONV-03) with 8-category taxonomy and 16 edge cases
-- [ ] 01-04-PLAN.md — Segment Extraction (CONV-05), Import Rewriting (CONV-12)
-- [x] 01-05-PLAN.md — Variable Migration, Source Map Generation
-
-### Phase 2: JSX, Props & Signal Specification
-**Goal**: The spec document contains complete behavioral descriptions of the JSX transform subsystem (the largest single component), props destructuring, and signal optimization — building on the core pipeline specified in Phase 1
-**Depends on**: Phase 1
-**Requirements**: SPEC-04, SPEC-06, SPEC-07
-**Success Criteria** (what must be TRUE):
-  1. The spec document describes JSX transformation rules (`_jsxSorted`/`_jsxSplit` conversion, static/dynamic prop separation, class normalization, bind sugar, slot/ref/children/key handling) with input/output examples
-  2. The spec document describes signal optimization rules (`_fnSignal` generation for inline JSX expressions, positional parameter creation) with examples showing when optimization applies vs when it does not
-  3. The spec document describes props destructuring transformation (`_rawProps` access patterns, `_restProps()` handling) and explicitly states the pre-pass ordering requirement relative to capture analysis
-**Plans**: TBD
-
-### Phase 3: Build Modes & Remaining Transforms Specification
-**Goal**: The spec document contains complete behavioral descriptions for all remaining CONV transformations and the strategy/mode system that controls optimizer behavior across different build contexts
-**Depends on**: Phase 1
-**Requirements**: SPEC-08, SPEC-09, SPEC-10, SPEC-11, SPEC-13, SPEC-14, SPEC-15, SPEC-16, SPEC-17
-**Success Criteria** (what must be TRUE):
-  1. The spec document describes all 7 entry strategies with grouping rules, behavioral differences, and the Inline/Hoist shared EntryPolicy distinction
-  2. The spec document describes all 5 emit modes with per-transformation behavioral differences (especially dev mode QRL variants and test mode const replacement exceptions)
-  3. The spec document describes the transformation pipeline ordering DAG — which CONVs run before/after which, and why ordering matters (e.g., const replacement before DCE, props destructuring before capture analysis)
-  4. The spec document describes PURE annotations with the explicit whitelist (componentQrl only) and anti-list of side-effectful wrappers, const replacement, dead branch elimination, code stripping, sync$ serialization, and noop QRL handling
-**Plans**: 4 plans
-
-Plans:
-- [x] 03-01-PLAN.md — PURE annotations, const replacement, dead branch elimination
-- [x] 03-02-PLAN.md — Code stripping, sync$ serialization, noop QRL handling
-- [x] 03-03-PLAN.md — Entry strategies and emit modes
-- [x] 03-04-PLAN.md — Pipeline ordering DAG
-
-### Phase 4: Public API, Bindings & Cross-Cutting Specification
-**Goal**: The spec document is complete — all public-facing contracts are documented, OXC migration guidance is embedded per-transformation, and representative examples from Jack's 162 spec files are included as verification anchors
-**Depends on**: Phase 1, Phase 2, Phase 3
-**Requirements**: SPEC-18, SPEC-19, SPEC-20, SPEC-26, SPEC-27, SPEC-28, SPEC-29
-**Success Criteria** (what must be TRUE):
-  1. The spec document contains the complete TransformModulesOptions type definition with all config fields, types, defaults, and valid values
-  2. The spec document contains the complete TransformOutput, TransformModule, SegmentAnalysis, and SegmentKind type definitions with field semantics
-  3. The spec document contains NAPI and WASM binding contracts (function signatures, serialization, async behavior) sufficient to implement bindings without referencing SWC source
-  4. The spec document contains OXC migration notes per transformation section — explicitly calling out where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena)
-  5. The spec document contains at least 20 representative input/output examples covering all 14 CONVs, extracted from Jack's 162 spec files
-**Plans**: 3 plans
-
-Plans:
-- [x] 04-01-PLAN.md — TransformModulesOptions, TransformOutput, type definitions
-- [x] 04-02-PLAN.md — NAPI/WASM binding contracts, OXC migration notes
-- [x] 04-03-PLAN.md — Representative examples (Appendix B)
-
-### Phase 5: Core OXC Implementation
-**Goal**: A working qwik-optimizer-oxc Rust crate implements all 14 CONV transformations using idiomatic OXC patterns, passing all 201 behavioral tests from Jack's spec corpus
-**Depends on**: Phase 4
-**Requirements**: IMPL-01, IMPL-02, IMPL-05, IMPL-08, IMPL-09
-**Success Criteria** (what must be TRUE):
-  1. Running `cargo test` executes all 201 behavioral test cases from Jack's spec corpus and all pass (semantic equivalence, not byte-for-byte matching)
-  2. The implementation uses OXC's Traverse trait with enter/exit hooks, arena allocators, SemanticBuilder, and Codegen — no SWC patterns (Fold, SyntaxContext, std::mem::replace ownership transfer)
-  3. The implementation uses OXC Scoping for capture analysis where it improves correctness over manual scope tracking
-  4. All 14 CONV transformation types produce functionally equivalent output to the SWC version for the full test corpus
-**Plans:** 7 plans
-
-Plans:
-- [x] 05-01-PLAN.md — Crate scaffold, types, foundation modules (words, hash, errors, is_const)
-- [x] 05-02-PLAN.md — Test harness + 201 SWC snapshot corpus setup
-- [x] 05-03-PLAN.md — Parser, GlobalCollect, entry strategy, legacy import rename
-- [x] 05-04-PLAN.md — Pre-traverse mutations (const replace, export filter) + QwikTransform skeleton with dollar detection
-- [x] 05-05-PLAN.md — Capture analysis (8-category taxonomy) + QRL wrapping + PURE annotations
-- [x] 05-06-PLAN.md — JSX transform, props destructuring, signal optimization
-- [x] 05-07-PLAN.md — Segment emission, variable migration, public API, full test suite activation
-
-### Phase 6: Strategies, Modes & Binding Implementation
-**Goal**: The optimizer is a drop-in replacement for the SWC version — all entry strategies and emit modes work, and Node.js/browser consumers can call it through NAPI and WASM bindings with the same JSON interface
-**Depends on**: Phase 5
-**Requirements**: IMPL-03, IMPL-04, IMPL-06, IMPL-07
-**Success Criteria** (what must be TRUE):
-  1. All 7 entry strategies (Inline, Hoist, Single, Hook, Segment, Component, Smart) produce correct segment grouping and output module organization
-  2. All 5 emit modes (Prod, Dev, Lib, Test, Hmr) produce correct behavioral variations (dev QRL variants, test const exceptions, etc.)
-  3. The NAPI binding exposes `transform_modules` to Node.js with the same JSON interface as the SWC version and produces equivalent output
-  4. The WASM binding exposes `transform_modules` to browsers/edge with the same interface as the SWC version
-**Plans:** 3 plans
-
-Plans:
-- [x] 06-01-PLAN.md — Entry strategies + Hoist .s() post-processing (IMPL-03)
-- [x] 06-02-PLAN.md — Emit mode gaps: HMR injection + Lib/Test validation (IMPL-04)
-- [x] 06-03-PLAN.md — NAPI + WASM binding crates (IMPL-06, IMPL-07)
-
-### Phase 7: Spec Gap Closure — Missing CONV Sections
-**Goal**: Close specification gaps identified by the v0.1.0 milestone audit — write the missing Dollar Detection and QRL Wrapping spec sections, verify existing CONV-09/10/11 sections, and add 20+ representative input/output examples
-**Depends on**: Phase 1, Phase 3, Phase 4
-**Requirements**: SPEC-01, SPEC-02, SPEC-09, SPEC-10, SPEC-11, SPEC-29
-**Gap Closure**: Closes gaps from v0.1.0 audit
-**Success Criteria** (what must be TRUE):
-  1. The spec document contains a complete Dollar Detection (CONV-01) section with marker function identification rules, imported vs local markers, and input/output examples
-  2. The spec document contains a complete QRL Wrapping (CONV-02) section with qrl()/inlinedQrl() generation, dev mode variants, captures emission, and PURE annotation rules
-  3. SPEC-09 (DCE), SPEC-10 (Const Replacement), and SPEC-11 (Code Stripping) spec sections are verified present and complete
-  4. The spec document contains at least 20 representative input/output examples covering all 14 CONVs
-**Plans:** 2/2 plans complete
-
-Plans:
-- [x] 07-01-PLAN.md — Verify CONV-01/02/09/10/11 sections and fix CONV-10 truncated example
-- [x] 07-02-PLAN.md — Update REQUIREMENTS.md checkboxes for SPEC-01/02/09/10/11/29
-
-### Phase 8: Implementation Gap Closure — Wire CONV-07/CONV-08 & Improve Parity
-**Goal**: Wire the disconnected signal optimization (CONV-07) and PURE annotation (CONV-08) code paths, un-ignore the 24 spec_examples.rs tests, and significantly improve SWC parity from the current 0.5%
-**Depends on**: Phase 5, Phase 6
-**Requirements**: IMPL-02, IMPL-05
-**Gap Closure**: Closes gaps from v0.1.0 audit
-**Success Criteria** (what must be TRUE):
-  1. `convert_inlined_fn` is called from the JSX prop classification path and `_fnSignal()` is emitted for applicable fixtures
-  2. `/*#__PURE__*/` is injected on `componentQrl()` calls in all non-Hoist strategies
-  3. The 24 spec_examples.rs tests are un-ignored and either pass or have specific failure reasons documented
-  4. SWC parity (root module match) improves from 1/201 to at least 50/201
-**Plans:** 5 plans
-
-Plans:
-- [x] 08-01-PLAN.md — QRL hoisting for Segment strategy + PURE annotations (IMPL-02, IMPL-05)
-- [x] 08-02-PLAN.md — Signal optimization wiring CONV-07 (IMPL-02)
-- [x] 08-03-PLAN.md — Spec examples activation + parity measurement (IMPL-05)
-- [x] 08-04-PLAN.md — Symbol naming scheme alignment for SWC parity (IMPL-02, IMPL-05)
-- [x] 08-05-PLAN.md — Consumed import stripping + separator comments for 50/201 parity (IMPL-05)
-
-### Phase 9: Metadata & Verification Cleanup
-**Goal**: Update stale requirement checkboxes, write missing VERIFICATION.md reports for phases 3-7, and remove the dead parallel feature flag
-**Depends on**: Phase 7, Phase 8
-**Requirements**: SPEC-06, SPEC-18, SPEC-19, SPEC-20, IMPL-03, IMPL-04
-**Gap Closure**: Closes gaps from v0.1.0 audit
-**Success Criteria** (what must be TRUE):
-  1. All requirement checkboxes in REQUIREMENTS.md match actual completion status
-  2. VERIFICATION.md exists for all 6 original phases plus gap closure phases
-  3. The `parallel` feature either has a working rayon implementation or is removed from Cargo.toml
-**Plans:** 3/3 plans complete
-
-Plans:
-- [x] 09-01-PLAN.md — Investigate requirements, update REQUIREMENTS.md + ROADMAP.md, remove parallel feature
-- [x] 09-02-PLAN.md — Write VERIFICATION.md for phases 3, 4, 5
-- [x] 09-03-PLAN.md — Write VERIFICATION.md for phases 6, 7
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Core Pipeline Specification | 3/5 | In Progress|  |
-| 2. JSX, Props & Signal Specification | 0/? | Not started | - |
-| 3. Build Modes & Remaining Transforms Specification | 4/4 | Complete | 2026-04-02 |
-| 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
-| 5. Core OXC Implementation | 7/7 | Complete | 2026-04-02 |
-| 6. Strategies, Modes & Binding Implementation | 3/3 | Complete | 2026-04-02 |
-| 7. Spec Gap Closure | 2/2 | Complete   | 2026-04-03 |
-| 8. Implementation Gap Closure | 5/5 | Complete | 2026-04-03 |
-| 9. Metadata & Verification Cleanup | 3/3 | Complete | 2026-04-03 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Core Pipeline Specification | v0.1.0 | 5/5 | Complete | 2026-04-02 |
+| 2. JSX, Props & Signal Specification | v0.1.0 | 3/3 | Complete | 2026-04-02 |
+| 3. Build Modes & Remaining Transforms | v0.1.0 | 4/4 | Complete | 2026-04-02 |
+| 4. Public API, Bindings & Cross-Cutting | v0.1.0 | 3/3 | Complete | 2026-04-02 |
+| 5. Core OXC Implementation | v0.1.0 | 7/7 | Complete | 2026-04-02 |
+| 6. Strategies, Modes & Bindings | v0.1.0 | 3/3 | Complete | 2026-04-02 |
+| 7. Spec Gap Closure | v0.1.0 | 2/2 | Complete | 2026-04-03 |
+| 8. Implementation Gap Closure | v0.1.0 | 5/5 | Complete | 2026-04-03 |
+| 9. Metadata & Verification Cleanup | v0.1.0 | 3/3 | Complete | 2026-04-03 |
