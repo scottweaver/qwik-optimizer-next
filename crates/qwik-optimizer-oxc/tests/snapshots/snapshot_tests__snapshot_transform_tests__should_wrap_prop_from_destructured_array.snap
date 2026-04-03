@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1017
 expression: output
 ---
 ============================= test.js ==
@@ -9,12 +8,11 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore, useTask$ } from "@qwik.dev/core";
 import { useForm, useForm2 } from "./some-file.ts";
-export const Input = qrl<{
-	error: string;
-	error2: string;
-	error3: string;
-}>(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export default qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const q_component_ZUK1E201Ins = /*#__PURE__*/ qrl(() => import("./test.tsx_component_ZUK1E201Ins"), "component_ZUK1E201Ins");
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /*#__PURE__*/ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const Input = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export default /*#__PURE__*/ componentQrl(q__1_iZVV0eoW44k);
 
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { Input } from "./test";

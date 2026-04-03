@@ -1,11 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 958
 expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { $, isServer } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 const state = {
 	counter: 0,
 	id: Math.random().toString(36).slice(2, 8)
@@ -17,7 +17,7 @@ export function doSomething() {
 	}
 }
 export function useHook() {
-	const fn = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+	const fn = q__u6BtPnK76q4;
 	return fn;
 }
 

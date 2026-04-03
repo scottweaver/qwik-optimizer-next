@@ -1,12 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 862
 expression: output
 ---
 ============================= project/test.jsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
+const q_component_fA7aHBrXs7g = /*#__PURE__*/ qrl(() => import("./test.tsx_component_fA7aHBrXs7g"), "component_fA7aHBrXs7g");
+const q__cA4RUxLrFo0 = /*#__PURE__*/ qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
 export const [a, { b, v1: [c], d = v2, ...e }, f = v3, ...g] = obj;
 const exp1 = 1;
 const internal = 2;
@@ -14,7 +15,7 @@ export { exp1, internal as expr2 };
 export function foo() {}
 export class bar {}
 export default function DefaultFn() {}
-export const Header = qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
+export const Header = /*#__PURE__*/ componentQrl(q__cA4RUxLrFo0);
 export const Footer = component$();
 
 ============================= project/test.tsx__cA4RUxLrFo0.jsx (ENTRY POINT) ==

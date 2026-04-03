@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 852
 expression: output
 ---
 ============================= test.js ==
@@ -9,7 +8,7 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useStore, mutable } from "@qwik.dev/core";
 import { dep } from "./file";
 import { Cmp } from "./cmp";
-const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
+const q__u6BtPnK76q4 = /*#__PURE__*/ _noopQrl("_u6BtPnK76q4");
 q__u6BtPnK76q4.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});

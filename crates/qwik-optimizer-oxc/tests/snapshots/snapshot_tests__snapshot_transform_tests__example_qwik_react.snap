@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 904
 expression: output
 ---
 ============================= ../node_modules/@qwik.dev/react/index.qwik.mjs ==
@@ -8,7 +7,7 @@ import { componentQrl, inlinedQrl, useLexicalScope, useHostElement, useStore, us
 import { jsx, Fragment } from "@qwik.dev/core/jsx-runtime";
 import { isBrowser, isServer } from "@qwik.dev/core";
 function qwikifyQrl(reactCmpQrl) {
-	return /* @__PURE__ */ componentQrl(inlinedQrl((props) => {
+	return /*#__PURE__*/ componentQrl(inlinedQrl((props) => {
 		const [reactCmpQrl] = useLexicalScope();
 		const hostElement = useHostElement();
 		const store = useStore({});
@@ -44,14 +43,14 @@ function qwikifyQrl(reactCmpQrl) {
 		if (isServer && !props["client:only"]) {
 			const jsx$1 = Promise.all([reactCmpQrl.resolve(), import("./server-9ac6caad.js")]).then(([Cmp, server]) => {
 				const html = server.render(Cmp, filterProps(props));
-				return /* @__PURE__ */ jsx(Host, {
+				return /*#__PURE__*/ jsx(Host, {
 					dangerouslySetInnerHTML: html,
 					[_IMMUTABLE]: ["dangerouslySetInnerHTML"]
 				});
 			});
-			return /* @__PURE__ */ jsx(Fragment, { children: jsx$1 });
+			return /*#__PURE__*/ jsx(Fragment, { children: jsx$1 });
 		}
-		return /* @__PURE__ */ jsx(Host, { children: /* @__PURE__ */ jsx(SkipRerender, {}) });
+		return /*#__PURE__*/ jsx(Host, { children: /*#__PURE__*/ jsx(SkipRerender, {}) });
 	}, "qwikifyQrl_component_zH94hIe0Ick", [reactCmpQrl]), { tagName: "qwik-wrap" });
 }
 const filterProps = (props) => {

@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 887
 expression: output
 ---
 ============================= test.js ==
@@ -9,11 +8,11 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore, Slot, Fragment } from "@qwik.dev/core";
 import Image from "./image.jpg?jsx";
-const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /* @__PURE__ */ _noopQrl("_1_iZVV0eoW44k");
-const q__2_sSArpd0iSRk = /* @__PURE__ */ _noopQrl("_2_sSArpd0iSRk");
-const q__3_OyZ0gk5pkcU = /* @__PURE__ */ _noopQrl("_3_OyZ0gk5pkcU");
-const q__4_Gairpaqi1qc = /* @__PURE__ */ _noopQrl("_4_Gairpaqi1qc");
+const q__u6BtPnK76q4 = /*#__PURE__*/ _noopQrl("_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /*#__PURE__*/ _noopQrl("_1_iZVV0eoW44k");
+const q__2_sSArpd0iSRk = /*#__PURE__*/ _noopQrl("_2_sSArpd0iSRk");
+const q__3_OyZ0gk5pkcU = /*#__PURE__*/ _noopQrl("_3_OyZ0gk5pkcU");
+const q__4_Gairpaqi1qc = /*#__PURE__*/ _noopQrl("_4_Gairpaqi1qc");
 q__u6BtPnK76q4.s((props: Stuff) => {
 	return <>
 			<div>{prop < 2 ? <p>1</p> : <Stuff>2</Stuff>}</div>

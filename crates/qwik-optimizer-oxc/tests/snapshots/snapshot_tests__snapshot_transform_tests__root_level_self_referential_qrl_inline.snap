@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 946
 expression: output
 ---
 ============================= ./node_modules/qwik-tree/index.qwik.js ==

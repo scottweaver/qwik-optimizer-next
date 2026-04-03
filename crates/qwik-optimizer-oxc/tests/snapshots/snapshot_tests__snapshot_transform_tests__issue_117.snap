@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 935
 expression: output
 ---
 ============================= project/test.tsx ==

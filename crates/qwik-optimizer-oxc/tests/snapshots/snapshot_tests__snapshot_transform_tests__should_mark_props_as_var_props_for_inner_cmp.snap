@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 966
 expression: output
 ---
 ============================= test.js ==
@@ -10,8 +9,11 @@ import { Fragment } from "@qwik.dev/core";
 import { component$, useResource$, Resource } from "@qwik.dev/core";
 import { type ModelProps } from "./modelMenu";
 import { serverImg } from "~/routes/(authenticated)/layout";
-export const Image = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const ModelImg = qrl<ModelProps>(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q_component_ZUK1E201Ins = /*#__PURE__*/ qrl(() => import("./test.tsx_component_ZUK1E201Ins"), "component_ZUK1E201Ins");
+const q__1_iZVV0eoW44k = /*#__PURE__*/ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const Image = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export const ModelImg = /*#__PURE__*/ componentQrl(q__1_iZVV0eoW44k);
 
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { Image } from "./test";

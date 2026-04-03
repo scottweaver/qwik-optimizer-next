@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 943
 expression: output
 ---
 ============================= components/main.js ==
@@ -8,7 +7,8 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { state } from "./sibling";
-export const Local = qrl(() => import("./main.tsx__zp0HVfIhA50.tsx"), "_zp0HVfIhA50");
+const q__zp0HVfIhA50 = /*#__PURE__*/ qrl(() => import("./main.tsx__zp0HVfIhA50.tsx"), "_zp0HVfIhA50");
+export const Local = /*#__PURE__*/ componentQrl(q__zp0HVfIhA50);
 
 ============================= components/main.tsx__zp0HVfIhA50.js (ENTRY POINT) ==
 import { state } from "./sibling";

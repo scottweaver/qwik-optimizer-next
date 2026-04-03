@@ -1,18 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 885
 expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ as Component, $ as onRender, useStore, wrap, useEffect } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export const useMemo$ = (qrt) => {
 	useEffect(qrt);
 };
 export const App = component$((props) => {
 	const state = useStore({ count: 0 });
-	qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4", [state]);
+	useMemoQrl(q__u6BtPnK76q4.w([state]));
 	return $(() => _jsxSorted("div", null, null, state.count, 1, "0"));
 });
 

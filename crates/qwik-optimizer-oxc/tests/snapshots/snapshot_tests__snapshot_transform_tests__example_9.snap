@@ -1,12 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 840
 expression: output
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
-const Header = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const Header = q__u6BtPnK76q4;
 
 ============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 export const _u6BtPnK76q4 = (decl1, { decl2 }, [decl3]) => {

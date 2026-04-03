@@ -1,13 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 870
 expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import json from "./foo.json" assert { type: "json" };
-export const Greeter = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const Greeter = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
 
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { default as json } from "./foo.json";

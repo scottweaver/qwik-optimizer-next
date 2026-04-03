@@ -1489,11 +1489,10 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 param_names: param_names.clone(),
             });
         } else {
-            // Segment strategy: qrl(() => import("./path"), "symbol_name")
-            // The callback body is extracted to a separate segment module.
-            // Replace the call args with:
-            //   1. () => import("./canonical_filename")
-            //   2. "symbol_name"
+            // Segment strategy: hoist QRL creation to module scope as
+            //   const q_sym = /*#__PURE__*/ qrl(() => import("./path"), "sym")
+            // Replace the call site with just the hoisted identifier (or
+            // wrapperQrl(q_sym) for component$/etc., with .w([caps]) if captures).
 
             let import_path = if self.explicit_extensions {
                 format!("./{}.{}", names.canonical_filename, self.extension)
@@ -1503,61 +1502,68 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
             let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
+            let ident_name = format!("q_{}", names.symbol_name);
 
-            // Build the import arrow: () => import("./path")
-            let import_path_str = arena_str(ctx, &import_path);
-            let import_expr = ctx.ast.expression_import(
-                SPAN,
-                ctx.ast.expression_string_literal(SPAN, import_path_str, None),
-                None,
-                None,
-            );
-            let arrow_params = ctx.ast.formal_parameters(
-                SPAN,
-                FormalParameterKind::ArrowFormalParameters,
-                ctx.ast.vec(),
-                None::<FormalParameterRest<'a>>,
-            );
-            let import_stmt = ctx.ast.statement_expression(SPAN, import_expr);
-            let arrow_body = ctx.ast.function_body(
-                SPAN,
-                ctx.ast.vec(),
-                ctx.ast.vec1(import_stmt),
-            );
-            let arrow = ctx.ast.expression_arrow_function(
-                SPAN,
-                true,
-                false,
-                None::<TSTypeParameterDeclaration<'a>>,
-                arrow_params,
-                None::<TSTypeAnnotation<'a>>,
-                arrow_body,
+            // 1. Build hoisted const RHS with PURE annotation
+            let qrl_rhs = format!(
+                r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
+                qrl_callee_name, import_path, names.symbol_name
             );
 
-            // Replace call arguments
-            call.arguments.clear();
-
-            // Arg 1: arrow function with dynamic import
-            call.arguments.push(expr_to_argument(arrow));
-
-            // Arg 2: symbol name string
-            call.arguments.push(Argument::StringLiteral(
-                ctx.ast.alloc_string_literal(
-                    SPAN,
-                    arena_str(ctx, &names.symbol_name),
-                    None,
-                ),
-            ));
-
-            if has_captures {
-                // Arg 3: captures array
-                let captures_array = build_capture_array_expr(&scoped_idents, ctx);
-                call.arguments.push(expr_to_argument(captures_array));
+            // Deduplicate by symbol_name
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code: qrl_rhs,
+                    symbol_name: names.symbol_name.clone(),
+                });
             }
 
-            // Replace callee with qrl/qrlDEV
-            if let Expression::Identifier(id) = &mut call.callee {
-                id.name = arena_ident(ctx, qrl_callee_name);
+            // 2. Build the replacement expression for the call site
+            let allocator = ctx.ast.allocator;
+
+            // Base replacement: q_sym or q_sym.w([cap1, cap2, ...])
+            let replacement = if has_captures {
+                let caps_str = scoped_idents.join(", ");
+                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+                let expr_stmt = format!("{};", w_expr_code);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
+                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                        es.unbox().expression
+                    } else {
+                        ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+                    }
+                } else {
+                    ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+                }
+            } else {
+                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+            };
+
+            // 3. Determine if we need a wrapper call (componentQrl, useTaskQrl, etc.)
+            //    For bare $() calls, ctx_name is "$" and we don't need a wrapper.
+            //    For named calls (component$, useTask$, etc.), we wrap with componentQrl etc.
+            let is_bare_dollar = pending.ctx_name == "$";
+
+            if is_bare_dollar {
+                // Bare $() call: replace entire expression with just the identifier
+                *expr = replacement;
+            } else {
+                // Wrapper call: e.g., componentQrl(q_sym)
+                // CONV-08: PURE annotation on componentQrl wrapper calls
+                let needs_pure = qrl_wrapper_name == "componentQrl";
+                let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
+                let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_call_code, allocator) {
+                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                        let mut wrapper_expr = es.unbox().expression;
+                        if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
+                            wrapper_call.arguments.clear();
+                            wrapper_call.arguments.push(expr_to_argument(replacement));
+                        }
+                        *expr = wrapper_expr;
+                    }
+                }
             }
 
             self.needs_qrl_import = true;
@@ -1645,16 +1651,17 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             }
         }
 
-        // Hoist strategy: emit extra_top_items const declarations and
-        // ref_assignments (.s() calls) into the root module.
+        // Emit extra_top_items const declarations and ref_assignments (.s() calls)
+        // into the root module. Works for both Hoist and Segment strategies.
         //
         // Ordering (critical per Pitfall 1):
         //   1. Import declarations (already inserted above)
-        //   2. const q_sym = _noopQrl("sym") declarations (extra_top_items)
-        //   3. q_sym.s(fn_body) expression statements (ref_assignments)
-        //   4. Original module body (exports, etc.)
-        if matches!(self.entry_strategy, EntryStrategy::Hoist)
-            && !matches!(self.mode, EmitMode::Lib)
+        //   2. // (separator comment)
+        //   3. const q_sym = ... declarations (extra_top_items)
+        //   4. q_sym.s(fn_body) expression statements (ref_assignments, Hoist only)
+        //   5. // (separator comment)
+        //   6. Original module body (exports, etc.)
+        if !self.extra_top_items.is_empty() && !matches!(self.mode, EmitMode::Lib)
         {
             // Find the insertion point: after imports, before everything else.
             let first_non_import = program.body.iter().position(|stmt| {

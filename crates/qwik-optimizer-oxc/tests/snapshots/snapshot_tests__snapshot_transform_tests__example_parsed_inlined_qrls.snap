@@ -1,15 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 894
 expression: output
 ---
 ============================= test.tsx ==
 import { componentQrl, inlinedQrl, useStore, jsxs, jsx, useLexicalScope } from "@qwik.dev/core";
-export const App = /* @__PURE__ */ componentQrl(inlinedQrl(() => {
+export const App = /*#__PURE__*/ componentQrl(inlinedQrl(() => {
 	useStyles$(inlinedQrl(STYLES, "STYLES_odz7dfdfdM"));
 	useStyles$(inlinedQrl(STYLES, "STYLES_odzdfdfdM"));
 	const store = useStore({ count: 0 });
-	return /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsxs("p", { children: ["Count: ", store.count] }), /* @__PURE__ */ jsx("p", { children: /* @__PURE__ */ jsx("button", {
+	return /*#__PURE__*/ jsxs("div", { children: [/*#__PURE__*/ jsxs("p", { children: ["Count: ", store.count] }), /*#__PURE__*/ jsx("p", { children: /*#__PURE__*/ jsx("button", {
 		onClick$: inlinedQrl(() => {
 			const [store] = useLexicalScope();
 			return store.count++;

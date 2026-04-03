@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 832
 expression: output
 ---
 ============================= project/test.tsx ==
@@ -10,8 +9,11 @@ import { $, component$ } from "@qwik.dev/core";
 import { foo, bar as bbar } from "../state";
 import * as dep2 from "dep2";
 import dep3 from "dep3/something";
-export const Header = qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
-export const App = qrl(() => import("./test.tsx__1_Vv7m2UfJ8NQ"), "_1_Vv7m2UfJ8NQ");
+const q_component_fA7aHBrXs7g = /*#__PURE__*/ qrl(() => import("./test.tsx_component_fA7aHBrXs7g"), "component_fA7aHBrXs7g");
+const q__cA4RUxLrFo0 = /*#__PURE__*/ qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
+const q__1_Vv7m2UfJ8NQ = /*#__PURE__*/ qrl(() => import("./test.tsx__1_Vv7m2UfJ8NQ"), "_1_Vv7m2UfJ8NQ");
+export const Header = /*#__PURE__*/ componentQrl(q__cA4RUxLrFo0);
+export const App = /*#__PURE__*/ componentQrl(q__1_Vv7m2UfJ8NQ);
 
 ============================= project/test.tsx__cA4RUxLrFo0.tsx ==
 import { $ } from "@qwik.dev/core";

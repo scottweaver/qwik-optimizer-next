@@ -51,12 +51,15 @@ pub(crate) fn emit_segment(
             .with_source_text(source)
             .build(&program);
         let map = result.map.map(|sm| sm.to_json_string());
-        (result.code, map)
+        // Normalize PURE annotations: OXC emits `/* @__PURE__ */`, SWC uses `/*#__PURE__*/`
+        let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
+        (code, map)
     } else {
         let result = oxc::codegen::Codegen::new()
             .with_source_text(source)
             .build(&program);
-        (result.code, None)
+        let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
+        (code, None)
     }
 }
 

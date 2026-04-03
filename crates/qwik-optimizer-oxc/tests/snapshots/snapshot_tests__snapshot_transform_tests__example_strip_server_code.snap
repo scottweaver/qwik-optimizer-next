@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 919
 expression: output
 ---
 ============================= test.js ==
@@ -11,7 +10,13 @@ import { isServer } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
-export const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
+const q_s_ZUK1E201Ins = /*#__PURE__*/ qrl(() => import("./test.tsx_component_ZUK1E201Ins"), "s_ZUK1E201Ins");
+const q_s_ojRqwHNSAtg = /*#__PURE__*/ qrl(() => import("./test.tsx_component_serverStuff_ojRqwHNSAtg"), "s_ojRqwHNSAtg");
+const q_s_IOaKJyEUknw = /*#__PURE__*/ qrl(() => import("./test.tsx_component_serverStuff_1_IOaKJyEUknw"), "s_IOaKJyEUknw");
+const q_s_vX1B9oMEgiI = /*#__PURE__*/ qrl(() => import("./test.tsx_component_1_vX1B9oMEgiI"), "s_vX1B9oMEgiI");
+const q_s_ivlVT3MNu2c = /*#__PURE__*/ qrl(() => import("./test.tsx_component_2_ivlVT3MNu2c"), "s_ivlVT3MNu2c");
+const q_s_u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
+export const Parent = /*#__PURE__*/ componentQrl(q_s_u6BtPnK76q4);
 
 ============================= test.tsx_component_serverStuff_1_IOaKJyEUknw.js (ENTRY POINT) ==
 export const s_IOaKJyEUknw = () => {

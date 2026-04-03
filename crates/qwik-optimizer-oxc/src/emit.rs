@@ -25,6 +25,9 @@ pub(crate) struct EmitResult {
 /// The `source_filename` parameter sets the `"file"` field in the source map JSON.
 ///
 /// OXC Codegen produces double-quoted strings by default (matches qwik-core SWC output).
+///
+/// Post-processing: OXC codegen emits `/* @__PURE__ */` but SWC uses `/*#__PURE__*/`.
+/// We normalize to SWC format for parity.
 pub(crate) fn emit_module<'a>(
     program: &oxc::ast::ast::Program<'a>,
     source: &str,
@@ -44,7 +47,7 @@ pub(crate) fn emit_module<'a>(
         let map = codegen_result.map.map(|sm| sm.to_json_string());
 
         EmitResult {
-            code: codegen_result.code,
+            code: normalize_pure_annotations(&codegen_result.code),
             map,
         }
     } else {
@@ -53,10 +56,18 @@ pub(crate) fn emit_module<'a>(
             .build(program);
 
         EmitResult {
-            code: codegen_result.code,
+            code: normalize_pure_annotations(&codegen_result.code),
             map: None,
         }
     }
+}
+
+/// Normalize PURE annotations from OXC format to SWC format.
+///
+/// OXC codegen emits `/* @__PURE__ */` but SWC uses `/*#__PURE__*/`.
+/// Both are valid tree-shaking hints but differ cosmetically.
+fn normalize_pure_annotations(code: &str) -> String {
+    code.replace("/* @__PURE__ */", "/*#__PURE__*/")
 }
 
 // ---------------------------------------------------------------------------
