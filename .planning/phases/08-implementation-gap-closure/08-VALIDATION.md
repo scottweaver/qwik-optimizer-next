@@ -42,7 +42,7 @@ created: 2026-04-03
 | 08-01-02 | 01 | 1 | IMPL-02 | snapshot | `cargo test -p qwik-optimizer-oxc --test snapshot_tests -- derived_signals` | ✅ | ⬜ pending |
 | 08-02-01 | 02 | 1 | IMPL-05 | snapshot | `cargo test -p qwik-optimizer-oxc --test snapshot_tests -- example_functional_component` | ✅ | ⬜ pending |
 | 08-03-01 | 03 | 2 | IMPL-05 | snapshot | `cargo test -p qwik-optimizer-oxc --test snapshot_tests swc_parity -- --nocapture` | ✅ | ⬜ pending |
-| 08-04-01 | 04 | 2 | IMPL-02 | integration | `cargo test -p qwik-optimizer-oxc --test spec_examples` | ✅ | ⬜ pending |
+| 08-03-01 | 03 | 3 | IMPL-02 | integration | `cargo test -p qwik-optimizer-oxc --test spec_examples` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

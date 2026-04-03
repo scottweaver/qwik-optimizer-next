@@ -18,8 +18,8 @@ Wire the disconnected signal optimization (CONV-07) and PURE annotation (CONV-08
 - **D-43:** When `convert_inlined_fn` produces a signal, set `needs_fn_signal_import = true` on the transform state (already exists at `transform.rs:426`). The `_fnSignal` import is already wired in the synthetic import emission path (`transform.rs:1631-1632`).
 
 ### PURE Annotation Injection (CONV-08)
-- **D-44:** Use string-based injection during code assembly to insert `/*#__PURE__*/` before `componentQrl()` calls. This matches the established Phase 5 pattern of string assembly then re-parse for segment construction (D-05/P07). The `_needs_pure` flag at `transform.rs:1312` should drive the injection.
-- **D-45:** PURE annotation applies ONLY to `componentQrl` calls, not to other `*Qrl` wrappers. The existing whitelist check (`qrl_wrapper_name == "componentQrl"`) is correct. Anti-list: `useTaskQrl`, `useVisibleTaskQrl`, `useResourceQrl`, etc.
+- **D-44:** Use string-based injection during code assembly to insert `/*#__PURE__*/` before QRL creation calls. This matches the established Phase 5 pattern of string assembly then re-parse for segment construction (D-05/P07).
+- **D-45:** ~~PURE annotation applies ONLY to `componentQrl` calls.~~ **REVISED (2026-04-03):** Per spec Rule 4 (lines 706-710) and 152/201 SWC snapshot evidence, `/*#__PURE__*/` applies to ALL QRL creation calls: `qrl()`, `inlinedQrl()`, `_noopQrl()`, plus wrapper calls like `componentQrl()`. This is required for IMPL-05 (SWC equivalence). The original D-45 was based on incomplete analysis; the broader scope is the correct behavior per both spec and SWC reference implementation.
 
 ### SWC Parity Improvement Strategy
 - **D-46:** Triage root module mismatches by most common pattern divergence first, not by CONV type. Current state: 200/201 root module mismatches. Likely high-impact categories: import ordering/format, JSX output differences, QRL call format differences, whitespace/formatting. Fix the patterns that affect the most fixtures first to maximize parity percentage per fix.
