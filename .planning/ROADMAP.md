@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
 - [x] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 201 behavioral tests with idiomatic OXC patterns
 - [x] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
-- [ ] **Phase 7: Spec Gap Closure** - Write missing CONV-01/02 spec sections, verify CONV-09/10/11, add representative examples
+- [x] **Phase 7: Spec Gap Closure** - Write missing CONV-01/02 spec sections, verify CONV-09/10/11, add representative examples (completed 2026-04-03)
 - [ ] **Phase 8: Implementation Gap Closure** - Wire CONV-07/CONV-08, inject PURE annotations, improve SWC parity
 - [ ] **Phase 9: Metadata & Verification Cleanup** - Update checkboxes, write missing VERIFICATIONs, fix parallel feature
 
@@ -122,11 +122,11 @@ Plans:
   2. The spec document contains a complete QRL Wrapping (CONV-02) section with qrl()/inlinedQrl() generation, dev mode variants, captures emission, and PURE annotation rules
   3. SPEC-09 (DCE), SPEC-10 (Const Replacement), and SPEC-11 (Code Stripping) spec sections are verified present and complete
   4. The spec document contains at least 20 representative input/output examples covering all 14 CONVs
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 07-01-PLAN.md — Verify CONV-01/02/09/10/11 sections and fix CONV-10 truncated example
-- [ ] 07-02-PLAN.md — Update REQUIREMENTS.md checkboxes for SPEC-01/02/09/10/11/29
+- [x] 07-02-PLAN.md — Update REQUIREMENTS.md checkboxes for SPEC-01/02/09/10/11/29
 
 ### Phase 8: Implementation Gap Closure — Wire CONV-07/CONV-08 & Improve Parity
 **Goal**: Wire the disconnected signal optimization (CONV-07) and PURE annotation (CONV-08) code paths, un-ignore the 24 spec_examples.rs tests, and significantly improve SWC parity from the current 0.5%
@@ -164,6 +164,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
 | 5. Core OXC Implementation | 6/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 1/3 | In Progress | - |
-| 7. Spec Gap Closure | 1/2 | In Progress|  |
+| 7. Spec Gap Closure | 2/2 | Complete   | 2026-04-03 |
 | 8. Implementation Gap Closure | 0/? | Not started | - |
 | 9. Metadata & Verification Cleanup | 0/? | Not started | - |
