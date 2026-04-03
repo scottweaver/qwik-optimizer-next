@@ -167,10 +167,10 @@ Plans:
   1. All requirement checkboxes in REQUIREMENTS.md match actual completion status
   2. VERIFICATION.md exists for all 6 original phases plus gap closure phases
   3. The `parallel` feature either has a working rayon implementation or is removed from Cargo.toml
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 09-01-PLAN.md — Investigate requirements, update REQUIREMENTS.md + ROADMAP.md, remove parallel feature
+- [x] 09-01-PLAN.md — Investigate requirements, update REQUIREMENTS.md + ROADMAP.md, remove parallel feature
 - [ ] 09-02-PLAN.md — Write VERIFICATION.md for phases 3, 4, 5
 - [ ] 09-03-PLAN.md — Write VERIFICATION.md for phases 6, 7
 
@@ -189,4 +189,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 6. Strategies, Modes & Binding Implementation | 3/3 | Complete | 2026-04-02 |
 | 7. Spec Gap Closure | 2/2 | Complete   | 2026-04-03 |
 | 8. Implementation Gap Closure | 5/5 | Complete | 2026-04-03 |
-| 9. Metadata & Verification Cleanup | 0/3 | In Progress | - |
+| 9. Metadata & Verification Cleanup | 1/3 | In Progress|  |
