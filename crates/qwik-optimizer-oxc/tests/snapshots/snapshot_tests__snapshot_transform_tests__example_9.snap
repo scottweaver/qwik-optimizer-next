@@ -1,0 +1,58 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 840
+expression: output
+---
+============================= test.tsx ==
+import { qrl } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+const Header = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+export const _u6BtPnK76q4 = (decl1, { decl2 }, [decl3]) => {
+	const { decl4, key: decl5 } = this;
+	let [decl6, ...decl7] = stuff;
+	const decl8 = 1, decl9;
+	function decl10(decl11, { decl12 }, [decl13]) {}
+	class decl14 {
+		method(decl15, { decl16 }, [decl17]) {}
+	}
+	try {} catch (decl18) {}
+	try {} catch ({ decl19 }) {}
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    64,
+    344
+  ],
+  "paramNames": [
+    "decl1",
+    "decl2",
+    "decl3"
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[
+  {
+    "scope": "optimizer",
+    "category": "sourceError",
+    "code": null,
+    "file": "test.tsx",
+    "message": "Missing initializer in const declaration"
+  }
+]

@@ -1,0 +1,57 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 831
+expression: output
+---
+============================= project/test.tsx ==
+import { qrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+const Header = qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
+
+============================= project/test.tsx__cA4RUxLrFo0.tsx (ENTRY POINT) ==
+export const _cA4RUxLrFo0 = (decl1, {decl2}, [decl3]) => {
+
+	const hola = ident1.no;
+	ident2;
+	const a = ident1 + ident3;
+	const b = ident1 + ident3;
+	ident4(ident5, [ident6], {ident7}, {key: ident8});
+	class Some {
+		prop = ident9;
+		method() {
+			return ident10;
+		}
+	}
+
+	return (
+		<div onClick={(ident11) => ident11 + ident12} required={false}/>
+	)
+};
+/*
+{
+  "origin": "project/test.tsx",
+  "name": "_cA4RUxLrFo0",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "cA4RUxLrFo0",
+  "canonicalFilename": "test.tsx__cA4RUxLrFo0",
+  "path": "project",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    64,
+    393
+  ],
+  "paramNames": [
+    "decl1",
+    "decl2",
+    "decl3"
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

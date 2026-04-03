@@ -1,0 +1,61 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 930
+expression: output
+---
+============================= test.js ==
+import { _noopQrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { inlinedQrl, $, component$, jsx, useStylesScoped$ } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /* @__PURE__ */ _noopQrl("_1_iZVV0eoW44k");
+const q__2_sSArpd0iSRk = /* @__PURE__ */ _noopQrl("_2_sSArpd0iSRk");
+q__u6BtPnK76q4.s(() => {
+	return /* @__PURE__ */ jsx(Slot, {});
+});
+q__1_iZVV0eoW44k.s((element) => {
+	field.internal.elements.push(element);
+});
+q__2_sSArpd0iSRk.s(() => {
+	const stylesScopedData = useStylesScoped$(STYLE_RED);
+	const store = useStore({ count: 10 });
+	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
+								Hello world
+							</button>;
+});
+export default () => {
+	const serverFnHash = globalThis.foo();
+	const data = globalThis.bar();
+	const qrl = inlinedQrl(null, serverFnHash, data.slice(1));
+	console.log(qrl);
+};
+function Lifecycle(props, key, flags) {
+	return componentQrl(q__u6BtPnK76q4)(props, key, flags);
+}
+export const rawFn = (event, element) => {
+	handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
+};
+export function Field({ children, name, type, ...props }) {
+	const { of: form } = props;
+	const field = getFieldStore(form, name);
+	return /* @__PURE__ */ jsx(Lifecycle, {
+		store: field,
+		...props,
+		children: children(field, {
+			name,
+			autoFocus: isServer && !!field.error,
+			ref: Qrl(q__1_iZVV0eoW44k.w([field])),
+			onInput$: $(rawFn)
+		})
+	}, name);
+}
+const STYLE_RED = `.container {background-color: red;}`;
+describe.each([])("$render.name: useStylesScoped", ({ render }) => {
+	it("should render object style", async () => {
+		const StyledComponent = componentQrl(q__2_sSArpd0iSRk);
+		const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
+	});
+});
+
+== DIAGNOSTICS ==
+[]

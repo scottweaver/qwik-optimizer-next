@@ -1,0 +1,19 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 937
+expression: output
+---
+============================= test.tsx ==
+import { _jsxSorted } from "@qwik.dev/core";
+import { Counter } from "./counter.tsx";
+export const Root = () => {
+	return _jsxSorted("html", null, null, [<head>
+				<meta charset="utf-8" />
+				<title>Qwik Blank App</title>
+			</head>, <body>
+				<Counter initial={3} />
+			</body>], 1, "0");
+};
+
+== DIAGNOSTICS ==
+[]

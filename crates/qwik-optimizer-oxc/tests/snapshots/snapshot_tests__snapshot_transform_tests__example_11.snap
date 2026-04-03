@@ -1,0 +1,105 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 832
+expression: output
+---
+============================= project/test.tsx ==
+import { qrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+import { foo, bar as bbar } from "../state";
+import * as dep2 from "dep2";
+import dep3 from "dep3/something";
+export const Header = qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
+export const App = qrl(() => import("./test.tsx__1_Vv7m2UfJ8NQ"), "_1_Vv7m2UfJ8NQ");
+
+============================= project/test.tsx__cA4RUxLrFo0.tsx ==
+import { $ } from "@qwik.dev/core";
+import { Header } from "./test";
+import { bar as bbar } from "../state";
+import { * as dep2 } from "dep2";
+import { default as dep3 } from "dep3/something";
+export const _cA4RUxLrFo0 = () => {
+	return (
+		<Header onClick={$((ev) => dep3(ev))}>
+			{dep2.stuff()}{bbar()}
+		</Header>
+	);
+};
+/*
+{
+  "origin": "project/test.tsx",
+  "name": "_cA4RUxLrFo0",
+  "entry": "entry_segments",
+  "displayName": "test.tsx_",
+  "hash": "cA4RUxLrFo0",
+  "canonicalFilename": "test.tsx__cA4RUxLrFo0",
+  "path": "project",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    180,
+    294
+  ]
+}
+*/
+============================= project/test.tsx_component_fA7aHBrXs7g.tsx ==
+import { default as dep3 } from "dep3/something";
+export const component_fA7aHBrXs7g = (ev) => dep3(ev);
+
+/*
+{
+  "origin": "project/test.tsx",
+  "name": "component_fA7aHBrXs7g",
+  "entry": "entry_segments",
+  "displayName": "test.tsx_component",
+  "hash": "fA7aHBrXs7g",
+  "canonicalFilename": "test.tsx_component_fA7aHBrXs7g",
+  "path": "project",
+  "extension": "tsx",
+  "parent": "_cA4RUxLrFo0",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    228,
+    247
+  ],
+  "paramNames": [
+    "ev"
+  ]
+}
+*/
+============================= project/test.tsx__1_Vv7m2UfJ8NQ.tsx ==
+import { Header } from "./test";
+import { foo } from "../state";
+export const _1_Vv7m2UfJ8NQ = () => {
+	return (
+		<Header>{foo()}</Header>
+	);
+};
+/*
+{
+  "origin": "project/test.tsx",
+  "name": "_1_Vv7m2UfJ8NQ",
+  "entry": "entry_segments",
+  "displayName": "test.tsx__1",
+  "hash": "Vv7m2UfJ8NQ",
+  "canonicalFilename": "test.tsx__1_Vv7m2UfJ8NQ",
+  "path": "project",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    316,
+    378
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

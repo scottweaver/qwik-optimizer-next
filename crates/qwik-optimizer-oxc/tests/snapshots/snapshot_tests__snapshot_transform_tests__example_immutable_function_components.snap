@@ -1,0 +1,19 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 869
+expression: output
+---
+============================= test.js ==
+import { _noopQrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useStore, Slot } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
+q__u6BtPnK76q4.s((props: Stuff) => {
+	return <div>
+			<Slot />
+		</div>;
+});
+export const App = componentQrl(q__u6BtPnK76q4);
+
+== DIAGNOSTICS ==
+[]

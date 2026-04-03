@@ -94,3 +94,21 @@ This document tracks missteps made during AI-assisted development and the correc
 - Changed return type from `(Vec<String>, bool)` to `Vec<String>`
 - Removed the `is_const` tracking variable and collapsed `Const`/`Let` into a single match arm
 - Simplified the call site and test destructuring
+
+---
+
+## 007: Hand-rolled snapshot tests that didn't verify output
+
+**Date:** 2026-04-03
+
+**What happened:** The snapshot test harness manually parsed the SWC `.snap` files and ran `transform_modules`, but the `snapshot_test!` macro only checked that the transform didn't panic and produced non-empty output. It never compared the actual output against the expected output from the `.snap` files. Functions like `compare_snapshot` and `normalize_code` existed but were never called. The project's `Cargo.toml` already listed `insta` as a dev-dependency, but it was unused.
+
+**Why it was wrong:** Tests that don't verify output are false confidence. The entire purpose of the 201 SWC `.snap` files is to define expected transform behavior — ignoring them means regressions go undetected. Additionally, hand-rolling snapshot comparison logic duplicates what `insta` provides out of the box with better tooling (`cargo insta review`, diff visualization, CI integration).
+
+**Corrective action:**
+- Moved SWC `.snap` files to `tests/swc_expected/` to separate the reference corpus from insta-managed snapshots
+- Rewrote `snapshot_test!` macro to use `insta::assert_snapshot!` — each test now captures the actual transform output as an insta snapshot for regression detection
+- Added `format_transform_output()` to serialize transform results in a format matching the SWC `.snap` structure for easy visual comparison
+- Added `swc_parity::parity_report` test that compares actual output against SWC expected and prints a summary (root match, segment count, diagnostics) without failing
+- Removed dead code: `compare_snapshot`, `normalize_code`, `run_snapshot_test`, `snapshot_test_debug!`
+- Sorted diagnostics in output formatting to prevent non-deterministic ordering from causing false failures

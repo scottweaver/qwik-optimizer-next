@@ -1,0 +1,49 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 880
+expression: output
+---
+============================= project/index.js ==
+import { qrlDEV } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { Fragment } from "@qwik.dev/core";
+import { component$, useStore } from "@qwik.dev/core";
+export const App = qrlDEV(() => import("./index.tsx__Q6Dyy5BeIxw.tsx"), "_Q6Dyy5BeIxw");
+
+============================= project/index.tsx__Q6Dyy5BeIxw.js (ENTRY POINT) ==
+export const _Q6Dyy5BeIxw = (props: Stuff) => {
+	return (
+		<>
+			<Cmp key="stuff"></Cmp>
+			<Cmp></Cmp>
+			<Cmp prop="23"></Cmp>
+			<Cmp prop="23" key={props.stuff}></Cmp>
+			<p key={props.stuff}>Hello Qwik</p>
+		</>
+	);
+};
+/*
+{
+  "origin": "project/index.tsx",
+  "name": "_Q6Dyy5BeIxw",
+  "entry": null,
+  "displayName": "index.tsx_",
+  "hash": "Q6Dyy5BeIxw",
+  "canonicalFilename": "index.tsx__Q6Dyy5BeIxw",
+  "path": "project",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    76,
+    283
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

@@ -1,0 +1,15 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 868
+expression: output
+---
+== DIAGNOSTICS ==
+[
+  {
+    "scope": "optimizer",
+    "category": "sourceError",
+    "code": null,
+    "file": "test.tsx",
+    "message": "Unexpected token. Did you mean `{'>'}` or `&gt;`?"
+  }
+]

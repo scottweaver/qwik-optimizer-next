@@ -1,0 +1,60 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 1018
+expression: output
+---
+============================= test.js ==
+import { qrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useStore } from "@qwik.dev/core";
+export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const PANELS: ActivePanel[] = [
+	"Examples",
+	"Input",
+	"Output",
+	"Console"
+];
+
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { PANELS } from "./test";
+import { useStore } from "@qwik.dev/core";
+export const _u6BtPnK76q4 = () => {
+			const panelStore = useStore(() => ({
+				active: 'Input',
+				list: PANELS,
+			}));
+
+			return (
+				<div
+					stuff={panelStore.active ? 'yes' : 'no'}
+					class={{
+						'too-long-to-wrap': true,
+						'examples-panel-input': panelStore.active === 'Input',
+						'examples-panel-output': panelStore.active === 'Output',
+						'examples-panel-console': panelStore.active === 'Console',
+					}}
+				/>
+			);
+		};
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    76,
+    510
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

@@ -1,0 +1,40 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 850
+expression: output
+---
+============================= src/components/mongo/404.tsx ==
+import { qrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+export default qrl(() => import("./404.tsx__0BX5jYI256c"), "_0BX5jYI256c");
+
+============================= src/components/mongo/404.tsx__0BX5jYI256c.tsx (ENTRY POINT) ==
+export const _0BX5jYI256c = () => {
+	return (
+		<div onClick$={() => console.log(mongodb)}>
+		</div>
+	);
+};
+/*
+{
+  "origin": "src/components/mongo/404.tsx",
+  "name": "_0BX5jYI256c",
+  "entry": null,
+  "displayName": "404.tsx_",
+  "hash": "0BX5jYI256c",
+  "canonicalFilename": "404.tsx__0BX5jYI256c",
+  "path": "src/components/mongo",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    62,
+    152
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

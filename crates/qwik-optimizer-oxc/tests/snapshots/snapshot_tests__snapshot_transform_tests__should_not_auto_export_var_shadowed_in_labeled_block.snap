@@ -1,0 +1,45 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 978
+expression: output
+---
+============================= test.js ==
+import { qrl } from "@qwik.dev/core";
+import { formAction$ } from "forms";
+export const action = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+const x = "module-level";
+export const _u6BtPnK76q4 = (data) => {
+	label: {
+		const x = "shadowed";
+		break label;
+	}
+	return {};
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "formAction$",
+  "captures": false,
+  "loc": [
+    86,
+    183
+  ],
+  "paramNames": [
+    "data"
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

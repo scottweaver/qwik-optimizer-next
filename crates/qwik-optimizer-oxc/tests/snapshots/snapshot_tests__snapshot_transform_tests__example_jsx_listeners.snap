@@ -1,0 +1,131 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 881
+expression: output
+---
+============================= test.js ==
+import { qrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+export const _u6BtPnK76q4 = () => {
+
+	return $(() => {
+		const handler = $(() => console.log('reused'));
+		return (
+			<div
+				onClick$={()=>console.log('onClick$')}
+				onDocumentScroll$={()=>console.log('onDocumentScroll')}
+				onDocumentScroll$={()=>console.log('onWindowScroll')}
+
+				on-cLick$={()=>console.log('on-cLick$')}
+				onDocument-sCroll$={()=>console.log('onDocument-sCroll')}
+				onDocument-scroLL$={()=>console.log('onDocument-scroLL')}
+
+				host:onClick$={()=>console.log('host:onClick$')}
+				host:onDocumentScroll$={()=>console.log('host:onDocument:scroll')}
+				host:onDocumentScroll$={()=>console.log('host:onWindow:scroll')}
+
+				onKeyup$={handler}
+				onDocument:keyup$={handler}
+				onWindow:keyup$={handler}
+
+				custom$={()=>console.log('custom')}
+			/>
+		)
+	});
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    69,
+    870
+  ]
+}
+*/
+============================= test.tsx_component_1_vX1B9oMEgiI.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+export const component_1_vX1B9oMEgiI = () => {
+		const handler = $(() => console.log('reused'));
+		return (
+			<div
+				onClick$={()=>console.log('onClick$')}
+				onDocumentScroll$={()=>console.log('onDocumentScroll')}
+				onDocumentScroll$={()=>console.log('onWindowScroll')}
+
+				on-cLick$={()=>console.log('on-cLick$')}
+				onDocument-sCroll$={()=>console.log('onDocument-sCroll')}
+				onDocument-scroLL$={()=>console.log('onDocument-scroLL')}
+
+				host:onClick$={()=>console.log('host:onClick$')}
+				host:onDocumentScroll$={()=>console.log('host:onDocument:scroll')}
+				host:onDocumentScroll$={()=>console.log('host:onWindow:scroll')}
+
+				onKeyup$={handler}
+				onDocument:keyup$={handler}
+				onWindow:keyup$={handler}
+
+				custom$={()=>console.log('custom')}
+			/>
+		)
+	};
+/*
+{
+  "origin": "test.tsx",
+  "name": "component_1_vX1B9oMEgiI",
+  "entry": null,
+  "displayName": "test.tsx_component_1",
+  "hash": "vX1B9oMEgiI",
+  "canonicalFilename": "test.tsx_component_1_vX1B9oMEgiI",
+  "path": "",
+  "extension": "js",
+  "parent": "_u6BtPnK76q4",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    97,
+    841
+  ]
+}
+*/
+============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
+export const component_ZUK1E201Ins = () => console.log("reused");
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "component_ZUK1E201Ins",
+  "entry": null,
+  "displayName": "test.tsx_component",
+  "hash": "ZUK1E201Ins",
+  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "path": "",
+  "extension": "js",
+  "parent": "component_1_vX1B9oMEgiI",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    125,
+    155
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[]

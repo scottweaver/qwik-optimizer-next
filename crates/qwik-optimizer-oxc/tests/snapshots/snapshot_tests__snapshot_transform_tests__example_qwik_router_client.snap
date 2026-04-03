@@ -1,0 +1,2529 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 906
+expression: output
+---
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs ==
+import { qrl } from "@qwik.dev/core";
+import { jsx, Fragment, jsxs } from "@qwik.dev/core/jsx-runtime";
+import { component$, useErrorBoundary, useOnWindow, $, Slot, createContextId, useContext, implicit$FirstArg, noSerialize, useVisibleTask$, useServerData, useSignal, untrack, sync$, isDev, withLocale, event$, isServer, useStyles$, useStore, isBrowser, useContextProvider, useTask$, getLocale, jsx as jsx$1, SkipRender, createElement } from "@qwik.dev/core";
+import { g as getClientNavPath, s as shouldPreload, p as preloadRouteBundles, l as loadClientData, i as isPromise, a as isSamePath, c as createLoaderSignal, t as toUrl, b as isSameOrigin, d as loadRoute, D as DEFAULT_LOADERS_SERIALIZATION_STRATEGY, C as CLIENT_DATA_CACHE, Q as Q_ROUTE, e as clientNavigate, f as QFN_KEY, h as QACTION_KEY, j as QDATA_KEY } from "./chunks/routing.qwik.mjs";
+import * as qwikRouterConfig from "@qwik-router-config";
+import { _getContextContainer, SerializerSymbol, _UNINITIALIZED, _hasStoreEffects, forceStoreEffects, _waitUntilRendered, _getContextHostElement, _getContextEvent, _serialize, _deserialize, _resolveContextWithoutSequentialScope } from "@qwik.dev/core/internal";
+import { _asyncRequestStore } from "@qwik.dev/router/middleware/request-handler";
+import * as v from "valibot";
+import * as z from "zod";
+export { z } from "zod";
+import swRegister from "@qwik-router-sw-register";
+import { renderToStream } from "@qwik.dev/core/server";
+import "@qwik.dev/core/preloader";
+import "./chunks/types.qwik.mjs";
+const ErrorBoundary = qrl(() => import("./index.qwik.mjs__0KNkylTSj1o.mjs"), "_0KNkylTSj1o");
+const RouteStateContext = /* @__PURE__ */ createContextId("qc-s");
+const ContentContext = /* @__PURE__ */ createContextId("qc-c");
+const ContentInternalContext = /* @__PURE__ */ createContextId("qc-ic");
+const DocumentHeadContext = /* @__PURE__ */ createContextId("qc-h");
+const RouteLocationContext = /* @__PURE__ */ createContextId("qc-l");
+const RouteNavigateContext = /* @__PURE__ */ createContextId("qc-n");
+const RouteActionContext = /* @__PURE__ */ createContextId("qc-a");
+const RoutePreventNavigateContext = /* @__PURE__ */ createContextId("qc-p");
+const useContent = () => useContext(ContentContext);
+const useDocumentHead = () => useContext(DocumentHeadContext);
+const useLocation = () => useContext(RouteLocationContext);
+const useNavigate = () => useContext(RouteNavigateContext);
+const usePreventNavigateQrl = (fn) => {
+	if (!__EXPERIMENTAL__.preventNavigate) {
+		throw new Error("usePreventNavigate$ is experimental and must be enabled with `experimental: [\"preventNavigate\"]` in the `qwikVite` plugin.");
+	}
+	const registerPreventNav = useContext(RoutePreventNavigateContext);
+	qrl(() => import("./index.qwik.mjs__1_pRA3IJzkWnc.mjs"), "_1_pRA3IJzkWnc", [fn, registerPreventNav]);
+};
+const usePreventNavigate$ = implicit$FirstArg(usePreventNavigateQrl);
+const useAction = () => useContext(RouteActionContext);
+const useQwikRouterEnv = () => noSerialize(useServerData("qwikrouter"));
+const Link = qrl(() => import("./index.qwik.mjs__2_FXwq3GxmoRk.mjs"), "_2_FXwq3GxmoRk");
+const resolveHead = (endpoint, routeLocation, contentModules, locale, defaults) => withLocale(locale, () => {
+	const head = createDocumentHead(defaults);
+	const getData = (loaderOrAction) => {
+		const id = loaderOrAction.__id;
+		if (loaderOrAction.__brand === "server_loader") {
+			if (!(id in endpoint.loaders)) {
+				throw new Error("You can not get the returned data of a loader that has not been executed for this request.");
+			}
+		}
+		const data = endpoint.loaders[id];
+		if (isPromise(data)) {
+			throw new Error("Loaders returning a promise can not be resolved for the head function.");
+		}
+		return data;
+	};
+	const fns = [];
+	for (const contentModule of contentModules) {
+		const contentModuleHead = contentModule?.head;
+		if (contentModuleHead) {
+			if (typeof contentModuleHead === "function") {
+				fns.unshift(contentModuleHead);
+			} else if (typeof contentModuleHead === "object") {
+				resolveDocumentHead(head, contentModuleHead);
+			}
+		}
+	}
+	if (fns.length) {
+		const headProps = {
+			head,
+			withLocale: (fn) => fn(),
+			resolveValue: getData,
+			...routeLocation
+		};
+		for (const fn of fns) {
+			resolveDocumentHead(head, fn(headProps));
+		}
+	}
+	return head;
+});
+const resolveDocumentHead = (resolvedHead, updatedHead) => {
+	if (typeof updatedHead.title === "string") {
+		resolvedHead.title = updatedHead.title;
+	}
+	mergeArray(resolvedHead.meta, updatedHead.meta);
+	mergeArray(resolvedHead.links, updatedHead.links);
+	mergeArray(resolvedHead.styles, updatedHead.styles);
+	mergeArray(resolvedHead.scripts, updatedHead.scripts);
+	Object.assign(resolvedHead.frontmatter, updatedHead.frontmatter);
+};
+const mergeArray = (existingArr, newArr) => {
+	if (Array.isArray(newArr)) {
+		for (const newItem of newArr) {
+			if (typeof newItem.key === "string") {
+				const existingIndex = existingArr.findIndex((i) => i.key === newItem.key);
+				if (existingIndex > -1) {
+					existingArr[existingIndex] = newItem;
+					continue;
+				}
+			}
+			existingArr.push(newItem);
+		}
+	}
+};
+const createDocumentHead = (defaults) => ({
+	title: defaults?.title || "",
+	meta: [...defaults?.meta || []],
+	links: [...defaults?.links || []],
+	styles: [...defaults?.styles || []],
+	scripts: [...defaults?.scripts || []],
+	frontmatter: { ...defaults?.frontmatter }
+});
+const transitionCss = "@layer qwik{@supports selector(html:active-view-transition-type(type)){html:active-view-transition-type(qwik-navigation){:root{view-transition-name:none}}}@supports not selector(html:active-view-transition-type(type)){:root{view-transition-name:none}}}";
+const restoreScroll = (type, toUrl, fromUrl, scroller, scrollState) => {
+	if (type === "popstate" && scrollState) {
+		scroller.scrollTo(scrollState.x, scrollState.y);
+	} else if (type === "link" || type === "form") {
+		if (!hashScroll(toUrl, fromUrl)) {
+			scroller.scrollTo(0, 0);
+		}
+	}
+};
+const hashScroll = (toUrl, fromUrl) => {
+	const elmId = toUrl.hash.slice(1);
+	const elm = elmId && document.getElementById(elmId);
+	if (elm) {
+		elm.scrollIntoView();
+		return true;
+	} else if (!elm && toUrl.hash && isSamePath(toUrl, fromUrl)) {
+		return true;
+	}
+	return false;
+};
+const currentScrollState = (elm) => {
+	return {
+		x: elm.scrollLeft,
+		y: elm.scrollTop,
+		w: Math.max(elm.scrollWidth, elm.clientWidth),
+		h: Math.max(elm.scrollHeight, elm.clientHeight)
+	};
+};
+const getScrollHistory = () => {
+	const state = history.state;
+	return state?._qRouterScroll;
+};
+const spaInit = qrl(() => import("./index.qwik.mjs__3_O4DoQMA2iPM.mjs"), "_3_O4DoQMA2iPM");
+const QWIK_CITY_SCROLLER = "_qCityScroller";
+const QWIK_ROUTER_SCROLLER = "_qRouterScroller";
+const preventNav = {};
+const internalState = { navCount: 0 };
+const useQwikRouter = (props) => {
+	if (!isServer) {
+		throw new Error("useQwikRouter can only run during SSR on the server. If you are seeing this, it means you are re-rendering the root of your application. Fix that or use the <QwikRouterProvider> component around the root of your application.");
+	}
+	useStyles$(transitionCss);
+	const env = useQwikRouterEnv();
+	if (!env?.params) {
+		throw new Error(`Missing Qwik Router Env Data for help visit https://github.com/QwikDev/qwik/issues/6237`);
+	}
+	const urlEnv = useServerData("url");
+	if (!urlEnv) {
+		throw new Error(`Missing Qwik URL Env Data`);
+	}
+	const serverHead = useServerData("documentHead");
+	if (env.ev.originalUrl.pathname !== env.ev.url.pathname && !__EXPERIMENTAL__.enableRequestRewrite) {
+		throw new Error(`enableRequestRewrite is an experimental feature and is not enabled. Please enable the feature flag by adding \`experimental: ["enableRequestRewrite"]\` to your qwikVite plugin options.`);
+	}
+	const url = new URL(urlEnv);
+	const routeLocationTarget = {
+		url,
+		params: env.params,
+		isNavigating: false,
+		prevUrl: void 0
+	};
+	const routeLocation = useStore(routeLocationTarget, { deep: false });
+	const navResolver = {};
+	const container = _getContextContainer();
+	const getSerializationStrategy = (loaderId) => {
+		return env.response.loadersSerializationStrategy.get(loaderId) || DEFAULT_LOADERS_SERIALIZATION_STRATEGY;
+	};
+	const loadersObject = {};
+	const loaderState = {};
+	for (const [key, value] of Object.entries(env.response.loaders)) {
+		loadersObject[key] = value;
+		loaderState[key] = createLoaderSignal(loadersObject, key, url, getSerializationStrategy(key), container);
+	}
+	loadersObject[SerializerSymbol] = (obj) => {
+		const loadersSerializationObject = {};
+		for (const [k, v] of Object.entries(obj)) {
+			loadersSerializationObject[k] = getSerializationStrategy(k) === "always" ? v : _UNINITIALIZED;
+		}
+		return loadersSerializationObject;
+	};
+	const routeInternal = useSignal({
+		type: "initial",
+		dest: url,
+		scroll: true
+	});
+	const documentHead = useStore(() => createDocumentHead(serverHead));
+	const content = useStore({
+		headings: void 0,
+		menu: void 0
+	});
+	const contentInternal = useSignal();
+	const currentActionId = env.response.action;
+	const currentAction = currentActionId ? env.response.loaders[currentActionId] : void 0;
+	const actionState = useSignal(currentAction ? {
+		id: currentActionId,
+		data: env.response.formData,
+		output: {
+			result: currentAction,
+			status: env.response.status
+		}
+	} : void 0);
+	const registerPreventNav = qrl(() => import("./index.qwik.mjs__4_Fq4rjdv06Ww.mjs"), "_4_Fq4rjdv06Ww");
+	const goto = qrl(() => import("./index.qwik.mjs__5_uoaoesJ2QXM.mjs"), "_5_uoaoesJ2QXM", [
+		actionState,
+		navResolver,
+		routeInternal,
+		routeLocation
+	]);
+	useContextProvider(ContentContext, content);
+	useContextProvider(ContentInternalContext, contentInternal);
+	useContextProvider(DocumentHeadContext, documentHead);
+	useContextProvider(RouteLocationContext, routeLocation);
+	useContextProvider(RouteNavigateContext, goto);
+	useContextProvider(RouteStateContext, loaderState);
+	useContextProvider(RouteActionContext, actionState);
+	useContextProvider(RoutePreventNavigateContext, registerPreventNav);
+	qrl(() => import("./index.qwik.mjs__6_40K6kutq1q0.mjs"), "_6_40K6kutq1q0", [
+		actionState,
+		content,
+		contentInternal,
+		documentHead,
+		env,
+		goto,
+		key,
+		loaderState,
+		loadersObject,
+		navResolver,
+		props,
+		routeInternal,
+		routeLocation,
+		routeLocationTarget,
+		serverHead,
+		value
+	]);
+};
+const QwikRouterProvider = qrl(() => import("./index.qwik.mjs__7_1oFrSAKho5U.mjs"), "_7_1oFrSAKho5U");
+const QwikCityProvider = QwikRouterProvider;
+const useQwikMockRouter = (props) => {
+	const urlEnv = props.url ?? "http://localhost/";
+	const url = new URL(urlEnv);
+	const routeLocation = useStore({
+		url,
+		params: props.params ?? {},
+		isNavigating: false,
+		prevUrl: void 0
+	}, { deep: false });
+	const loadersData = props.loaders?.reduce((acc, { loader, data }) => {
+		acc[loader.__id] = data;
+		return acc;
+	}, {});
+	const loaderState = useStore(loadersData ?? {}, { deep: false });
+	const goto = props.goto ?? qrl(() => import("./index.qwik.mjs__8_IadkMzO9zV4.mjs"), "_8_IadkMzO9zV4");
+	const documentHead = useStore(createDocumentHead, { deep: false });
+	const content = useStore({
+		headings: void 0,
+		menu: void 0
+	}, { deep: false });
+	const contentInternal = useSignal();
+	const actionState = useSignal();
+	useContextProvider(ContentContext, content);
+	useContextProvider(ContentInternalContext, contentInternal);
+	useContextProvider(DocumentHeadContext, documentHead);
+	useContextProvider(RouteLocationContext, routeLocation);
+	useContextProvider(RouteNavigateContext, goto);
+	useContextProvider(RouteStateContext, loaderState);
+	useContextProvider(RouteActionContext, actionState);
+	const actionsMocks = props.actions?.reduce((acc, { action, handler }) => {
+		acc[action.__id] = handler;
+		return acc;
+	}, {});
+	qrl(() => import("./index.qwik.mjs__9_Nc0U8SrzYBk.mjs"), "_9_Nc0U8SrzYBk", [actionState, actionsMocks]);
+};
+const QwikRouterMockProvider = qrl(() => import("./index.qwik.mjs__10_rnEMz0B61YQ.mjs"), "_10_rnEMz0B61YQ");
+const QwikCityMockProvider = QwikRouterMockProvider;
+const RouterOutlet = qrl(() => import("./index.qwik.mjs__11_fa0c9bbY9K4.mjs"), "_11_fa0c9bbY9K4");
+const routeActionQrl = (actionQrl, ...rest) => {
+	const { id, validators } = getValidators(rest, actionQrl);
+	function action() {
+		const loc = useLocation();
+		const currentAction = useAction();
+		const initialState = {
+			actionPath: `?${QACTION_KEY}=${id}`,
+			submitted: false,
+			isRunning: false,
+			status: void 0,
+			value: void 0,
+			formData: void 0
+		};
+		const state = useStore(() => {
+			const value = currentAction.value;
+			if (value && value?.id === id) {
+				const data = value.data;
+				if (data instanceof FormData) {
+					initialState.formData = data;
+				}
+				if (value.output) {
+					const { status, result } = value.output;
+					initialState.status = status;
+					initialState.value = result;
+				}
+			}
+			return initialState;
+		});
+		const submit = qrl(() => import("./index.qwik.mjs__12_meRd8Hzw4q8.mjs"), "_12_meRd8Hzw4q8", [
+			currentAction,
+			id,
+			loc,
+			state
+		]);
+		initialState.submit = submit;
+		return state;
+	}
+	action.__brand = "server_action";
+	action.__validators = validators;
+	action.__qrl = actionQrl;
+	action.__id = id;
+	Object.freeze(action);
+	return action;
+};
+const globalActionQrl = (actionQrl, ...rest) => {
+	const action = routeActionQrl(actionQrl, ...rest);
+	if (isServer) {
+		if (typeof globalThis._qwikActionsMap === "undefined") {
+			globalThis._qwikActionsMap = /* @__PURE__ */ new Map();
+		}
+		globalThis._qwikActionsMap.set(action.__id, action);
+	}
+	return action;
+};
+const routeAction$ = /* @__PURE__ */ implicit$FirstArg(routeActionQrl);
+const globalAction$ = /* @__PURE__ */ implicit$FirstArg(globalActionQrl);
+const getValue = (obj) => obj.value;
+const routeLoaderQrl = (loaderQrl, ...rest) => {
+	const { id, validators, serializationStrategy } = getValidators(rest, loaderQrl);
+	function loader() {
+		const state = _resolveContextWithoutSequentialScope(RouteStateContext);
+		if (!(id in state)) {
+			throw new Error(`routeLoader$ "${loaderQrl.getSymbol()}" was invoked in a route where it was not declared.
+    This is because the routeLoader$ was not exported in a 'layout.tsx' or 'index.tsx' file of the existing route.
+    For more information check: https://qwik.dev/docs/route-loader/
+
+    If your are managing reusable logic or a library it is essential that this function is re-exported from within 'layout.tsx' or 'index.tsx file of the existing route otherwise it will not run or throw exception.
+    For more information check: https://qwik.dev/docs/re-exporting-loaders/`);
+		}
+		const loaderData = state[id];
+		untrack(getValue, loaderData);
+		return loaderData;
+	}
+	loader.__brand = "server_loader";
+	loader.__qrl = loaderQrl;
+	loader.__validators = validators;
+	loader.__id = id;
+	loader.__serializationStrategy = serializationStrategy;
+	loader.__expires = -1;
+	Object.freeze(loader);
+	return loader;
+};
+const routeLoader$ = /* @__PURE__ */ implicit$FirstArg(routeLoaderQrl);
+const validatorQrl = (validator) => {
+	if (isServer) {
+		return { validate: validator };
+	}
+	return void 0;
+};
+const validator$ = /* @__PURE__ */ implicit$FirstArg(validatorQrl);
+const flattenValibotIssues = (issues) => {
+	return issues.reduce((acc, issue) => {
+		if (issue.path) {
+			const hasArrayType = issue.path.some((path) => path.type === "array");
+			if (hasArrayType) {
+				const keySuffix = issue.expected === "Array" ? "[]" : "";
+				const key = issue.path.map((item) => item.type === "array" ? "*" : item.key).join(".").replace(/\.\*/g, "[]") + keySuffix;
+				acc[key] = acc[key] || [];
+				if (Array.isArray(acc[key])) {
+					acc[key].push(issue.message);
+				}
+				return acc;
+			} else {
+				acc[issue.path.map((item) => item.key).join(".")] = issue.message;
+			}
+		}
+		return acc;
+	}, {});
+};
+const valibotQrl = (qrl) => {
+	if (!__EXPERIMENTAL__.valibot) {
+		throw new Error("Valibot is an experimental feature and is not enabled. Please enable the feature flag by adding `experimental: [\"valibot\"]` to your qwikVite plugin options.");
+	}
+	if (isServer) {
+		return {
+			__brand: "valibot",
+			async validate(ev, inputData) {
+				const schema = await qrl.resolve().then((obj) => typeof obj === "function" ? obj(ev) : obj);
+				const data = inputData ?? await ev.parseBody();
+				const result = await v.safeParseAsync(schema, data);
+				if (result.success) {
+					return {
+						success: true,
+						data: result.output
+					};
+				} else {
+					if (isDev) {
+						console.error("ERROR: Valibot validation failed", result.issues);
+					}
+					return {
+						success: false,
+						status: 400,
+						error: {
+							formErrors: v.flatten(result.issues).root ?? [],
+							fieldErrors: flattenValibotIssues(result.issues)
+						}
+					};
+				}
+			}
+		};
+	}
+	return void 0;
+};
+const valibot$ = /* @__PURE__ */ implicit$FirstArg(valibotQrl);
+const flattenZodIssues = (issues) => {
+	issues = Array.isArray(issues) ? issues : [issues];
+	return issues.reduce((acc, issue) => {
+		const isExpectingArray = "expected" in issue && issue.expected === "array";
+		const hasArrayType = issue.path.some((path) => typeof path === "number") || isExpectingArray;
+		if (hasArrayType) {
+			const keySuffix = "expected" in issue && issue.expected === "array" ? "[]" : "";
+			const key = issue.path.map((path) => typeof path === "number" ? "*" : path).join(".").replace(/\.\*/g, "[]") + keySuffix;
+			acc[key] = acc[key] || [];
+			if (Array.isArray(acc[key])) {
+				acc[key].push(issue.message);
+			}
+			return acc;
+		} else {
+			acc[issue.path.join(".")] = issue.message;
+		}
+		return acc;
+	}, {});
+};
+const zodQrl = (qrl) => {
+	if (isServer) {
+		return {
+			__brand: "zod",
+			async validate(ev, inputData) {
+				const schema = await qrl.resolve().then((obj) => {
+					if (typeof obj === "function") {
+						obj = obj(z, ev);
+					}
+					if (obj instanceof z.Schema) {
+						return obj;
+					} else {
+						return z.object(obj);
+					}
+				});
+				const data = inputData ?? await ev.parseBody();
+				const result = await withLocale(ev.locale(), () => schema.safeParseAsync(data));
+				if (result.success) {
+					return result;
+				} else {
+					if (isDev) {
+						console.error("ERROR: Zod validation failed", result.error.issues);
+					}
+					return {
+						success: false,
+						status: 400,
+						error: {
+							formErrors: result.error.flatten().formErrors,
+							fieldErrors: flattenZodIssues(result.error.issues)
+						}
+					};
+				}
+			}
+		};
+	}
+	return void 0;
+};
+const zod$ = /* @__PURE__ */ implicit$FirstArg(zodQrl);
+const serverQrl = (qrl, options) => {
+	if (isServer) {
+		const captured = qrl.getCaptured();
+		if (captured && captured.length > 0 && !_getContextHostElement()) {
+			throw new Error("For security reasons, we cannot serialize QRLs that capture lexical scope.");
+		}
+	}
+	const method = options?.method?.toUpperCase?.() || "POST";
+	const headers = options?.headers || {};
+	const origin = options?.origin || "";
+	const fetchOptions = options?.fetchOptions || {};
+	return qrl(() => import("./index.qwik.mjs__13_yA7jhUN8njs.mjs"), "_13_yA7jhUN8njs", [
+		captured,
+		fetchOptions,
+		headers,
+		method,
+		origin,
+		qrl
+	]);
+};
+const server$ = /* @__PURE__ */ implicit$FirstArg(serverQrl);
+const getValidators = (rest, qrl) => {
+	let id;
+	let serializationStrategy = DEFAULT_LOADERS_SERIALIZATION_STRATEGY;
+	const validators = [];
+	if (rest.length === 1) {
+		const options = rest[0];
+		if (options && typeof options === "object") {
+			if ("validate" in options) {
+				validators.push(options);
+			} else {
+				id = options.id;
+				if (options.serializationStrategy) {
+					serializationStrategy = options.serializationStrategy;
+				}
+				if (options.validation) {
+					validators.push(...options.validation);
+				}
+			}
+		}
+	} else if (rest.length > 1) {
+		validators.push(...rest.filter((v2) => !!v2));
+	}
+	if (typeof id === "string") {
+		if (isDev) {
+			if (!/^[\w/.-]+$/.test(id)) {
+				throw new Error(`Invalid id: ${id}, id can only contain [a-zA-Z0-9_.-]`);
+			}
+		}
+		id = `id_${id}`;
+	} else {
+		id = qrl.getHash();
+	}
+	return {
+		validators: validators.reverse(),
+		id,
+		serializationStrategy
+	};
+};
+const ServiceWorkerRegister = (props) => /* @__PURE__ */ jsx("script", {
+	type: "module",
+	dangerouslySetInnerHTML: swRegister,
+	nonce: props.nonce
+});
+const Form = ({ action, spaReset, reloadDocument, onSubmit$, ...rest }, key) => {
+	if (action) {
+		const isArrayApi = Array.isArray(onSubmit$);
+		if (isArrayApi) {
+			return jsx$1("form", {
+				...rest,
+				action: action.actionPath,
+				"preventdefault:submit": !reloadDocument,
+				onSubmit$: [...onSubmit$, !reloadDocument ? qrl(() => import("./index.qwik.mjs__14_G3lwMdydYKE.mjs"), "_14_G3lwMdydYKE", [action]) : void 0],
+				method: "post",
+				["data-spa-reset"]: spaReset ? "true" : void 0
+			}, key);
+		}
+		return jsx$1("form", {
+			...rest,
+			action: action.actionPath,
+			"preventdefault:submit": !reloadDocument,
+			onSubmit$: [onSubmit$, !reloadDocument ? action.submit : void 0],
+			method: "post",
+			["data-spa-reset"]: spaReset ? "true" : void 0
+		}, key);
+	} else {
+		return /* @__PURE__ */ jsx(GetForm, {
+			spaReset,
+			reloadDocument,
+			onSubmit$,
+			...rest
+		}, key);
+	}
+};
+const GetForm = qrl(() => import("./index.qwik.mjs__15_6z2T00WEHNs.mjs"), "_15_6z2T00WEHNs");
+const untypedAppUrl = function appUrl(route, params, paramsPrefix = "") {
+	const path = route.split("/");
+	for (let i = 0; i < path.length; i++) {
+		const segment = path[i];
+		if (segment.startsWith("[") && segment.endsWith("]")) {
+			const isSpread = segment.startsWith("[...");
+			const key = segment.substring(segment.startsWith("[...") ? 4 : 1, segment.length - 1);
+			const value = params ? params[paramsPrefix + key] || params[key] : "";
+			path[i] = isSpread ? value : encodeURIComponent(value);
+		}
+		if (segment.startsWith("(") && segment.endsWith(")")) {
+			path.splice(i, 1);
+		}
+	}
+	let url = path.join("/");
+	let baseURL = "/";
+	if (baseURL) {
+		if (!baseURL.endsWith("/")) {
+			baseURL += "/";
+		}
+		while (url.startsWith("/")) {
+			url = url.substring(1);
+		}
+		url = baseURL + url;
+	}
+	return url;
+};
+function omitProps(obj, keys) {
+	const omittedObj = {};
+	for (const key in obj) {
+		if (!key.startsWith("param:") && !keys.includes(key)) {
+			omittedObj[key] = obj[key];
+		}
+	}
+	return omittedObj;
+}
+const createRenderer = (getOptions) => {
+	return (opts) => {
+		const { jsx, options } = getOptions(opts);
+		return renderToStream(jsx, options);
+	};
+};
+const DocumentHeadTags = qrl(() => import("./index.qwik.mjs__16_d4Ts0KvtNzs.mjs"), "_16_d4Ts0KvtNzs");
+export { DocumentHeadTags, ErrorBoundary, Form, Link, QWIK_CITY_SCROLLER, QWIK_ROUTER_SCROLLER, QwikCityMockProvider, QwikCityProvider, QwikRouterMockProvider, QwikRouterProvider, RouterOutlet, ServiceWorkerRegister, createRenderer, globalAction$, globalActionQrl, omitProps, routeAction$, routeActionQrl, routeLoader$, routeLoaderQrl, server$, serverQrl, untypedAppUrl, useContent, useDocumentHead, useLocation, useNavigate, usePreventNavigate$, usePreventNavigateQrl, useQwikRouter, valibot$, valibotQrl, validator$, validatorQrl, zod$, zodQrl };
+
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__0KNkylTSj1o.mjs (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { Fragment } from "@qwik.dev/core/jsx-runtime";
+import { Slot } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+import { useErrorBoundary } from "@qwik.dev/core";
+import { useOnWindow } from "@qwik.dev/core";
+export const _0KNkylTSj1o = (props) => {
+	const store = useErrorBoundary();
+	useOnWindow("qerror", $((e) => {
+		store.error = e.detail.error;
+	}));
+	if (store.error && props.fallback$) {
+		return /* @__PURE__ */ jsx(Fragment, { children: props.fallback$(store.error) });
+	}
+	return /* @__PURE__ */ jsx(Slot, {});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_0KNkylTSj1o",
+  "entry": null,
+  "displayName": "index.qwik.mjs_",
+  "hash": "0KNkylTSj1o",
+  "canonicalFilename": "index.qwik.mjs__0KNkylTSj1o",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    1609,
+    1933
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__7_1oFrSAKho5U.mjs (ENTRY POINT) ==
+import { Slot } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+import { useQwikRouter } from "./index.qwik.js";
+export const _7_1oFrSAKho5U = (props) => {
+	useQwikRouter(props);
+	return /* @__PURE__ */ jsx(Slot, {});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_7_1oFrSAKho5U",
+  "entry": null,
+  "displayName": "index.qwik.mjs__7",
+  "hash": "1oFrSAKho5U",
+  "canonicalFilename": "index.qwik.mjs__7_1oFrSAKho5U",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    35629,
+    35719
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__6_40K6kutq1q0.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { C as CLIENT_DATA_CACHE } from "./chunks/routing.qwik.mjs";
+import { D as DEFAULT_LOADERS_SERIALIZATION_STRATEGY } from "./chunks/routing.qwik.mjs";
+import { QWIK_ROUTER_SCROLLER } from "./index.qwik.js";
+import { Q as Q_ROUTE } from "./chunks/routing.qwik.mjs";
+import { _getContextContainer } from "@qwik.dev/core/internal";
+import { _hasStoreEffects } from "@qwik.dev/core/internal";
+import { _waitUntilRendered } from "@qwik.dev/core/internal";
+import { e as clientNavigate } from "./chunks/routing.qwik.mjs";
+import { c as createLoaderSignal } from "./chunks/routing.qwik.mjs";
+import { forceStoreEffects } from "@qwik.dev/core/internal";
+import { getLocale } from "@qwik.dev/core";
+import { isBrowser } from "@qwik.dev/core";
+import { isDev } from "@qwik.dev/core";
+import { b as isSameOrigin } from "./chunks/routing.qwik.mjs";
+import { a as isSamePath } from "./chunks/routing.qwik.mjs";
+import { isServer } from "@qwik.dev/core";
+import { l as loadClientData } from "./chunks/routing.qwik.mjs";
+import { d as loadRoute } from "./chunks/routing.qwik.mjs";
+import { noSerialize } from "@qwik.dev/core";
+import { * as qwikRouterConfig } from "@qwik-router-config";
+function callRestoreScrollOnDocument() {
+	if (document.__q_scroll_restore__) {
+		document.__q_scroll_restore__();
+		document.__q_scroll_restore__ = void 0;
+	}
+}
+const saveScrollHistory = (scrollState) => {
+	const state = history.state || {};
+	state._qRouterScroll = scrollState;
+	history.replaceState(state, "");
+};
+const startViewTransition = (params) => {
+	if (!params.update) {
+		return;
+	}
+	if ("startViewTransition" in document) {
+		let transition;
+		try {
+			transition = document.startViewTransition(params);
+		} catch {
+			transition = document.startViewTransition(params.update);
+		}
+		const event = new CustomEvent("qviewtransition", { detail: transition });
+		document.dispatchEvent(event);
+		return transition;
+	} else {
+		params.update?.();
+	}
+};
+export const _6_40K6kutq1q0 = ({ track }) => { const actionState = _captures[0];
+const content = _captures[1];
+const contentInternal = _captures[2];
+const documentHead = _captures[3];
+const env = _captures[4];
+const goto = _captures[5];
+const key = _captures[6];
+const loaderState = _captures[7];
+const loadersObject = _captures[8];
+const navResolver = _captures[9];
+const props = _captures[10];
+const routeInternal = _captures[11];
+const routeLocation = _captures[12];
+const routeLocationTarget = _captures[13];
+const serverHead = _captures[14];
+const value = _captures[15];
+
+    async function run() {
+      const navigation = track(routeInternal);
+      const action = track(actionState);
+      const locale = getLocale('');
+      const prevUrl = routeLocation.url;
+      const navType = action ? 'form' : navigation.type;
+      const _ref = {};
+      _ref.replaceState = navigation._ref.replaceState;
+      const { replaceState } = _ref;
+      let trackUrl;
+      let clientPageData;
+      let loadedRoute = null;
+      let container2;
+      if (isServer) {
+        trackUrl = new URL(navigation.dest, routeLocation.url);
+        loadedRoute = env.loadedRoute;
+        clientPageData = env.response;
+      } else {
+        trackUrl = new URL(navigation.dest, location);
+        if (trackUrl.pathname.endsWith('/')) {
+          if (globalThis.__NO_TRAILING_SLASH__) {
+            trackUrl.pathname = trackUrl.pathname.slice(0, -1);
+          }
+        } else if (!globalThis.__NO_TRAILING_SLASH__) {
+          trackUrl.pathname += '/';
+        }
+        let loadRoutePromise = loadRoute(
+          qwikRouterConfig.routes,
+          qwikRouterConfig.menus,
+          qwikRouterConfig.cacheModules,
+          trackUrl.pathname
+        );
+        container2 = _getContextContainer();
+        const pageData = (clientPageData = await loadClientData(trackUrl, {
+          action,
+          clearCache: true,
+        }));
+        if (!pageData) {
+          routeInternal.untrackedValue = { type: navType, dest: trackUrl };
+          return;
+        }
+        const newHref = pageData.href;
+        const newURL = new URL(newHref, trackUrl);
+        if (!isSamePath(newURL, trackUrl)) {
+          if (!pageData.isRewrite) {
+            trackUrl = newURL;
+          }
+          loadRoutePromise = loadRoute(
+            qwikRouterConfig.routes,
+            qwikRouterConfig.menus,
+            qwikRouterConfig.cacheModules,
+            newURL.pathname
+            // Load the actual required path.
+          );
+        }
+        try {
+          loadedRoute = await loadRoutePromise;
+        } catch (e) {
+          console.error(e);
+          window.location.href = newHref;
+          return;
+        }
+      }
+      if (loadedRoute) {
+        const [routeName, params, mods, menu] = loadedRoute;
+        const contentModules = mods;
+        const pageModule = contentModules[contentModules.length - 1];
+        if (navigation.dest.search && !!isSamePath(trackUrl, prevUrl)) {
+          trackUrl.search = navigation.dest.search;
+        }
+        let shouldForcePrevUrl = false;
+        let shouldForceUrl = false;
+        let shouldForceParams = false;
+        if (!isSamePath(trackUrl, prevUrl)) {
+          if (_hasStoreEffects(routeLocation, 'prevUrl')) {
+            shouldForcePrevUrl = true;
+          }
+          routeLocationTarget.prevUrl = prevUrl;
+        }
+        if (routeLocationTarget.url !== trackUrl) {
+          if (_hasStoreEffects(routeLocation, 'url')) {
+            shouldForceUrl = true;
+          }
+          routeLocationTarget.url = trackUrl;
+        }
+        if (routeLocationTarget.params !== params) {
+          if (_hasStoreEffects(routeLocation, 'params')) {
+            shouldForceParams = true;
+          }
+          routeLocationTarget.params = params;
+        }
+        routeInternal.untrackedValue = { type: navType, dest: trackUrl };
+        const resolvedHead = resolveHead(
+          clientPageData,
+          routeLocation,
+          contentModules,
+          locale,
+          serverHead
+        );
+        content.headings = pageModule.headings;
+        content.menu = menu;
+        contentInternal.untrackedValue = noSerialize(contentModules);
+        documentHead.links = resolvedHead.links;
+        documentHead.meta = resolvedHead.meta;
+        documentHead.styles = resolvedHead.styles;
+        documentHead.scripts = resolvedHead.scripts;
+        documentHead.title = resolvedHead.title;
+        documentHead.frontmatter = resolvedHead.frontmatter;
+        if (isBrowser) {
+          let scrollState;
+          if (navType === 'popstate') {
+            scrollState = getScrollHistory();
+          }
+          const scroller =
+            document.getElementById(QWIK_ROUTER_SCROLLER) ?? document.documentElement;
+          if (
+            (navigation.scroll &&
+              (!navigation.forceReload || !isSamePath(trackUrl, prevUrl)) &&
+              (navType === 'link' || navType === 'popstate')) || // Action might have responded with a redirect.
+            (navType === 'form' && !isSamePath(trackUrl, prevUrl))
+          ) {
+            document.__q_scroll_restore__ = () =>
+              restoreScroll(navType, trackUrl, prevUrl, scroller, scrollState);
+          }
+          const _ref = {};
+          _ref.loaders = clientPageData?._ref.loaders;
+          const { loaders } = _ref;
+          if (loaders) {
+            const container3 = _getContextContainer();
+            for (const [key, value] of Object.entries(loaders)) {
+              const signal = loaderState[key];
+              const awaitedValue = await value;
+              loadersObject[key] = awaitedValue;
+              if (!signal) {
+                loaderState[key] = createLoaderSignal(
+                  loadersObject,
+                  key,
+                  trackUrl,
+                  DEFAULT_LOADERS_SERIALIZATION_STRATEGY,
+                  container3
+                );
+              } else {
+                signal.invalidate();
+              }
+            }
+          }
+          CLIENT_DATA_CACHE.clear();
+          if (!window._qRouterSPA) {
+            window._qRouterSPA = true;
+            history.scrollRestoration = 'manual';
+            window.addEventListener('popstate', () => {
+              window._qRouterScrollEnabled = false;
+              clearTimeout(window._qRouterScrollDebounce);
+              goto(location.href, {
+                type: 'popstate',
+              });
+            });
+            window.removeEventListener('popstate', window._qRouterInitPopstate);
+            window._qRouterInitPopstate = void 0;
+            if (!window._qRouterHistoryPatch) {
+              window._qRouterHistoryPatch = true;
+              const _ref = {};
+              _ref.pushState = history._ref.pushState;
+              const { pushState } = _ref;
+              const replaceState2 = history.replaceState;
+              const prepareState = (state) => {
+                if (state === null || typeof state === 'undefined') {
+                  state = {};
+                } else if (state?.constructor !== Object) {
+                  state = { _data: state };
+                  if (isDev) {
+                    console.warn(
+                      'In a Qwik SPA context, `history.state` is used to store scroll state. Direct calls to `pushState()` and `replaceState()` must supply an actual Object type. We need to be able to automatically attach the scroll state to your state object. A new state object has been created, your data has been moved to: `history.state._data`'
+                    );
+                  }
+                }
+                state._qRouterScroll = state._qRouterScroll || currentScrollState(scroller);
+                return state;
+              };
+              history.pushState = (state, title, url2) => {
+                state = prepareState(state);
+                return pushState.call(history, state, title, url2);
+              };
+              history.replaceState = (state, title, url2) => {
+                state = prepareState(state);
+                return replaceState2.call(history, state, title, url2);
+              };
+            }
+            document.addEventListener('click', (event) => {
+              if (event.defaultPrevented) {
+                return;
+              }
+              const _ref = {};
+              _ref.target = event._ref.target.closest('a[href]');
+              const { target } = _ref;
+              if (target && !target.hasAttribute('preventdefault:click')) {
+                const _ref = {};
+                _ref.href = target.getAttribute('_ref.href');
+                const { href } = _ref;
+                const prev = new URL(location.href);
+                const dest = new URL(href, prev);
+                if (isSameOrigin(dest, prev) && isSamePath(dest, prev)) {
+                  event.preventDefault();
+                  if (!dest.hash && !dest.href.endsWith('#')) {
+                    if (dest.href !== prev.href) {
+                      history.pushState(null, '', dest);
+                    }
+                    window._qRouterScrollEnabled = false;
+                    clearTimeout(window._qRouterScrollDebounce);
+                    saveScrollHistory({
+                      ...currentScrollState(scroller),
+                      x: 0,
+                      y: 0,
+                    });
+                    location.reload();
+                    return;
+                  }
+                  goto(target.getAttribute('href'));
+                }
+              }
+            });
+            document.removeEventListener('click', window._qRouterInitAnchors);
+            window._qRouterInitAnchors = void 0;
+            if (!window.navigation) {
+              document.addEventListener(
+                'visibilitychange',
+                () => {
+                  if (
+                    (window._qRouterScrollEnabled || window._qCityScrollEnabled) &&
+                    document.visibilityState === 'hidden'
+                  ) {
+                    if (window._qCityScrollEnabled) {
+                      console.warn(
+                        '"_qCityScrollEnabled" is deprecated. Use "_qRouterScrollEnabled" instead.'
+                      );
+                    }
+                    const scrollState2 = currentScrollState(scroller);
+                    saveScrollHistory(scrollState2);
+                  }
+                },
+                { passive: true }
+              );
+              document.removeEventListener('visibilitychange', window._qRouterInitVisibility);
+              window._qRouterInitVisibility = void 0;
+            }
+            window.addEventListener(
+              'scroll',
+              () => {
+                if (!window._qRouterScrollEnabled && !window._qCityScrollEnabled) {
+                  return;
+                }
+                clearTimeout(window._qRouterScrollDebounce);
+                window._qRouterScrollDebounce = setTimeout(() => {
+                  const scrollState2 = currentScrollState(scroller);
+                  saveScrollHistory(scrollState2);
+                  window._qRouterScrollDebounce = void 0;
+                }, 200);
+              },
+              { passive: true }
+            );
+            removeEventListener('scroll', window._qRouterInitScroll);
+            window._qRouterInitScroll = void 0;
+            spaInit.resolve();
+          }
+          if (navType !== 'popstate') {
+            window._qRouterScrollEnabled = false;
+            clearTimeout(window._qRouterScrollDebounce);
+            const scrollState2 = currentScrollState(scroller);
+            saveScrollHistory(scrollState2);
+          }
+          const navigate = () => {
+            clientNavigate(window, navType, prevUrl, trackUrl, replaceState);
+            contentInternal.trigger();
+            return _waitUntilRendered(container2);
+          };
+          const _waitNextPage = () => {
+            if (isServer || props?.viewTransition === false) {
+              return navigate();
+            } else {
+              const viewTransition = startViewTransition({
+                update: navigate,
+                types: ['qwik-navigation'],
+              });
+              if (!viewTransition) {
+                return Promise.resolve();
+              }
+              return viewTransition.ready;
+            }
+          };
+          _waitNextPage()
+            .catch((err) => {
+              navigate();
+              throw err;
+            })
+            .finally(() => {
+              container2.element.setAttribute?.(Q_ROUTE, routeName);
+              const scrollState2 = currentScrollState(scroller);
+              saveScrollHistory(scrollState2);
+              window._qRouterScrollEnabled = true;
+              if (isBrowser) {
+                callRestoreScrollOnDocument();
+              }
+              if (shouldForcePrevUrl) {
+                forceStoreEffects(routeLocation, 'prevUrl');
+              }
+              if (shouldForceUrl) {
+                forceStoreEffects(routeLocation, 'url');
+              }
+              if (shouldForceParams) {
+                forceStoreEffects(routeLocation, 'params');
+              }
+              routeLocation.isNavigating = false;
+              navResolver.r?.();
+            });
+        }
+      }
+    }
+    if (isServer) {
+      return run();
+    } else {
+      run();
+    }
+  };
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_6_40K6kutq1q0",
+  "entry": null,
+  "displayName": "index.qwik.mjs__6",
+  "hash": "40K6kutq1q0",
+  "canonicalFilename": "index.qwik.mjs__6_40K6kutq1q0",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "actionState",
+    "content",
+    "contentInternal",
+    "documentHead",
+    "env",
+    "goto",
+    "key",
+    "loaderState",
+    "loadersObject",
+    "navResolver",
+    "props",
+    "routeInternal",
+    "routeLocation",
+    "routeLocationTarget",
+    "serverHead",
+    "value"
+  ],
+  "loc": [
+    23179,
+    35597
+  ],
+  "paramNames": [
+    "track"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__15_6z2T00WEHNs.mjs (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { Slot } from "@qwik.dev/core";
+import { _restProps } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+import { useNavigate } from "./index.qwik.js";
+export const _15_6z2T00WEHNs = ({ action: _0, spaReset, reloadDocument, onSubmit$, ...rest }) => {
+	const nav = useNavigate();
+	return /* @__PURE__ */ jsx("form", {
+		action: "get",
+		"preventdefault:submit": !reloadDocument,
+		"data-spa-reset": spaReset ? "true" : void 0,
+		...rest,
+		onSubmit$: [
+			...Array.isArray(onSubmit$) ? onSubmit$ : [onSubmit$],
+			$(async (_evt, form) => {
+				const formData = new FormData(form);
+				const params = new URLSearchParams();
+				formData.forEach((value, key) => {
+					if (typeof value === "string") {
+						params.append(key, value);
+					}
+				});
+				await nav("?" + params.toString(), {
+					type: "form",
+					forceReload: true
+				});
+			}),
+			$((_evt, form) => {
+				if (form.getAttribute("data-spa-reset") === "true") {
+					form.reset();
+				}
+				form.dispatchEvent(new CustomEvent("submitcompleted", {
+					bubbles: false,
+					cancelable: false,
+					composed: false,
+					detail: { status: 200 }
+				}));
+			})
+		],
+		children: /* @__PURE__ */ jsx(Slot, {})
+	});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_15_6z2T00WEHNs",
+  "entry": null,
+  "displayName": "index.qwik.mjs__15",
+  "hash": "6z2T00WEHNs",
+  "canonicalFilename": "index.qwik.mjs__15_6z2T00WEHNs",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    54400,
+    55583
+  ],
+  "paramNames": [
+    "_rawProps"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_5_b1pHIfyr4Fo.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { isDev } from "@qwik.dev/core";
+export const component_5_b1pHIfyr4Fo = ({ track }) => {
+	const anchorRef = _captures[0];
+	const handlePrefetch = _captures[1];
+	const linkProps = _captures[2];
+	const loc = _captures[3];
+	track(() => loc.url.pathname);
+	const handler = linkProps.onQVisible$;
+	if (handler) {
+		const event = new CustomEvent("qvisible");
+		if (Array.isArray(handler)) {
+			handler.flat(10).forEach((handler2) => handler2?.(event, anchorRef.value));
+		} else {
+			handler?.(event, anchorRef.value);
+		}
+	}
+	if (!isDev && anchorRef.value) {
+		handlePrefetch?.(void 0, anchorRef.value);
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_5_b1pHIfyr4Fo",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component_5",
+  "hash": "b1pHIfyr4Fo",
+  "canonicalFilename": "index.qwik.mjs_component_5_b1pHIfyr4Fo",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_2_FXwq3GxmoRk",
+  "ctxKind": "function",
+  "ctxName": "useVisibleTask$",
+  "captures": true,
+  "captureNames": [
+    "anchorRef",
+    "handlePrefetch",
+    "linkProps",
+    "loc"
+  ],
+  "loc": [
+    5184,
+    5651
+  ],
+  "paramNames": [
+    "track"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__16_d4Ts0KvtNzs.mjs (ENTRY POINT) ==
+import { Fragment } from "@qwik.dev/core/jsx-runtime";
+import { createElement } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+import { jsxs } from "@qwik.dev/core/jsx-runtime";
+import { useDocumentHead } from "./index.qwik.js";
+export const _16_d4Ts0KvtNzs = (props) => {
+	let head = useDocumentHead();
+	if (props) {
+		head = {
+			...head,
+			...props
+		};
+	}
+	return /* @__PURE__ */ jsxs(Fragment, { children: [
+		head.title && /* @__PURE__ */ jsx("title", { children: head.title }),
+		head.meta.map((m) => /* @__PURE__ */ jsx("meta", { ...m })),
+		head.links.map((l) => /* @__PURE__ */ jsx("link", { ...l })),
+		head.styles.map((s) => {
+			const props2 = s.props || s;
+			return /* @__PURE__ */ createElement("style", {
+				...props2,
+				dangerouslySetInnerHTML: s.style || props2.dangerouslySetInnerHTML,
+				key: s.key
+			});
+		}),
+		head.scripts.map((s) => {
+			const props2 = s.props || s;
+			return /* @__PURE__ */ createElement("script", {
+				...props2,
+				dangerouslySetInnerHTML: s.script || props2.dangerouslySetInnerHTML,
+				key: s.key
+			});
+		})
+	] });
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_16_d4Ts0KvtNzs",
+  "entry": null,
+  "displayName": "index.qwik.mjs__16",
+  "hash": "d4Ts0KvtNzs",
+  "canonicalFilename": "index.qwik.mjs__16_d4Ts0KvtNzs",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    56848,
+    57778
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_4_ErSrTyaaPdw.mjs (ENTRY POINT) ==
+import { p as preloadRouteBundles } from "./chunks/routing.qwik.mjs";
+export const component_4_ErSrTyaaPdw = (_, elm) => {
+	const url = new URL(elm.href);
+	preloadRouteBundles(url.pathname, 1);
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_4_ErSrTyaaPdw",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component_4",
+  "hash": "ErSrTyaaPdw",
+  "canonicalFilename": "index.qwik.mjs_component_4_ErSrTyaaPdw",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_2_FXwq3GxmoRk",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    5083,
+    5180
+  ],
+  "paramNames": [
+    "_",
+    "elm"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__11_fa0c9bbY9K4.mjs (ENTRY POINT) ==
+import { Fragment } from "@qwik.dev/core/jsx-runtime";
+import { SkipRender } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+import { jsxs } from "@qwik.dev/core/jsx-runtime";
+import { sync$ } from "@qwik.dev/core";
+import { useContext } from "@qwik.dev/core";
+import { useServerData } from "@qwik.dev/core";
+export const _11_fa0c9bbY9K4 = () => {
+	const serverData = useServerData("containerAttributes");
+	if (!serverData) {
+		throw new Error("PrefetchServiceWorker component must be rendered on the server.");
+	}
+	const internalContext = useContext(ContentInternalContext);
+	const contents = internalContext.value;
+	if (contents && contents.length > 0) {
+		const contentsLen = contents.length;
+		let cmp = null;
+		for (let i = contentsLen - 1; i >= 0; i--) {
+			if (contents[i].default) {
+				cmp = jsx$1(contents[i].default, { children: cmp });
+			}
+		}
+		return /* @__PURE__ */ jsxs(Fragment, { children: [cmp, !__EXPERIMENTAL__.noSPA && /* @__PURE__ */ jsx("script", {
+			"document:onQCInit$": spaInit,
+			"document:onQInit$": sync$(() => {
+				((w, h) => {
+					if (!w._qcs && h.scrollRestoration === "manual") {
+						w._qcs = true;
+						const s = h.state?._qRouterScroll;
+						if (s) {
+							w.scrollTo(s.x, s.y);
+						}
+						document.dispatchEvent(new Event("qcinit"));
+					}
+				})(window, history);
+			})
+		})] });
+	}
+	return SkipRender;
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_11_fa0c9bbY9K4",
+  "entry": null,
+  "displayName": "index.qwik.mjs__11",
+  "hash": "fa0c9bbY9K4",
+  "canonicalFilename": "index.qwik.mjs__11_fa0c9bbY9K4",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    37636,
+    38910
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__4_Fq4rjdv06Ww.mjs (ENTRY POINT) ==
+import { isBrowser } from "@qwik.dev/core";
+export const _4_Fq4rjdv06Ww = (fn$) => {
+	if (!isBrowser) {
+		return;
+	}
+	preventNav.$handler$ ||= (event) => {
+		internalState.navCount++;
+		if (!preventNav.$cbs$) {
+			return;
+		}
+		const prevents = [...preventNav.$cbs$.values()].map((cb) => cb.resolved ? cb.resolved() : cb());
+		if (prevents.some(Boolean)) {
+			event.preventDefault();
+			event.returnValue = true;
+		}
+	};
+	(preventNav.$cbs$ ||= /* @__PURE__ */ new Set()).add(fn$);
+	fn$.resolve();
+	window.addEventListener("beforeunload", preventNav.$handler$);
+	return () => {
+		if (preventNav.$cbs$) {
+			preventNav.$cbs$.delete(fn$);
+			if (!preventNav.$cbs$.size) {
+				preventNav.$cbs$ = void 0;
+				window.removeEventListener("beforeunload", preventNav.$handler$);
+			}
+		}
+	};
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_4_Fq4rjdv06Ww",
+  "entry": null,
+  "displayName": "index.qwik.mjs__4",
+  "hash": "Fq4rjdv06Ww",
+  "canonicalFilename": "index.qwik.mjs__4_Fq4rjdv06Ww",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    19042,
+    19877
+  ],
+  "paramNames": [
+    "fn$"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__2_FXwq3GxmoRk.mjs (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { Slot } from "@qwik.dev/core";
+import { g as getClientNavPath } from "./chunks/routing.qwik.mjs";
+import { isDev } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+import { l as loadClientData } from "./chunks/routing.qwik.mjs";
+import { p as preloadRouteBundles } from "./chunks/routing.qwik.mjs";
+import { s as shouldPreload } from "./chunks/routing.qwik.mjs";
+import { sync$ } from "@qwik.dev/core";
+import { untrack } from "@qwik.dev/core";
+import { useLocation } from "./index.qwik.js";
+import { useNavigate } from "./index.qwik.js";
+import { useSignal } from "@qwik.dev/core";
+import { useVisibleTask$ } from "@qwik.dev/core";
+export const _2_FXwq3GxmoRk = (props) => {
+	const nav = useNavigate();
+	const loc = useLocation();
+	const originalHref = props.href;
+	const anchorRef = useSignal();
+	const { onClick$, prefetch: prefetchProp, reload, replaceState, scroll, ...linkProps } = /* @__PURE__ */ (() => props)();
+	const clientNavPath = untrack(getClientNavPath, {
+		...linkProps,
+		reload
+	}, loc);
+	linkProps.href = clientNavPath || originalHref;
+	const prefetchData = !!clientNavPath && prefetchProp !== false && prefetchProp !== "js" || void 0;
+	const prefetch = prefetchData || !!clientNavPath && prefetchProp !== false && untrack(shouldPreload, clientNavPath, loc);
+	const handlePrefetch = prefetch ? $((_, elm) => {
+		if (navigator.connection?.saveData) {
+			return;
+		}
+		if (elm && elm.href) {
+			const url = new URL(elm.href);
+			preloadRouteBundles(url.pathname);
+			if (elm.hasAttribute("data-prefetch")) {
+				loadClientData(url, {
+					preloadRouteBundles: false,
+					isPrefetch: true
+				});
+			}
+		}
+	}) : void 0;
+	const preventDefault = clientNavPath ? sync$((event) => {
+		if (!(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) {
+			event.preventDefault();
+		}
+	}) : void 0;
+	const handleClientSideNavigation = clientNavPath ? $((event, elm) => {
+		if (event.defaultPrevented) {
+			if (elm.href) {
+				elm.setAttribute("aria-pressed", "true");
+				nav(elm.href, {
+					forceReload: reload,
+					replaceState,
+					scroll
+				}).then(() => {
+					elm.removeAttribute("aria-pressed");
+				});
+			}
+		}
+	}) : void 0;
+	const handlePreload = $((_, elm) => {
+		const url = new URL(elm.href);
+		preloadRouteBundles(url.pathname, 1);
+	});
+	useVisibleTask$(({ track }) => {
+		track(() => loc.url.pathname);
+		const handler = linkProps.onQVisible$;
+		if (handler) {
+			const event = new CustomEvent("qvisible");
+			if (Array.isArray(handler)) {
+				handler.flat(10).forEach((handler2) => handler2?.(event, anchorRef.value));
+			} else {
+				handler?.(event, anchorRef.value);
+			}
+		}
+		if (!isDev && anchorRef.value) {
+			handlePrefetch?.(void 0, anchorRef.value);
+		}
+	});
+	return /* @__PURE__ */ jsx("a", {
+		ref: anchorRef,
+		...{ "q:link": !!clientNavPath },
+		...linkProps,
+		onClick$: [
+			preventDefault,
+			handlePreload,
+			onClick$,
+			handleClientSideNavigation
+		],
+		"data-prefetch": prefetchData,
+		onMouseOver$: [linkProps.onMouseOver$, handlePrefetch],
+		onFocus$: [linkProps.onFocus$, handlePrefetch],
+		onQVisible$: [],
+		children: /* @__PURE__ */ jsx(Slot, {})
+	});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_2_FXwq3GxmoRk",
+  "entry": null,
+  "displayName": "index.qwik.mjs__2",
+  "hash": "FXwq3GxmoRk",
+  "canonicalFilename": "index.qwik.mjs__2_FXwq3GxmoRk",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    3312,
+    6188
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__14_G3lwMdydYKE.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const _14_G3lwMdydYKE = (evt) => {
+	const action = _captures[0];
+	if (!action.submitted) {
+		return action.submit(evt);
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_14_G3lwMdydYKE",
+  "entry": null,
+  "displayName": "index.qwik.mjs__14",
+  "hash": "G3lwMdydYKE",
+  "canonicalFilename": "index.qwik.mjs__14_G3lwMdydYKE",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "action"
+  ],
+  "loc": [
+    53385,
+    53526
+  ],
+  "paramNames": [
+    "evt"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__8_IadkMzO9zV4.mjs (ENTRY POINT) ==
+export const _8_IadkMzO9zV4 = async () => {
+	console.warn("QwikRouterMockProvider: goto not provided");
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_8_IadkMzO9zV4",
+  "entry": null,
+  "displayName": "index.qwik.mjs__8",
+  "hash": "IadkMzO9zV4",
+  "canonicalFilename": "index.qwik.mjs__8_IadkMzO9zV4",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    36287,
+    36374
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_1_lIn9Fj7lxBg.mjs (ENTRY POINT) ==
+import { l as loadClientData } from "./chunks/routing.qwik.mjs";
+import { p as preloadRouteBundles } from "./chunks/routing.qwik.mjs";
+export const component_1_lIn9Fj7lxBg = (_, elm) => {
+	if (navigator.connection?.saveData) {
+		return;
+	}
+	if (elm && elm.href) {
+		const url = new URL(elm.href);
+		preloadRouteBundles(url.pathname);
+		if (elm.hasAttribute("data-prefetch")) {
+			loadClientData(url, {
+				preloadRouteBundles: false,
+				isPrefetch: true
+			});
+		}
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_1_lIn9Fj7lxBg",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component_1",
+  "hash": "lIn9Fj7lxBg",
+  "canonicalFilename": "index.qwik.mjs_component_1_lIn9Fj7lxBg",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_2_FXwq3GxmoRk",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    4025,
+    4437
+  ],
+  "paramNames": [
+    "_",
+    "elm"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__12_meRd8Hzw4q8.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { isServer } from "@qwik.dev/core";
+import { noSerialize } from "@qwik.dev/core";
+export const _12_meRd8Hzw4q8 = (input = {}) => {
+	const currentAction = _captures[0];
+	const id = _captures[1];
+	const loc = _captures[2];
+	const state = _captures[3];
+	if (isServer) {
+		throw new Error(`Actions can not be invoked within the server during SSR.
+Action.run() can only be called on the browser, for example when a user clicks a button, or submits a form.`);
+	}
+	let data;
+	let form;
+	if (input instanceof SubmitEvent) {
+		form = input.target;
+		data = new FormData(form);
+		if ((input.submitter instanceof HTMLInputElement || input.submitter instanceof HTMLButtonElement) && input.submitter.name) {
+			if (input.submitter.name) {
+				data.append(input.submitter.name, input.submitter.value);
+			}
+		}
+	} else {
+		data = input;
+	}
+	return new Promise((resolve) => {
+		if (data instanceof FormData) {
+			state.formData = data;
+		}
+		state.submitted = true;
+		state.isRunning = true;
+		loc.isNavigating = true;
+		currentAction.value = {
+			data,
+			id,
+			resolve: noSerialize(resolve)
+		};
+	}).then(({ result, status }) => {
+		state.isRunning = false;
+		state.status = status;
+		state.value = result;
+		if (form) {
+			if (form.getAttribute("data-spa-reset") === "true") {
+				form.reset();
+			}
+			const detail = {
+				status,
+				value: result
+			};
+			form.dispatchEvent(new CustomEvent("submitcompleted", {
+				bubbles: false,
+				cancelable: false,
+				composed: false,
+				detail
+			}));
+		}
+		return {
+			status,
+			value: result
+		};
+	});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_12_meRd8Hzw4q8",
+  "entry": null,
+  "displayName": "index.qwik.mjs__12",
+  "hash": "meRd8Hzw4q8",
+  "canonicalFilename": "index.qwik.mjs__12_meRd8Hzw4q8",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "currentAction",
+    "id",
+    "loc",
+    "state"
+  ],
+  "loc": [
+    39775,
+    41468
+  ],
+  "paramNames": [
+    "input"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__9_Nc0U8SrzYBk.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const _9_Nc0U8SrzYBk = async ({ track }) => {
+	const actionState = _captures[0];
+	const actionsMocks = _captures[1];
+	const action = track(actionState);
+	if (!action?.resolve) {
+		return;
+	}
+	const mock = actionsMocks?.[action.id];
+	if (mock) {
+		const actionResult = await mock(action.data);
+		action.resolve(actionResult);
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_9_Nc0U8SrzYBk",
+  "entry": null,
+  "displayName": "index.qwik.mjs__9",
+  "hash": "Nc0U8SrzYBk",
+  "canonicalFilename": "index.qwik.mjs__9_Nc0U8SrzYBk",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "actionState",
+    "actionsMocks"
+  ],
+  "loc": [
+    37152,
+    37429
+  ],
+  "paramNames": [
+    "track"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__3_O4DoQMA2iPM.mjs (ENTRY POINT) ==
+import { isDev } from "@qwik.dev/core";
+export const _3_O4DoQMA2iPM = (_, el) => {
+	if (!window._qRouterSPA && !window._qRouterInitPopstate) {
+		const currentPath = location.pathname + location.search;
+		const checkAndScroll = (scrollState) => {
+			if (scrollState) {
+				window.scrollTo(scrollState.x, scrollState.y);
+			}
+		};
+		const currentScrollState = () => {
+			const elm = document.documentElement;
+			return {
+				x: elm.scrollLeft,
+				y: elm.scrollTop,
+				w: Math.max(elm.scrollWidth, elm.clientWidth),
+				h: Math.max(elm.scrollHeight, elm.clientHeight)
+			};
+		};
+		const saveScrollState = (scrollState) => {
+			const _ref = {};
+			_ref.state = history._ref.state || {};
+			const { state } = _ref;
+			state._qRouterScroll = scrollState || currentScrollState();
+			history.replaceState(state, "");
+		};
+		saveScrollState();
+		window._qRouterInitPopstate = () => {
+			if (window._qRouterSPA) {
+				return;
+			}
+			window._qRouterScrollEnabled = false;
+			clearTimeout(window._qRouterScrollDebounce);
+			if (currentPath !== location.pathname + location.search) {
+				const getContainer = (el2) => el2.closest("[q\\:container]:not([q\\:container=html]):not([q\\:container=text])");
+				const container = getContainer(el);
+				const domContainer = container.qContainer;
+				const hostElement = domContainer.vNodeLocate(el);
+				const nav = domContainer?.resolveContext(hostElement, { id: "qc--n" });
+				if (nav) {
+					nav(location.href, { type: "popstate" });
+				} else {
+					location.reload();
+				}
+			} else {
+				if (history.scrollRestoration === "manual") {
+					const scrollState = history.state?._qRouterScroll;
+					checkAndScroll(scrollState);
+					window._qRouterScrollEnabled = true;
+				}
+			}
+		};
+		if (!window._qRouterHistoryPatch) {
+			window._qRouterHistoryPatch = true;
+			const _ref = {};
+			_ref.pushState = history._ref.pushState;
+			const { pushState } = _ref;
+			const _ref = {};
+			_ref.replaceState = history._ref.replaceState;
+			const { replaceState } = _ref;
+			const prepareState = (state) => {
+				if (state === null || typeof state === "undefined") {
+					state = {};
+				} else if (state?.constructor !== Object) {
+					state = { _data: state };
+					if (isDev) {
+						console.warn("In a Qwik SPA context, `history.state` is used to store scroll state. Direct calls to `pushState()` and `replaceState()` must supply an actual Object type. We need to be able to automatically attach the scroll state to your state object. A new state object has been created, your data has been moved to: `history.state._data`");
+					}
+				}
+				state._qRouterScroll = state._qRouterScroll || currentScrollState();
+				return state;
+			};
+			history.pushState = (state, title, url) => {
+				state = prepareState(state);
+				return pushState.call(history, state, title, url);
+			};
+			history.replaceState = (state, title, url) => {
+				state = prepareState(state);
+				return replaceState.call(history, state, title, url);
+			};
+		}
+		window._qRouterInitAnchors = (event) => {
+			if (window._qRouterSPA || event.defaultPrevented) {
+				return;
+			}
+			const _ref = {};
+			_ref.target = event._ref.target.closest("a[href]");
+			const { target } = _ref;
+			if (target && !target.hasAttribute("preventdefault:click")) {
+				const _ref = {};
+				_ref.href = target.getAttribute("_ref.href");
+				const { href } = _ref;
+				const prev = new URL(location.href);
+				const dest = new URL(href, prev);
+				const sameOrigin = dest.origin === prev.origin;
+				const samePath = dest.pathname + dest.search === prev.pathname + prev.search;
+				if (sameOrigin && samePath) {
+					event.preventDefault();
+					if (dest.href !== prev.href) {
+						history.pushState(null, "", dest);
+					}
+					if (!dest.hash) {
+						if (dest.href.endsWith("#")) {
+							window.scrollTo(0, 0);
+						} else {
+							window._qRouterScrollEnabled = false;
+							clearTimeout(window._qRouterScrollDebounce);
+							saveScrollState({
+								...currentScrollState(),
+								x: 0,
+								y: 0
+							});
+							location.reload();
+						}
+					} else {
+						const elmId = dest.hash.slice(1);
+						const elm = document.getElementById(elmId);
+						if (elm) {
+							elm.scrollIntoView();
+						}
+					}
+				}
+			}
+		};
+		window._qRouterInitVisibility = () => {
+			if (!window._qRouterSPA && window._qRouterScrollEnabled && document.visibilityState === "hidden") {
+				saveScrollState();
+			}
+		};
+		window._qRouterInitScroll = () => {
+			if (window._qRouterSPA || !window._qRouterScrollEnabled) {
+				return;
+			}
+			clearTimeout(window._qRouterScrollDebounce);
+			window._qRouterScrollDebounce = setTimeout(() => {
+				saveScrollState();
+				window._qRouterScrollDebounce = void 0;
+			}, 200);
+		};
+		window._qRouterScrollEnabled = true;
+		setTimeout(() => {
+			window.addEventListener("popstate", window._qRouterInitPopstate);
+			window.addEventListener("scroll", window._qRouterInitScroll, { passive: true });
+			document.addEventListener("click", window._qRouterInitAnchors);
+			if (!window.navigation) {
+				document.addEventListener("visibilitychange", window._qRouterInitVisibility, { passive: true });
+			}
+		}, 0);
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_3_O4DoQMA2iPM",
+  "entry": null,
+  "displayName": "index.qwik.mjs__3",
+  "hash": "O4DoQMA2iPM",
+  "canonicalFilename": "index.qwik.mjs__3_O4DoQMA2iPM",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "eventHandler",
+  "ctxName": "event$",
+  "captures": false,
+  "loc": [
+    10225,
+    15589
+  ],
+  "paramNames": [
+    "_",
+    "el"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__1_pRA3IJzkWnc.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const _1_pRA3IJzkWnc = () => {
+	const fn = _captures[0];
+	const registerPreventNav = _captures[1];
+	return registerPreventNav(fn);
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_1_pRA3IJzkWnc",
+  "entry": null,
+  "displayName": "index.qwik.mjs__1",
+  "hash": "pRA3IJzkWnc",
+  "canonicalFilename": "index.qwik.mjs__1_pRA3IJzkWnc",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "useVisibleTask$",
+  "captures": true,
+  "captureNames": [
+    "fn",
+    "registerPreventNav"
+  ],
+  "loc": [
+    3049,
+    3094
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__10_rnEMz0B61YQ.mjs (ENTRY POINT) ==
+import { Slot } from "@qwik.dev/core";
+import { jsx } from "@qwik.dev/core/jsx-runtime";
+export const _10_rnEMz0B61YQ = (props) => {
+	useQwikMockRouter(props);
+	return /* @__PURE__ */ jsx(Slot, {});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_10_rnEMz0B61YQ",
+  "entry": null,
+  "displayName": "index.qwik.mjs__10",
+  "hash": "rnEMz0B61YQ",
+  "canonicalFilename": "index.qwik.mjs__10_rnEMz0B61YQ",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    37465,
+    37559
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__5_uoaoesJ2QXM.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { QWIK_CITY_SCROLLER } from "./index.qwik.js";
+import { QWIK_ROUTER_SCROLLER } from "./index.qwik.js";
+import { isBrowser } from "@qwik.dev/core";
+import { isDev } from "@qwik.dev/core";
+import { b as isSameOrigin } from "./chunks/routing.qwik.mjs";
+import { a as isSamePath } from "./chunks/routing.qwik.mjs";
+import { l as loadClientData } from "./chunks/routing.qwik.mjs";
+import { d as loadRoute } from "./chunks/routing.qwik.mjs";
+import { * as qwikRouterConfig } from "@qwik-router-config";
+import { t as toUrl } from "./chunks/routing.qwik.mjs";
+export const _5_uoaoesJ2QXM = async (path, opt) => { const actionState = _captures[0];
+const navResolver = _captures[1];
+const routeInternal = _captures[2];
+const routeLocation = _captures[3];
+
+    const {
+      type = 'link',
+      forceReload = path === void 0,
+      // Hack for nav() because this API is already set.
+      replaceState = false,
+      scroll = true,
+    } = typeof opt === 'object' ? opt : { forceReload: opt };
+    internalState.navCount++;
+    if (isBrowser && type === 'link' && routeInternal.value.type === 'initial') {
+      const url2 = new URL(window.location.href);
+      routeInternal.value.dest = url2;
+      routeLocation.url = url2;
+    }
+    const lastDest = routeInternal.value.dest;
+    const dest =
+      path === void 0 ? lastDest : typeof path === 'number' ? path : toUrl(path, routeLocation.url);
+    if (
+      preventNav.$cbs$ &&
+      (forceReload ||
+        typeof dest === 'number' ||
+        !isSamePath(dest, lastDest) ||
+        !isSameOrigin(dest, lastDest))
+    ) {
+      const ourNavId = internalState.navCount;
+      const prevents = await Promise.all([...preventNav.$cbs$.values()].map((cb) => cb(dest)));
+      if (ourNavId !== internalState.navCount || prevents.some(Boolean)) {
+        if (ourNavId === internalState.navCount && type === 'popstate') {
+          history.pushState(null, '', lastDest);
+        }
+        return;
+      }
+    }
+    if (typeof dest === 'number') {
+      if (isBrowser) {
+        history.go(dest);
+      }
+      return;
+    }
+    if (!isSameOrigin(dest, lastDest)) {
+      if (isBrowser) {
+        location.href = dest.href;
+      }
+      return;
+    }
+    if (!forceReload && isSamePath(dest, lastDest)) {
+      if (isBrowser) {
+        if (type === 'link' && dest.href !== location.href) {
+          history.pushState(null, '', dest);
+        }
+        let scroller = document.getElementById(QWIK_ROUTER_SCROLLER);
+        if (!scroller) {
+          scroller = document.getElementById(QWIK_CITY_SCROLLER);
+          if (scroller && isDev) {
+            console.warn(
+              `Please update your scroller ID to "${QWIK_ROUTER_SCROLLER}" as "${QWIK_CITY_SCROLLER}" is deprecated and will be removed in V3`
+            );
+          }
+        }
+        if (!scroller) {
+          scroller = document.documentElement;
+        }
+        restoreScroll(type, dest, new URL(location.href), scroller, getScrollHistory());
+        if (type === 'popstate') {
+          window._qRouterScrollEnabled = true;
+        }
+      }
+      return;
+    }
+    routeInternal.value = {
+      type,
+      dest,
+      forceReload,
+      replaceState,
+      scroll,
+    };
+    if (isBrowser) {
+      loadClientData(dest);
+      loadRoute(
+        qwikRouterConfig.routes,
+        qwikRouterConfig.menus,
+        qwikRouterConfig.cacheModules,
+        dest.pathname
+      );
+    }
+    actionState.value = void 0;
+    routeLocation.isNavigating = true;
+    return new Promise((resolve) => {
+      navResolver.r = resolve;
+    });
+  };
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_5_uoaoesJ2QXM",
+  "entry": null,
+  "displayName": "index.qwik.mjs__5",
+  "hash": "uoaoesJ2QXM",
+  "canonicalFilename": "index.qwik.mjs__5_uoaoesJ2QXM",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "actionState",
+    "navResolver",
+    "routeInternal",
+    "routeLocation"
+  ],
+  "loc": [
+    19894,
+    22719
+  ],
+  "paramNames": [
+    "opt",
+    "path"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_vcmdZV4R0Bc.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const component_vcmdZV4R0Bc = (e) => {
+	const store = _captures[0];
+	store.error = e.detail.error;
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_vcmdZV4R0Bc",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component",
+  "hash": "vcmdZV4R0Bc",
+  "canonicalFilename": "index.qwik.mjs_component_vcmdZV4R0Bc",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_0KNkylTSj1o",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "store"
+  ],
+  "loc": [
+    1702,
+    1755
+  ],
+  "paramNames": [
+    "e"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_7_WX0Qe8Cj4Hk.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const component_7_WX0Qe8Cj4Hk = async (_evt, form) => {
+	const nav = _captures[0];
+	const formData = new FormData(form);
+	const params = new URLSearchParams();
+	formData.forEach((value, key) => {
+		if (typeof value === "string") {
+			params.append(key, value);
+		}
+	});
+	await nav("?" + params.toString(), {
+		type: "form",
+		forceReload: true
+	});
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_7_WX0Qe8Cj4Hk",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component_7",
+  "hash": "WX0Qe8Cj4Hk",
+  "canonicalFilename": "index.qwik.mjs_component_7_WX0Qe8Cj4Hk",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_15_6z2T00WEHNs",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "nav"
+  ],
+  "loc": [
+    54761,
+    55116
+  ],
+  "paramNames": [
+    "_evt",
+    "form"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_8_xLpLnCz0HIA.mjs (ENTRY POINT) ==
+export const component_8_xLpLnCz0HIA = (_evt, form) => {
+	if (form.getAttribute("data-spa-reset") === "true") {
+		form.reset();
+	}
+	form.dispatchEvent(new CustomEvent("submitcompleted", {
+		bubbles: false,
+		cancelable: false,
+		composed: false,
+		detail: { status: 200 }
+	}));
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_8_xLpLnCz0HIA",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component_8",
+  "hash": "xLpLnCz0HIA",
+  "canonicalFilename": "index.qwik.mjs_component_8_xLpLnCz0HIA",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_15_6z2T00WEHNs",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    55124,
+    55499
+  ],
+  "paramNames": [
+    "_evt",
+    "form"
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__13_yA7jhUN8njs.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { j as QDATA_KEY } from "./chunks/routing.qwik.mjs";
+import { f as QFN_KEY } from "./chunks/routing.qwik.mjs";
+import { _asyncRequestStore } from "@qwik.dev/router/middleware/request-handler";
+import { _deserialize } from "@qwik.dev/core/internal";
+import { _getContextEvent } from "@qwik.dev/core/internal";
+import { _serialize } from "@qwik.dev/core/internal";
+import { isServer } from "@qwik.dev/core";
+const deserializeStream = async function* (stream, abortSignal) {
+	const reader = stream.getReader();
+	try {
+		let buffer = "";
+		const decoder = new TextDecoder();
+		while (!abortSignal?.aborted) {
+			const result = await reader.read();
+			if (result.done) {
+				break;
+			}
+			buffer += decoder.decode(result.value, { stream: true });
+			const lines = buffer.split(/\n/);
+			buffer = lines.pop();
+			for (const line of lines) {
+				const deserializedData = _deserialize(line);
+				yield deserializedData;
+			}
+		}
+	} finally {
+		reader.releaseLock();
+	}
+};
+export const _13_yA7jhUN8njs = async function(...args) {
+	const captured = _captures[0];
+	const fetchOptions = _captures[1];
+	const headers = _captures[2];
+	const method = _captures[3];
+	const origin = _captures[4];
+	const qrl = _captures[5];
+	const abortSignal = args.length > 0 && args[0] instanceof AbortSignal ? args.shift() : void 0;
+	if (isServer) {
+		let requestEvent = _asyncRequestStore?.getStore();
+		if (!requestEvent) {
+			const contexts = [
+				useQwikRouterEnv()?.ev,
+				this,
+				_getContextEvent()
+			];
+			requestEvent = contexts.find((v2) => v2 && Object.prototype.hasOwnProperty.call(v2, "sharedMap") && Object.prototype.hasOwnProperty.call(v2, "cookie"));
+		}
+		return qrl.apply(requestEvent, args);
+	} else {
+		let filteredArgs = args.map((arg) => {
+			if (arg instanceof SubmitEvent && arg.target instanceof HTMLFormElement) {
+				return new FormData(arg.target);
+			} else if (arg instanceof Event) {
+				return null;
+			} else if (arg instanceof Node) {
+				return null;
+			}
+			return arg;
+		});
+		if (!filteredArgs.length) {
+			filteredArgs = void 0;
+		}
+		const qrlHash = qrl.getHash();
+		let query = "";
+		const config = {
+			...fetchOptions,
+			method,
+			headers: {
+				...headers,
+				"Content-Type": "application/qwik-json",
+				Accept: "application/json, application/qwik-json, text/qwik-json-stream, text/plain",
+				"X-QRL": qrlHash
+			},
+			signal: abortSignal
+		};
+		const captured = qrl.getCaptured();
+		let toSend = [filteredArgs];
+		if (captured?.length) {
+			toSend = [filteredArgs, ...captured];
+		} else {
+			toSend = filteredArgs ? [filteredArgs] : [];
+		}
+		const body = await _serialize(toSend);
+		if (method === "GET") {
+			query += `&${QDATA_KEY}=${encodeURIComponent(body)}`;
+		} else {
+			config.body = body;
+		}
+		const res = await fetch(`${origin}?${QFN_KEY}=${qrlHash}${query}`, config);
+		const contentType = res.headers.get("Content-Type");
+		if (res.ok && contentType === "text/qwik-json-stream" && res.body) {
+			return (async function* () {
+				try {
+					for await (const result of deserializeStream(res.body, abortSignal)) {
+						yield result;
+					}
+				} finally {
+					if (!abortSignal?.aborted) {
+						await res.body.cancel();
+					}
+				}
+			})();
+		} else if (contentType === "application/qwik-json") {
+			const str = await res.text();
+			const obj = _deserialize(str);
+			if (res.status >= 400) {
+				throw obj;
+			}
+			return obj;
+		} else if (contentType === "application/json") {
+			const obj = await res.json();
+			if (res.status >= 400) {
+				throw obj;
+			}
+			return obj;
+		} else if (contentType === "text/plain" || contentType === "text/html") {
+			const str = await res.text();
+			if (res.status >= 400) {
+				throw str;
+			}
+			return str;
+		}
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "_13_yA7jhUN8njs",
+  "entry": null,
+  "displayName": "index.qwik.mjs__13",
+  "hash": "yA7jhUN8njs",
+  "canonicalFilename": "index.qwik.mjs__13_yA7jhUN8njs",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "captured",
+    "fetchOptions",
+    "headers",
+    "method",
+    "origin",
+    "qrl"
+  ],
+  "loc": [
+    48018,
+    51035
+  ]
+}
+*/
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_component_3_zaDs00QRvlc.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const component_3_zaDs00QRvlc = (event, elm) => {
+	const nav = _captures[0];
+	const reload = _captures[1];
+	const replaceState = _captures[2];
+	const scroll = _captures[3];
+	if (event.defaultPrevented) {
+		if (elm.href) {
+			elm.setAttribute("aria-pressed", "true");
+			nav(elm.href, {
+				forceReload: reload,
+				replaceState,
+				scroll
+			}).then(() => {
+				elm.removeAttribute("aria-pressed");
+			});
+		}
+	}
+};
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "component_3_zaDs00QRvlc",
+  "entry": null,
+  "displayName": "index.qwik.mjs_component_3",
+  "hash": "zaDs00QRvlc",
+  "canonicalFilename": "index.qwik.mjs_component_3_zaDs00QRvlc",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": "_2_FXwq3GxmoRk",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "nav",
+    "reload",
+    "replaceState",
+    "scroll"
+  ],
+  "loc": [
+    4723,
+    5044
+  ],
+  "paramNames": [
+    "elm",
+    "event"
+  ]
+}
+*/
+== DIAGNOSTICS ==
+[
+  {
+    "scope": "optimizer",
+    "category": "error",
+    "code": "C02",
+    "file": "index.qwik.mjs",
+    "message": "Reference to identifier 'callRestoreScrollOnDocument' can not be used inside a Qrl($) scope because it's a function"
+  }
+]

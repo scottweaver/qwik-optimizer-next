@@ -1,0 +1,11 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 957
+expression: output
+---
+============================= test.tsx ==
+import { inlinedQrl } from "@qwik.dev/core";
+const foo = inlinedQrl(null, "some_hash");
+
+== DIAGNOSTICS ==
+[]

@@ -1,0 +1,19 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 827
+expression: output
+---
+============================= test.tsx ==
+import { _jsxSorted } from "@qwik.dev/core";
+export default (_rawProps) => {
+	const data = _rawProps.data;
+	return _jsxSorted("div", {
+		"data-is-active": data.selectedOutputDetail === "options",
+		onClick$: () => {
+			data.selectedOutputDetail = "options";
+		}
+	}, null, null, 1, "0");
+};
+
+== DIAGNOSTICS ==
+[]

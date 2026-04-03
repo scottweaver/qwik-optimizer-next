@@ -1,0 +1,49 @@
+---
+source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 898
+expression: output
+---
+============================= test.js ==
+import { inlinedQrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { _jsxSplit } from "@qwik.dev/core";
+import { $, component$, useTask$ } from "@qwik.dev/core";
+import { CONST } from "const";
+export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
+	console.log(hey, some);
+	useTaskQrl(({ track }) => {
+		track(() => count);
+		console.log(count, rest, hey, some, hey2);
+	}, "component_ZUK1E201Ins", [
+		count,
+		hey,
+		hey2,
+		rest,
+		some
+	]);
+	return _jsxSplit("div", {
+		some,
+		params: { some },
+		class: count,
+		...rest
+	}, { override: true }, count, 1, null);
+}, "_u6BtPnK76q4");
+export const NoWorks2 = componentQrl(({ count, stuff: { hey } }) => {
+	console.log(hey);
+	useTaskQrl(({ track }) => {
+		track(() => count);
+		console.log(count);
+	}, "component_1_vX1B9oMEgiI", [count]);
+	return _jsxSorted("div", { class: count }, null, count, 1, null);
+}, "_1_iZVV0eoW44k");
+export const NoWorks3 = componentQrl(({ count, stuff = hola() }) => {
+	console.log(stuff);
+	useTaskQrl(({ track }) => {
+		track(() => count);
+		console.log(count);
+	}, "component_2_ivlVT3MNu2c", [count]);
+	return _jsxSorted("div", { class: count }, null, count, 1, null);
+}, "_2_sSArpd0iSRk");
+
+== DIAGNOSTICS ==
+[]

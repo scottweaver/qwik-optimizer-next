@@ -395,10 +395,10 @@ fn fixtures_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures.json")
 }
 
-fn snapshots_dir() -> PathBuf {
+fn swc_expected_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
-        .join("snapshots")
+        .join("swc_expected")
 }
 
 fn load_fixtures() -> FixtureFile {
@@ -407,7 +407,7 @@ fn load_fixtures() -> FixtureFile {
 }
 
 fn load_snapshot(name: &str) -> SnapshotData {
-    let path = snapshots_dir().join(format!("{}.snap", name));
+    let path = swc_expected_dir().join(format!("{}.snap", name));
     let content = fs::read_to_string(&path)
         .unwrap_or_else(|_| panic!("Failed to read snapshot file: {}", path.display()));
     parse_snapshot(&content)
@@ -431,7 +431,7 @@ mod parser_smoke_tests {
     #[test]
     fn test_all_snapshots_loadable() {
         let fixtures = load_fixtures();
-        let snap_dir = snapshots_dir();
+        let snap_dir = swc_expected_dir();
         for name in fixtures.fixtures.keys() {
             let path = snap_dir.join(format!("{}.snap", name));
             assert!(
@@ -535,7 +535,7 @@ mod parser_smoke_tests {
     fn test_parse_dead_code_snapshot() {
         let snap = load_snapshot("example_dead_code");
 
-        // Should have input with the dead if(false) branch
+        // Should have input with the dead if(false)
         assert!(first_input_code(&snap).contains("if (false)"));
 
         // Root module should have componentQrl
@@ -747,96 +747,61 @@ mod snapshot_transform_tests {
         }
     }
 
-    /// Normalize whitespace for comparison: collapse runs of whitespace to single space,
-    /// trim lines, and filter empty lines.
-    fn normalize_code(code: &str) -> String {
-        code.lines()
-            .map(|l| l.trim())
-            .filter(|l| !l.is_empty())
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
+    /// Format the transform result into a human-readable string for insta snapshots.
+    ///
+    /// Uses a format similar to the SWC `.snap` files so actual vs expected
+    /// output can be visually compared.
+    fn format_transform_output(result: &qwik_optimizer_oxc::TransformOutput) -> String {
+        let mut out = String::new();
 
-    /// Compare actual output against expected snapshot, returning pass/fail info.
-    fn compare_snapshot(
-        fixture_name: &str,
-        config: &FixtureConfig,
-        expected: &SnapshotData,
-    ) -> (bool, String) {
-        let opts = fixture_to_options(config, &expected.inputs);
-        let result = qwik_optimizer_oxc::transform_modules(opts);
-
-        let mut issues: Vec<String> = Vec::new();
-
-        // Check for panics (no panics = basic success)
-        // Check that we got a root module
-        let root_module = result.modules.iter().find(|m| m.segment.is_none());
-        if root_module.is_none() && !config.inputs.is_empty() {
-            issues.push("No root module in output".to_string());
+        // Root module first
+        if let Some(root) = result.modules.iter().find(|m| m.segment.is_none()) {
+            out.push_str(&format!("============================= {} ==\n", root.path));
+            out.push_str(&root.code);
+            out.push('\n');
         }
 
-        // Compare root module code (normalized)
-        if let (Some(actual_root), Some(expected_root)) = (root_module, &expected.root_module) {
-            let actual_norm = normalize_code(&actual_root.code);
-            let expected_norm = normalize_code(&expected_root.code);
-            if actual_norm != expected_norm {
-                // Check for semantic equivalence: key patterns should be present
-                let mut semantic_issues = Vec::new();
-
-                // Check that key QRL patterns are present
-                if expected_norm.contains("componentQrl") && !actual_norm.contains("componentQrl") {
-                    semantic_issues.push("Missing componentQrl in root".to_string());
-                }
-                if expected_norm.contains("qrl(") && !actual_norm.contains("qrl(") && !actual_norm.contains("Qrl(") {
-                    semantic_issues.push("Missing qrl() call in root".to_string());
-                }
-
-                if !semantic_issues.is_empty() {
-                    for issue in &semantic_issues {
-                        issues.push(format!("ROOT SEMANTIC: {}", issue));
-                    }
-                }
-                // Cosmetic difference is OK per project constraints
-            }
-        }
-
-        // Compare segment count
-        let actual_segments: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
-        if expected.segments.len() != actual_segments.len() {
-            // This is a significant difference but not necessarily a failure
-            // Some cosmetic differences in how segments are counted may exist
-            if expected.segments.len() > 0 && actual_segments.is_empty() {
-                issues.push(format!(
-                    "SEGMENT COUNT: expected {} segments, got 0",
-                    expected.segments.len()
+        // Segments
+        for module in &result.modules {
+            if let Some(ref seg) = module.segment {
+                let entry = if module.is_entry { " (ENTRY POINT)" } else { "" };
+                out.push_str(&format!(
+                    "============================= {}{} ==\n",
+                    module.path, entry
                 ));
+                out.push_str(&module.code);
+                out.push('\n');
+
+                // Segment analysis as JSON (matches SWC .snap format)
+                let json = serde_json::to_string_pretty(seg).unwrap_or_else(|_| format!("{:?}", seg));
+                out.push_str(&format!("/*\n{}\n*/\n", json));
             }
         }
 
-        // Compare diagnostics (error count should match)
-        let expected_has_errors = expected.diagnostics.contains("error");
-        let actual_has_errors = result.diagnostics.iter().any(|d| {
-            matches!(d.category, qwik_optimizer_oxc::DiagnosticCategory::Error)
-        });
-        if expected_has_errors != actual_has_errors {
-            // Only flag if expected errors but none produced (or vice versa)
-            // This is a semantic issue
-            if expected_has_errors && !actual_has_errors {
-                issues.push("Expected error diagnostics but got none".to_string());
-            }
-        }
-
-        let passed = issues.iter().all(|i| !i.starts_with("ROOT SEMANTIC:") && !i.starts_with("SEGMENT COUNT:"));
-        let detail = if issues.is_empty() {
-            "PASS".to_string()
+        // Diagnostics (sorted for deterministic output)
+        out.push_str("== DIAGNOSTICS ==\n");
+        if result.diagnostics.is_empty() {
+            out.push_str("[]");
         } else {
-            issues.join("; ")
-        };
+            let mut sorted_diags = result.diagnostics.clone();
+            sorted_diags.sort_by(|a, b| a.message.cmp(&b.message));
+            let diag_json = serde_json::to_string_pretty(&sorted_diags)
+                .unwrap_or_else(|_| format!("{:?}", sorted_diags));
+            out.push_str(&diag_json);
+        }
+        out.push('\n');
 
-        (passed, detail)
+        out
     }
 
-    /// Macro to generate a snapshot test for each fixture.
+    /// Macro to generate an insta snapshot test for each fixture.
+    ///
+    /// Each test:
+    /// 1. Loads input from the SWC `.snap` file + config from `fixtures.json`
+    /// 2. Runs `transform_modules`
+    /// 3. Captures the output as an insta snapshot for regression detection
+    ///
+    /// Use `cargo insta review` to approve/reject snapshot changes.
     macro_rules! snapshot_test {
         ($name:ident) => {
             #[test]
@@ -848,22 +813,10 @@ mod snapshot_transform_tests {
                     .get(fixture_name)
                     .unwrap_or_else(|| panic!("No fixture config for '{}'", fixture_name));
                 let expected = load_snapshot(fixture_name);
-
                 let opts = fixture_to_options(config, &expected.inputs);
-
-                // The test passes if transform_modules doesn't panic.
-                // We compare output but accept cosmetic differences.
                 let result = qwik_optimizer_oxc::transform_modules(opts);
-
-                // Basic sanity: should produce at least as many modules as inputs
-                // Allow empty output if the fixture has parse errors (diagnostics present)
-                if !config.inputs.is_empty() && result.diagnostics.is_empty() {
-                    assert!(
-                        !result.modules.is_empty(),
-                        "Fixture '{}': transform_modules produced no modules and no diagnostics",
-                        fixture_name
-                    );
-                }
+                let output = format_transform_output(&result);
+                insta::assert_snapshot!(fixture_name, output);
             }
         };
     }
@@ -1070,6 +1023,166 @@ mod snapshot_transform_tests {
     snapshot_test!(support_windows_paths);
     snapshot_test!(ternary_prop);
     snapshot_test!(transform_qrl_in_regular_prop);
+}
+
+// ============================================================================
+// SWC parity report (compare & contrast -- does NOT fail on mismatch)
+// ============================================================================
+
+#[cfg(test)]
+mod swc_parity {
+    use super::*;
+    use qwik_optimizer_oxc::{
+        TransformModulesOptions, TransformModuleInput, EntryStrategy, EmitMode, MinifyMode,
+    };
+
+    /// Normalize whitespace for fuzzy comparison: trim lines, filter empty lines.
+    fn normalize(code: &str) -> String {
+        code.lines()
+            .map(|l| l.trim())
+            .filter(|l| !l.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    /// Run all 201 fixtures and print a parity summary.
+    ///
+    /// This test always passes — it reports how many fixtures produce output
+    /// matching the SWC reference. Run with `--nocapture` to see the report:
+    ///
+    /// ```
+    /// cargo test -p qwik-optimizer-oxc --test snapshot_tests swc_parity -- --nocapture
+    /// ```
+    #[test]
+    fn parity_report() {
+        let fixtures = load_fixtures();
+        let mut total = 0;
+        let mut root_match = 0;
+        let mut segment_count_match = 0;
+        let mut diagnostics_match = 0;
+        let mut full_match = 0;
+        let mut mismatches: Vec<String> = Vec::new();
+
+        for (name, config) in &fixtures.fixtures {
+            total += 1;
+            let expected = load_snapshot(name);
+
+            // Build options using the same logic as snapshot_transform_tests
+            let entry_strategy = match config.entry_strategy.as_str() {
+                "Segment" => EntryStrategy::Segment,
+                "Inline" => EntryStrategy::Inline,
+                "Hoist" => EntryStrategy::Hoist,
+                "Single" => EntryStrategy::Single,
+                "Component" => EntryStrategy::Component,
+                "Smart" => EntryStrategy::Smart,
+                "Hook" => EntryStrategy::Hook,
+                _ => EntryStrategy::Segment,
+            };
+            let mode = match config.mode.as_str() {
+                "Lib" => EmitMode::Lib,
+                "Prod" => EmitMode::Prod,
+                "Dev" => EmitMode::Dev,
+                "Hmr" => EmitMode::Hmr,
+                "Test" => EmitMode::Test,
+                _ => EmitMode::Lib,
+            };
+            let minify = match config.minify.as_str() {
+                "Simplify" => MinifyMode::Simplify,
+                "None" => MinifyMode::None,
+                _ => MinifyMode::Simplify,
+            };
+
+            let inputs: Vec<TransformModuleInput> = if expected.inputs.len() == 1 && expected.inputs[0].path.is_empty() {
+                config.inputs.iter().map(|fi| TransformModuleInput {
+                    code: expected.inputs[0].code.clone(),
+                    path: fi.path.clone(),
+                    dev_path: fi.dev_path.clone(),
+                }).collect()
+            } else {
+                config.inputs.iter().filter_map(|fi| {
+                    expected.inputs.iter()
+                        .find(|si| si.path == fi.path)
+                        .map(|si| TransformModuleInput {
+                            code: si.code.clone(),
+                            path: fi.path.clone(),
+                            dev_path: fi.dev_path.clone(),
+                        })
+                }).collect()
+            };
+
+            let opts = TransformModulesOptions {
+                src_dir: config.src_dir.clone(),
+                root_dir: config.root_dir.clone(),
+                input: inputs,
+                source_maps: config.source_maps,
+                minify,
+                transpile_ts: config.transpile_ts,
+                transpile_jsx: config.transpile_jsx,
+                preserve_filenames: config.preserve_filenames,
+                explicit_extensions: config.explicit_extensions,
+                entry_strategy,
+                mode,
+                scope: config.scope.clone(),
+                core_module: config.core_module.clone(),
+                strip_exports: config.strip_exports.clone(),
+                strip_ctx_name: config.strip_ctx_name.clone(),
+                strip_event_handlers: config.strip_event_handlers,
+                reg_ctx_name: config.reg_ctx_name.clone(),
+                is_server: config.is_server,
+            };
+
+            let result = qwik_optimizer_oxc::transform_modules(opts);
+
+            // Compare root module
+            let actual_root = result.modules.iter().find(|m| m.segment.is_none());
+            let root_ok = match (actual_root, &expected.root_module) {
+                (Some(actual), Some(exp)) => normalize(&actual.code) == normalize(&exp.code),
+                (None, None) => true,
+                _ => false,
+            };
+            if root_ok { root_match += 1; }
+
+            // Compare segment count
+            let actual_seg_count = result.modules.iter().filter(|m| m.segment.is_some()).count();
+            let seg_ok = actual_seg_count == expected.segments.len();
+            if seg_ok { segment_count_match += 1; }
+
+            // Compare diagnostics (error presence)
+            let expected_has_errors = expected.diagnostics.contains("error");
+            let actual_has_errors = result.diagnostics.iter().any(|d| {
+                matches!(d.category, qwik_optimizer_oxc::DiagnosticCategory::Error)
+            });
+            let diag_ok = expected_has_errors == actual_has_errors;
+            if diag_ok { diagnostics_match += 1; }
+
+            if root_ok && seg_ok && diag_ok {
+                full_match += 1;
+            } else {
+                let mut issues: Vec<String> = Vec::new();
+                if !root_ok { issues.push("root".to_string()); }
+                if !seg_ok { issues.push(format!("segments(exp={},act={})", expected.segments.len(), actual_seg_count)); }
+                if !diag_ok { issues.push("diagnostics".to_string()); }
+                mismatches.push(format!("  {}: {}", name, issues.join(", ")));
+            }
+        }
+
+        mismatches.sort();
+
+        println!("\n{:=<60}", "");
+        println!("SWC PARITY REPORT ({total} fixtures)");
+        println!("{:=<60}", "");
+        println!("  Full match:          {full_match}/{total} ({:.0}%)", full_match as f64 / total as f64 * 100.0);
+        println!("  Root module match:   {root_match}/{total}");
+        println!("  Segment count match: {segment_count_match}/{total}");
+        println!("  Diagnostics match:   {diagnostics_match}/{total}");
+        if !mismatches.is_empty() {
+            println!("\nMismatches ({}):", mismatches.len());
+            for m in &mismatches {
+                println!("{m}");
+            }
+        }
+        println!("{:=<60}\n", "");
+    }
 }
 
 // ============================================================================
