@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The spec document describes segment extraction behavior — filename generation, hash computation, nested segment relationships, and variable migration — with input/output examples
   4. The spec document describes import rewriting rules (consumed import stripping, synthetic import addition, per-segment resolution) with before/after examples
   5. The spec document describes source map generation contracts for both root and segment modules
-**Plans:** 1/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md — Pipeline Overview, GlobalCollect, Hash Generation, Path Resolution (infrastructure)
@@ -62,7 +62,13 @@ Plans:
   2. The spec document describes all 5 emit modes with per-transformation behavioral differences (especially dev mode QRL variants and test mode const replacement exceptions)
   3. The spec document describes the transformation pipeline ordering DAG — which CONVs run before/after which, and why ordering matters (e.g., const replacement before DCE, props destructuring before capture analysis)
   4. The spec document describes PURE annotations with the explicit whitelist (componentQrl only) and anti-list of side-effectful wrappers, const replacement, dead branch elimination, code stripping, sync$ serialization, and noop QRL handling
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [x] 03-01-PLAN.md — PURE annotations, const replacement, dead branch elimination
+- [x] 03-02-PLAN.md — Code stripping, sync$ serialization, noop QRL handling
+- [x] 03-03-PLAN.md — Entry strategies and emit modes
+- [x] 03-04-PLAN.md — Pipeline ordering DAG
 
 ### Phase 4: Public API, Bindings & Cross-Cutting Specification
 **Goal**: The spec document is complete — all public-facing contracts are documented, OXC migration guidance is embedded per-transformation, and representative examples from Jack's 162 spec files are included as verification anchors
@@ -74,7 +80,12 @@ Plans:
   3. The spec document contains NAPI and WASM binding contracts (function signatures, serialization, async behavior) sufficient to implement bindings without referencing SWC source
   4. The spec document contains OXC migration notes per transformation section — explicitly calling out where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena)
   5. The spec document contains at least 20 representative input/output examples covering all 14 CONVs, extracted from Jack's 162 spec files
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 04-01-PLAN.md — TransformModulesOptions, TransformOutput, type definitions
+- [x] 04-02-PLAN.md — NAPI/WASM binding contracts, OXC migration notes
+- [x] 04-03-PLAN.md — Representative examples (Appendix B)
 
 ### Phase 5: Core OXC Implementation
 **Goal**: A working qwik-optimizer-oxc Rust crate implements all 14 CONV transformations using idiomatic OXC patterns, passing all 201 behavioral tests from Jack's spec corpus
@@ -108,8 +119,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Entry strategies + Hoist .s() post-processing (IMPL-03)
-- [ ] 06-02-PLAN.md — Emit mode gaps: HMR injection + Lib/Test validation (IMPL-04)
+- [x] 06-01-PLAN.md — Entry strategies + Hoist .s() post-processing (IMPL-03)
+- [x] 06-02-PLAN.md — Emit mode gaps: HMR injection + Lib/Test validation (IMPL-04)
 - [x] 06-03-PLAN.md — NAPI + WASM binding crates (IMPL-06, IMPL-07)
 
 ### Phase 7: Spec Gap Closure — Missing CONV Sections
@@ -148,7 +159,7 @@ Plans:
 - [x] 08-05-PLAN.md — Consumed import stripping + separator comments for 50/201 parity (IMPL-05)
 
 ### Phase 9: Metadata & Verification Cleanup
-**Goal**: Update stale requirement checkboxes, write missing VERIFICATION.md reports for phases 3-6, and either wire the rayon parallel feature or remove the dead feature flag
+**Goal**: Update stale requirement checkboxes, write missing VERIFICATION.md reports for phases 3-7, and remove the dead parallel feature flag
 **Depends on**: Phase 7, Phase 8
 **Requirements**: SPEC-06, SPEC-18, SPEC-19, SPEC-20, IMPL-03, IMPL-04
 **Gap Closure**: Closes gaps from v0.1.0 audit
@@ -156,7 +167,12 @@ Plans:
   1. All requirement checkboxes in REQUIREMENTS.md match actual completion status
   2. VERIFICATION.md exists for all 6 original phases plus gap closure phases
   3. The `parallel` feature either has a working rayon implementation or is removed from Cargo.toml
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Investigate requirements, update REQUIREMENTS.md + ROADMAP.md, remove parallel feature
+- [ ] 09-02-PLAN.md — Write VERIFICATION.md for phases 3, 4, 5
+- [ ] 09-03-PLAN.md — Write VERIFICATION.md for phases 6, 7
 
 ## Progress
 
@@ -165,12 +181,12 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Pipeline Specification | 1/5 | In Progress|  |
+| 1. Core Pipeline Specification | 3/5 | In Progress|  |
 | 2. JSX, Props & Signal Specification | 0/? | Not started | - |
-| 3. Build Modes & Remaining Transforms Specification | 0/? | Not started | - |
+| 3. Build Modes & Remaining Transforms Specification | 4/4 | Complete | 2026-04-02 |
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
-| 5. Core OXC Implementation | 6/7 | In Progress | - |
-| 6. Strategies, Modes & Binding Implementation | 1/3 | In Progress | - |
+| 5. Core OXC Implementation | 7/7 | Complete | 2026-04-02 |
+| 6. Strategies, Modes & Binding Implementation | 3/3 | Complete | 2026-04-02 |
 | 7. Spec Gap Closure | 2/2 | Complete   | 2026-04-03 |
-| 8. Implementation Gap Closure | 3/5 | In Progress | - |
-| 9. Metadata & Verification Cleanup | 0/? | Not started | - |
+| 8. Implementation Gap Closure | 5/5 | Complete | 2026-04-03 |
+| 9. Metadata & Verification Cleanup | 0/3 | In Progress | - |
