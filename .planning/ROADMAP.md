@@ -144,8 +144,8 @@ Plans:
 - [x] 08-01-PLAN.md — QRL hoisting for Segment strategy + PURE annotations (IMPL-02, IMPL-05)
 - [x] 08-02-PLAN.md — Signal optimization wiring CONV-07 (IMPL-02)
 - [x] 08-03-PLAN.md — Spec examples activation + parity measurement (IMPL-05)
-- [ ] 08-04-PLAN.md — Symbol naming scheme alignment for SWC parity (IMPL-02, IMPL-05)
-- [ ] 08-05-PLAN.md — Consumed import stripping + separator comments for 50/201 parity (IMPL-05)
+- [x] 08-04-PLAN.md — Symbol naming scheme alignment for SWC parity (IMPL-02, IMPL-05)
+- [x] 08-05-PLAN.md — Consumed import stripping + separator comments for 50/201 parity (IMPL-05)
 
 ### Phase 9: Metadata & Verification Cleanup
 **Goal**: Update stale requirement checkboxes, write missing VERIFICATION.md reports for phases 3-6, and either wire the rayon parallel feature or remove the dead feature flag

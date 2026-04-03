@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-04-03T20:59:30.203Z"
-last_activity: 2026-04-03 -- Phase 08 execution started
+stopped_at: Completed 08-05-PLAN.md
+last_updated: "2026-04-03T21:43:23.874Z"
+last_activity: 2026-04-03
 progress:
   total_phases: 9
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 32
-  completed_plans: 30
+  completed_plans: 32
   percent: 77
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 ## Current Position
 
 Phase: 08 (implementation-gap-closure) — EXECUTING
-Plan: 1 of 5
-Status: Executing Phase 08
-Last activity: 2026-04-03 -- Phase 08 execution started
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-04-03
 
 Progress: [########░░] 77%
 
@@ -63,6 +63,7 @@ Progress: [########░░] 77%
 | Phase 06 P03 | 3m | 2 tasks | 7 files |
 | Phase 06 P02 | 6m | 2 tasks | 3 files |
 | Phase 08 P03 | 10m | 2 tasks | 1 files |
+| Phase 08 P05 | 21m | 2 tasks | 189 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,10 @@ Recent decisions affecting current work:
 - [Phase 06 P02]: HMR _useHmr injection via string-based prepend in code_move::inject_use_hmr
 - [Phase 06 P02]: Synthetic imports mechanism added to NewModuleCtx for segment-level import injection
 - [Phase 08]: All 24 spec examples pass without errors -- optimizer produces valid output for all 14 CONVs
+- [Phase 08]: D-48: Strip ALL $-suffixed marker function imports, not just called ones
+- [Phase 08]: D-49: Dead import elimination skips Lib mode
+- [Phase 08]: D-50: Separator comments use post-emit string insertion
+- [Phase 08]: D-51: Root-level hoisting via is_root_level on HoistedConst
 
 ### Pending Todos
 
@@ -104,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T20:35:33.647Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-04-03T21:43:23.871Z
+Stopped at: Completed 08-05-PLAN.md
 Resume file: None
