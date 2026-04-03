@@ -20,7 +20,27 @@ use oxc::ast::AstBuilder;
 use oxc::ast::ast::*;
 use oxc::span::SPAN;
 
+use crate::inlined_fn::convert_inlined_fn;
 use crate::is_const::is_const_expression;
+use crate::transform::{IdentCollector, TypedId, compute_scoped_idents};
+
+// ---------------------------------------------------------------------------
+// Signal optimization context
+// ---------------------------------------------------------------------------
+
+/// Context needed for signal optimization (CONV-07) during JSX prop classification.
+///
+/// When provided to `transform_jsx_element`, dynamic prop values are checked
+/// via `convert_inlined_fn` to determine if they can be wrapped as `_fnSignal()`
+/// calls.
+pub(crate) struct SignalOptContext<'a, 'b> {
+    /// Flattened declaration stack (Var-type entries from all frames).
+    pub decl_stack_flat: &'b [TypedId],
+    /// Whether the transform is running in server mode.
+    pub is_server: bool,
+    /// The allocator for AST construction.
+    pub allocator: &'a Allocator,
+}
 
 // ---------------------------------------------------------------------------
 // JSX flags bitmask
@@ -45,6 +65,7 @@ pub(crate) fn transform_jsx_element<'a>(
     jsx_key_counter: &mut u32,
     is_root: bool,
     allocator: &'a Allocator,
+    signal_ctx: Option<&SignalOptContext<'a, '_>>,
 ) -> (Expression<'a>, JsxImportNeeds) {
     let ast = AstBuilder::new(allocator);
     let mut needs = JsxImportNeeds::default();
@@ -66,8 +87,8 @@ pub(crate) fn transform_jsx_element<'a>(
 
     // 3. Process attributes
     let attrs = opening.attributes;
-    let (has_spread, var_props, const_props, extracted_key, children_from_props) =
-        classify_props(attrs, &ast, allocator);
+    let (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used) =
+        classify_props(attrs, &ast, allocator, signal_ctx);
 
     // Use extracted key if present, otherwise use generated key
     let final_key = extracted_key.unwrap_or(key_expr);
@@ -79,6 +100,10 @@ pub(crate) fn transform_jsx_element<'a>(
     let flags: u32 = FLAG_DYNAMIC_CHILDREN;
 
     // 6. Choose callee
+    if signal_used {
+        needs.needs_fn_signal = true;
+    }
+
     let callee_name = if has_spread {
         needs.needs_jsx_split = true;
         "_jsxSplit"
@@ -227,23 +252,31 @@ fn jsx_member_to_expr<'a>(
 
 /// Classify JSX props into var (dynamic) and const (static) buckets.
 ///
-/// Returns `(has_spread, var_props_obj, const_props_obj, extracted_key, children_from_props)`.
+/// When `signal_ctx` is provided, dynamic prop values are checked for signal
+/// optimization eligibility via `convert_inlined_fn`. If eligible, the prop
+/// value is replaced with a `_fnSignal()` call expression (parsed from the
+/// generated code string).
+///
+/// Returns `(has_spread, var_props_obj, const_props_obj, extracted_key, children_from_props, signal_used)`.
 fn classify_props<'a>(
     attrs: ArenaVec<'a, JSXAttributeItem<'a>>,
     ast: &AstBuilder<'a>,
     allocator: &'a Allocator,
+    signal_ctx: Option<&SignalOptContext<'a, '_>>,
 ) -> (
     bool,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
+    bool,
 ) {
     let mut has_spread = false;
     let mut var_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
     let mut const_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
     let mut extracted_key: Option<Expression<'a>> = None;
     let mut children_from_props: Option<Expression<'a>> = None;
+    let mut signal_used = false;
 
     for attr in attrs {
         match attr {
@@ -292,6 +325,23 @@ fn classify_props<'a>(
 
                 // Classify as const or var
                 let is_const = is_const_expression(&value_expr);
+
+                // Attempt signal optimization for dynamic prop values (CONV-07)
+                let value_expr = if !is_const {
+                    if let Some(ctx) = signal_ctx {
+                        try_signal_optimize(
+                            value_expr,
+                            ctx,
+                            &mut signal_used,
+                            allocator,
+                        )
+                    } else {
+                        value_expr
+                    }
+                } else {
+                    value_expr
+                };
+
                 let prop_key = build_prop_key(&normalized_key, ast, allocator);
                 let prop = ObjectPropertyKind::ObjectProperty(ast.alloc_object_property(
                     SPAN,
@@ -324,7 +374,69 @@ fn classify_props<'a>(
         Some(ast.expression_object(SPAN, const_entries))
     };
 
-    (has_spread, var_props, const_props, extracted_key, children_from_props)
+    (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used)
+}
+
+// ---------------------------------------------------------------------------
+// Signal optimization helper (CONV-07)
+// ---------------------------------------------------------------------------
+
+/// Attempt to wrap a dynamic prop value expression as a `_fnSignal()` call.
+///
+/// Collects identifiers from the expression, computes scoped_idents against
+/// the declaration stack, and calls `convert_inlined_fn`. If eligible, parses
+/// the resulting code string into an AST expression and returns it.
+fn try_signal_optimize<'a>(
+    value_expr: Expression<'a>,
+    ctx: &SignalOptContext<'a, '_>,
+    signal_used: &mut bool,
+    allocator: &'a Allocator,
+) -> Expression<'a> {
+    // Skip call expressions -- they can't be signal-optimized
+    if matches!(&value_expr, Expression::CallExpression(_)) {
+        return value_expr;
+    }
+
+    // Collect identifiers referenced in this expression
+    let expr_idents = IdentCollector::collect(&value_expr);
+
+    // Compute scoped_idents (captures) for this expression
+    let scoped_names = compute_scoped_idents(&expr_idents, ctx.decl_stack_flat);
+
+    // Build (name, is_const) pairs for convert_inlined_fn
+    let scoped_pairs: Vec<(String, bool)> = scoped_names
+        .iter()
+        .map(|name| {
+            let is_const = ctx
+                .decl_stack_flat
+                .iter()
+                .any(|(n, t)| n == name && matches!(t, crate::transform::IdentType::Const));
+            (name.clone(), is_const)
+        })
+        .collect();
+
+    let (fn_signal_code, _arrow_code, _is_const) =
+        convert_inlined_fn(&value_expr, &scoped_pairs, false, ctx.is_server, allocator);
+
+    if let Some(code) = fn_signal_code {
+        // Parse the generated _fnSignal(...) code into an expression
+        if let Some(parsed_expr) = parse_signal_expr(&code, allocator) {
+            *signal_used = true;
+            return parsed_expr;
+        }
+    }
+
+    value_expr
+}
+
+/// Parse a code string (e.g., `_fnSignal(p0 => p0.value, [obj])`) into an AST expression.
+fn parse_signal_expr<'a>(code: &str, allocator: &'a Allocator) -> Option<Expression<'a>> {
+    use oxc::parser::Parser;
+    use oxc::span::SourceType;
+
+    let src: &str = allocator.alloc_str(code);
+    let parser = Parser::new(allocator, src, SourceType::tsx());
+    parser.parse_expression().ok()
 }
 
 // ---------------------------------------------------------------------------

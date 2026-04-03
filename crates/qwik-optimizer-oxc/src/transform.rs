@@ -1042,6 +1042,19 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             let taken = std::mem::replace(expr, ctx.ast.expression_null_literal(SPAN));
             let is_root = self.segment_stack.is_empty();
 
+            // Build signal optimization context (CONV-07)
+            // Flatten decl_stack to get all Var-type entries for capture analysis
+            let decl_stack_flat: Vec<TypedId> = self
+                .decl_stack
+                .iter()
+                .flat_map(|frame| frame.iter().cloned())
+                .collect();
+            let signal_ctx = crate::jsx_transform::SignalOptContext {
+                decl_stack_flat: &decl_stack_flat,
+                is_server: self.is_server,
+                allocator,
+            };
+
             let (new_expr, needs) = if is_jsx_element {
                 if let Expression::JSXElement(el) = taken {
                     crate::jsx_transform::transform_jsx_element(
@@ -1049,6 +1062,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         &mut self.jsx_key_counter,
                         is_root,
                         allocator,
+                        Some(&signal_ctx),
                     )
                 } else {
                     unreachable!()
@@ -1074,6 +1088,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             }
             if needs.needs_fragment {
                 self.needs_fragment_import = true;
+            }
+            if needs.needs_fn_signal {
+                self.needs_fn_signal_import = true;
             }
 
             *expr = new_expr;
