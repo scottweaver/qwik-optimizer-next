@@ -122,7 +122,11 @@ Plans:
   2. The spec document contains a complete QRL Wrapping (CONV-02) section with qrl()/inlinedQrl() generation, dev mode variants, captures emission, and PURE annotation rules
   3. SPEC-09 (DCE), SPEC-10 (Const Replacement), and SPEC-11 (Code Stripping) spec sections are verified present and complete
   4. The spec document contains at least 20 representative input/output examples covering all 14 CONVs
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Verify CONV-01/02/09/10/11 sections and fix CONV-10 truncated example
+- [ ] 07-02-PLAN.md — Update REQUIREMENTS.md checkboxes for SPEC-01/02/09/10/11/29
 
 ### Phase 8: Implementation Gap Closure — Wire CONV-07/CONV-08 & Improve Parity
 **Goal**: Wire the disconnected signal optimization (CONV-07) and PURE annotation (CONV-08) code paths, un-ignore the 24 spec_examples.rs tests, and significantly improve SWC parity from the current 0.5%
