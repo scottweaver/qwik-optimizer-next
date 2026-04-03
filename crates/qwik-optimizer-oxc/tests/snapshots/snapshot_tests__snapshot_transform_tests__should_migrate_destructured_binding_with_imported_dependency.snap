@@ -1,11 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 975
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-import { $ } from "@qwik.dev/core";
 import { source } from "lib";
 const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
 const { a } = source;

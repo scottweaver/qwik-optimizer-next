@@ -1,12 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 843
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useStore, isDev, isServer as isServer2 } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+import { useStore, isDev, isServer as isServer2 } from "@qwik.dev/core";
 import { isServer, isBrowser as isb } from "@qwik.dev/core/build";
 import { mongodb } from "mondodb";
 import { threejs } from "threejs";

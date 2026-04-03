@@ -1,13 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 889
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
-import { component$, useStore, Slot, Fragment } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+import { useStore, Slot, Fragment } from "@qwik.dev/core";
 import Image from "./image.jpg?jsx";
 const q_AppDynamic1_component_R00UJ05gbes = /*#__PURE__*/ _noopQrl("AppDynamic1_component_R00UJ05gbes");
 const q_AppDynamic2_component_3EY2zm0v00A = /*#__PURE__*/ _noopQrl("AppDynamic2_component_3EY2zm0v00A");

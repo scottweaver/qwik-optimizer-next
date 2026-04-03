@@ -1,11 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 960
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-import { $, isServer } from "@qwik.dev/core";
+import { isServer } from "@qwik.dev/core";
 const q_useHook_fn_kScGJcREaTg = /*#__PURE__*/ qrl(() => import("./test.tsx_useHook_fn_kScGJcREaTg"), "useHook_fn_kScGJcREaTg");
 const state = {
 	counter: 0,

@@ -1,12 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 899
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { component$ } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 const q_s_HTDRsvUbLiE = /*#__PURE__*/ qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "s_HTDRsvUbLiE");
 export const Foo = /*#__PURE__*/ componentQrl(q_s_HTDRsvUbLiE);
 

@@ -1,11 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 887
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
+import { useMemoQrl } from "@qwik.dev/core";
 import { component$ as Component, $ as onRender, useStore, wrap, useEffect } from "@qwik.dev/core";
 const q_App_useMemo_0Fw1Fv1C3tY = /*#__PURE__*/ qrl(() => import("./test.tsx_App_useMemo_0Fw1Fv1C3tY"), "App_useMemo_0Fw1Fv1C3tY");
 export const useMemo$ = (qrt) => {

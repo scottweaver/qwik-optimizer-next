@@ -1,11 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 844
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-import { component$, useStyles$ } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 import css1 from "./global.css";
 import css2 from "./style.css";
 import css3 from "./style.css";

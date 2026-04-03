@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 981
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
+import { formActionQrl } from "@qwik.dev/core";
 import { formAction$ } from "forms";
 const q_action_formAction_dIQV5vh1He4 = /*#__PURE__*/ qrl(() => import("./test.tsx_action_formAction_dIQV5vh1He4"), "action_formAction_dIQV5vh1He4");
 export const action = formActionQrl(q_action_formAction_dIQV5vh1He4);

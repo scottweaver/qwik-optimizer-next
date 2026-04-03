@@ -1,13 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 895
 expression: output
-snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { inlinedQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
-import { component$ } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 export const FOO_MAPPING = {
 	A: 1,
 	B: 2,

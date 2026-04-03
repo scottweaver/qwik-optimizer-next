@@ -1,11 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 946
 expression: output
-snapshot_kind: text
 ---
 ============================= test.ts ==
 import { qrl } from "@qwik.dev/core";
-import { $, component$ } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 import { isDev } from "@qwik.dev/core/build";
 import { stuff } from "@qwik.dev/router";
 import { moreStuff } from "@qwik.dev/router/more/here";

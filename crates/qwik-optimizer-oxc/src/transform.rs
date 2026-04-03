@@ -372,6 +372,10 @@ pub(crate) struct QwikTransform {
     /// imports AND locally-exported $-suffixed identifiers.
     pub(crate) marker_functions: HashMap<String, String>,
 
+    /// Import specifiers consumed during transformation (e.g., "$", "component$").
+    /// These are stripped from the root module output in exit_program.
+    pub(crate) consumed_imports: HashSet<String>,
+
     /// Local name for the bare `$` import from the core module.
     pub(crate) qsegment_fn: Option<String>,
     /// Local name for `sync$`.
@@ -508,6 +512,7 @@ impl QwikTransform {
 
         QwikTransform {
             marker_functions,
+            consumed_imports: HashSet::new(),
             qsegment_fn,
             sync_qrl_fn,
             stack_ctxt: Vec::new(),
@@ -1000,6 +1005,12 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         // CONV-01: Dollar detection
         // 1. Check if callee is a known $ marker function
         if let Some((ctx_name, is_sync)) = self.detect_dollar_call(&node.callee) {
+            // Track the callee name as a consumed import for root module stripping.
+            // The callee is the local binding (e.g., "component$", "$").
+            if let Expression::Identifier(ident) = &node.callee {
+                self.consumed_imports.insert(ident.name.as_str().to_string());
+            }
+
             // 2. Verify first argument is a function/arrow expression
             if Self::first_arg_is_function(&node.arguments) {
                 let ctx_kind = words::classify_ctx_kind(&ctx_name);
@@ -1794,6 +1805,29 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             imports_to_add.push(("_wrapProp", "_wrapProp"));
         }
 
+        // Also add synthetic imports for wrapper functions (componentQrl, useTaskQrl, etc.)
+        // These are used in the root module body when $-suffixed calls are rewritten.
+        // Use a BTreeSet for deterministic ordering across runs.
+        {
+            let mut wrapper_imports: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+            for seg in &self.segments {
+                if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
+                    let wrapper_name = words::dollar_to_qrl_name(&seg.ctx_name);
+                    // Don't add if already in imports_to_add
+                    if !imports_to_add.iter().any(|(s, _)| *s == wrapper_name) {
+                        wrapper_imports.insert(wrapper_name);
+                    }
+                }
+            }
+            // Insert in reverse sorted order so they end up in sorted order at position 0
+            for wrapper in wrapper_imports.into_iter().rev() {
+                let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, self.core_module);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, ctx.ast.allocator) {
+                    program.body.insert(0, stmt);
+                }
+            }
+        }
+
         // Insert synthetic import declarations at position 0 using string-based parsing.
         // This avoids complex AST builder API differences across OXC versions.
         let allocator = ctx.ast.allocator;
@@ -1802,6 +1836,45 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
                 program.body.insert(0, stmt);
             }
+        }
+
+        // Strip consumed $-suffixed imports from the root module.
+        // SWC removes marker function imports (e.g., $, component$) that were consumed
+        // during transformation, keeping only specifiers still referenced in the body.
+        if !self.consumed_imports.is_empty() {
+            program.body.retain_mut(|stmt| {
+                if let Statement::ImportDeclaration(import_decl) = stmt {
+                    let source_val = import_decl.source.value.as_str();
+                    // Only strip from core module imports
+                    let is_core = source_val == self.core_module
+                        || source_val == "@qwik.dev/core"
+                        || source_val.ends_with("/core");
+                    if is_core {
+                        if let Some(specifiers) = &mut import_decl.specifiers {
+                            specifiers.retain(|spec| {
+                                if let ImportDeclarationSpecifier::ImportSpecifier(named) = spec {
+                                    let local_name = named.local.name.as_str();
+                                    let imported_name = match &named.imported {
+                                        ModuleExportName::IdentifierName(id) => id.name.as_str(),
+                                        ModuleExportName::IdentifierReference(id) => id.name.as_str(),
+                                        ModuleExportName::StringLiteral(s) => s.value.as_str(),
+                                    };
+                                    // Keep if NOT consumed
+                                    !self.consumed_imports.contains(local_name)
+                                        && !self.consumed_imports.contains(imported_name)
+                                } else {
+                                    true // Keep default/namespace imports
+                                }
+                            });
+                            // Remove the entire import if no specifiers remain
+                            if specifiers.is_empty() {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                true
+            });
         }
 
         // Emit extra_top_items const declarations and ref_assignments (.s() calls)
