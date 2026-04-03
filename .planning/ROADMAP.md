@@ -170,5 +170,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 5. Core OXC Implementation | 6/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 1/3 | In Progress | - |
 | 7. Spec Gap Closure | 2/2 | Complete   | 2026-04-03 |
-| 8. Implementation Gap Closure | 0/3 | Not started | - |
+| 8. Implementation Gap Closure | 0/3 | Planned | - |
 | 9. Metadata & Verification Cleanup | 0/? | Not started | - |
