@@ -122,10 +122,10 @@ Plans:
   2. The spec document contains a complete QRL Wrapping (CONV-02) section with qrl()/inlinedQrl() generation, dev mode variants, captures emission, and PURE annotation rules
   3. SPEC-09 (DCE), SPEC-10 (Const Replacement), and SPEC-11 (Code Stripping) spec sections are verified present and complete
   4. The spec document contains at least 20 representative input/output examples covering all 14 CONVs
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 07-01-PLAN.md — Verify CONV-01/02/09/10/11 sections and fix CONV-10 truncated example
+- [x] 07-01-PLAN.md — Verify CONV-01/02/09/10/11 sections and fix CONV-10 truncated example
 - [ ] 07-02-PLAN.md — Update REQUIREMENTS.md checkboxes for SPEC-01/02/09/10/11/29
 
 ### Phase 8: Implementation Gap Closure — Wire CONV-07/CONV-08 & Improve Parity
@@ -164,6 +164,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
 | 5. Core OXC Implementation | 6/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 1/3 | In Progress | - |
-| 7. Spec Gap Closure | 0/? | Not started | - |
+| 7. Spec Gap Closure | 1/2 | In Progress|  |
 | 8. Implementation Gap Closure | 0/? | Not started | - |
 | 9. Metadata & Verification Cleanup | 0/? | Not started | - |

@@ -9,17 +9,17 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Specification — Core Transformations
 
-- [ ] **SPEC-01**: Spec documents CONV-01 (Dollar Detection) — identification of `$`-suffixed function calls as marker functions requiring QRL extraction, including imported markers from `@qwik.dev/core` and locally-defined `$`-suffixed functions
-- [ ] **SPEC-02**: Spec documents CONV-02 (QRL Wrapping) — replacement of `$`-suffixed calls with `Qrl` counterparts, `qrl()`/`inlinedQrl()` reference generation, dev mode variants (`qrlDEV`, `inlinedQrlDEV`)
+- [x] **SPEC-01**: Spec documents CONV-01 (Dollar Detection) — identification of `$`-suffixed function calls as marker functions requiring QRL extraction, including imported markers from `@qwik.dev/core` and locally-defined `$`-suffixed functions
+- [x] **SPEC-02**: Spec documents CONV-02 (QRL Wrapping) — replacement of `$`-suffixed calls with `Qrl` counterparts, `qrl()`/`inlinedQrl()` reference generation, dev mode variants (`qrlDEV`, `inlinedQrlDEV`)
 - [x] **SPEC-03**: Spec documents CONV-03 (Capture Analysis) — free variable detection across `$()` boundaries with full taxonomy of 8 capture categories (imports, inner locals, outer locals, loop variables, shadowed bindings, destructured params, hoisted functions, TS type-only imports)
 - [x] **SPEC-04**: Spec documents CONV-04 (Props Destructuring) — transformation of destructured component props to `_rawProps` access patterns, `_restProps()` handling, pre-pass ordering requirement
 - [x] **SPEC-05**: Spec documents CONV-05 (Segment Extraction) — extraction of `$()` callback bodies into separate output modules, canonical filename generation, hash suffixes, nested segment parent-child relationships, variable migration
 - [ ] **SPEC-06**: Spec documents CONV-06 (JSX Transform) — `_jsxSorted()`/`_jsxSplit()` conversion, static/dynamic prop separation, `class`/`className` normalization, `bind:value`/`bind:checked` sugar, `q:slot`, `ref`, children extraction, key counter generation
 - [x] **SPEC-07**: Spec documents CONV-07 (Signal Optimization) — `_fnSignal()` generation for inline JSX expressions, parameterized function creation with positional params (`p0`, `p1`)
 - [x] **SPEC-08**: Spec documents CONV-08 (PURE Annotations) — `/*#__PURE__*/` on `componentQrl` only, with explicit anti-list of side-effectful wrappers that must NOT be annotated
-- [ ] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
-- [ ] **SPEC-10**: Spec documents CONV-10 (Const Replacement) — `isServer`/`isBrowser`/`isDev` replacement with boolean literals, import source handling, Test mode exception
-- [ ] **SPEC-11**: Spec documents CONV-11 (Code Stripping) — `strip_exports`, `strip_ctx_name`, `strip_event_handlers` mechanisms with throwing stub generation
+- [x] **SPEC-09**: Spec documents CONV-09 (Dead Branch Elimination) — unreachable code removal after const replacement, client-side tree-shaking via Treeshaker
+- [x] **SPEC-10**: Spec documents CONV-10 (Const Replacement) — `isServer`/`isBrowser`/`isDev` replacement with boolean literals, import source handling, Test mode exception
+- [x] **SPEC-11**: Spec documents CONV-11 (Code Stripping) — `strip_exports`, `strip_ctx_name`, `strip_event_handlers` mechanisms with throwing stub generation
 - [x] **SPEC-12**: Spec documents CONV-12 (Import Rewriting) — legacy rename, consumed import stripping, synthetic import addition, per-segment import resolution
 - [x] **SPEC-13**: Spec documents CONV-13 (sync$ Serialization) — `_qrlSync()` with stringified function body
 - [x] **SPEC-14**: Spec documents CONV-14 (Noop QRL Handling) — `_noopQrl()`/`_noopQrlDEV()` for empty/unused callbacks
@@ -109,17 +109,17 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SPEC-01 | Phase 7 (gap closure) | Pending |
-| SPEC-02 | Phase 7 (gap closure) | Pending |
+| SPEC-01 | Phase 7 (gap closure) | Complete |
+| SPEC-02 | Phase 7 (gap closure) | Complete |
 | SPEC-03 | Phase 1 | Complete |
 | SPEC-04 | Phase 2 | Complete |
 | SPEC-05 | Phase 1 | Complete |
 | SPEC-06 | Phase 9 (gap closure) | Pending |
 | SPEC-07 | Phase 2 | Complete |
 | SPEC-08 | Phase 3 | Complete |
-| SPEC-09 | Phase 7 (gap closure) | Pending |
-| SPEC-10 | Phase 7 (gap closure) | Pending |
-| SPEC-11 | Phase 7 (gap closure) | Pending |
+| SPEC-09 | Phase 7 (gap closure) | Complete |
+| SPEC-10 | Phase 7 (gap closure) | Complete |
+| SPEC-11 | Phase 7 (gap closure) | Complete |
 | SPEC-12 | Phase 1 | Complete |
 | SPEC-13 | Phase 3 | Complete |
 | SPEC-14 | Phase 3 | Complete |
