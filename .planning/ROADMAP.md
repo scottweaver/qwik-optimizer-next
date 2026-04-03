@@ -142,7 +142,7 @@ Plans:
 
 Plans:
 - [x] 08-01-PLAN.md — QRL hoisting for Segment strategy + PURE annotations (IMPL-02, IMPL-05)
-- [ ] 08-02-PLAN.md — Signal optimization wiring CONV-07 (IMPL-02)
+- [x] 08-02-PLAN.md — Signal optimization wiring CONV-07 (IMPL-02)
 - [ ] 08-03-PLAN.md — Spec examples activation + parity measurement (IMPL-05)
 
 ### Phase 9: Metadata & Verification Cleanup
