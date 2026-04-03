@@ -7,7 +7,7 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$, useStore } from "@qwik.dev/core";
-export const App = qrl(() => import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw");
+export const App = qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU"), "App_component_1_w0t0o3QMovU");
 
 ============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
@@ -30,7 +30,7 @@ export const App_component_ckEPmXZlub0 = () => {
   "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
   "path": "",
   "extension": "js",
-  "parent": "App_Jlq9hNxnCvw",
+  "parent": "App_component_1_w0t0o3QMovU",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,
@@ -58,10 +58,10 @@ export const App_component_ckEPmXZlub0 = () => {
   ]
 }
 */
-============================= test.tsx_App_Jlq9hNxnCvw.js (ENTRY POINT) ==
+============================= test.tsx_App_component_1_w0t0o3QMovU.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
-export const App_Jlq9hNxnCvw = ({count, rest: [I2, {I3, v1: [I4], I5=v2, ...I6}, I7=v3, ...I8]}) => {
+export const App_component_1_w0t0o3QMovU = ({count, rest: [I2, {I3, v1: [I4], I5=v2, ...I6}, I7=v3, ...I8]}) => {
 	const state = useStore({count: 0});
 	const {rest: [C2, {C3, v1: [C4], C5=v2, ...C6}, C7=v3, ...C8]} = foo();
 	return $(() => {
@@ -77,11 +77,11 @@ export const App_Jlq9hNxnCvw = ({count, rest: [I2, {I3, v1: [I4], I5=v2, ...I6},
 /*
 {
   "origin": "test.tsx",
-  "name": "App_Jlq9hNxnCvw",
+  "name": "App_component_1_w0t0o3QMovU",
   "entry": null,
-  "displayName": "test.tsx_App",
-  "hash": "Jlq9hNxnCvw",
-  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
+  "displayName": "test.tsx_App_component_1",
+  "hash": "w0t0o3QMovU",
+  "canonicalFilename": "test.tsx_App_component_1_w0t0o3QMovU",
   "path": "",
   "extension": "js",
   "parent": null,

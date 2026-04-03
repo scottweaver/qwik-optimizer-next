@@ -7,13 +7,13 @@ snapshot_kind: text
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useStore, Slot } from "@qwik.dev/core";
-const q_App_Jlq9hNxnCvw = /* @__PURE__ */ _noopQrl("App_Jlq9hNxnCvw");
-q_App_Jlq9hNxnCvw.s((props: Stuff) => {
+const q_App_component_ckEPmXZlub0 = /* @__PURE__ */ _noopQrl("App_component_ckEPmXZlub0");
+q_App_component_ckEPmXZlub0.s((props: Stuff) => {
 	return <div>
 			<Slot />
 		</div>;
 });
-export const App = componentQrl(q_App_Jlq9hNxnCvw);
+export const App = componentQrl(q_App_component_ckEPmXZlub0);
 
 == DIAGNOSTICS ==
 []

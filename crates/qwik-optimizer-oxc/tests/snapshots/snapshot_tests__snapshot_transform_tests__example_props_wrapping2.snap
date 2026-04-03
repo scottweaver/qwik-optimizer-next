@@ -21,7 +21,7 @@ export const Works = componentQrl((props: {
 			local: fromLocal
 		}
 	}, null, null, 1, null);
-}, "Works_3wleYXX4dYQ");
+}, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==
 []

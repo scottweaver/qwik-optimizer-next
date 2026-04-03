@@ -15,9 +15,9 @@ export const Child = componentQrl(() => {
 	// Double count watch
 	useBrowserVisibleTaskQrl(() => {
 		state.count = thing.doStuff() + import("./sibling");
-	}, "Child_component_9GyF01GDKqw", [state]);
+	}, "Child_component_useBrowserVisibleTask_0IGFPOyJmQA", [state]);
 	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
-}, "Child_7e7u5mtQ0PI");
+}, "Child_component_9GyF01GDKqw");
 
 == DIAGNOSTICS ==
 []

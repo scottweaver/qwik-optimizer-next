@@ -8,7 +8,7 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
 export function App() {
-	const Header = qrl(() => import("./test.tsx_App_Header_PzePpx0uX0Y"), "App_Header_PzePpx0uX0Y");
+	const Header = qrl(() => import("./test.tsx_App_Header_component_B9F3YeqcO1w"), "App_Header_component_B9F3YeqcO1w");
 	return Header;
 }
 
@@ -25,7 +25,7 @@ export const App_Header_component_div_onClick_aO7uI7Iw6oQ = (ctx) => console.log
   "canonicalFilename": "test.tsx_App_Header_component_div_onClick_aO7uI7Iw6oQ",
   "path": "",
   "extension": "tsx",
-  "parent": "App_Header_PzePpx0uX0Y",
+  "parent": "App_Header_component_B9F3YeqcO1w",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -38,9 +38,9 @@ export const App_Header_component_div_onClick_aO7uI7Iw6oQ = (ctx) => console.log
   ]
 }
 */
-============================= test.tsx_App_Header_PzePpx0uX0Y.tsx (ENTRY POINT) ==
+============================= test.tsx_App_Header_component_B9F3YeqcO1w.tsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
-export const App_Header_PzePpx0uX0Y = () => {
+export const App_Header_component_B9F3YeqcO1w = () => {
 		console.log("mount");
 		return (
 			<div onClick={$((ctx) => console.log(ctx))}/>
@@ -49,11 +49,11 @@ export const App_Header_PzePpx0uX0Y = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "App_Header_PzePpx0uX0Y",
+  "name": "App_Header_component_B9F3YeqcO1w",
   "entry": null,
-  "displayName": "test.tsx_App_Header",
-  "hash": "PzePpx0uX0Y",
-  "canonicalFilename": "test.tsx_App_Header_PzePpx0uX0Y",
+  "displayName": "test.tsx_App_Header_component",
+  "hash": "B9F3YeqcO1w",
+  "canonicalFilename": "test.tsx_App_Header_component_B9F3YeqcO1w",
   "path": "",
   "extension": "tsx",
   "parent": null,

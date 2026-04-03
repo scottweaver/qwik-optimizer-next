@@ -17,7 +17,7 @@ export default componentQrl(() => {
 	const key = "A";
 	const value = FOO_MAPPING[key];
 	return _jsxSorted(_Fragment, null, null, value, 1, null);
-}, "test_5GvkoOCMrJc");
+}, "test_component_LUXeXe0DQrg");
 
 == DIAGNOSTICS ==
 []

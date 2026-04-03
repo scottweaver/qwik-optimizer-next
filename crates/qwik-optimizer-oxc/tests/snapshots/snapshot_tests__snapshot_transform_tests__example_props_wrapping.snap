@@ -20,7 +20,7 @@ export const Works = componentQrl((_rawProps) => {
 			local: fromLocal
 		}
 	}, null, null, 1, null);
-}, "Works_3wleYXX4dYQ");
+}, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==
 []

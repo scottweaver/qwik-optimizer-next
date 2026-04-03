@@ -9,8 +9,8 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore, mutable } from "@qwik.dev/core";
 import { dep } from "./file";
-const q_App_Jlq9hNxnCvw = /* @__PURE__ */ _noopQrl("App_Jlq9hNxnCvw");
-q_App_Jlq9hNxnCvw.s(() => {
+const q_App_component_ckEPmXZlub0 = /* @__PURE__ */ _noopQrl("App_component_ckEPmXZlub0");
+q_App_component_ckEPmXZlub0.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});
 	return <>
@@ -37,7 +37,7 @@ q_App_Jlq9hNxnCvw.s(() => {
 			<div>First {signal.value + dep}</div>
 		</>;
 });
-export const App = componentQrl(q_App_Jlq9hNxnCvw);
+export const App = componentQrl(q_App_component_ckEPmXZlub0);
 
 == DIAGNOSTICS ==
 []

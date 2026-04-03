@@ -11,14 +11,14 @@ export const useMemoQrl = (qrt) => {
 	useEffect(qrt);
 };
 export const useMemo$ = wrap(useMemoQrl);
-export const App = qrl(() => import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw");
+export const App = qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU"), "App_component_1_w0t0o3QMovU");
 export const Lightweight = (props) => {
-	qrl(() => import("./test.tsx_Lightweight_nztHzT4fCF4"), "Lightweight_nztHzT4fCF4");
+	qrl(() => import("./test.tsx_Lightweight_useMemo_UIcxVTQF1a8"), "Lightweight_useMemo_UIcxVTQF1a8");
 };
 
-============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
+============================= test.tsx_App_component_useMemo_6Sc9KVki3Y0.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const App_component_ckEPmXZlub0 = () => {
+export const App_component_useMemo_6Sc9KVki3Y0 = () => {
 	const state = _captures[0];
 	console.log(state.count);
 };
@@ -26,14 +26,14 @@ export const App_component_ckEPmXZlub0 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "App_component_ckEPmXZlub0",
+  "name": "App_component_useMemo_6Sc9KVki3Y0",
   "entry": null,
-  "displayName": "test.tsx_App_component",
-  "hash": "ckEPmXZlub0",
-  "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
+  "displayName": "test.tsx_App_component_useMemo",
+  "hash": "6Sc9KVki3Y0",
+  "canonicalFilename": "test.tsx_App_component_useMemo_6Sc9KVki3Y0",
   "path": "",
   "extension": "js",
-  "parent": "App_Jlq9hNxnCvw",
+  "parent": "App_component_1_w0t0o3QMovU",
   "ctxKind": "function",
   "ctxName": "useMemo$",
   "captures": true,
@@ -46,55 +46,47 @@ export const App_component_ckEPmXZlub0 = () => {
   ]
 }
 */
-============================= test.tsx_App_Jlq9hNxnCvw.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { useMemo$ } from "./test";
-import { useStore } from "@qwik.dev/core";
-export const App_Jlq9hNxnCvw = (props) => {
-	const state = useStore({count: 0});
-	useMemo$(() => {
-		console.log(state.count);
-	});
-	return $(() => (
+============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const App_component_ckEPmXZlub0 = () => (
 		<div>{state.count}</div>
-	));
-};
+	);
 /*
 {
   "origin": "test.tsx",
-  "name": "App_Jlq9hNxnCvw",
+  "name": "App_component_ckEPmXZlub0",
   "entry": null,
-  "displayName": "test.tsx_App",
-  "hash": "Jlq9hNxnCvw",
-  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
+  "displayName": "test.tsx_App_component",
+  "hash": "ckEPmXZlub0",
+  "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
   "path": "",
   "extension": "js",
-  "parent": null,
+  "parent": "App_component_1_w0t0o3QMovU",
   "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    197,
-    361
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "state"
   ],
-  "paramNames": [
-    "props"
+  "loc": [
+    317,
+    357
   ]
 }
 */
-============================= test.tsx_Lightweight_nztHzT4fCF4.js (ENTRY POINT) ==
-export const Lightweight_nztHzT4fCF4 = () => {
+============================= test.tsx_Lightweight_useMemo_UIcxVTQF1a8.js (ENTRY POINT) ==
+export const Lightweight_useMemo_UIcxVTQF1a8 = () => {
 	console.log(state.count);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Lightweight_nztHzT4fCF4",
+  "name": "Lightweight_useMemo_UIcxVTQF1a8",
   "entry": null,
-  "displayName": "test.tsx_Lightweight",
-  "hash": "nztHzT4fCF4",
-  "canonicalFilename": "test.tsx_Lightweight_nztHzT4fCF4",
+  "displayName": "test.tsx_Lightweight_useMemo",
+  "hash": "UIcxVTQF1a8",
+  "canonicalFilename": "test.tsx_Lightweight_useMemo_UIcxVTQF1a8",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -108,10 +100,18 @@ export const Lightweight_nztHzT4fCF4 = () => {
 }
 */
 ============================= test.tsx_App_component_1_w0t0o3QMovU.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const App_component_1_w0t0o3QMovU = () => (
+import { $ } from "@qwik.dev/core";
+import { useMemo$ } from "./test";
+import { useStore } from "@qwik.dev/core";
+export const App_component_1_w0t0o3QMovU = (props) => {
+	const state = useStore({count: 0});
+	useMemo$(() => {
+		console.log(state.count);
+	});
+	return $(() => (
 		<div>{state.count}</div>
-	);
+	));
+};
 /*
 {
   "origin": "test.tsx",
@@ -122,16 +122,16 @@ export const App_component_1_w0t0o3QMovU = () => (
   "canonicalFilename": "test.tsx_App_component_1_w0t0o3QMovU",
   "path": "",
   "extension": "js",
-  "parent": "App_Jlq9hNxnCvw",
+  "parent": null,
   "ctxKind": "function",
-  "ctxName": "$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
+  "ctxName": "component$",
+  "captures": false,
   "loc": [
-    317,
-    357
+    197,
+    361
+  ],
+  "paramNames": [
+    "props"
   ]
 }
 */

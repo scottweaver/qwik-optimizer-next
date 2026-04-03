@@ -8,11 +8,11 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { state } from "./sibling";
-export const Local = qrl(() => import("./main.tsx_Local_9kqcjkCFv30.tsx"), "Local_9kqcjkCFv30");
+export const Local = qrl(() => import("./main.tsx_Local_component_jJ0v28bs0p8.tsx"), "Local_component_jJ0v28bs0p8");
 
-============================= components/main.tsx_Local_9kqcjkCFv30.js (ENTRY POINT) ==
+============================= components/main.tsx_Local_component_jJ0v28bs0p8.js (ENTRY POINT) ==
 import { state } from "./sibling";
-export const Local_9kqcjkCFv30 = () => {
+export const Local_component_jJ0v28bs0p8 = () => {
 	return (
 		<div>{state}</div>
 	)
@@ -20,11 +20,11 @@ export const Local_9kqcjkCFv30 = () => {
 /*
 {
   "origin": "components/main.tsx",
-  "name": "Local_9kqcjkCFv30",
+  "name": "Local_component_jJ0v28bs0p8",
   "entry": null,
-  "displayName": "main.tsx_Local",
-  "hash": "9kqcjkCFv30",
-  "canonicalFilename": "main.tsx_Local_9kqcjkCFv30",
+  "displayName": "main.tsx_Local_component",
+  "hash": "jJ0v28bs0p8",
+  "canonicalFilename": "main.tsx_Local_component_jJ0v28bs0p8",
   "path": "components",
   "extension": "js",
   "parent": null,

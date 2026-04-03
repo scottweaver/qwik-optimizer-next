@@ -9,21 +9,21 @@ import { wrapperFn, getEnv } from "utils";
 import { formAction$, valiForm$ } from "forms";
 const flagEnabled = getEnv().PUBLIC_FEATURE;
 export const FeatureSchema = wrapperFn(flagEnabled);
-export const featureAction = qrl(() => import("./test.tsx_featureAction_2xV4qM2Xetg"), "featureAction_2xV4qM2Xetg");
+export const featureAction = qrl(() => import("./test.tsx_featureAction_formAction_cZgh2PzV1cc"), "featureAction_formAction_cZgh2PzV1cc");
 
-============================= test.tsx_featureAction_2xV4qM2Xetg.js (ENTRY POINT) ==
-export const featureAction_2xV4qM2Xetg = async (requestEvent) => {
+============================= test.tsx_featureAction_formAction_cZgh2PzV1cc.js (ENTRY POINT) ==
+export const featureAction_formAction_cZgh2PzV1cc = async (requestEvent) => {
 	return { status: "success" };
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "featureAction_2xV4qM2Xetg",
+  "name": "featureAction_formAction_cZgh2PzV1cc",
   "entry": null,
-  "displayName": "test.tsx_featureAction",
-  "hash": "2xV4qM2Xetg",
-  "canonicalFilename": "test.tsx_featureAction_2xV4qM2Xetg",
+  "displayName": "test.tsx_featureAction_formAction",
+  "hash": "cZgh2PzV1cc",
+  "canonicalFilename": "test.tsx_featureAction_formAction_cZgh2PzV1cc",
   "path": "",
   "extension": "js",
   "parent": null,

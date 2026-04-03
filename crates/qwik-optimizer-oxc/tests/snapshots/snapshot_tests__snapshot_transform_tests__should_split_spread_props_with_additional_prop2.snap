@@ -7,10 +7,10 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSplit } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-export default qrl(() => import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx_test_5GvkoOCMrJc.js (ENTRY POINT) ==
-export const test_5GvkoOCMrJc = (props) => {
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+export const test_component_LUXeXe0DQrg = (props) => {
 			return (
 				<div test="test" {...props}></div>
 			);
@@ -18,11 +18,11 @@ export const test_5GvkoOCMrJc = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_5GvkoOCMrJc",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_test",
-  "hash": "5GvkoOCMrJc",
-  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "js",
   "parent": null,

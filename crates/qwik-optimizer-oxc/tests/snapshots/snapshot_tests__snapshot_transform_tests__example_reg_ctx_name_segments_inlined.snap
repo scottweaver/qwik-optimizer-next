@@ -9,8 +9,8 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$, server$ } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	const text = "hola";
-	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_onClick_oE96WYiwk8Y", [text]) }, null, null, 1, null);
-}, "Works_3wleYXX4dYQ");
+	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_onClick_server_OsNoEFc5SM4", [text]) }, null, null, 1, null);
+}, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==
 []

@@ -9,32 +9,32 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore, Slot, Fragment } from "@qwik.dev/core";
 import Image from "./image.jpg?jsx";
-const q_AppDynamic1_xcBP9zDXuxk = /* @__PURE__ */ _noopQrl("AppDynamic1_xcBP9zDXuxk");
-const q_AppDynamic2_T0nR4RX01Ew = /* @__PURE__ */ _noopQrl("AppDynamic2_T0nR4RX01Ew");
-const q_AppDynamic3_KMSDPif9GmA = /* @__PURE__ */ _noopQrl("AppDynamic3_KMSDPif9GmA");
-const q_AppDynamic4_X8lGlDIKzVM = /* @__PURE__ */ _noopQrl("AppDynamic4_X8lGlDIKzVM");
-const q_AppStatic_lutLfp0UyRg = /* @__PURE__ */ _noopQrl("AppStatic_lutLfp0UyRg");
-q_AppDynamic1_xcBP9zDXuxk.s((props: Stuff) => {
+const q_AppDynamic1_component_R00UJ05gbes = /* @__PURE__ */ _noopQrl("AppDynamic1_component_R00UJ05gbes");
+const q_AppDynamic2_component_3EY2zm0v00A = /* @__PURE__ */ _noopQrl("AppDynamic2_component_3EY2zm0v00A");
+const q_AppDynamic3_component_FVq83NlbTDQ = /* @__PURE__ */ _noopQrl("AppDynamic3_component_FVq83NlbTDQ");
+const q_AppDynamic4_component_IO0yr8UvWEI = /* @__PURE__ */ _noopQrl("AppDynamic4_component_IO0yr8UvWEI");
+const q_AppStatic_component_gYRXqF3G5nE = /* @__PURE__ */ _noopQrl("AppStatic_component_gYRXqF3G5nE");
+q_AppDynamic1_component_R00UJ05gbes.s((props: Stuff) => {
 	return <>
 			<div>{prop < 2 ? <p>1</p> : <Stuff>2</Stuff>}</div>
 		</>;
 });
-q_AppDynamic2_T0nR4RX01Ew.s((props: Stuff) => {
+q_AppDynamic2_component_3EY2zm0v00A.s((props: Stuff) => {
 	return <div>{prop.value && <Stuff></Stuff>}<div></div></div>;
 });
-q_AppDynamic3_KMSDPif9GmA.s((props: Stuff) => {
+q_AppDynamic3_component_FVq83NlbTDQ.s((props: Stuff) => {
 	if (prop.value) {
 		return <Stuff></Stuff>;
 	}
 	return <div></div>;
 });
-q_AppDynamic4_X8lGlDIKzVM.s((props: Stuff) => {
+q_AppDynamic4_component_IO0yr8UvWEI.s((props: Stuff) => {
 	if (prop.value) {
 		return <div></div>;
 	}
 	return <Stuff></Stuff>;
 });
-q_AppStatic_lutLfp0UyRg.s((props: Stuff) => {
+q_AppStatic_component_gYRXqF3G5nE.s((props: Stuff) => {
 	return <>
 			<div>Static {f ? 1 : 3}</div>
 			<div>{prop < 2 ? <p>1</p> : <p>2</p>}</div>
@@ -69,11 +69,11 @@ export function Fn4(props: Stuff) {
 	return _jsxSorted(Stuff, null, null, null, 1, "8");
 }
 export const Arrow = (props: Stuff) => _jsxSorted("div", null, null, prop < 2 ? _jsxSorted("p", null, null, "1", 1, "9") : _jsxSorted(Stuff, null, null, "2", 1, "10"), 1, "11");
-export const AppDynamic1 = componentQrl(q_AppDynamic1_xcBP9zDXuxk);
-export const AppDynamic2 = componentQrl(q_AppDynamic2_T0nR4RX01Ew);
-export const AppDynamic3 = componentQrl(q_AppDynamic3_KMSDPif9GmA);
-export const AppDynamic4 = componentQrl(q_AppDynamic4_X8lGlDIKzVM);
-export const AppStatic = componentQrl(q_AppStatic_lutLfp0UyRg);
+export const AppDynamic1 = componentQrl(q_AppDynamic1_component_R00UJ05gbes);
+export const AppDynamic2 = componentQrl(q_AppDynamic2_component_3EY2zm0v00A);
+export const AppDynamic3 = componentQrl(q_AppDynamic3_component_FVq83NlbTDQ);
+export const AppDynamic4 = componentQrl(q_AppDynamic4_component_IO0yr8UvWEI);
+export const AppStatic = componentQrl(q_AppStatic_component_gYRXqF3G5nE);
 
 == DIAGNOSTICS ==
 []

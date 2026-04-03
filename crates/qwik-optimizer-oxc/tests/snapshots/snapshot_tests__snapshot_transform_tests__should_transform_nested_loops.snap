@@ -7,12 +7,12 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useSignal, Signal } from "@qwik.dev/core";
-const Foo = qrl(() => import("./test.tsx_Foo_n07hoBxfni0"), "Foo_n07hoBxfni0");
+const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 
-============================= test.tsx_Foo_n07hoBxfni0.js (ENTRY POINT) ==
+============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
-export const Foo_n07hoBxfni0 = function() {
+export const Foo_component_HTDRsvUbLiE = function() {
   const data = useSignal<Signal<any>[]>([]);
   const data2 = useSignal<Signal<any>[]>([]);
   return <div>
@@ -28,11 +28,11 @@ export const Foo_n07hoBxfni0 = function() {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_n07hoBxfni0",
+  "name": "Foo_component_HTDRsvUbLiE",
   "entry": null,
-  "displayName": "test.tsx_Foo",
-  "hash": "n07hoBxfni0",
-  "canonicalFilename": "test.tsx_Foo_n07hoBxfni0",
+  "displayName": "test.tsx_Foo_component",
+  "hash": "HTDRsvUbLiE",
+  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "js",
   "parent": null,

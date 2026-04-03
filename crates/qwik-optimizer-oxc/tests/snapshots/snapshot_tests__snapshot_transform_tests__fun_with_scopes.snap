@@ -7,16 +7,16 @@ snapshot_kind: text
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { inlinedQrl, $, component$, jsx, useStylesScoped$ } from "@qwik.dev/core";
-const q_Lifecycle_3nYZNS6dG6o = /* @__PURE__ */ _noopQrl("Lifecycle_3nYZNS6dG6o");
+const q_Lifecycle_component_r7jPBpjrWLc = /* @__PURE__ */ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
 const q_Field_FIPfOhEtx3A = /* @__PURE__ */ _noopQrl("Field_FIPfOhEtx3A");
-const q_StyledComponent_PaW6AQ4sJb8 = /* @__PURE__ */ _noopQrl("StyledComponent_PaW6AQ4sJb8");
-q_Lifecycle_3nYZNS6dG6o.s(() => {
+const q_StyledComponent_component_Wg7SquUqgAE = /* @__PURE__ */ _noopQrl("StyledComponent_component_Wg7SquUqgAE");
+q_Lifecycle_component_r7jPBpjrWLc.s(() => {
 	return /* @__PURE__ */ jsx(Slot, {});
 });
 q_Field_FIPfOhEtx3A.s((element) => {
 	field.internal.elements.push(element);
 });
-q_StyledComponent_PaW6AQ4sJb8.s(() => {
+q_StyledComponent_component_Wg7SquUqgAE.s(() => {
 	const stylesScopedData = useStylesScoped$(STYLE_RED);
 	const store = useStore({ count: 10 });
 	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
@@ -30,7 +30,7 @@ export default () => {
 	console.log(qrl);
 };
 function Lifecycle(props, key, flags) {
-	return componentQrl(q_Lifecycle_3nYZNS6dG6o)(props, key, flags);
+	return componentQrl(q_Lifecycle_component_r7jPBpjrWLc)(props, key, flags);
 }
 export const rawFn = (event, element) => {
 	handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
@@ -52,7 +52,7 @@ export function Field({ children, name, type, ...props }) {
 const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 	it("should render object style", async () => {
-		const StyledComponent = componentQrl(q_StyledComponent_PaW6AQ4sJb8);
+		const StyledComponent = componentQrl(q_StyledComponent_component_Wg7SquUqgAE);
 		const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
 	});
 });

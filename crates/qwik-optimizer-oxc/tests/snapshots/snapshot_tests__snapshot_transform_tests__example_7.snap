@@ -7,9 +7,36 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
-export const Header = qrl(() => import("./test.tsx_Header_WjUaUQN7Oxg"), "Header_WjUaUQN7Oxg");
-const App = qrl(() => import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw");
+export const Header = qrl(() => import("./test.tsx_Header_component_J4uyIhaBNR4"), "Header_component_J4uyIhaBNR4");
+const App = qrl(() => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
 
+============================= test.tsx_App_component_ckEPmXZlub0.tsx (ENTRY POINT) ==
+import { Header } from "./test";
+export const App_component_ckEPmXZlub0 = () => {
+	return (
+		<Header/>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "App_component_ckEPmXZlub0",
+  "entry": null,
+  "displayName": "test.tsx_App_component",
+  "hash": "ckEPmXZlub0",
+  "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    194,
+    241
+  ]
+}
+*/
 ============================= test.tsx_Header_component_div_onClick_i7ekvWH3674.tsx (ENTRY POINT) ==
 export const Header_component_div_onClick_i7ekvWH3674 = (ctx) => console.log(ctx);
 
@@ -23,7 +50,7 @@ export const Header_component_div_onClick_i7ekvWH3674 = (ctx) => console.log(ctx
   "canonicalFilename": "test.tsx_Header_component_div_onClick_i7ekvWH3674",
   "path": "",
   "extension": "tsx",
-  "parent": "Header_WjUaUQN7Oxg",
+  "parent": "Header_component_J4uyIhaBNR4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -36,36 +63,9 @@ export const Header_component_div_onClick_i7ekvWH3674 = (ctx) => console.log(ctx
   ]
 }
 */
-============================= test.tsx_App_Jlq9hNxnCvw.tsx (ENTRY POINT) ==
-import { Header } from "./test";
-export const App_Jlq9hNxnCvw = () => {
-	return (
-		<Header/>
-	);
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_Jlq9hNxnCvw",
-  "entry": null,
-  "displayName": "test.tsx_App",
-  "hash": "Jlq9hNxnCvw",
-  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    194,
-    241
-  ]
-}
-*/
-============================= test.tsx_Header_WjUaUQN7Oxg.tsx (ENTRY POINT) ==
+============================= test.tsx_Header_component_J4uyIhaBNR4.tsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
-export const Header_WjUaUQN7Oxg = () => {
+export const Header_component_J4uyIhaBNR4 = () => {
 	console.log("mount");
 	return (
 		<div onClick={$((ctx) => console.log(ctx))}/>
@@ -74,11 +74,11 @@ export const Header_WjUaUQN7Oxg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Header_WjUaUQN7Oxg",
+  "name": "Header_component_J4uyIhaBNR4",
   "entry": null,
-  "displayName": "test.tsx_Header",
-  "hash": "WjUaUQN7Oxg",
-  "canonicalFilename": "test.tsx_Header_WjUaUQN7Oxg",
+  "displayName": "test.tsx_Header_component",
+  "hash": "J4uyIhaBNR4",
+  "canonicalFilename": "test.tsx_Header_component_J4uyIhaBNR4",
   "path": "",
   "extension": "tsx",
   "parent": null,

@@ -12,13 +12,13 @@ export const useMemo$ = (qrt) => {
 };
 export const App = component$((props) => {
 	const state = useStore({ count: 0 });
-	qrl(() => import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw", [state]);
+	qrl(() => import("./test.tsx_App_useMemo_0Fw1Fv1C3tY"), "App_useMemo_0Fw1Fv1C3tY", [state]);
 	return $(() => _jsxSorted("div", null, null, state.count, 1, "0"));
 });
 
-============================= test.tsx_App_Jlq9hNxnCvw.js (ENTRY POINT) ==
+============================= test.tsx_App_useMemo_0Fw1Fv1C3tY.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const App_Jlq9hNxnCvw = () => {
+export const App_useMemo_0Fw1Fv1C3tY = () => {
 	const state = _captures[0];
 	console.log(state.count);
 };
@@ -26,11 +26,11 @@ export const App_Jlq9hNxnCvw = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "App_Jlq9hNxnCvw",
+  "name": "App_useMemo_0Fw1Fv1C3tY",
   "entry": null,
-  "displayName": "test.tsx_App",
-  "hash": "Jlq9hNxnCvw",
-  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
+  "displayName": "test.tsx_App_useMemo",
+  "hash": "0Fw1Fv1C3tY",
+  "canonicalFilename": "test.tsx_App_useMemo_0Fw1Fv1C3tY",
   "path": "",
   "extension": "js",
   "parent": null,

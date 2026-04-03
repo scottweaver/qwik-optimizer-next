@@ -11,11 +11,11 @@ import { component$ } from "@qwik.dev/core";
 // Root-level self-referential component
 // The QRL should NOT be hoisted before the component function is defined
 // or should use two-phase emission to avoid forward reference
-export const Tree = qrl(() => import("./test.tsx_Tree_LeZ3ij0OMbY"), "Tree_LeZ3ij0OMbY");
+export const Tree = qrl(() => import("./test.tsx_Tree_component_T0k10EAlawU"), "Tree_component_T0k10EAlawU");
 
-============================= test.tsx_Tree_LeZ3ij0OMbY.tsx (ENTRY POINT) ==
+============================= test.tsx_Tree_component_T0k10EAlawU.tsx (ENTRY POINT) ==
 import { Tree } from "./test";
-export const Tree_LeZ3ij0OMbY = (props) => {
+export const Tree_component_T0k10EAlawU = (props) => {
 	return (
 		<div>
 			{props.label}
@@ -26,11 +26,11 @@ export const Tree_LeZ3ij0OMbY = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Tree_LeZ3ij0OMbY",
+  "name": "Tree_component_T0k10EAlawU",
   "entry": null,
-  "displayName": "test.tsx_Tree",
-  "hash": "LeZ3ij0OMbY",
-  "canonicalFilename": "test.tsx_Tree_LeZ3ij0OMbY",
+  "displayName": "test.tsx_Tree_component",
+  "hash": "T0k10EAlawU",
+  "canonicalFilename": "test.tsx_Tree_component_T0k10EAlawU",
   "path": "",
   "extension": "tsx",
   "parent": null,

@@ -7,8 +7,57 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
-export const Foo = qrl(() => import("./test.tsx_Foo_n07hoBxfni0"), "Foo_n07hoBxfni0");
+export const Foo = qrl(() => import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
 
+============================= test.tsx_Foo_component_1_DvU6FitWglY.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+export const Foo_component_1_DvU6FitWglY = () => {
+
+	return $(() => {
+		const handler = $(() => console.log('reused'));
+		return (
+			<div
+				onClick$={()=>console.log('onClick$')}
+				onDocumentScroll$={()=>console.log('onDocumentScroll')}
+				onDocumentScroll$={()=>console.log('onWindowScroll')}
+
+				on-cLick$={()=>console.log('on-cLick$')}
+				onDocument-sCroll$={()=>console.log('onDocument-sCroll')}
+				onDocument-scroLL$={()=>console.log('onDocument-scroLL')}
+
+				host:onClick$={()=>console.log('host:onClick$')}
+				host:onDocumentScroll$={()=>console.log('host:onDocument:scroll')}
+				host:onDocumentScroll$={()=>console.log('host:onWindow:scroll')}
+
+				onKeyup$={handler}
+				onDocument:keyup$={handler}
+				onWindow:keyup$={handler}
+
+				custom$={()=>console.log('custom')}
+			/>
+		)
+	});
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_1_DvU6FitWglY",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_1",
+  "hash": "DvU6FitWglY",
+  "canonicalFilename": "test.tsx_Foo_component_1_DvU6FitWglY",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    69,
+    870
+  ]
+}
+*/
 ============================= test.tsx_Foo_component_handler_H10xZtD0e7w.js (ENTRY POINT) ==
 export const Foo_component_handler_H10xZtD0e7w = () => console.log("reused");
 
@@ -68,62 +117,13 @@ export const Foo_component_HTDRsvUbLiE = () => {
   "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "js",
-  "parent": "Foo_n07hoBxfni0",
+  "parent": "Foo_component_1_DvU6FitWglY",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
   "loc": [
     97,
     841
-  ]
-}
-*/
-============================= test.tsx_Foo_n07hoBxfni0.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-export const Foo_n07hoBxfni0 = () => {
-
-	return $(() => {
-		const handler = $(() => console.log('reused'));
-		return (
-			<div
-				onClick$={()=>console.log('onClick$')}
-				onDocumentScroll$={()=>console.log('onDocumentScroll')}
-				onDocumentScroll$={()=>console.log('onWindowScroll')}
-
-				on-cLick$={()=>console.log('on-cLick$')}
-				onDocument-sCroll$={()=>console.log('onDocument-sCroll')}
-				onDocument-scroLL$={()=>console.log('onDocument-scroLL')}
-
-				host:onClick$={()=>console.log('host:onClick$')}
-				host:onDocumentScroll$={()=>console.log('host:onDocument:scroll')}
-				host:onDocumentScroll$={()=>console.log('host:onWindow:scroll')}
-
-				onKeyup$={handler}
-				onDocument:keyup$={handler}
-				onWindow:keyup$={handler}
-
-				custom$={()=>console.log('custom')}
-			/>
-		)
-	});
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_n07hoBxfni0",
-  "entry": null,
-  "displayName": "test.tsx_Foo",
-  "hash": "n07hoBxfni0",
-  "canonicalFilename": "test.tsx_Foo_n07hoBxfni0",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    69,
-    870
   ]
 }
 */

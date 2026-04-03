@@ -13,7 +13,7 @@ export const Issue3795 = componentQrl(() => {
 	base += "bar";
 	const secondAssignment = base;
 	return _jsxSorted("div", null, { id: "issue-3795-result" }, [firstAssignment, secondAssignment], 1, null);
-}, "Issue3795_Ynrmtdf2F7s");
+}, "Issue3795_component_wsE8beycatI");
 
 == DIAGNOSTICS ==
 []

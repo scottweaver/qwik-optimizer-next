@@ -11,20 +11,20 @@ import mongodb from "mongodb";
 export const onGet = () => {
 	throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
 };
-export default qrl(() => import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx_test_5GvkoOCMrJc.tsx (ENTRY POINT) ==
-export const test_5GvkoOCMrJc = ()=> {
+============================= test.tsx_test_component_LUXeXe0DQrg.tsx (ENTRY POINT) ==
+export const test_component_LUXeXe0DQrg = ()=> {
 	return <div>cmp</div>
 };
 /*
 {
   "origin": "test.tsx",
-  "name": "test_5GvkoOCMrJc",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_test",
-  "hash": "5GvkoOCMrJc",
-  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "tsx",
   "parent": null,

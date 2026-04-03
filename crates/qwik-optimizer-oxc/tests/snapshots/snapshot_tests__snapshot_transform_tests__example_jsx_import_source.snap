@@ -9,20 +9,20 @@ import { _jsxSorted } from "@qwik.dev/core";
 /* @jsxImportSource react */
 import { qwikify$ } from "./qwikfy";
 export const App = () => _jsxSorted("div", { onClick$: () => console.log("App") }, null, null, 1, "0");
-export const App2 = qrl(() => import("./test.tsx_App2_TBMHRgb2wi0.tsx"), "App2_TBMHRgb2wi0");
+export const App2 = qrl(() => import("./test.tsx_App2_qwikify_RKJW7oCMdS4.tsx"), "App2_qwikify_RKJW7oCMdS4");
 
-============================= test.tsx_App2_TBMHRgb2wi0.js (ENTRY POINT) ==
-export const App2_TBMHRgb2wi0 = () => (
+============================= test.tsx_App2_qwikify_RKJW7oCMdS4.js (ENTRY POINT) ==
+export const App2_qwikify_RKJW7oCMdS4 = () => (
 	<div onClick$={()=>console.log('App2')}></div>
 );
 /*
 {
   "origin": "test.tsx",
-  "name": "App2_TBMHRgb2wi0",
+  "name": "App2_qwikify_RKJW7oCMdS4",
   "entry": null,
-  "displayName": "test.tsx_App2",
-  "hash": "TBMHRgb2wi0",
-  "canonicalFilename": "test.tsx_App2_TBMHRgb2wi0",
+  "displayName": "test.tsx_App2_qwikify",
+  "hash": "RKJW7oCMdS4",
+  "canonicalFilename": "test.tsx_App2_qwikify_RKJW7oCMdS4",
   "path": "",
   "extension": "js",
   "parent": null,

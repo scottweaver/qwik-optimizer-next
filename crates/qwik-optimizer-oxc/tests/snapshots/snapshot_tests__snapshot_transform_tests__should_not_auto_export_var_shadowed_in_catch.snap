@@ -7,12 +7,12 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { formAction$ } from "forms";
 import { translate } from "i18n";
-export const action = qrl(() => import("./test.tsx_action_Qmp8dwHIKyo"), "action_Qmp8dwHIKyo");
+export const action = qrl(() => import("./test.tsx_action_formAction_dIQV5vh1He4"), "action_formAction_dIQV5vh1He4");
 
-============================= test.tsx_action_Qmp8dwHIKyo.js (ENTRY POINT) ==
+============================= test.tsx_action_formAction_dIQV5vh1He4.js (ENTRY POINT) ==
 import { translate } from "i18n";
 const t = translate();
-export const action_Qmp8dwHIKyo = (data) => {
+export const action_formAction_dIQV5vh1He4 = (data) => {
 	try {
 		return { status: "success" };
 	} catch (err) {
@@ -27,11 +27,11 @@ export const action_Qmp8dwHIKyo = (data) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "action_Qmp8dwHIKyo",
+  "name": "action_formAction_dIQV5vh1He4",
   "entry": null,
-  "displayName": "test.tsx_action",
-  "hash": "Qmp8dwHIKyo",
-  "canonicalFilename": "test.tsx_action_Qmp8dwHIKyo",
+  "displayName": "test.tsx_action_formAction",
+  "hash": "dIQV5vh1He4",
+  "canonicalFilename": "test.tsx_action_formAction_dIQV5vh1He4",
   "path": "",
   "extension": "js",
   "parent": null,

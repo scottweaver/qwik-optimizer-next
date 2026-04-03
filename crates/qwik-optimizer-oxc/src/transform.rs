@@ -1099,8 +1099,25 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         let pending = self.segment_stack.pop().unwrap();
 
-        // Pop the context name we pushed
-        self.stack_ctxt.pop();
+        // --- Compute names via register_context_name ---
+        // IMPORTANT: Must be called BEFORE popping stack_ctxt so the ctx_name
+        // (e.g., "component") is included in the display_name_core, matching
+        // SWC's naming behavior (SWC calls register_context_name during fold,
+        // before the ctx_name is popped).
+        let names = crate::hash::register_context_name(
+            &self.stack_ctxt,
+            &mut self.segment_names,
+            self.scope.as_deref(),
+            &self.rel_path,
+            &self.file_name,
+            &self.mode,
+            None,
+            None,
+            None,
+        );
+
+        // NOTE: stack_ctxt pop is deferred until after compute_entry (below)
+        // to match SWC, which passes the full context to the entry policy.
 
         // --- Flatten decl_stack for Var entries ---
         let all_decl: Vec<TypedId> = self
@@ -1157,19 +1174,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             &mut self_imports,
         );
 
-        // --- Compute names via register_context_name ---
-        let names = crate::hash::register_context_name(
-            &self.stack_ctxt,
-            &mut self.segment_names,
-            self.scope.as_deref(),
-            &self.rel_path,
-            &self.file_name,
-            &self.mode,
-            None,
-            None,
-            None,
-        );
-
         let has_captures = !scoped_idents.is_empty();
         let should_emit = self.should_emit_segment(&pending.ctx_name, &pending.ctx_kind);
 
@@ -1181,6 +1185,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             &names.hash,
             &names.symbol_name,
         );
+
+        // Pop the context name we pushed in enter_call_expression.
+        // Deferred until after register_context_name and compute_entry
+        // to match SWC's naming and entry policy behavior.
+        self.stack_ctxt.pop();
 
         // --- Extract expr code from source text ---
         let call = match expr {

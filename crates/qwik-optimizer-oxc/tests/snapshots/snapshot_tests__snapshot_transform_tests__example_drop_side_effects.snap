@@ -19,51 +19,24 @@ import { sideEffect } from "./secret";
 	console.log("run");
 })();
 sideEffect();
-export const api = qrlDEV(() => import("./test.tsx_api_okf08xCeyUA"), "api_okf08xCeyUA");
-export default qrlDEV(() => import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
+export const api = qrlDEV(() => import("./test.tsx_api_server_JonPp043gH0"), "api_server_JonPp043gH0");
+export default qrlDEV(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx_test_5GvkoOCMrJc.js (ENTRY POINT) ==
-import { api } from "./test";
-export const test_5GvkoOCMrJc = () => {
-	return (
-		<button onClick$={() => await api()}></button>
-	)
-	};
-/*
-{
-  "origin": "test.tsx",
-  "name": "test_5GvkoOCMrJc",
-  "entry": null,
-  "displayName": "test.tsx_test",
-  "hash": "5GvkoOCMrJc",
-  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    491,
-    575
-  ]
-}
-*/
-============================= test.tsx_api_okf08xCeyUA.js (ENTRY POINT) ==
+============================= test.tsx_api_server_JonPp043gH0.js (ENTRY POINT) ==
 const dfd = new Client(secret);
 const supabase = clientSupabase();
-export const api_okf08xCeyUA = () => {
+export const api_server_JonPp043gH0 = () => {
 	supabase.from("ffg").do(dfd);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "api_okf08xCeyUA",
+  "name": "api_server_JonPp043gH0",
   "entry": null,
-  "displayName": "test.tsx_api",
-  "hash": "okf08xCeyUA",
-  "canonicalFilename": "test.tsx_api_okf08xCeyUA",
+  "displayName": "test.tsx_api_server",
+  "hash": "JonPp043gH0",
+  "canonicalFilename": "test.tsx_api_server_JonPp043gH0",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -73,6 +46,33 @@ export const api_okf08xCeyUA = () => {
   "loc": [
     424,
     473
+  ]
+}
+*/
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+import { api } from "./test";
+export const test_component_LUXeXe0DQrg = () => {
+	return (
+		<button onClick$={() => await api()}></button>
+	)
+	};
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_LUXeXe0DQrg",
+  "entry": null,
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    491,
+    575
   ]
 }
 */

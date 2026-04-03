@@ -9,12 +9,12 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useSignal } from "@qwik.dev/core";
 import { A } from "./componentA";
-export const Cmp = qrl(() => import("./test.tsx_Cmp_VOFhWBnY6qQ"), "Cmp_VOFhWBnY6qQ");
+export const Cmp = qrl(() => import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
 
-============================= test.tsx_Cmp_VOFhWBnY6qQ.js (ENTRY POINT) ==
+============================= test.tsx_Cmp_component_4ryKJTOKjWE.js (ENTRY POINT) ==
 import { A } from "./componentA";
 import { useSignal } from "@qwik.dev/core";
-export const Cmp_VOFhWBnY6qQ = () => {
+export const Cmp_component_4ryKJTOKjWE = () => {
 	const currentStep = useSignal('STEP_1');
 	const currentType = useSignal<'NEXT' | 'PREVIOUS'>('PREVIOUS');
 
@@ -32,11 +32,11 @@ export const Cmp_VOFhWBnY6qQ = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Cmp_VOFhWBnY6qQ",
+  "name": "Cmp_component_4ryKJTOKjWE",
   "entry": null,
-  "displayName": "test.tsx_Cmp",
-  "hash": "VOFhWBnY6qQ",
-  "canonicalFilename": "test.tsx_Cmp_VOFhWBnY6qQ",
+  "displayName": "test.tsx_Cmp_component",
+  "hash": "4ryKJTOKjWE",
+  "canonicalFilename": "test.tsx_Cmp_component_4ryKJTOKjWE",
   "path": "",
   "extension": "js",
   "parent": null,

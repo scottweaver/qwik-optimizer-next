@@ -8,13 +8,13 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const Greeter = qrl(() => import("./test.tsx_Greeter_LDKOk8PWmEs"), "Greeter_LDKOk8PWmEs");
+export const Greeter = qrl(() => import("./test.tsx_Greeter_component_1_krCndSwhX4U"), "Greeter_component_1_krCndSwhX4U");
 const d = qrl(() => import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
 
-============================= test.tsx_Greeter_LDKOk8PWmEs.js (ENTRY POINT) ==
+============================= test.tsx_Greeter_component_1_krCndSwhX4U.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const Greeter_LDKOk8PWmEs = () => {
+export const Greeter_component_1_krCndSwhX4U = () => {
 	const stuff = useStore();
 	return $(() => {
 		return (
@@ -31,11 +31,11 @@ export const Greeter_LDKOk8PWmEs = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Greeter_LDKOk8PWmEs",
+  "name": "Greeter_component_1_krCndSwhX4U",
   "entry": null,
-  "displayName": "test.tsx_Greeter",
-  "hash": "LDKOk8PWmEs",
-  "canonicalFilename": "test.tsx_Greeter_LDKOk8PWmEs",
+  "displayName": "test.tsx_Greeter_component_1",
+  "hash": "krCndSwhX4U",
+  "canonicalFilename": "test.tsx_Greeter_component_1_krCndSwhX4U",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -72,7 +72,7 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
   "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "js",
-  "parent": "Greeter_LDKOk8PWmEs",
+  "parent": "Greeter_component_1_krCndSwhX4U",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,

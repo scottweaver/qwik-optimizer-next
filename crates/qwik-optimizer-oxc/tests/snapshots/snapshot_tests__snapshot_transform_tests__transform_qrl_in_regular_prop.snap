@@ -7,8 +7,33 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
-export const Cmp = qrl(() => import("./test.tsx_Cmp_VOFhWBnY6qQ"), "Cmp_VOFhWBnY6qQ");
+export const Cmp = qrl(() => import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
 
+============================= test.tsx_Cmp_component_4ryKJTOKjWE.ts (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { Cmp } from "./test";
+export const Cmp_component_4ryKJTOKjWE = () =>
+			<Cmp foo={$(() => console.log('hi there'))}>Hello Qwik</Cmp>;
+/*
+{
+  "origin": "test.tsx",
+  "name": "Cmp_component_4ryKJTOKjWE",
+  "entry": null,
+  "displayName": "test.tsx_Cmp_component",
+  "hash": "4ryKJTOKjWE",
+  "canonicalFilename": "test.tsx_Cmp_component_4ryKJTOKjWE",
+  "path": "",
+  "extension": "ts",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    72,
+    153
+  ]
+}
+*/
 ============================= test.tsx_Cmp_component_foo_NWdBU7Rizzk.ts (ENTRY POINT) ==
 export const Cmp_component_foo_NWdBU7Rizzk = () => console.log("hi there");
 
@@ -22,38 +47,13 @@ export const Cmp_component_foo_NWdBU7Rizzk = () => console.log("hi there");
   "canonicalFilename": "test.tsx_Cmp_component_foo_NWdBU7Rizzk",
   "path": "",
   "extension": "ts",
-  "parent": "Cmp_VOFhWBnY6qQ",
+  "parent": "Cmp_component_4ryKJTOKjWE",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
   "loc": [
     102,
     134
-  ]
-}
-*/
-============================= test.tsx_Cmp_VOFhWBnY6qQ.ts (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { Cmp } from "./test";
-export const Cmp_VOFhWBnY6qQ = () =>
-			<Cmp foo={$(() => console.log('hi there'))}>Hello Qwik</Cmp>;
-/*
-{
-  "origin": "test.tsx",
-  "name": "Cmp_VOFhWBnY6qQ",
-  "entry": null,
-  "displayName": "test.tsx_Cmp",
-  "hash": "VOFhWBnY6qQ",
-  "canonicalFilename": "test.tsx_Cmp_VOFhWBnY6qQ",
-  "path": "",
-  "extension": "ts",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    72,
-    153
   ]
 }
 */

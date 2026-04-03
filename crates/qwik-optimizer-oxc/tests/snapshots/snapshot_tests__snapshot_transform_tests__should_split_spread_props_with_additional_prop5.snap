@@ -11,10 +11,10 @@ import { component$ } from "@qwik.dev/core";
 function Hola(props: any) {
 	return _jsxSplit("div", { ...props }, null, null, 1, "0");
 }
-export default qrl(() => import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx_test_5GvkoOCMrJc.js (ENTRY POINT) ==
-export const test_5GvkoOCMrJc = () => {
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+export const test_component_LUXeXe0DQrg = () => {
 		return <Hola>
 			<div>1</div>
 			<div>2</div>
@@ -23,11 +23,11 @@ export const test_5GvkoOCMrJc = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_5GvkoOCMrJc",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_test",
-  "hash": "5GvkoOCMrJc",
-  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "js",
   "parent": null,

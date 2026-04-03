@@ -22,12 +22,12 @@ export const Parent = componentQrl(() => {
 	});
 	useTaskQrl(() => {
 		// Code
-	}, "Parent_component_t6Wy3C0Q0XM");
+	}, "Parent_component_useTask_ngmvcygWux8");
 	return _jsxSorted("div", {
 		shouldRemove$: () => state.text,
 		onClick$: () => console.log("parent", state, threejs)
 	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
-}, "Parent_OkkVWYSU0Cs");
+}, "Parent_component_t6Wy3C0Q0XM");
 
 == DIAGNOSTICS ==
 []

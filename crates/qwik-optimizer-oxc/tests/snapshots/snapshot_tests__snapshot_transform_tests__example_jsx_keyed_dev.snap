@@ -8,10 +8,10 @@ import { qrlDEV } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore } from "@qwik.dev/core";
-export const App = qrlDEV(() => import("./index.tsx_App_QlNpap6xsVY.tsx"), "App_QlNpap6xsVY");
+export const App = qrlDEV(() => import("./index.tsx_App_component_KGLYFBhvJc0.tsx"), "App_component_KGLYFBhvJc0");
 
-============================= project/index.tsx_App_QlNpap6xsVY.js (ENTRY POINT) ==
-export const App_QlNpap6xsVY = (props: Stuff) => {
+============================= project/index.tsx_App_component_KGLYFBhvJc0.js (ENTRY POINT) ==
+export const App_component_KGLYFBhvJc0 = (props: Stuff) => {
 	return (
 		<>
 			<Cmp key="stuff"></Cmp>
@@ -25,11 +25,11 @@ export const App_QlNpap6xsVY = (props: Stuff) => {
 /*
 {
   "origin": "project/index.tsx",
-  "name": "App_QlNpap6xsVY",
+  "name": "App_component_KGLYFBhvJc0",
   "entry": null,
-  "displayName": "index.tsx_App",
-  "hash": "QlNpap6xsVY",
-  "canonicalFilename": "index.tsx_App_QlNpap6xsVY",
+  "displayName": "index.tsx_App_component",
+  "hash": "KGLYFBhvJc0",
+  "canonicalFilename": "index.tsx_App_component_KGLYFBhvJc0",
   "path": "project",
   "extension": "js",
   "parent": null,

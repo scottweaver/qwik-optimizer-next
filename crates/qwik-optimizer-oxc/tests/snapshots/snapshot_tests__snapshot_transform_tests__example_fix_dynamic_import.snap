@@ -11,11 +11,11 @@ import thing from "../state";
 export function foo() {
 	return import("../foo/state2");
 }
-export const Header = qrl(() => import("./test.tsx_Header_7M60ZIa1Z5c"), "Header_7M60ZIa1Z5c");
+export const Header = qrl(() => import("./test.tsx_Header_component_RGgm7Ks9QWI"), "Header_component_RGgm7Ks9QWI");
 
-============================= project/folder/test.tsx_Header_7M60ZIa1Z5c.tsx ==
+============================= project/folder/test.tsx_Header_component_RGgm7Ks9QWI.tsx ==
 import { default as thing } from "../state";
-export const Header_7M60ZIa1Z5c = () => {
+export const Header_component_RGgm7Ks9QWI = () => {
 	return (
 		<div>
 			{import("../folder/state3")}
@@ -26,11 +26,11 @@ export const Header_7M60ZIa1Z5c = () => {
 /*
 {
   "origin": "project/folder/test.tsx",
-  "name": "Header_7M60ZIa1Z5c",
+  "name": "Header_component_RGgm7Ks9QWI",
   "entry": "entry_segments",
-  "displayName": "test.tsx_Header",
-  "hash": "7M60ZIa1Z5c",
-  "canonicalFilename": "test.tsx_Header_7M60ZIa1Z5c",
+  "displayName": "test.tsx_Header_component",
+  "hash": "RGgm7Ks9QWI",
+  "canonicalFilename": "test.tsx_Header_component_RGgm7Ks9QWI",
   "path": "project/folder",
   "extension": "tsx",
   "parent": null,

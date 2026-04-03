@@ -7,10 +7,10 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-const ManyEventsComponent = qrl(() => import("./test.tsx_ManyEventsComponent_2JjCqWjZTIY"), "ManyEventsComponent_2JjCqWjZTIY");
+const ManyEventsComponent = qrl(() => import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
 
-============================= test.tsx_ManyEventsComponent_2JjCqWjZTIY.js (ENTRY POINT) ==
-export const ManyEventsComponent_2JjCqWjZTIY = () => {
+============================= test.tsx_ManyEventsComponent_component_ndbrzxiyG3g.js (ENTRY POINT) ==
+export const ManyEventsComponent_component_ndbrzxiyG3g = () => {
 			return (
 				<div>
 					<button
@@ -34,11 +34,11 @@ export const ManyEventsComponent_2JjCqWjZTIY = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "ManyEventsComponent_2JjCqWjZTIY",
+  "name": "ManyEventsComponent_component_ndbrzxiyG3g",
   "entry": null,
-  "displayName": "test.tsx_ManyEventsComponent",
-  "hash": "2JjCqWjZTIY",
-  "canonicalFilename": "test.tsx_ManyEventsComponent_2JjCqWjZTIY",
+  "displayName": "test.tsx_ManyEventsComponent_component",
+  "hash": "ndbrzxiyG3g",
+  "canonicalFilename": "test.tsx_ManyEventsComponent_component_ndbrzxiyG3g",
   "path": "",
   "extension": "js",
   "parent": null,

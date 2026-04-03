@@ -9,7 +9,7 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 export default componentQrl(() => {
 	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
-}, "index_QZMqpWS0ou8");
+}, "index_component_SlchSt2Vxlo");
 
 == DIAGNOSTICS ==
 []

@@ -12,13 +12,13 @@ export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
 componentQrl();
-export const Foo = qrl(() => import("./test.tsx_Foo_n07hoBxfni0"), "Foo_n07hoBxfni0");
-export const Root = qrl(() => import("./test.tsx_Root_jdhzAEvAMGA"), "Root_jdhzAEvAMGA");
+export const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+export const Root = qrl(() => import("./test.tsx_Root_component_1_cBpQNYDUHI4"), "Root_component_1_cBpQNYDUHI4");
 
-============================= test.tsx_Root_jdhzAEvAMGA.js (ENTRY POINT) ==
+============================= test.tsx_Root_component_1_cBpQNYDUHI4.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useStyles } from "@qwik.dev/core";
-export const Root_jdhzAEvAMGA = () => {
+export const Root_component_1_cBpQNYDUHI4 = () => {
 	useStyles($('thing'));
 	return $(() => {
 		return (
@@ -29,11 +29,11 @@ export const Root_jdhzAEvAMGA = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Root_jdhzAEvAMGA",
+  "name": "Root_component_1_cBpQNYDUHI4",
   "entry": null,
-  "displayName": "test.tsx_Root",
-  "hash": "jdhzAEvAMGA",
-  "canonicalFilename": "test.tsx_Root_jdhzAEvAMGA",
+  "displayName": "test.tsx_Root_component_1",
+  "hash": "cBpQNYDUHI4",
+  "canonicalFilename": "test.tsx_Root_component_1_cBpQNYDUHI4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -46,11 +46,11 @@ export const Root_jdhzAEvAMGA = () => {
   ]
 }
 */
-============================= test.tsx_Foo_n07hoBxfni0.js (ENTRY POINT) ==
+============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { hW } from "./test";
 import { handleWatch } from "./test";
 import { qrl } from "@qwik.dev/core/what";
-export const Foo_n07hoBxfni0 = () => {
+export const Foo_component_HTDRsvUbLiE = () => {
 	useStyles$('thing');
 	const qwik = hW + handleWatch;
 	console.log(qwik);
@@ -62,11 +62,11 @@ export const Foo_n07hoBxfni0 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_n07hoBxfni0",
+  "name": "Foo_component_HTDRsvUbLiE",
   "entry": null,
-  "displayName": "test.tsx_Foo",
-  "hash": "n07hoBxfni0",
-  "canonicalFilename": "test.tsx_Foo_n07hoBxfni0",
+  "displayName": "test.tsx_Foo_component",
+  "hash": "HTDRsvUbLiE",
+  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -95,7 +95,7 @@ export const Root_component_royhjYaCbYE = () => {
   "canonicalFilename": "test.tsx_Root_component_royhjYaCbYE",
   "path": "",
   "extension": "js",
-  "parent": "Root_jdhzAEvAMGA",
+  "parent": "Root_component_1_cBpQNYDUHI4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,

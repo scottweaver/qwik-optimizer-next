@@ -9,15 +9,15 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore, mutable } from "@qwik.dev/core";
 import { dep } from "./file";
-const q_TextContent_UYRxD8Ev3d8 = /* @__PURE__ */ _noopQrl("TextContent_UYRxD8Ev3d8");
-const q_App_Jlq9hNxnCvw = /* @__PURE__ */ _noopQrl("App_Jlq9hNxnCvw");
-q_TextContent_UYRxD8Ev3d8.s((props) => {
+const q_TextContent_component_puSwpKXO7Kg = /* @__PURE__ */ _noopQrl("TextContent_component_puSwpKXO7Kg");
+const q_App_component_ckEPmXZlub0 = /* @__PURE__ */ _noopQrl("App_component_ckEPmXZlub0");
+q_TextContent_component_puSwpKXO7Kg.s((props) => {
 	return <>
 			<div>data-nu: {props["data-nu"]}</div>
 			<div>class: {props.class}</div>
 		</>;
 });
-q_App_Jlq9hNxnCvw.s(() => {
+q_App_component_ckEPmXZlub0.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});
 	return <>
@@ -44,8 +44,8 @@ q_App_Jlq9hNxnCvw.s(() => {
 			<div>{signal.value + dep}</div>
 		</>;
 });
-export const TextContent = componentQrl(q_TextContent_UYRxD8Ev3d8);
-export const App = componentQrl(q_App_Jlq9hNxnCvw);
+export const TextContent = componentQrl(q_TextContent_component_puSwpKXO7Kg);
+export const App = componentQrl(q_App_component_ckEPmXZlub0);
 
 == DIAGNOSTICS ==
 []

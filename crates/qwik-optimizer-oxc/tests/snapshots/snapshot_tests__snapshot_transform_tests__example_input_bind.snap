@@ -19,7 +19,7 @@ export const Greeter = componentQrl(() => {
 		<div>{value}</div>,
 		<div>{value.value}</div>
 	], 1, null);
-}, "s_LDKOk8PWmEs");
+}, "s_n7HuG2hhU0Q");
 
 == DIAGNOSTICS ==
 []

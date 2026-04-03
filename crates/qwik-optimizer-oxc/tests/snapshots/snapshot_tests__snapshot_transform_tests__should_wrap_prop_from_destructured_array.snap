@@ -13,15 +13,52 @@ export const Input = qrl<{
 	error: string;
 	error2: string;
 	error3: string;
-}>(() => import("./test.tsx_Input_xELXckvC5A4"), "Input_xELXckvC5A4");
-export default qrl(() => import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
+}>(() => import("./test.tsx_Input_component_9metqqaxlN8"), "Input_component_9metqqaxlN8");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx_test_5GvkoOCMrJc.js (ENTRY POINT) ==
+============================= test.tsx_Input_component_9metqqaxlN8.js (ENTRY POINT) ==
+import { useTask$ } from "@qwik.dev/core";
+export const Input_component_9metqqaxlN8 = (props) => {
+				useTask$(({ track }) => {
+					track(() => props.error);
+					track(() => props.error2);
+					track(() => props.error3);
+				});
+
+				return (
+					<>
+					</>
+				);
+			};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Input_component_9metqqaxlN8",
+  "entry": null,
+  "displayName": "test.tsx_Input_component",
+  "hash": "9metqqaxlN8",
+  "canonicalFilename": "test.tsx_Input_component_9metqqaxlN8",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    146,
+    402
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { Input } from "./test";
 import { useForm } from "./some-file.ts";
 import { useForm2 } from "./some-file.ts";
 import { useStore } from "@qwik.dev/core";
-export const test_5GvkoOCMrJc = () => {
+export const test_component_LUXeXe0DQrg = () => {
 			const [store, math] = [useStore({errors: {}}), Math.random()];
 			const [[store2]] = [[useStore({errors: {}})]];
 			const { store3, math4 } = { store3: useStore({errors: {}}), math4: Math.random() };
@@ -52,11 +89,11 @@ export const test_5GvkoOCMrJc = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_5GvkoOCMrJc",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_test",
-  "hash": "5GvkoOCMrJc",
-  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -69,9 +106,9 @@ export const test_5GvkoOCMrJc = () => {
   ]
 }
 */
-============================= test.tsx_Input_component_9metqqaxlN8.js (ENTRY POINT) ==
+============================= test.tsx_Input_component_useTask_Sbgs9Wtfkt0.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Input_component_9metqqaxlN8 = ({ track }) => {
+export const Input_component_useTask_Sbgs9Wtfkt0 = ({ track }) => {
 	const props = _captures[0];
 	track(() => props.error);
 	track(() => props.error2);
@@ -81,14 +118,14 @@ export const Input_component_9metqqaxlN8 = ({ track }) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Input_component_9metqqaxlN8",
+  "name": "Input_component_useTask_Sbgs9Wtfkt0",
   "entry": null,
-  "displayName": "test.tsx_Input_component",
-  "hash": "9metqqaxlN8",
-  "canonicalFilename": "test.tsx_Input_component_9metqqaxlN8",
+  "displayName": "test.tsx_Input_component_useTask",
+  "hash": "Sbgs9Wtfkt0",
+  "canonicalFilename": "test.tsx_Input_component_useTask_Sbgs9Wtfkt0",
   "path": "",
   "extension": "js",
-  "parent": "Input_xELXckvC5A4",
+  "parent": "Input_component_9metqqaxlN8",
   "ctxKind": "function",
   "ctxName": "useTask$",
   "captures": true,
@@ -101,43 +138,6 @@ export const Input_component_9metqqaxlN8 = ({ track }) => {
   ],
   "paramNames": [
     "track"
-  ]
-}
-*/
-============================= test.tsx_Input_xELXckvC5A4.js (ENTRY POINT) ==
-import { useTask$ } from "@qwik.dev/core";
-export const Input_xELXckvC5A4 = (props) => {
-				useTask$(({ track }) => {
-					track(() => props.error);
-					track(() => props.error2);
-					track(() => props.error3);
-				});
-
-				return (
-					<>
-					</>
-				);
-			};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Input_xELXckvC5A4",
-  "entry": null,
-  "displayName": "test.tsx_Input",
-  "hash": "xELXckvC5A4",
-  "canonicalFilename": "test.tsx_Input_xELXckvC5A4",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    146,
-    402
-  ],
-  "paramNames": [
-    "props"
   ]
 }
 */

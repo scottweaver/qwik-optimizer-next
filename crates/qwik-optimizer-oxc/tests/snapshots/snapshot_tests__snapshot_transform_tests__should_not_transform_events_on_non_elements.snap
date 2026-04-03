@@ -9,12 +9,12 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { CustomComponent } from "./custom-component";
 import { AnotherComponent } from "./another-component";
-export const Greeter = qrl(() => import("./test.tsx_Greeter_LDKOk8PWmEs"), "Greeter_LDKOk8PWmEs");
+export const Greeter = qrl(() => import("./test.tsx_Greeter_component_n7HuG2hhU0Q"), "Greeter_component_n7HuG2hhU0Q");
 
-============================= test.tsx_Greeter_LDKOk8PWmEs.tsx (ENTRY POINT) ==
+============================= test.tsx_Greeter_component_n7HuG2hhU0Q.tsx (ENTRY POINT) ==
 import { AnotherComponent } from "./another-component";
 import { CustomComponent } from "./custom-component";
-export const Greeter_LDKOk8PWmEs = () => {
+export const Greeter_component_n7HuG2hhU0Q = () => {
 	return (
 		<div>
 			<CustomComponent onClick$={() => {}}/>
@@ -27,11 +27,11 @@ export const Greeter_LDKOk8PWmEs = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Greeter_LDKOk8PWmEs",
+  "name": "Greeter_component_n7HuG2hhU0Q",
   "entry": null,
-  "displayName": "test.tsx_Greeter",
-  "hash": "LDKOk8PWmEs",
-  "canonicalFilename": "test.tsx_Greeter_LDKOk8PWmEs",
+  "displayName": "test.tsx_Greeter_component",
+  "hash": "n7HuG2hhU0Q",
+  "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "tsx",
   "parent": null,

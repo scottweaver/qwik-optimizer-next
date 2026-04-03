@@ -9,117 +9,14 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useTask$, useStore, useStyles$ } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
-export const Parent = qrl(() => import("./test.tsx_Parent_UhsrANEJoQg"), "Parent_UhsrANEJoQg");
-export const Child = qrl(() => import("./test.tsx_Child_7e7u5mtQ0PI"), "Child_7e7u5mtQ0PI");
+export const Parent = qrl(() => import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
+export const Child = qrl(() => import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
 
 ============================= test.tsx_Parent_component_0TaiDayHrlo.js ==
-import { _captures } from "@qwik.dev/core";
-import { default as mongo } from "mongodb";
-export const Parent_component_0TaiDayHrlo = async () => {
-	const state = _captures[0];
-	state.text = await mongo.users();
-	redis.set(state.text);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Parent_component_0TaiDayHrlo",
-  "entry": "test.tsx_entry_Parent",
-  "displayName": "test.tsx_Parent_component",
-  "hash": "0TaiDayHrlo",
-  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
-  "path": "",
-  "extension": "js",
-  "parent": "Parent_UhsrANEJoQg",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
-  "loc": [
-    243,
-    330
-  ]
-}
-*/
-============================= test.tsx_Child_7e7u5mtQ0PI.js ==
 import { default as mongo } from "mongodb";
 import { useStore } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const Child_7e7u5mtQ0PI = () => {
-	const state = useStore({
-		text: ''
-	});
-
-	// Double count watch
-	useTask$(async () => {
-		state.text = await mongo.users();
-	});
-
-	return (
-		<div onClick$={() => console.log('child')}>
-			{state.text}
-		</div>
-	);
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Child_7e7u5mtQ0PI",
-  "entry": "test.tsx_entry_Child",
-  "displayName": "test.tsx_Child",
-  "hash": "7e7u5mtQ0PI",
-  "canonicalFilename": "test.tsx_Child_7e7u5mtQ0PI",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    445,
-    683
-  ]
-}
-*/
-============================= test.tsx_Child_component_9GyF01GDKqw.js ==
-import { _captures } from "@qwik.dev/core";
-import { default as mongo } from "mongodb";
-export const Child_component_9GyF01GDKqw = async () => {
-	const state = _captures[0];
-	state.text = await mongo.users();
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Child_component_9GyF01GDKqw",
-  "entry": "test.tsx_entry_Child",
-  "displayName": "test.tsx_Child_component",
-  "hash": "9GyF01GDKqw",
-  "canonicalFilename": "test.tsx_Child_component_9GyF01GDKqw",
-  "path": "",
-  "extension": "js",
-  "parent": "Child_7e7u5mtQ0PI",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
-  "loc": [
-    531,
-    593
-  ]
-}
-*/
-============================= test.tsx_Parent_UhsrANEJoQg.js ==
-import { default as mongo } from "mongodb";
-import { useStore } from "@qwik.dev/core";
-import { useTask$ } from "@qwik.dev/core";
-export const Parent_UhsrANEJoQg = () => {
+export const Parent_component_0TaiDayHrlo = () => {
 	const state = useStore({
 		text: ''
 	});
@@ -139,11 +36,11 @@ export const Parent_UhsrANEJoQg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Parent_UhsrANEJoQg",
+  "name": "Parent_component_0TaiDayHrlo",
   "entry": "test.tsx_entry_Parent",
-  "displayName": "test.tsx_Parent",
-  "hash": "UhsrANEJoQg",
-  "canonicalFilename": "test.tsx_Parent_UhsrANEJoQg",
+  "displayName": "test.tsx_Parent_component",
+  "hash": "0TaiDayHrlo",
+  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -153,6 +50,109 @@ export const Parent_UhsrANEJoQg = () => {
   "loc": [
     157,
     421
+  ]
+}
+*/
+============================= test.tsx_Child_component_9GyF01GDKqw.js ==
+import { default as mongo } from "mongodb";
+import { useStore } from "@qwik.dev/core";
+import { useTask$ } from "@qwik.dev/core";
+export const Child_component_9GyF01GDKqw = () => {
+	const state = useStore({
+		text: ''
+	});
+
+	// Double count watch
+	useTask$(async () => {
+		state.text = await mongo.users();
+	});
+
+	return (
+		<div onClick$={() => console.log('child')}>
+			{state.text}
+		</div>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Child_component_9GyF01GDKqw",
+  "entry": "test.tsx_entry_Child",
+  "displayName": "test.tsx_Child_component",
+  "hash": "9GyF01GDKqw",
+  "canonicalFilename": "test.tsx_Child_component_9GyF01GDKqw",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    445,
+    683
+  ]
+}
+*/
+============================= test.tsx_Parent_component_useTask_gDH1EtUWqBU.js ==
+import { _captures } from "@qwik.dev/core";
+import { default as mongo } from "mongodb";
+export const Parent_component_useTask_gDH1EtUWqBU = async () => {
+	const state = _captures[0];
+	state.text = await mongo.users();
+	redis.set(state.text);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Parent_component_useTask_gDH1EtUWqBU",
+  "entry": "test.tsx_entry_Parent",
+  "displayName": "test.tsx_Parent_component_useTask",
+  "hash": "gDH1EtUWqBU",
+  "canonicalFilename": "test.tsx_Parent_component_useTask_gDH1EtUWqBU",
+  "path": "",
+  "extension": "js",
+  "parent": "Parent_component_0TaiDayHrlo",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "state"
+  ],
+  "loc": [
+    243,
+    330
+  ]
+}
+*/
+============================= test.tsx_Child_component_useTask_Oh4n7ZeqJkU.js ==
+import { _captures } from "@qwik.dev/core";
+import { default as mongo } from "mongodb";
+export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
+	const state = _captures[0];
+	state.text = await mongo.users();
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Child_component_useTask_Oh4n7ZeqJkU",
+  "entry": "test.tsx_entry_Child",
+  "displayName": "test.tsx_Child_component_useTask",
+  "hash": "Oh4n7ZeqJkU",
+  "canonicalFilename": "test.tsx_Child_component_useTask_Oh4n7ZeqJkU",
+  "path": "",
+  "extension": "js",
+  "parent": "Child_component_9GyF01GDKqw",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "state"
+  ],
+  "loc": [
+    531,
+    593
   ]
 }
 */

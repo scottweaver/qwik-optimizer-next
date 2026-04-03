@@ -25,7 +25,7 @@ export const AtomStatus = componentQrl((_rawProps) => {
 			ctx.store[atom.ID] ? "selected" : null
 		]
 	}, null, null, 1, null);
-}, "AtomStatus_BTLza9UlDQA");
+}, "AtomStatus_component_hdwpoUtydSA");
 
 == DIAGNOSTICS ==
 []

@@ -13,7 +13,7 @@ import { component$ } from "@qwik.dev/core";
 // or should use two-phase emission to avoid forward reference
 export const Tree = componentQrl((props) => {
 	return _jsxSorted("div", null, null, [props.label, props.children && props.children.map((child) => _jsxSplit(Tree, { ...child }, null, null, 1, "0"))], 1, null);
-}, "Tree_CfBsNR88qPI");
+}, "Tree_component_XMEiO6Rrd3Y");
 
 == DIAGNOSTICS ==
 []

@@ -8,11 +8,11 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSplit } from "@qwik.dev/core";
 import { $, component$, useSignal } from "@qwik.dev/core";
 import { destructureBindings } from "./destructure-bindings";
-export const FieldInput = qrl(() => import("./test.tsx_FieldInput_ylDi5NLjH3k"), "FieldInput_ylDi5NLjH3k");
+export const FieldInput = qrl(() => import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
 
-============================= test.tsx_FieldInput_ylDi5NLjH3k.js (ENTRY POINT) ==
+============================= test.tsx_FieldInput_component_V4XAtJSTRKg.js (ENTRY POINT) ==
 import { destructureBindings } from "./destructure-bindings";
-export const FieldInput_ylDi5NLjH3k = (props) => {
+export const FieldInput_component_V4XAtJSTRKg = (props) => {
     const initialValues = { value: undefined as string | undefined };
     const rest = destructureBindings(props, initialValues);
 
@@ -29,11 +29,11 @@ export const FieldInput_ylDi5NLjH3k = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "FieldInput_ylDi5NLjH3k",
+  "name": "FieldInput_component_V4XAtJSTRKg",
   "entry": null,
-  "displayName": "test.tsx_FieldInput",
-  "hash": "ylDi5NLjH3k",
-  "canonicalFilename": "test.tsx_FieldInput_ylDi5NLjH3k",
+  "displayName": "test.tsx_FieldInput_component",
+  "hash": "V4XAtJSTRKg",
+  "canonicalFilename": "test.tsx_FieldInput_component_V4XAtJSTRKg",
   "path": "",
   "extension": "js",
   "parent": null,
