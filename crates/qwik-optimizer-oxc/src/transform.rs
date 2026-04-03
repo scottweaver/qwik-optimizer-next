@@ -100,7 +100,7 @@ impl IdentCollector {
 impl<'a> Visit<'a> for IdentCollector {
     fn visit_identifier_reference(&mut self, id: &IdentifierReference<'a>) {
         // Only collect in expression context
-        if self.tracking.last() == Some(&Tracking::Track) {
+        if self.tracking.last().is_some_and(|t| {t == &Tracking::Track}) {
             let name = id.name.as_str();
             if !GLOBAL_BUILTINS.contains(&name) {
                 self.idents.insert(name.to_string());
@@ -168,28 +168,20 @@ impl<'a> Visit<'a> for IdentCollector {
 // compute_scoped_idents
 // ---------------------------------------------------------------------------
 
-/// Intersect `all_idents` with `all_decl` (keeping only `Var(_)` entries),
-/// deduplicate, sort, and compute `is_const` (true iff every matched entry is
-/// `Var(true)`).
-///
-/// Returns `(sorted_names, is_const)`.
+/// Intersect `all_idents` with `all_decl` (keeping only `Const` and `Let` entries),
+/// deduplicate, and return sorted captured identifier names.
 pub(crate) fn compute_scoped_idents(
     all_idents: &HashSet<String>,
     all_decl: &[TypedId],
-) -> (Vec<String>, bool) {
+) -> Vec<String> {
     let mut matched: HashSet<String> = HashSet::new();
-    let mut is_const = true;
 
     for name in all_idents {
         for (decl_name, decl_type) in all_decl {
             if name == decl_name {
                 match decl_type {
-                    IdentType::Const => {
+                    IdentType::Const | IdentType::Let => {
                         matched.insert(name.clone());
-                    }
-                    IdentType::Let => {
-                        matched.insert(name.clone());
-                        is_const = false;
                     }
                     // Fn/Class entries are NOT captured as scoped idents
                     IdentType::Fn | IdentType::Class => {}
@@ -200,7 +192,7 @@ pub(crate) fn compute_scoped_idents(
 
     let mut sorted: Vec<String> = matched.into_iter().collect();
     sorted.sort();
-    (sorted, is_const)
+    sorted
 }
 
 // ---------------------------------------------------------------------------
@@ -1118,7 +1110,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             .collect();
 
         // --- Compute scoped_idents (captures) ---
-        let (mut scoped_idents, _is_const) =
+        let mut scoped_idents =
             compute_scoped_idents(&pending.descendent_idents, &all_decl);
 
         // Exclude function parameters of the callback
@@ -2371,12 +2363,11 @@ mod tests {
             ("w".to_string(), IdentType::Const),
         ];
 
-        let (scoped, is_const) = compute_scoped_idents(&idents, &decl);
+        let scoped = compute_scoped_idents(&idents, &decl);
         assert!(scoped.contains(&"x".to_string()));
         assert!(scoped.contains(&"y".to_string()));
         assert!(!scoped.contains(&"z".to_string())); // not in decl
         assert!(!scoped.contains(&"w".to_string())); // not in idents
-        assert!(!is_const); // y is Let
     }
 
     #[test]
@@ -2392,7 +2383,7 @@ mod tests {
             ("myVar".to_string(), IdentType::Const),
         ];
 
-        let (scoped, _) = compute_scoped_idents(&idents, &decl);
+        let scoped = compute_scoped_idents(&idents, &decl);
         assert!(!scoped.contains(&"myFn".to_string()), "Fn should not be scoped ident");
         assert!(!scoped.contains(&"myClass".to_string()), "Class should not be scoped ident");
         assert!(scoped.contains(&"myVar".to_string()), "Var should be scoped ident");

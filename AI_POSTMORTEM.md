@@ -79,3 +79,18 @@ This document tracks missteps made during AI-assisted development and the correc
 - Updated the `compute_scoped_idents` match to use separate arms for `Const` and `Let`
 - Updated `collect_binding_to_decl` to map `is_const` bool -> `IdentType::Const`/`IdentType::Let` at the boundary
 - Updated all test call sites
+
+---
+
+## 006: `compute_scoped_idents` returned an unused boolean in a tuple
+
+**Date:** 2026-04-02
+
+**What happened:** `compute_scoped_idents` returned `(Vec<String>, bool)` where the `bool` indicated whether all captured identifiers were `const`. The only real call site discarded this value (`_is_const`), and the test assertions on it were testing dead logic.
+
+**Why it was wrong:** Returning unused data in a tuple is noise — it complicates the signature, forces callers to destructure with `_` placeholders, and suggests the value matters when it doesn't. It also kept the `Const`/`Let` match arms artificially separate when they could be collapsed.
+
+**Corrective action:**
+- Changed return type from `(Vec<String>, bool)` to `Vec<String>`
+- Removed the `is_const` tracking variable and collapsed `Const`/`Let` into a single match arm
+- Simplified the call site and test destructuring
