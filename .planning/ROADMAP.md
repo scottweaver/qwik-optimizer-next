@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
 - [x] **Phase 7: Spec Gap Closure** - Write missing CONV-01/02 spec sections, verify CONV-09/10/11, add representative examples (completed 2026-04-03)
 - [x] **Phase 8: Implementation Gap Closure** - Wire CONV-07/CONV-08, inject PURE annotations, improve SWC parity
-- [ ] **Phase 9: Metadata & Verification Cleanup** - Update checkboxes, write missing VERIFICATIONs, fix parallel feature
+- [x] **Phase 9: Metadata & Verification Cleanup** - Update checkboxes, write missing VERIFICATIONs, fix parallel feature
 
 ## Phase Details
 
@@ -167,7 +167,7 @@ Plans:
   1. All requirement checkboxes in REQUIREMENTS.md match actual completion status
   2. VERIFICATION.md exists for all 6 original phases plus gap closure phases
   3. The `parallel` feature either has a working rayon implementation or is removed from Cargo.toml
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 09-01-PLAN.md — Investigate requirements, update REQUIREMENTS.md + ROADMAP.md, remove parallel feature
@@ -189,4 +189,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 6. Strategies, Modes & Binding Implementation | 3/3 | Complete | 2026-04-02 |
 | 7. Spec Gap Closure | 2/2 | Complete   | 2026-04-03 |
 | 8. Implementation Gap Closure | 5/5 | Complete | 2026-04-03 |
-| 9. Metadata & Verification Cleanup | 1/3 | In Progress|  |
+| 9. Metadata & Verification Cleanup | 3/3 | Complete | 2026-04-03 |
