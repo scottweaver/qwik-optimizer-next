@@ -4,11 +4,12 @@ assertion_line: 850
 expression: output
 ---
 ============================= src/routes/_repl/[id]/[[...slug]].js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 import { sibling } from "./sibling";
-const q_slug_component_0AM8HPnkNs4 = /*#__PURE__*/ qrl(() => import("./[[...slug]].tsx_slug_component_0AM8HPnkNs4.tsx"), "slug_component_0AM8HPnkNs4");
+//
+const q_slug_component_0AM8HPnkNs4 = /*#__PURE__*/ qrl(()=>import("./[[...slug]].tsx_slug_component_0AM8HPnkNs4.tsx"), "slug_component_0AM8HPnkNs4");
+//
 export default /*#__PURE__*/ componentQrl(q_slug_component_0AM8HPnkNs4);
 
 ============================= src/routes/_repl/[id]/[[...slug]].tsx_slug_component_0AM8HPnkNs4.js ==

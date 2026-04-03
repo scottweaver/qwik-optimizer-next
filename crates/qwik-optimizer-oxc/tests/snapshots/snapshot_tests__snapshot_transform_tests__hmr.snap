@@ -4,11 +4,12 @@ assertion_line: 933
 expression: output
 ---
 ============================= test.js ==
-import { qrlDEV } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(() => import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"), "TestGetsHmr_component_jBUoou0sxX4");
-const q_TestNoHmr_Zk400rjx7cI = /*#__PURE__*/ qrlDEV(() => import("./test.tsx_TestNoHmr_Zk400rjx7cI"), "TestNoHmr_Zk400rjx7cI");
+import { qrlDEV } from "@qwik.dev/core";
+//
+const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"), "TestGetsHmr_component_jBUoou0sxX4");
+const q_TestNoHmr_Zk400rjx7cI = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestNoHmr_Zk400rjx7cI"), "TestNoHmr_Zk400rjx7cI");
+//
 export const TestGetsHmr = /*#__PURE__*/ componentQrl(q_TestGetsHmr_component_jBUoou0sxX4);
 export const TestNoHmr = componentQrl(q_TestNoHmr_Zk400rjx7cI);
 

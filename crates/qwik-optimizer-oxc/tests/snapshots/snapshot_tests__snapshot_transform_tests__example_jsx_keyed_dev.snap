@@ -4,12 +4,11 @@ assertion_line: 882
 expression: output
 ---
 ============================= project/index.js ==
-import { qrlDEV } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { Fragment } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { useStore } from "@qwik.dev/core";
-const q_App_component_KGLYFBhvJc0 = /*#__PURE__*/ qrlDEV(() => import("./index.tsx_App_component_KGLYFBhvJc0.tsx"), "App_component_KGLYFBhvJc0");
+import { qrlDEV } from "@qwik.dev/core";
+//
+const q_App_component_KGLYFBhvJc0 = /*#__PURE__*/ qrlDEV(()=>import("./index.tsx_App_component_KGLYFBhvJc0.tsx"), "App_component_KGLYFBhvJc0");
+//
 export const App = /*#__PURE__*/ componentQrl(q_App_component_KGLYFBhvJc0);
 
 ============================= project/index.tsx_App_component_KGLYFBhvJc0.js (ENTRY POINT) ==

@@ -4,10 +4,8 @@ assertion_line: 928
 expression: output
 ---
 ============================= test.jsx ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { $, useTask$ } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 import { CONST } from "const";
 export const Works = componentQrl((props) => {
 	const { countNested } = useStore({ value: { count: 0 } }).value;

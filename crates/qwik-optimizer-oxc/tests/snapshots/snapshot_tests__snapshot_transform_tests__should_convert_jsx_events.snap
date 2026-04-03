@@ -4,10 +4,11 @@ assertion_line: 949
 expression: output
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(() => import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
+import { qrl } from "@qwik.dev/core";
+//
+const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(()=>import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
+//
 const ManyEventsComponent = /*#__PURE__*/ componentQrl(q_ManyEventsComponent_component_ndbrzxiyG3g);
 
 ============================= test.tsx_ManyEventsComponent_component_ndbrzxiyG3g.js (ENTRY POINT) ==

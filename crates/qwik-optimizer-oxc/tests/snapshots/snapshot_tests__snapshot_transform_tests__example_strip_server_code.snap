@@ -4,23 +4,17 @@ assertion_line: 921
 expression: output
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { clientQrl } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { serverStuffQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
-import { useStore } from "@qwik.dev/core";
-import { isServer } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
-const q_s_gDH1EtUWqBU = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_useTask_gDH1EtUWqBU"), "s_gDH1EtUWqBU");
-const q_s_2ca3HLDC7yc = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_serverStuff_a_2ca3HLDC7yc"), "s_2ca3HLDC7yc");
-const q_s_v9qawr2Inkk = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_serverStuff_b_client_v9qawr2Inkk"), "s_v9qawr2Inkk");
-const q_s_r1qAHX7Opp0 = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_serverStuff_r1qAHX7Opp0"), "s_r1qAHX7Opp0");
-const q_s_P8oRQhHsurk = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_useTask_1_P8oRQhHsurk"), "s_P8oRQhHsurk");
-const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo");
+//
+const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo");
+//
 export const Parent = /*#__PURE__*/ componentQrl(q_s_0TaiDayHrlo);
 
 ============================= test.tsx_Parent_component_0TaiDayHrlo.js (ENTRY POINT) ==

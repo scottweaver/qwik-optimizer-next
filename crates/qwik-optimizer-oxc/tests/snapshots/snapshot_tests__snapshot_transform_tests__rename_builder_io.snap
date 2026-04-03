@@ -4,14 +4,16 @@ assertion_line: 946
 expression: output
 ---
 ============================= test.ts ==
-import { qrl } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 import { isDev } from "@qwik.dev/core/build";
 import { stuff } from "@qwik.dev/router";
 import { moreStuff } from "@qwik.dev/router/more/here";
 import { qwikify$ } from "@qwik.dev/react";
 import sdk from "@builder.io/sdk";
-const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(() => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+//
 export const Foo = qwikify$(MyReactComponent);
 export const Bar = $("a thing");
 export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);

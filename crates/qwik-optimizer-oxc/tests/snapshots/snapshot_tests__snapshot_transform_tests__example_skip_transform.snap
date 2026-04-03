@@ -1,10 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 916
 expression: output
 ---
 ============================= test.tsx ==
 import { _jsxSorted } from "@qwik.dev/core";
-import { component$ as Component, $ as onRender } from "@qwik.dev/core";
 export const handler = $(() => console.log("hola"));
 export const App = component$((props) => {
 	useStyles$("hola");

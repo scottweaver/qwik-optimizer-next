@@ -5,11 +5,11 @@ expression: output
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component, onRender } from "@qwik.dev/core";
-const q_renderHeader1_div_onClick_USi8k1jUb40 = /*#__PURE__*/ qrl(() => import("./test.tsx_renderHeader1_div_onClick_USi8k1jUb40"), "renderHeader1_div_onClick_USi8k1jUb40");
-const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(() => import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
-const q_renderHeader2_PJjSfD4ZE08 = /*#__PURE__*/ qrl(() => import("./test.tsx_renderHeader2_PJjSfD4ZE08"), "renderHeader2_PJjSfD4ZE08");
+import { component } from "@qwik.dev/core";
+//
+const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
+const q_renderHeader2_PJjSfD4ZE08 = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_PJjSfD4ZE08"), "renderHeader2_PJjSfD4ZE08");
+//
 export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
 const renderHeader2 = component(q_renderHeader2_PJjSfD4ZE08);
 

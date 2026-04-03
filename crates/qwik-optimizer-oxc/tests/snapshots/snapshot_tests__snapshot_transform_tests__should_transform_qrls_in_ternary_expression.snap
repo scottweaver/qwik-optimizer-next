@@ -4,12 +4,11 @@ assertion_line: 1011
 expression: output
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { useSignal } from "@qwik.dev/core";
-const q_FieldInput_component_input_onInput_zBzGtdHkCmE = /*#__PURE__*/ qrl(() => import("./test.tsx_FieldInput_component_input_onInput_zBzGtdHkCmE"), "FieldInput_component_input_onInput_zBzGtdHkCmE");
-const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(() => import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
+import { qrl } from "@qwik.dev/core";
+//
+const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
+//
 export const FieldInput = /*#__PURE__*/ componentQrl(q_FieldInput_component_V4XAtJSTRKg);
 
 ============================= test.tsx_FieldInput_component_V4XAtJSTRKg.js (ENTRY POINT) ==

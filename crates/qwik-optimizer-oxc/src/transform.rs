@@ -305,6 +305,10 @@ pub(crate) struct HoistedConst {
     pub rhs_code: String,
     /// Deduplication key -- same as `name`.
     pub symbol_name: String,
+    /// Whether this hoisted const belongs to the root module (true) or
+    /// to a parent segment (false). Only root-level consts are emitted
+    /// in exit_program; child consts are emitted by code_move.
+    pub is_root_level: bool,
 }
 
 /// Internal record for a single extracted segment. Accumulated in
@@ -1091,17 +1095,21 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             };
 
-            if needs.needs_jsx_sorted {
-                self.needs_jsx_sorted_import = true;
-            }
-            if needs.needs_jsx_split {
-                self.needs_jsx_split_import = true;
-            }
-            if needs.needs_fragment {
-                self.needs_fragment_import = true;
-            }
-            if needs.needs_fn_signal {
-                self.needs_fn_signal_import = true;
+            // Only set root module import flags when NOT inside a segment scope.
+            // JSX inside segments will have their imports handled by code_move.
+            if is_root {
+                if needs.needs_jsx_sorted {
+                    self.needs_jsx_sorted_import = true;
+                }
+                if needs.needs_jsx_split {
+                    self.needs_jsx_split_import = true;
+                }
+                if needs.needs_fragment {
+                    self.needs_fragment_import = true;
+                }
+                if needs.needs_fn_signal {
+                    self.needs_fn_signal_import = true;
+                }
             }
 
             *expr = new_expr;
@@ -1366,10 +1374,12 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             // Deduplicate by symbol_name
             if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                let is_root_level = self.segment_stack.is_empty();
                 self.extra_top_items.push(HoistedConst {
                     name: ident_name.clone(),
                     rhs_code: noop_rhs,
                     symbol_name: names.symbol_name.clone(),
+                    is_root_level,
                 });
             }
 
@@ -1549,10 +1559,13 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             // Deduplicate by symbol_name
             if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                // After popping the current segment, an empty stack means root-level.
+                let is_root_level = self.segment_stack.is_empty();
                 self.extra_top_items.push(HoistedConst {
                     name: ident_name.clone(),
                     rhs_code: qrl_rhs,
                     symbol_name: names.symbol_name.clone(),
+                    is_root_level,
                 });
             }
 
@@ -1805,32 +1818,26 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             imports_to_add.push(("_wrapProp", "_wrapProp"));
         }
 
-        // Also add synthetic imports for wrapper functions (componentQrl, useTaskQrl, etc.)
+        // Collect wrapper function imports (componentQrl, useTaskQrl, etc.)
         // These are used in the root module body when $-suffixed calls are rewritten.
         // Use a BTreeSet for deterministic ordering across runs.
-        {
-            let mut wrapper_imports: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
-            for seg in &self.segments {
-                if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
-                    let wrapper_name = words::dollar_to_qrl_name(&seg.ctx_name);
-                    // Don't add if already in imports_to_add
-                    if !imports_to_add.iter().any(|(s, _)| *s == wrapper_name) {
-                        wrapper_imports.insert(wrapper_name);
-                    }
-                }
-            }
-            // Insert in reverse sorted order so they end up in sorted order at position 0
-            for wrapper in wrapper_imports.into_iter().rev() {
-                let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, self.core_module);
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, ctx.ast.allocator) {
-                    program.body.insert(0, stmt);
+        let mut wrapper_imports: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        for seg in &self.segments {
+            if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
+                let wrapper_name = words::dollar_to_qrl_name(&seg.ctx_name);
+                // Don't add if already in imports_to_add
+                if !imports_to_add.iter().any(|(s, _)| *s == wrapper_name) {
+                    wrapper_imports.insert(wrapper_name);
                 }
             }
         }
 
-        // Insert synthetic import declarations at position 0 using string-based parsing.
-        // This avoids complex AST builder API differences across OXC versions.
+        // Insert synthetic import declarations at position 0.
+        // Order: regular imports first (they get pushed down), then wrappers on top.
+        // This produces SWC-compatible order: wrappers first, then regular.
         let allocator = ctx.ast.allocator;
+
+        // 1. Regular imports (qrl, inlinedQrl, etc.) -- inserted at pos 0 in reverse
         for (specifier, _local) in imports_to_add.into_iter().rev() {
             let import_str = format!(r#"import {{ {} }} from "{}";"#, specifier, self.core_module);
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
@@ -1838,10 +1845,32 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             }
         }
 
-        // Strip consumed $-suffixed imports from the root module.
-        // SWC removes marker function imports (e.g., $, component$) that were consumed
-        // during transformation, keeping only specifiers still referenced in the body.
-        if !self.consumed_imports.is_empty() {
+        // 2. Wrapper imports (componentQrl, etc.) -- inserted at pos 0 in reverse sorted order
+        //    Since these are inserted AFTER regular imports, they end up BEFORE them (at top).
+        for wrapper in wrapper_imports.into_iter().rev() {
+            let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, self.core_module);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
+                program.body.insert(0, stmt);
+            }
+        }
+
+        // Strip all $-suffixed marker function imports from the root module.
+        // SWC removes ALL marker function imports (e.g., $, component$, useTask$)
+        // because they are consumed by the transformation and replaced with QRL
+        // counterparts (componentQrl, etc.) or removed entirely.
+        // This includes both called AND uncalled marker functions.
+        {
+            // Build the complete set of names to strip: marker_functions keys + bare $
+            let mut strip_names: HashSet<&str> = HashSet::new();
+            for key in self.marker_functions.keys() {
+                strip_names.insert(key.as_str());
+            }
+            if let Some(ref qseg) = self.qsegment_fn {
+                strip_names.insert(qseg.as_str());
+            }
+            // Also strip any explicitly consumed imports (tracked during traversal)
+            let consumed_owned: Vec<String> = self.consumed_imports.iter().cloned().collect();
+
             program.body.retain_mut(|stmt| {
                 if let Statement::ImportDeclaration(import_decl) = stmt {
                     let source_val = import_decl.source.value.as_str();
@@ -1859,9 +1888,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                                         ModuleExportName::IdentifierReference(id) => id.name.as_str(),
                                         ModuleExportName::StringLiteral(s) => s.value.as_str(),
                                     };
-                                    // Keep if NOT consumed
-                                    !self.consumed_imports.contains(local_name)
-                                        && !self.consumed_imports.contains(imported_name)
+                                    // Strip if it's a marker function or consumed import
+                                    let should_strip = strip_names.contains(local_name)
+                                        || strip_names.contains(imported_name)
+                                        || consumed_owned.iter().any(|c| c == local_name || c == imported_name);
+                                    !should_strip
                                 } else {
                                     true // Keep default/namespace imports
                                 }
@@ -1887,7 +1918,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         //   4. q_sym.s(fn_body) expression statements (ref_assignments, Hoist only)
         //   5. // (separator comment)
         //   6. Original module body (exports, etc.)
-        if !self.extra_top_items.is_empty() && !matches!(self.mode, EmitMode::Lib)
+        let has_root_items = self.extra_top_items.iter().any(|h| h.is_root_level);
+        if (has_root_items || !self.ref_assignments.is_empty()) && !matches!(self.mode, EmitMode::Lib)
         {
             // Find the insertion point: after imports, before everything else.
             let first_non_import = program.body.iter().position(|stmt| {
@@ -1906,8 +1938,12 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             }
 
-            // Insert const declarations for extra_top_items (in reverse)
-            let extra_items: Vec<HoistedConst> = self.extra_top_items.clone();
+            // Insert const declarations for root-level extra_top_items only (in reverse).
+            // Child segment QRLs are emitted by code_move into their parent segment files.
+            let extra_items: Vec<HoistedConst> = self.extra_top_items.iter()
+                .filter(|h| h.is_root_level)
+                .cloned()
+                .collect();
             for item in extra_items.into_iter().rev() {
                 let const_decl = format!("const {} = {};", item.name, item.rhs_code);
                 if let Some(stmt) = crate::add_side_effect::parse_single_statement(&const_decl, allocator) {
@@ -1915,6 +1951,80 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             }
         }
+
+        // Dead import elimination: remove any ORIGINAL core module import specifier
+        // whose local binding is NOT referenced in the remaining program body.
+        // This handles cases like `onRender` being imported but never used.
+        // Skip in Lib mode where code generation patterns differ.
+        if !matches!(self.mode, EmitMode::Lib) {
+            // Build set of synthetically-added import names (should not be eliminated)
+            let mut synthetic_names: HashSet<String> = HashSet::new();
+            // Marker function Qrl-suffixed wrappers
+            for seg in &self.segments {
+                if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
+                    synthetic_names.insert(words::dollar_to_qrl_name(&seg.ctx_name));
+                }
+            }
+            // Standard synthetic imports
+            for name in ["qrl", "qrlDEV", "inlinedQrl", "inlinedQrlDEV",
+                         "_noopQrl", "_noopQrlDEV", "_jsxSorted", "_jsxSplit",
+                         "Fragment", "_fnSignal", "_wrapProp"] {
+                synthetic_names.insert(name.to_string());
+            }
+
+            // Collect all identifier references in non-import statements
+            let mut referenced: HashSet<String> = HashSet::new();
+            for stmt in program.body.iter() {
+                if !matches!(stmt, Statement::ImportDeclaration(_)) {
+                    let mut collector = IdentRefCollector { refs: &mut referenced };
+                    collector.visit_statement(stmt);
+                }
+            }
+
+            program.body.retain_mut(|stmt| {
+                if let Statement::ImportDeclaration(import_decl) = stmt {
+                    let source_val = import_decl.source.value.as_str();
+                    let is_core = source_val == self.core_module
+                        || source_val == "@qwik.dev/core"
+                        || source_val.ends_with("/core");
+                    if is_core {
+                        if let Some(specifiers) = &mut import_decl.specifiers {
+                            specifiers.retain(|spec| {
+                                match spec {
+                                    ImportDeclarationSpecifier::ImportSpecifier(named) => {
+                                        let local = named.local.name.as_str();
+                                        // Keep synthetic imports unconditionally
+                                        synthetic_names.contains(local)
+                                            || referenced.contains(local)
+                                    }
+                                    ImportDeclarationSpecifier::ImportDefaultSpecifier(def) => {
+                                        referenced.contains(def.local.name.as_str())
+                                    }
+                                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
+                                        referenced.contains(ns.local.name.as_str())
+                                    }
+                                }
+                            });
+                            if specifiers.is_empty() {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                true
+            });
+        }
+    }
+}
+
+/// Visitor that collects all identifier references (not declarations).
+struct IdentRefCollector<'a> {
+    refs: &'a mut HashSet<String>,
+}
+
+impl<'b> Visit<'b> for IdentRefCollector<'_> {
+    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'b>) {
+        self.refs.insert(ident.name.as_str().to_string());
     }
 }
 

@@ -5,7 +5,9 @@ expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
+//
+const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(()=>import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
+//
 const shared = { id: "abc" };
 export function readShared() {
 	return shared.id;

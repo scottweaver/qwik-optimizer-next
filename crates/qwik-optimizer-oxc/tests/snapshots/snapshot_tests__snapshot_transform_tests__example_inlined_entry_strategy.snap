@@ -4,10 +4,9 @@ assertion_line: 873
 expression: output
 ---
 ============================= test.tsx ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
 import { thing } from "./sibling";
 import mongodb from "mongodb";

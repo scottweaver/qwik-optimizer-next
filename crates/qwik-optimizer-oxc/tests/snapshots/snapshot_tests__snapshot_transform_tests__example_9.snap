@@ -5,8 +5,9 @@ expression: output
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
-import { component$ } from "@qwik.dev/core";
-const q_Header_WjUaUQN7Oxg = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_WjUaUQN7Oxg"), "Header_WjUaUQN7Oxg");
+//
+const q_Header_WjUaUQN7Oxg = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_WjUaUQN7Oxg"), "Header_WjUaUQN7Oxg");
+//
 const Header = q_Header_WjUaUQN7Oxg;
 
 ============================= test.tsx_Header_WjUaUQN7Oxg.tsx (ENTRY POINT) ==

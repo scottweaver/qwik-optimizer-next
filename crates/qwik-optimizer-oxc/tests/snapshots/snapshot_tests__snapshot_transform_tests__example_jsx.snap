@@ -4,12 +4,13 @@ assertion_line: 879
 expression: output
 ---
 ============================= test.js ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
-import { h, Fragment } from "@qwik.dev/core";
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(() => import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
+import { Fragment } from "@qwik.dev/core";
+//
+const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
+//
 export const Lightweight = (props) => {
 	return _jsxSorted("div", null, null, <>
 				<div />

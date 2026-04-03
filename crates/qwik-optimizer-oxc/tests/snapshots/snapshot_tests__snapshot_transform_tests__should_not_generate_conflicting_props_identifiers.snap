@@ -4,13 +4,13 @@ assertion_line: 982
 expression: output
 ---
 ============================= test.js ==
-import { _noopQrl } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { useComputedQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
-const q_test_component_useComputed_PYU291PvidQ = /*#__PURE__*/ _noopQrl("test_component_useComputed_PYU291PvidQ");
-const q_test_component_useTask_jewzFYh3XmQ = /*#__PURE__*/ _noopQrl("test_component_useTask_jewzFYh3XmQ");
+import { _noopQrl } from "@qwik.dev/core";
+//
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ _noopQrl("test_component_LUXeXe0DQrg");
+//
 q_test_component_useComputed_PYU291PvidQ.s(() => color);
 q_test_component_useTask_jewzFYh3XmQ.s(() => {
 	props.checked;

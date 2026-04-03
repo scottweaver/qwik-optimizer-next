@@ -4,14 +4,14 @@ assertion_line: 853
 expression: output
 ---
 ============================= test.js ==
-import { _noopQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { Fragment } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { useStore, mutable } from "@qwik.dev/core";
 import { dep } from "./file";
+//
 const q_TextContent_component_puSwpKXO7Kg = /*#__PURE__*/ _noopQrl("TextContent_component_puSwpKXO7Kg");
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
+//
 q_TextContent_component_puSwpKXO7Kg.s((props) => {
 	return <>
 			<div>data-nu: {props["data-nu"]}</div>

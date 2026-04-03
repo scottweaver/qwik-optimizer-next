@@ -4,10 +4,9 @@ assertion_line: 904
 expression: output
 ---
 ============================= test.js ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { $, useSignal } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
+import { useSignal } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	let fromLocal = useSignal(0);
 	return _jsxSorted("div", null, null, [

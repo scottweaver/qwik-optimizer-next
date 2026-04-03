@@ -650,6 +650,7 @@ pub(crate) fn collect_needed_extra_top_items(
             name: item.name.clone(),
             rhs_code: item.rhs_code.clone(),
             symbol_name: item.symbol_name.clone(),
+            is_root_level: item.is_root_level,
         })
         .collect()
 }

@@ -4,11 +4,12 @@ assertion_line: 877
 expression: output
 ---
 ============================= test.js ==
-import { _noopQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
+//
 const q_Issue3742_component_svSy0PlWTAw = /*#__PURE__*/ _noopQrl("Issue3742_component_svSy0PlWTAw");
+//
 q_Issue3742_component_svSy0PlWTAw.s(({ description = "", other }: any) => {
 	const counter = useSignal(0);
 	return <div title={description && "description" in other ? `Hello ${counter.value}` : `Bye ${counter.value}`}>

@@ -4,11 +4,12 @@ assertion_line: 913
 expression: output
 ---
 ============================= test.tsx ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(() => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
-const q_Other_component_C1my3EIdP1k = /*#__PURE__*/ qrl(() => import("./test.tsx_Other_component_C1my3EIdP1k"), "Other_component_C1my3EIdP1k");
+import { qrl } from "@qwik.dev/core";
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+const q_Other_component_C1my3EIdP1k = /*#__PURE__*/ qrl(()=>import("./test.tsx_Other_component_C1my3EIdP1k"), "Other_component_C1my3EIdP1k");
+//
 // This shared variable is used by multiple segments, so it should stay at root
 const SHARED_CONFIG = { value: 42 };
 // This is an export, so it must stay at root

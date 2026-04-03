@@ -4,12 +4,12 @@ assertion_line: 945
 expression: output
 ---
 ============================= components/main.js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { $ } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 import { state } from "./sibling";
-const q_Local_component_jJ0v28bs0p8 = /*#__PURE__*/ qrl(() => import("./main.tsx_Local_component_jJ0v28bs0p8.tsx"), "Local_component_jJ0v28bs0p8");
+//
+const q_Local_component_jJ0v28bs0p8 = /*#__PURE__*/ qrl(()=>import("./main.tsx_Local_component_jJ0v28bs0p8.tsx"), "Local_component_jJ0v28bs0p8");
+//
 export const Local = /*#__PURE__*/ componentQrl(q_Local_component_jJ0v28bs0p8);
 
 ============================= components/main.tsx_Local_component_jJ0v28bs0p8.js (ENTRY POINT) ==

@@ -4,9 +4,8 @@ assertion_line: 894
 expression: output
 ---
 ============================= test.js ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 export const Issue3795 = componentQrl(() => {
 	let base = "foo";
 	const firstAssignment = base;

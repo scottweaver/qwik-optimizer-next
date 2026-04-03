@@ -4,9 +4,8 @@ assertion_line: 893
 expression: output
 ---
 ============================= test.jsx ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 export const Issue3561 = componentQrl(() => {
 	const props = useStore({ product: { currentVariant: {
 		variantImage: "image",

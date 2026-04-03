@@ -4,11 +4,9 @@ assertion_line: 911
 expression: output
 ---
 ============================= test.js ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { serverQrl } from "@qwik.dev/core";
-import { $ } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	const text = "hola";
 	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_onClick_server_OsNoEFc5SM4", [text]) }, null, null, 1, null);

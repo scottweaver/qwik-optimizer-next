@@ -4,12 +4,12 @@ assertion_line: 865
 expression: output
 ---
 ============================= project/folder/test.tsx ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { $ } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 import thing from "../state";
-const q_Header_component_RGgm7Ks9QWI = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_RGgm7Ks9QWI"), "Header_component_RGgm7Ks9QWI");
+//
+const q_Header_component_RGgm7Ks9QWI = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_RGgm7Ks9QWI"), "Header_component_RGgm7Ks9QWI");
+//
 export function foo() {
 	return import("../foo/state2");
 }

@@ -46,19 +46,17 @@ pub(crate) fn emit_module<'a>(
 
         let map = codegen_result.map.map(|sm| sm.to_json_string());
 
-        EmitResult {
-            code: normalize_pure_annotations(&codegen_result.code),
-            map,
-        }
+        let code = normalize_pure_annotations(&codegen_result.code);
+        let code = insert_separator_comments(&code);
+        EmitResult { code, map }
     } else {
         let codegen_result = oxc::codegen::Codegen::new()
             .with_source_text(source)
             .build(program);
 
-        EmitResult {
-            code: normalize_pure_annotations(&codegen_result.code),
-            map: None,
-        }
+        let code = normalize_pure_annotations(&codegen_result.code);
+        let code = insert_separator_comments(&code);
+        EmitResult { code, map: None }
     }
 }
 
@@ -67,7 +65,71 @@ pub(crate) fn emit_module<'a>(
 /// OXC codegen emits `/* @__PURE__ */` but SWC uses `/*#__PURE__*/`.
 /// Both are valid tree-shaking hints but differ cosmetically.
 fn normalize_pure_annotations(code: &str) -> String {
-    code.replace("/* @__PURE__ */", "/*#__PURE__*/")
+    let code = code.replace("/* @__PURE__ */", "/*#__PURE__*/");
+    // Normalize arrow function spacing in dynamic imports to match SWC format.
+    // OXC codegen emits `() => import(...)` but SWC uses `()=>import(...)`.
+    code.replace("() => import(", "()=>import(")
+}
+
+/// Insert `//` separator comments between code sections to match SWC output format.
+///
+/// SWC emits empty single-line comments (`//`) as separators between:
+/// 1. Import block and hoisted QRL const declarations (`const q_...`)
+/// 2. Hoisted QRL const declarations and the module body
+///
+/// Only inserts separators when hoisted QRL declarations exist.
+fn insert_separator_comments(code: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    if lines.is_empty() {
+        return code.to_string();
+    }
+
+    // Check if there are any hoisted QRL const declarations
+    let has_hoisted = lines.iter().any(|l| {
+        let t = l.trim();
+        t.starts_with("const q_") && t.contains("/*#__PURE__*/")
+    });
+    if !has_hoisted {
+        return code.to_string();
+    }
+
+    let mut result = Vec::with_capacity(lines.len() + 4);
+    let mut last_was_import = false;
+    let mut in_hoisted_section = false;
+
+    for line in &lines {
+        let trimmed = line.trim();
+
+        let is_import = trimmed.starts_with("import ");
+        let is_hoisted_const = trimmed.starts_with("const q_") && trimmed.contains("/*#__PURE__*/");
+
+        // Transition: imports -> non-imports (insert //)
+        if last_was_import && !is_import && !trimmed.is_empty() {
+            result.push("//");
+            if is_hoisted_const {
+                in_hoisted_section = true;
+            }
+        }
+
+        // Transition: hoisted consts -> non-hoisted (insert //)
+        if in_hoisted_section && !is_hoisted_const && !trimmed.is_empty() {
+            result.push("//");
+            in_hoisted_section = false;
+        }
+
+        result.push(line);
+        last_was_import = is_import;
+        if is_hoisted_const {
+            in_hoisted_section = true;
+        }
+    }
+
+    // Preserve trailing newline if original had one
+    let mut output = result.join("\n");
+    if code.ends_with('\n') && !output.ends_with('\n') {
+        output.push('\n');
+    }
+    output
 }
 
 // ---------------------------------------------------------------------------

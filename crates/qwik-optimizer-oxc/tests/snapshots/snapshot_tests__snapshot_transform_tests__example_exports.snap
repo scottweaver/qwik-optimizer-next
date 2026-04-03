@@ -4,11 +4,11 @@ assertion_line: 864
 expression: output
 ---
 ============================= project/test.jsx ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
-const q_Header_component_1_uWM1kg0IGO0 = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_1_uWM1kg0IGO0"), "Header_component_1_uWM1kg0IGO0");
+import { qrl } from "@qwik.dev/core";
+//
+const q_Header_component_1_uWM1kg0IGO0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_1_uWM1kg0IGO0"), "Header_component_1_uWM1kg0IGO0");
+//
 export const [a, { b, v1: [c], d = v2, ...e }, f = v3, ...g] = obj;
 const exp1 = 1;
 const internal = 2;

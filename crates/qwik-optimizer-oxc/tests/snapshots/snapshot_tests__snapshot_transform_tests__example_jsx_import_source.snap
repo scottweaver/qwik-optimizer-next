@@ -4,12 +4,15 @@ assertion_line: 880
 expression: output
 ---
 ============================= test.js ==
+import { qwikifyQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { qwikifyQrl } from "@qwik.dev/core";
+//
 /* @jsxImportSource react */
 import { qwikify$ } from "./qwikfy";
-const q_App2_qwikify_RKJW7oCMdS4 = /*#__PURE__*/ qrl(() => import("./test.tsx_App2_qwikify_RKJW7oCMdS4.tsx"), "App2_qwikify_RKJW7oCMdS4");
+//
+const q_App2_qwikify_RKJW7oCMdS4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App2_qwikify_RKJW7oCMdS4.tsx"), "App2_qwikify_RKJW7oCMdS4");
+//
 export const App = () => _jsxSorted("div", { onClick$: () => console.log("App") }, null, null, 1, "0");
 export const App2 = qwikifyQrl(q_App2_qwikify_RKJW7oCMdS4);
 

@@ -4,9 +4,8 @@ assertion_line: 851
 expression: output
 ---
 ============================= src/components/mongo/index.tsx ==
-import { inlinedQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 export default componentQrl(() => {
 	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
 }, "index_component_SlchSt2Vxlo");

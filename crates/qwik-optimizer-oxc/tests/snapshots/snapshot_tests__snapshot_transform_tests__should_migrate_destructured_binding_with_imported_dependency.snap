@@ -6,7 +6,9 @@ expression: output
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { source } from "lib";
-const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
+//
+const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(()=>import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
+//
 const { a } = source;
 export const handler = q_handler_T7IDIUVU4lI;
 

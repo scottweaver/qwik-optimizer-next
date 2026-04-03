@@ -4,48 +4,44 @@ assertion_line: 908
 expression: output
 ---
 ============================= ../node_modules/@qwik.dev/router/index.qwik.mjs ==
-import { qrl } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { eventQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { useVisibleTaskQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 import { jsx, Fragment, jsxs } from "@qwik.dev/core/jsx-runtime";
-import { useErrorBoundary, useOnWindow, Slot, createContextId, useContext, implicit$FirstArg, noSerialize, useServerData, useSignal, untrack, isDev, withLocale, isServer, useStore, isBrowser, useContextProvider, getLocale, jsx as jsx$1, SkipRender, createElement } from "@qwik.dev/core";
+import { createContextId, useContext, implicit$FirstArg, noSerialize, useServerData, useSignal, untrack, isDev, withLocale, isServer, useStore, useContextProvider, jsx as jsx$1 } from "@qwik.dev/core";
 import { g as getClientNavPath, s as shouldPreload, p as preloadRouteBundles, l as loadClientData, i as isPromise, a as isSamePath, c as createLoaderSignal, t as toUrl, b as isSameOrigin, d as loadRoute, D as DEFAULT_LOADERS_SERIALIZATION_STRATEGY, C as CLIENT_DATA_CACHE, Q as Q_ROUTE, e as clientNavigate, f as QFN_KEY, h as QACTION_KEY, j as QDATA_KEY } from "./chunks/routing.qwik.mjs";
 import * as qwikRouterConfig from "@qwik-router-config";
 import { _getContextContainer, SerializerSymbol, _UNINITIALIZED, _hasStoreEffects, forceStoreEffects, _waitUntilRendered, _getContextHostElement, _getContextEvent, _serialize, _deserialize, _resolveContextWithoutSequentialScope } from "@qwik.dev/core/internal";
 import { _asyncRequestStore } from "@qwik.dev/router/middleware/request-handler";
 import * as v from "valibot";
 import * as z from "zod";
-const q_ErrorBoundary_component_yTCHi5s1o00 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_ErrorBoundary_component_yTCHi5s1o00.mjs"), "ErrorBoundary_component_yTCHi5s1o00");
-const q_ErrorBoundary_component_1_16K8z6DSSp8 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_ErrorBoundary_component_1_16K8z6DSSp8.mjs"), "ErrorBoundary_component_1_16K8z6DSSp8");
-const q_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo.mjs"), "usePreventNavigateQrl_useVisibleTask_no0bm2fybZo");
-const q_Link_component_handlePrefetch_Evus9ZlzXpQ = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_handlePrefetch_Evus9ZlzXpQ.mjs"), "Link_component_handlePrefetch_Evus9ZlzXpQ");
-const q_Link_component_handleClientSideNavigation_rMfmL7bFMLU = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_handleClientSideNavigation_rMfmL7bFMLU.mjs"), "Link_component_handleClientSideNavigation_rMfmL7bFMLU");
-const q_Link_component_handlePreload_MhXmSxzp4GE = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_handlePreload_MhXmSxzp4GE.mjs"), "Link_component_handlePreload_MhXmSxzp4GE");
-const q_Link_component_useVisibleTask_6K6z063D0C4 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_useVisibleTask_6K6z063D0C4.mjs"), "Link_component_useVisibleTask_6K6z063D0C4");
-const q_Link_component_nhj84CU1784 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_nhj84CU1784.mjs"), "Link_component_nhj84CU1784");
-const q_spaInit_event_Js1cotabL5I = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_spaInit_event_Js1cotabL5I.mjs"), "spaInit_event_Js1cotabL5I");
-const q_useQwikRouter_registerPreventNav_W0LIs8PUJoA = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikRouter_registerPreventNav_W0LIs8PUJoA.mjs"), "useQwikRouter_registerPreventNav_W0LIs8PUJoA");
-const q_useQwikRouter_goto_OSnb99dm7Ow = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikRouter_goto_OSnb99dm7Ow.mjs"), "useQwikRouter_goto_OSnb99dm7Ow");
-const q_useQwikRouter_useTask_omhKiQfdzZU = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikRouter_useTask_omhKiQfdzZU.mjs"), "useQwikRouter_useTask_omhKiQfdzZU");
-const q_QwikRouterProvider_component_lCQXGdS0iZM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_QwikRouterProvider_component_lCQXGdS0iZM.mjs"), "QwikRouterProvider_component_lCQXGdS0iZM");
-const q_useQwikMockRouter_goto_ojVznvSDqoM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikMockRouter_goto_ojVznvSDqoM.mjs"), "useQwikMockRouter_goto_ojVznvSDqoM");
-const q_useQwikMockRouter_useTask_oml2hW1aK6I = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikMockRouter_useTask_oml2hW1aK6I.mjs"), "useQwikMockRouter_useTask_oml2hW1aK6I");
-const q_QwikRouterMockProvider_component_kN7AQXV0aXo = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_QwikRouterMockProvider_component_kN7AQXV0aXo.mjs"), "QwikRouterMockProvider_component_kN7AQXV0aXo");
-const q_RouterOutlet_component_hKWOEO9aIDM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_RouterOutlet_component_hKWOEO9aIDM.mjs"), "RouterOutlet_component_hKWOEO9aIDM");
-const q_routeActionQrl_action_submit_JY3C42B1B08 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_routeActionQrl_action_submit_JY3C42B1B08.mjs"), "routeActionQrl_action_submit_JY3C42B1B08");
-const q_serverQrl_RA3PmZ4Oyak = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_serverQrl_RA3PmZ4Oyak.mjs"), "serverQrl_RA3PmZ4Oyak");
-const q_Form_SFSwnnnjQIk = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Form_SFSwnnnjQIk.mjs"), "Form_SFSwnnnjQIk");
-const q_GetForm_component_OIWHwJ5eKxg = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_GetForm_component_OIWHwJ5eKxg.mjs"), "GetForm_component_OIWHwJ5eKxg");
-const q_GetForm_component_1_PlB4pu4Bj6I = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_GetForm_component_1_PlB4pu4Bj6I.mjs"), "GetForm_component_1_PlB4pu4Bj6I");
-const q_GetForm_component_2_hKjwJJIqHfA = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_GetForm_component_2_hKjwJJIqHfA.mjs"), "GetForm_component_2_hKjwJJIqHfA");
-const q_DocumentHeadTags_component_LaCcLS5Bz4c = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_DocumentHeadTags_component_LaCcLS5Bz4c.mjs"), "DocumentHeadTags_component_LaCcLS5Bz4c");
+//
+const q_ErrorBoundary_component_1_16K8z6DSSp8 = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_ErrorBoundary_component_1_16K8z6DSSp8.mjs"), "ErrorBoundary_component_1_16K8z6DSSp8");
+const q_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo.mjs"), "usePreventNavigateQrl_useVisibleTask_no0bm2fybZo");
+const q_Link_component_nhj84CU1784 = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_Link_component_nhj84CU1784.mjs"), "Link_component_nhj84CU1784");
+const q_spaInit_event_Js1cotabL5I = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_spaInit_event_Js1cotabL5I.mjs"), "spaInit_event_Js1cotabL5I");
+const q_useQwikRouter_registerPreventNav_W0LIs8PUJoA = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_registerPreventNav_W0LIs8PUJoA.mjs"), "useQwikRouter_registerPreventNav_W0LIs8PUJoA");
+const q_useQwikRouter_goto_OSnb99dm7Ow = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_goto_OSnb99dm7Ow.mjs"), "useQwikRouter_goto_OSnb99dm7Ow");
+const q_useQwikRouter_useTask_omhKiQfdzZU = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_useTask_omhKiQfdzZU.mjs"), "useQwikRouter_useTask_omhKiQfdzZU");
+const q_QwikRouterProvider_component_lCQXGdS0iZM = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_QwikRouterProvider_component_lCQXGdS0iZM.mjs"), "QwikRouterProvider_component_lCQXGdS0iZM");
+const q_useQwikMockRouter_goto_ojVznvSDqoM = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikMockRouter_goto_ojVznvSDqoM.mjs"), "useQwikMockRouter_goto_ojVznvSDqoM");
+const q_useQwikMockRouter_useTask_oml2hW1aK6I = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikMockRouter_useTask_oml2hW1aK6I.mjs"), "useQwikMockRouter_useTask_oml2hW1aK6I");
+const q_QwikRouterMockProvider_component_kN7AQXV0aXo = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_QwikRouterMockProvider_component_kN7AQXV0aXo.mjs"), "QwikRouterMockProvider_component_kN7AQXV0aXo");
+const q_RouterOutlet_component_hKWOEO9aIDM = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_RouterOutlet_component_hKWOEO9aIDM.mjs"), "RouterOutlet_component_hKWOEO9aIDM");
+const q_routeActionQrl_action_submit_JY3C42B1B08 = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_routeActionQrl_action_submit_JY3C42B1B08.mjs"), "routeActionQrl_action_submit_JY3C42B1B08");
+const q_serverQrl_RA3PmZ4Oyak = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_serverQrl_RA3PmZ4Oyak.mjs"), "serverQrl_RA3PmZ4Oyak");
+const q_Form_SFSwnnnjQIk = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_Form_SFSwnnnjQIk.mjs"), "Form_SFSwnnnjQIk");
+const q_GetForm_component_2_hKjwJJIqHfA = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_GetForm_component_2_hKjwJJIqHfA.mjs"), "GetForm_component_2_hKjwJJIqHfA");
+const q_DocumentHeadTags_component_LaCcLS5Bz4c = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_DocumentHeadTags_component_LaCcLS5Bz4c.mjs"), "DocumentHeadTags_component_LaCcLS5Bz4c");
+//
 export { z } from "zod";
 import swRegister from "@qwik-router-sw-register";
 import { renderToStream } from "@qwik.dev/core/server";
 import "@qwik.dev/core/preloader";
 import "./chunks/types.qwik.mjs";
+//
 const ErrorBoundary = /*#__PURE__*/ componentQrl(q_ErrorBoundary_component_1_16K8z6DSSp8);
 const RouteStateContext = /*#__PURE__*/ createContextId("qc-s");
 const ContentContext = /*#__PURE__*/ createContextId("qc-c");

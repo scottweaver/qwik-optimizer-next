@@ -4,11 +4,12 @@ assertion_line: 885
 expression: output
 ---
 ============================= test.tsx ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
-import { $ } from "@qwik.dev/core";
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+//
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+//
 export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 export function Button({ text, color }) {
 	return _jsxSorted("button", {
