@@ -18,6 +18,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Public API, Bindings & Cross-Cutting Specification** - Specify the public API contract, NAPI/WASM bindings, OXC migration notes, and representative examples
 - [x] **Phase 5: Core OXC Implementation** - Implement the core transform engine passing all 201 behavioral tests with idiomatic OXC patterns
 - [x] **Phase 6: Strategies, Modes & Binding Implementation** - Implement all entry strategies, emit modes, NAPI and WASM bindings for drop-in replacement
+- [ ] **Phase 7: Spec Gap Closure** - Write missing CONV-01/02 spec sections, verify CONV-09/10/11, add representative examples
+- [ ] **Phase 8: Implementation Gap Closure** - Wire CONV-07/CONV-08, inject PURE annotations, improve SWC parity
+- [ ] **Phase 9: Metadata & Verification Cleanup** - Update checkboxes, write missing VERIFICATIONs, fix parallel feature
 
 ## Phase Details
 
@@ -109,10 +112,45 @@ Plans:
 - [ ] 06-02-PLAN.md — Emit mode gaps: HMR injection + Lib/Test validation (IMPL-04)
 - [x] 06-03-PLAN.md — NAPI + WASM binding crates (IMPL-06, IMPL-07)
 
+### Phase 7: Spec Gap Closure — Missing CONV Sections
+**Goal**: Close specification gaps identified by the v0.1.0 milestone audit — write the missing Dollar Detection and QRL Wrapping spec sections, verify existing CONV-09/10/11 sections, and add 20+ representative input/output examples
+**Depends on**: Phase 1, Phase 3, Phase 4
+**Requirements**: SPEC-01, SPEC-02, SPEC-09, SPEC-10, SPEC-11, SPEC-29
+**Gap Closure**: Closes gaps from v0.1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. The spec document contains a complete Dollar Detection (CONV-01) section with marker function identification rules, imported vs local markers, and input/output examples
+  2. The spec document contains a complete QRL Wrapping (CONV-02) section with qrl()/inlinedQrl() generation, dev mode variants, captures emission, and PURE annotation rules
+  3. SPEC-09 (DCE), SPEC-10 (Const Replacement), and SPEC-11 (Code Stripping) spec sections are verified present and complete
+  4. The spec document contains at least 20 representative input/output examples covering all 14 CONVs
+**Plans:** TBD
+
+### Phase 8: Implementation Gap Closure — Wire CONV-07/CONV-08 & Improve Parity
+**Goal**: Wire the disconnected signal optimization (CONV-07) and PURE annotation (CONV-08) code paths, un-ignore the 24 spec_examples.rs tests, and significantly improve SWC parity from the current 0.5%
+**Depends on**: Phase 5, Phase 6
+**Requirements**: IMPL-02, IMPL-05
+**Gap Closure**: Closes gaps from v0.1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. `convert_inlined_fn` is called from the JSX prop classification path and `_fnSignal()` is emitted for applicable fixtures
+  2. `/*#__PURE__*/` is injected on `componentQrl()` calls in all non-Hoist strategies
+  3. The 24 spec_examples.rs tests are un-ignored and either pass or have specific failure reasons documented
+  4. SWC parity (root module match) improves from 1/201 to at least 50/201
+**Plans:** TBD
+
+### Phase 9: Metadata & Verification Cleanup
+**Goal**: Update stale requirement checkboxes, write missing VERIFICATION.md reports for phases 3-6, and either wire the rayon parallel feature or remove the dead feature flag
+**Depends on**: Phase 7, Phase 8
+**Requirements**: SPEC-06, SPEC-18, SPEC-19, SPEC-20, IMPL-03, IMPL-04
+**Gap Closure**: Closes gaps from v0.1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. All requirement checkboxes in REQUIREMENTS.md match actual completion status
+  2. VERIFICATION.md exists for all 6 original phases plus gap closure phases
+  3. The `parallel` feature either has a working rayon implementation or is removed from Cargo.toml
+**Plans:** TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -122,3 +160,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 4. Public API, Bindings & Cross-Cutting Specification | 3/3 | Complete | 2026-04-02 |
 | 5. Core OXC Implementation | 6/7 | In Progress | - |
 | 6. Strategies, Modes & Binding Implementation | 1/3 | In Progress | - |
+| 7. Spec Gap Closure | 0/? | Not started | - |
+| 8. Implementation Gap Closure | 0/? | Not started | - |
+| 9. Metadata & Verification Cleanup | 0/? | Not started | - |

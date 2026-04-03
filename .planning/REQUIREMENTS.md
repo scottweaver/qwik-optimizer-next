@@ -109,26 +109,26 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SPEC-01 | Phase 1 | Pending |
-| SPEC-02 | Phase 1 | Pending |
+| SPEC-01 | Phase 7 (gap closure) | Pending |
+| SPEC-02 | Phase 7 (gap closure) | Pending |
 | SPEC-03 | Phase 1 | Complete |
 | SPEC-04 | Phase 2 | Complete |
 | SPEC-05 | Phase 1 | Complete |
-| SPEC-06 | Phase 2 | Pending |
+| SPEC-06 | Phase 9 (gap closure) | Pending |
 | SPEC-07 | Phase 2 | Complete |
 | SPEC-08 | Phase 3 | Complete |
-| SPEC-09 | Phase 3 | Pending |
-| SPEC-10 | Phase 3 | Pending |
-| SPEC-11 | Phase 3 | Pending |
+| SPEC-09 | Phase 7 (gap closure) | Pending |
+| SPEC-10 | Phase 7 (gap closure) | Pending |
+| SPEC-11 | Phase 7 (gap closure) | Pending |
 | SPEC-12 | Phase 1 | Complete |
 | SPEC-13 | Phase 3 | Complete |
 | SPEC-14 | Phase 3 | Complete |
 | SPEC-15 | Phase 3 | Complete |
 | SPEC-16 | Phase 3 | Complete |
 | SPEC-17 | Phase 3 | Complete |
-| SPEC-18 | Phase 4 | Pending |
-| SPEC-19 | Phase 4 | Pending |
-| SPEC-20 | Phase 4 | Pending |
+| SPEC-18 | Phase 9 (gap closure) | Pending |
+| SPEC-19 | Phase 9 (gap closure) | Pending |
+| SPEC-20 | Phase 9 (gap closure) | Pending |
 | SPEC-21 | Phase 1 | Complete |
 | SPEC-22 | Phase 1 | Complete |
 | SPEC-23 | Phase 1 | Complete |
@@ -137,13 +137,13 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-26 | Phase 4 | Complete |
 | SPEC-27 | Phase 4 | Complete |
 | SPEC-28 | Phase 4 | Complete |
-| SPEC-29 | Phase 4 | Pending |
+| SPEC-29 | Phase 7 (gap closure) | Pending |
 | SPEC-30 | Phase 1 | Complete |
 | IMPL-01 | Phase 5 | Complete |
-| IMPL-02 | Phase 5 | Complete |
-| IMPL-03 | Phase 6 | Pending |
-| IMPL-04 | Phase 6 | Pending |
-| IMPL-05 | Phase 5 | Complete |
+| IMPL-02 | Phase 8 (gap closure) | Pending |
+| IMPL-03 | Phase 9 (gap closure) | Pending |
+| IMPL-04 | Phase 9 (gap closure) | Pending |
+| IMPL-05 | Phase 8 (gap closure) | Pending |
 | IMPL-06 | Phase 6 | Complete |
 | IMPL-07 | Phase 6 | Complete |
 | IMPL-08 | Phase 5 | Complete |
@@ -156,13 +156,16 @@ Deferred to future release. Tracked but not in current roadmap.
 **Coverage:**
 - v1 requirements: 35 phase-mapped + 4 reference = 39 total
 - Mapped to phases: 35/35 (100%)
-- Phase 1: 11 requirements (SPEC-01, 02, 03, 05, 12, 21, 22, 23, 24, 25, 30)
-- Phase 2: 3 requirements (SPEC-04, 06, 07)
-- Phase 3: 9 requirements (SPEC-08, 09, 10, 11, 13, 14, 15, 16, 17)
-- Phase 4: 7 requirements (SPEC-18, 19, 20, 26, 27, 28, 29)
-- Phase 5: 5 requirements (IMPL-01, 02, 05, 08, 09)
-- Phase 6: 4 requirements (IMPL-03, 04, 06, 07)
+- Phase 1: 8 requirements (SPEC-03, 05, 12, 21, 22, 23, 24, 25, 30)
+- Phase 2: 2 requirements (SPEC-04, 07)
+- Phase 3: 6 requirements (SPEC-08, 13, 14, 15, 16, 17)
+- Phase 4: 3 requirements (SPEC-26, 27, 28)
+- Phase 5: 3 requirements (IMPL-01, 08, 09)
+- Phase 6: 2 requirements (IMPL-06, 07)
+- Phase 7 (gap closure): 6 requirements (SPEC-01, 02, 09, 10, 11, 29)
+- Phase 8 (gap closure): 2 requirements (IMPL-02, 05)
+- Phase 9 (gap closure): 6 requirements (SPEC-06, 18, 19, 20, IMPL-03, 04)
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-01 after roadmap creation*
+*Last updated: 2026-04-03 after gap closure phase creation*
