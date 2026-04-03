@@ -6,12 +6,12 @@ snapshot_kind: text
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { $ } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
 const shared = { id: "abc" };
 export function readShared() {
 	return shared.id;
 }
-export const handler = qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
+export const handler = q_handler_T7IDIUVU4lI;
 
 ============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
 export const handler_T7IDIUVU4lI = () => {

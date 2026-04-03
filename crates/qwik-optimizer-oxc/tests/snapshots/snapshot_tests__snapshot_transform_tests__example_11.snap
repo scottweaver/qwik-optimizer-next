@@ -10,8 +10,11 @@ import { $, component$ } from "@qwik.dev/core";
 import { foo, bar as bbar } from "../state";
 import * as dep2 from "dep2";
 import dep3 from "dep3/something";
-export const Header = qrl(() => import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
-export const App = qrl(() => import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
+const q_Header_component_onClick_FaGKP0YO8vk = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_onClick_FaGKP0YO8vk"), "Header_component_onClick_FaGKP0YO8vk");
+const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
+const q_App_component_wGkRHWXaqjs = /*#__PURE__*/ qrl(() => import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
+export const Header = /*#__PURE__*/ componentQrl(q_Header_component_UVBJuFYfvDo);
+export const App = /*#__PURE__*/ componentQrl(q_App_component_wGkRHWXaqjs);
 
 ============================= project/test.tsx_Header_component_onClick_FaGKP0YO8vk.tsx ==
 import { default as dep3 } from "dep3/something";

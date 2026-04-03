@@ -9,12 +9,11 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore, useTask$ } from "@qwik.dev/core";
 import { useForm, useForm2 } from "./some-file.ts";
-export const Input = qrl<{
-	error: string;
-	error2: string;
-	error3: string;
-}>(() => import("./test.tsx_Input_component_9metqqaxlN8"), "Input_component_9metqqaxlN8");
-export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+const q_Input_component_useTask_Sbgs9Wtfkt0 = /*#__PURE__*/ qrl(() => import("./test.tsx_Input_component_useTask_Sbgs9Wtfkt0"), "Input_component_useTask_Sbgs9Wtfkt0");
+const q_Input_component_9metqqaxlN8 = /*#__PURE__*/ qrl(() => import("./test.tsx_Input_component_9metqqaxlN8"), "Input_component_9metqqaxlN8");
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+export const Input = /*#__PURE__*/ componentQrl(q_Input_component_9metqqaxlN8);
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
 ============================= test.tsx_Input_component_9metqqaxlN8.js (ENTRY POINT) ==
 import { useTask$ } from "@qwik.dev/core";

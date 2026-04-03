@@ -7,11 +7,11 @@ snapshot_kind: text
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { inlinedQrl, $, component$, jsx, useStylesScoped$ } from "@qwik.dev/core";
-const q_Lifecycle_component_r7jPBpjrWLc = /* @__PURE__ */ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
-const q_Field_FIPfOhEtx3A = /* @__PURE__ */ _noopQrl("Field_FIPfOhEtx3A");
-const q_StyledComponent_component_Wg7SquUqgAE = /* @__PURE__ */ _noopQrl("StyledComponent_component_Wg7SquUqgAE");
+const q_Lifecycle_component_r7jPBpjrWLc = /*#__PURE__*/ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
+const q_Field_FIPfOhEtx3A = /*#__PURE__*/ _noopQrl("Field_FIPfOhEtx3A");
+const q_StyledComponent_component_Wg7SquUqgAE = /*#__PURE__*/ _noopQrl("StyledComponent_component_Wg7SquUqgAE");
 q_Lifecycle_component_r7jPBpjrWLc.s(() => {
-	return /* @__PURE__ */ jsx(Slot, {});
+	return /*#__PURE__*/ jsx(Slot, {});
 });
 q_Field_FIPfOhEtx3A.s((element) => {
 	field.internal.elements.push(element);

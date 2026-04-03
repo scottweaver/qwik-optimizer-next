@@ -7,7 +7,9 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$, useStore } from "@qwik.dev/core";
-export const App = qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU"), "App_component_1_w0t0o3QMovU");
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(() => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+const q_App_component_1_w0t0o3QMovU = /*#__PURE__*/ qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU"), "App_component_1_w0t0o3QMovU");
+export const App = /*#__PURE__*/ componentQrl(q_App_component_1_w0t0o3QMovU);
 
 ============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";

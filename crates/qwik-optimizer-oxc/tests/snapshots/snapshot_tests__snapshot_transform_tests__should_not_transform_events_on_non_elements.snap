@@ -9,7 +9,8 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { CustomComponent } from "./custom-component";
 import { AnotherComponent } from "./another-component";
-export const Greeter = qrl(() => import("./test.tsx_Greeter_component_n7HuG2hhU0Q"), "Greeter_component_n7HuG2hhU0Q");
+const q_Greeter_component_n7HuG2hhU0Q = /*#__PURE__*/ qrl(() => import("./test.tsx_Greeter_component_n7HuG2hhU0Q"), "Greeter_component_n7HuG2hhU0Q");
+export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_n7HuG2hhU0Q);
 
 ============================= test.tsx_Greeter_component_n7HuG2hhU0Q.tsx (ENTRY POINT) ==
 import { AnotherComponent } from "./another-component";

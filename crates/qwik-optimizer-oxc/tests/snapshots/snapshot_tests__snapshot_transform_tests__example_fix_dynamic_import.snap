@@ -8,11 +8,11 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
 import thing from "../state";
-const q__R9GtuAm43Z0 = /*#__PURE__*/ qrl(() => import("./test.tsx__R9GtuAm43Z0"), "_R9GtuAm43Z0");
+const q_Header_component_RGgm7Ks9QWI = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_RGgm7Ks9QWI"), "Header_component_RGgm7Ks9QWI");
 export function foo() {
 	return import("../foo/state2");
 }
-export const Header = qrl(() => import("./test.tsx_Header_component_RGgm7Ks9QWI"), "Header_component_RGgm7Ks9QWI");
+export const Header = /*#__PURE__*/ componentQrl(q_Header_component_RGgm7Ks9QWI);
 
 ============================= project/folder/test.tsx_Header_component_RGgm7Ks9QWI.tsx ==
 import { default as thing } from "../state";

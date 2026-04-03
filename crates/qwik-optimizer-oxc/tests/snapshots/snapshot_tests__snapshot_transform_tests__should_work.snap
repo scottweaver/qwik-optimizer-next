@@ -8,8 +8,10 @@ import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 import { globalAction$ } from "@qwik.dev/router";
-export const useSecretAction = qrl(() => import("./test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q"), "useSecretAction_globalAction_Cbn41AEUQ0Q");
-export const SecretForm = qrl(() => import("./test.tsx_SecretForm_component_1noi8FsTz7c"), "SecretForm_component_1noi8FsTz7c");
+const q_useSecretAction_globalAction_Cbn41AEUQ0Q = /*#__PURE__*/ qrl(() => import("./test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q"), "useSecretAction_globalAction_Cbn41AEUQ0Q");
+const q_SecretForm_component_1noi8FsTz7c = /*#__PURE__*/ qrl(() => import("./test.tsx_SecretForm_component_1noi8FsTz7c"), "SecretForm_component_1noi8FsTz7c");
+export const useSecretAction = globalActionQrl(q_useSecretAction_globalAction_Cbn41AEUQ0Q);
+export const SecretForm = /*#__PURE__*/ componentQrl(q_SecretForm_component_1noi8FsTz7c);
 
 ============================= test.tsx_SecretForm_component_1noi8FsTz7c.js (ENTRY POINT) ==
 import { useSecretAction } from "./test";

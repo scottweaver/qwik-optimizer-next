@@ -7,13 +7,13 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ as Component, $ as onRender, useStore, wrap, useEffect } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q_App_useMemo_0Fw1Fv1C3tY = /*#__PURE__*/ qrl(() => import("./test.tsx_App_useMemo_0Fw1Fv1C3tY"), "App_useMemo_0Fw1Fv1C3tY");
 export const useMemo$ = (qrt) => {
 	useEffect(qrt);
 };
 export const App = component$((props) => {
 	const state = useStore({ count: 0 });
-	qrl(() => import("./test.tsx_App_useMemo_0Fw1Fv1C3tY"), "App_useMemo_0Fw1Fv1C3tY", [state]);
+	useMemoQrl(q_App_useMemo_0Fw1Fv1C3tY.w([state]));
 	return $(() => _jsxSorted("div", null, null, state.count, 1, "0"));
 });
 

@@ -9,8 +9,12 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useTask$, useStore, useStyles$ } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
-export const Parent = qrl(() => import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
-export const Child = qrl(() => import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
+const q_Parent_component_useTask_gDH1EtUWqBU = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_useTask_gDH1EtUWqBU"), "Parent_component_useTask_gDH1EtUWqBU");
+const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(() => import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
+const q_Child_component_useTask_Oh4n7ZeqJkU = /*#__PURE__*/ qrl(() => import("./test.tsx_Child_component_useTask_Oh4n7ZeqJkU"), "Child_component_useTask_Oh4n7ZeqJkU");
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ qrl(() => import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
+export const Parent = /*#__PURE__*/ componentQrl(q_Parent_component_0TaiDayHrlo);
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
 
 ============================= test.tsx_Parent_component_0TaiDayHrlo.js ==
 import { default as mongo } from "mongodb";

@@ -12,8 +12,8 @@ import { clientSupabase } from "supabase";
 import { Client } from "openai";
 import { secret } from "./secret";
 import { sideEffect } from "./secret";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /*#__PURE__*/ qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const q_api_server_JonPp043gH0 = /*#__PURE__*/ qrlDEV(() => import("./test.tsx_api_server_JonPp043gH0"), "api_server_JonPp043gH0");
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 (function() {
 	console.log("run");
 })();
@@ -21,8 +21,8 @@ const q__1_iZVV0eoW44k = /*#__PURE__*/ qrlDEV(() => import("./test.tsx__1_iZVV0e
 	console.log("run");
 })();
 sideEffect();
-export const api = qrlDEV(() => import("./test.tsx_api_server_JonPp043gH0"), "api_server_JonPp043gH0");
-export default qrlDEV(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+export const api = serverQrl(q_api_server_JonPp043gH0);
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
 ============================= test.tsx_api_server_JonPp043gH0.js (ENTRY POINT) ==
 const dfd = new Client(secret);

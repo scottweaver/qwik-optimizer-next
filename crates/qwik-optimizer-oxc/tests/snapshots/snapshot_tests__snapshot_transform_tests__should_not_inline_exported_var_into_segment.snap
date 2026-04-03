@@ -7,10 +7,10 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { wrapperFn, getEnv } from "utils";
 import { formAction$, valiForm$ } from "forms";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q_featureAction_formAction_cZgh2PzV1cc = /*#__PURE__*/ qrl(() => import("./test.tsx_featureAction_formAction_cZgh2PzV1cc"), "featureAction_formAction_cZgh2PzV1cc");
 const flagEnabled = getEnv().PUBLIC_FEATURE;
 export const FeatureSchema = wrapperFn(flagEnabled);
-export const featureAction = qrl(() => import("./test.tsx_featureAction_formAction_cZgh2PzV1cc"), "featureAction_formAction_cZgh2PzV1cc");
+export const featureAction = formActionQrl(q_featureAction_formAction_cZgh2PzV1cc);
 
 ============================= test.tsx_featureAction_formAction_cZgh2PzV1cc.js (ENTRY POINT) ==
 export const featureAction_formAction_cZgh2PzV1cc = async (requestEvent) => {

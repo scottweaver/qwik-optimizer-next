@@ -7,8 +7,8 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
-const q_component_fA7aHBrXs7g = /*#__PURE__*/ qrl(() => import("./test.tsx_component_fA7aHBrXs7g"), "component_fA7aHBrXs7g");
-const q__cA4RUxLrFo0 = /*#__PURE__*/ qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
+const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
+const q_Header_component_1_uWM1kg0IGO0 = /*#__PURE__*/ qrl(() => import("./test.tsx_Header_component_1_uWM1kg0IGO0"), "Header_component_1_uWM1kg0IGO0");
 export const [a, { b, v1: [c], d = v2, ...e }, f = v3, ...g] = obj;
 const exp1 = 1;
 const internal = 2;
@@ -16,7 +16,7 @@ export { exp1, internal as expr2 };
 export function foo() {}
 export class bar {}
 export default function DefaultFn() {}
-export const Header = qrl(() => import("./test.tsx_Header_component_1_uWM1kg0IGO0"), "Header_component_1_uWM1kg0IGO0");
+export const Header = /*#__PURE__*/ componentQrl(q_Header_component_1_uWM1kg0IGO0);
 export const Footer = component$();
 
 ============================= project/test.tsx_Header_component_UVBJuFYfvDo.jsx (ENTRY POINT) ==

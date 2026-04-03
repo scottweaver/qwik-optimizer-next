@@ -13,44 +13,44 @@ import { _getContextContainer, SerializerSymbol, _UNINITIALIZED, _hasStoreEffect
 import { _asyncRequestStore } from "@qwik.dev/router/middleware/request-handler";
 import * as v from "valibot";
 import * as z from "zod";
-const q_component_vcmdZV4R0Bc = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_vcmdZV4R0Bc.mjs"), "component_vcmdZV4R0Bc");
-const q__0KNkylTSj1o = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__0KNkylTSj1o.mjs"), "_0KNkylTSj1o");
-const q__1_pRA3IJzkWnc = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__1_pRA3IJzkWnc.mjs"), "_1_pRA3IJzkWnc");
-const q_component_1_lIn9Fj7lxBg = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_1_lIn9Fj7lxBg.mjs"), "component_1_lIn9Fj7lxBg");
-const q_component_3_zaDs00QRvlc = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_3_zaDs00QRvlc.mjs"), "component_3_zaDs00QRvlc");
-const q_component_4_ErSrTyaaPdw = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_4_ErSrTyaaPdw.mjs"), "component_4_ErSrTyaaPdw");
-const q_component_5_b1pHIfyr4Fo = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_5_b1pHIfyr4Fo.mjs"), "component_5_b1pHIfyr4Fo");
-const q__2_FXwq3GxmoRk = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__2_FXwq3GxmoRk.mjs"), "_2_FXwq3GxmoRk");
-const q__3_O4DoQMA2iPM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__3_O4DoQMA2iPM.mjs"), "_3_O4DoQMA2iPM");
-const q__4_Fq4rjdv06Ww = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__4_Fq4rjdv06Ww.mjs"), "_4_Fq4rjdv06Ww");
-const q__5_uoaoesJ2QXM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__5_uoaoesJ2QXM.mjs"), "_5_uoaoesJ2QXM");
-const q__6_40K6kutq1q0 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__6_40K6kutq1q0.mjs"), "_6_40K6kutq1q0");
-const q__7_1oFrSAKho5U = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__7_1oFrSAKho5U.mjs"), "_7_1oFrSAKho5U");
-const q__8_IadkMzO9zV4 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__8_IadkMzO9zV4.mjs"), "_8_IadkMzO9zV4");
-const q__9_Nc0U8SrzYBk = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__9_Nc0U8SrzYBk.mjs"), "_9_Nc0U8SrzYBk");
-const q__10_rnEMz0B61YQ = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__10_rnEMz0B61YQ.mjs"), "_10_rnEMz0B61YQ");
-const q__11_fa0c9bbY9K4 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__11_fa0c9bbY9K4.mjs"), "_11_fa0c9bbY9K4");
-const q__12_meRd8Hzw4q8 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__12_meRd8Hzw4q8.mjs"), "_12_meRd8Hzw4q8");
-const q__13_yA7jhUN8njs = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__13_yA7jhUN8njs.mjs"), "_13_yA7jhUN8njs");
-const q__14_G3lwMdydYKE = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__14_G3lwMdydYKE.mjs"), "_14_G3lwMdydYKE");
-const q_component_7_WX0Qe8Cj4Hk = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_7_WX0Qe8Cj4Hk.mjs"), "component_7_WX0Qe8Cj4Hk");
-const q_component_8_xLpLnCz0HIA = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_component_8_xLpLnCz0HIA.mjs"), "component_8_xLpLnCz0HIA");
-const q__15_6z2T00WEHNs = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__15_6z2T00WEHNs.mjs"), "_15_6z2T00WEHNs");
-const q__16_d4Ts0KvtNzs = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs__16_d4Ts0KvtNzs.mjs"), "_16_d4Ts0KvtNzs");
+const q_ErrorBoundary_component_yTCHi5s1o00 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_ErrorBoundary_component_yTCHi5s1o00.mjs"), "ErrorBoundary_component_yTCHi5s1o00");
+const q_ErrorBoundary_component_1_16K8z6DSSp8 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_ErrorBoundary_component_1_16K8z6DSSp8.mjs"), "ErrorBoundary_component_1_16K8z6DSSp8");
+const q_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo.mjs"), "usePreventNavigateQrl_useVisibleTask_no0bm2fybZo");
+const q_Link_component_handlePrefetch_Evus9ZlzXpQ = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_handlePrefetch_Evus9ZlzXpQ.mjs"), "Link_component_handlePrefetch_Evus9ZlzXpQ");
+const q_Link_component_handleClientSideNavigation_rMfmL7bFMLU = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_handleClientSideNavigation_rMfmL7bFMLU.mjs"), "Link_component_handleClientSideNavigation_rMfmL7bFMLU");
+const q_Link_component_handlePreload_MhXmSxzp4GE = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_handlePreload_MhXmSxzp4GE.mjs"), "Link_component_handlePreload_MhXmSxzp4GE");
+const q_Link_component_useVisibleTask_6K6z063D0C4 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_useVisibleTask_6K6z063D0C4.mjs"), "Link_component_useVisibleTask_6K6z063D0C4");
+const q_Link_component_nhj84CU1784 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Link_component_nhj84CU1784.mjs"), "Link_component_nhj84CU1784");
+const q_spaInit_event_Js1cotabL5I = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_spaInit_event_Js1cotabL5I.mjs"), "spaInit_event_Js1cotabL5I");
+const q_useQwikRouter_registerPreventNav_W0LIs8PUJoA = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikRouter_registerPreventNav_W0LIs8PUJoA.mjs"), "useQwikRouter_registerPreventNav_W0LIs8PUJoA");
+const q_useQwikRouter_goto_OSnb99dm7Ow = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikRouter_goto_OSnb99dm7Ow.mjs"), "useQwikRouter_goto_OSnb99dm7Ow");
+const q_useQwikRouter_useTask_omhKiQfdzZU = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikRouter_useTask_omhKiQfdzZU.mjs"), "useQwikRouter_useTask_omhKiQfdzZU");
+const q_QwikRouterProvider_component_lCQXGdS0iZM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_QwikRouterProvider_component_lCQXGdS0iZM.mjs"), "QwikRouterProvider_component_lCQXGdS0iZM");
+const q_useQwikMockRouter_goto_ojVznvSDqoM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikMockRouter_goto_ojVznvSDqoM.mjs"), "useQwikMockRouter_goto_ojVznvSDqoM");
+const q_useQwikMockRouter_useTask_oml2hW1aK6I = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_useQwikMockRouter_useTask_oml2hW1aK6I.mjs"), "useQwikMockRouter_useTask_oml2hW1aK6I");
+const q_QwikRouterMockProvider_component_kN7AQXV0aXo = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_QwikRouterMockProvider_component_kN7AQXV0aXo.mjs"), "QwikRouterMockProvider_component_kN7AQXV0aXo");
+const q_RouterOutlet_component_hKWOEO9aIDM = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_RouterOutlet_component_hKWOEO9aIDM.mjs"), "RouterOutlet_component_hKWOEO9aIDM");
+const q_routeActionQrl_action_submit_JY3C42B1B08 = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_routeActionQrl_action_submit_JY3C42B1B08.mjs"), "routeActionQrl_action_submit_JY3C42B1B08");
+const q_serverQrl_RA3PmZ4Oyak = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_serverQrl_RA3PmZ4Oyak.mjs"), "serverQrl_RA3PmZ4Oyak");
+const q_Form_SFSwnnnjQIk = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_Form_SFSwnnnjQIk.mjs"), "Form_SFSwnnnjQIk");
+const q_GetForm_component_OIWHwJ5eKxg = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_GetForm_component_OIWHwJ5eKxg.mjs"), "GetForm_component_OIWHwJ5eKxg");
+const q_GetForm_component_1_PlB4pu4Bj6I = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_GetForm_component_1_PlB4pu4Bj6I.mjs"), "GetForm_component_1_PlB4pu4Bj6I");
+const q_GetForm_component_2_hKjwJJIqHfA = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_GetForm_component_2_hKjwJJIqHfA.mjs"), "GetForm_component_2_hKjwJJIqHfA");
+const q_DocumentHeadTags_component_LaCcLS5Bz4c = /*#__PURE__*/ qrl(() => import("./index.qwik.mjs_DocumentHeadTags_component_LaCcLS5Bz4c.mjs"), "DocumentHeadTags_component_LaCcLS5Bz4c");
 export { z } from "zod";
 import swRegister from "@qwik-router-sw-register";
 import { renderToStream } from "@qwik.dev/core/server";
 import "@qwik.dev/core/preloader";
 import "./chunks/types.qwik.mjs";
-const ErrorBoundary = qrl(() => import("./index.qwik.mjs_ErrorBoundary_component_1_16K8z6DSSp8.mjs"), "ErrorBoundary_component_1_16K8z6DSSp8");
-const RouteStateContext = /* @__PURE__ */ createContextId("qc-s");
-const ContentContext = /* @__PURE__ */ createContextId("qc-c");
-const ContentInternalContext = /* @__PURE__ */ createContextId("qc-ic");
-const DocumentHeadContext = /* @__PURE__ */ createContextId("qc-h");
-const RouteLocationContext = /* @__PURE__ */ createContextId("qc-l");
-const RouteNavigateContext = /* @__PURE__ */ createContextId("qc-n");
-const RouteActionContext = /* @__PURE__ */ createContextId("qc-a");
-const RoutePreventNavigateContext = /* @__PURE__ */ createContextId("qc-p");
+const ErrorBoundary = /*#__PURE__*/ componentQrl(q_ErrorBoundary_component_1_16K8z6DSSp8);
+const RouteStateContext = /*#__PURE__*/ createContextId("qc-s");
+const ContentContext = /*#__PURE__*/ createContextId("qc-c");
+const ContentInternalContext = /*#__PURE__*/ createContextId("qc-ic");
+const DocumentHeadContext = /*#__PURE__*/ createContextId("qc-h");
+const RouteLocationContext = /*#__PURE__*/ createContextId("qc-l");
+const RouteNavigateContext = /*#__PURE__*/ createContextId("qc-n");
+const RouteActionContext = /*#__PURE__*/ createContextId("qc-a");
+const RoutePreventNavigateContext = /*#__PURE__*/ createContextId("qc-p");
 const useContent = () => useContext(ContentContext);
 const useDocumentHead = () => useContext(DocumentHeadContext);
 const useLocation = () => useContext(RouteLocationContext);
@@ -60,12 +60,12 @@ const usePreventNavigateQrl = (fn) => {
 		throw new Error("usePreventNavigate$ is experimental and must be enabled with `experimental: [\"preventNavigate\"]` in the `qwikVite` plugin.");
 	}
 	const registerPreventNav = useContext(RoutePreventNavigateContext);
-	qrl(() => import("./index.qwik.mjs_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo.mjs"), "usePreventNavigateQrl_useVisibleTask_no0bm2fybZo", [fn, registerPreventNav]);
+	useVisibleTaskQrl(q_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo.w([fn, registerPreventNav]));
 };
 const usePreventNavigate$ = implicit$FirstArg(usePreventNavigateQrl);
 const useAction = () => useContext(RouteActionContext);
 const useQwikRouterEnv = () => noSerialize(useServerData("qwikrouter"));
-const Link = qrl(() => import("./index.qwik.mjs_Link_component_nhj84CU1784.mjs"), "Link_component_nhj84CU1784");
+const Link = /*#__PURE__*/ componentQrl(q_Link_component_nhj84CU1784);
 const resolveHead = (endpoint, routeLocation, contentModules, locale, defaults) => withLocale(locale, () => {
 	const head = createDocumentHead(defaults);
 	const getData = (loaderOrAction) => {
@@ -170,7 +170,7 @@ const getScrollHistory = () => {
 	const state = history.state;
 	return state?._qRouterScroll;
 };
-const spaInit = qrl(() => import("./index.qwik.mjs_spaInit_event_Js1cotabL5I.mjs"), "spaInit_event_Js1cotabL5I");
+const spaInit = eventQrl(q_spaInit_event_Js1cotabL5I);
 const QWIK_CITY_SCROLLER = "_qCityScroller";
 const QWIK_ROUTER_SCROLLER = "_qRouterScroller";
 const preventNav = {};
@@ -239,8 +239,8 @@ const useQwikRouter = (props) => {
 			status: env.response.status
 		}
 	} : void 0);
-	const registerPreventNav = qrl(() => import("./index.qwik.mjs_useQwikRouter_registerPreventNav_W0LIs8PUJoA.mjs"), "useQwikRouter_registerPreventNav_W0LIs8PUJoA");
-	const goto = qrl(() => import("./index.qwik.mjs_useQwikRouter_goto_OSnb99dm7Ow.mjs"), "useQwikRouter_goto_OSnb99dm7Ow", [
+	const registerPreventNav = q_useQwikRouter_registerPreventNav_W0LIs8PUJoA;
+	const goto = q_useQwikRouter_goto_OSnb99dm7Ow.w([
 		actionState,
 		navResolver,
 		routeInternal,
@@ -254,7 +254,7 @@ const useQwikRouter = (props) => {
 	useContextProvider(RouteStateContext, loaderState);
 	useContextProvider(RouteActionContext, actionState);
 	useContextProvider(RoutePreventNavigateContext, registerPreventNav);
-	qrl(() => import("./index.qwik.mjs_useQwikRouter_useTask_omhKiQfdzZU.mjs"), "useQwikRouter_useTask_omhKiQfdzZU", [
+	useTaskQrl(q_useQwikRouter_useTask_omhKiQfdzZU.w([
 		actionState,
 		content,
 		contentInternal,
@@ -273,7 +273,7 @@ const useQwikRouter = (props) => {
 		value
 	]));
 };
-const QwikRouterProvider = qrl(() => import("./index.qwik.mjs_QwikRouterProvider_component_lCQXGdS0iZM.mjs"), "QwikRouterProvider_component_lCQXGdS0iZM");
+const QwikRouterProvider = /*#__PURE__*/ componentQrl(q_QwikRouterProvider_component_lCQXGdS0iZM);
 const QwikCityProvider = QwikRouterProvider;
 const useQwikMockRouter = (props) => {
 	const urlEnv = props.url ?? "http://localhost/";
@@ -289,7 +289,7 @@ const useQwikMockRouter = (props) => {
 		return acc;
 	}, {});
 	const loaderState = useStore(loadersData ?? {}, { deep: false });
-	const goto = props.goto ?? qrl(() => import("./index.qwik.mjs_useQwikMockRouter_goto_ojVznvSDqoM.mjs"), "useQwikMockRouter_goto_ojVznvSDqoM");
+	const goto = props.goto ?? q_useQwikMockRouter_goto_ojVznvSDqoM;
 	const documentHead = useStore(createDocumentHead, { deep: false });
 	const content = useStore({
 		headings: void 0,
@@ -308,11 +308,11 @@ const useQwikMockRouter = (props) => {
 		acc[action.__id] = handler;
 		return acc;
 	}, {});
-	qrl(() => import("./index.qwik.mjs_useQwikMockRouter_useTask_oml2hW1aK6I.mjs"), "useQwikMockRouter_useTask_oml2hW1aK6I", [actionState, actionsMocks]);
+	useTaskQrl(q_useQwikMockRouter_useTask_oml2hW1aK6I.w([actionState, actionsMocks]));
 };
-const QwikRouterMockProvider = qrl(() => import("./index.qwik.mjs_QwikRouterMockProvider_component_kN7AQXV0aXo.mjs"), "QwikRouterMockProvider_component_kN7AQXV0aXo");
+const QwikRouterMockProvider = /*#__PURE__*/ componentQrl(q_QwikRouterMockProvider_component_kN7AQXV0aXo);
 const QwikCityMockProvider = QwikRouterMockProvider;
-const RouterOutlet = qrl(() => import("./index.qwik.mjs_RouterOutlet_component_hKWOEO9aIDM.mjs"), "RouterOutlet_component_hKWOEO9aIDM");
+const RouterOutlet = /*#__PURE__*/ componentQrl(q_RouterOutlet_component_hKWOEO9aIDM);
 const routeActionQrl = (actionQrl, ...rest) => {
 	const { id, validators } = getValidators(rest, actionQrl);
 	function action() {
@@ -341,7 +341,7 @@ const routeActionQrl = (actionQrl, ...rest) => {
 			}
 			return initialState;
 		});
-		const submit = qrl(() => import("./index.qwik.mjs_routeActionQrl_action_submit_JY3C42B1B08.mjs"), "routeActionQrl_action_submit_JY3C42B1B08", [
+		const submit = q_routeActionQrl_action_submit_JY3C42B1B08.w([
 			currentAction,
 			id,
 			loc,
@@ -525,7 +525,7 @@ const serverQrl = (qrl, options) => {
 	const headers = options?.headers || {};
 	const origin = options?.origin || "";
 	const fetchOptions = options?.fetchOptions || {};
-	return qrl(() => import("./index.qwik.mjs_serverQrl_RA3PmZ4Oyak.mjs"), "serverQrl_RA3PmZ4Oyak", [
+	return q_serverQrl_RA3PmZ4Oyak.w([
 		captured,
 		fetchOptions,
 		headers,
@@ -586,7 +586,7 @@ const Form = ({ action, spaReset, reloadDocument, onSubmit$, ...rest }, key) => 
 				...rest,
 				action: action.actionPath,
 				"preventdefault:submit": !reloadDocument,
-				onSubmit$: [...onSubmit$, !reloadDocument ? qrl(() => import("./index.qwik.mjs_Form_SFSwnnnjQIk.mjs"), "Form_SFSwnnnjQIk", [action]) : void 0],
+				onSubmit$: [...onSubmit$, !reloadDocument ? q_Form_SFSwnnnjQIk.w([action]) : void 0],
 				method: "post",
 				["data-spa-reset"]: spaReset ? "true" : void 0
 			}, key);
@@ -608,7 +608,7 @@ const Form = ({ action, spaReset, reloadDocument, onSubmit$, ...rest }, key) => 
 		}, key);
 	}
 };
-const GetForm = qrl(() => import("./index.qwik.mjs_GetForm_component_2_hKjwJJIqHfA.mjs"), "GetForm_component_2_hKjwJJIqHfA");
+const GetForm = /*#__PURE__*/ componentQrl(q_GetForm_component_2_hKjwJJIqHfA);
 const untypedAppUrl = function appUrl(route, params, paramsPrefix = "") {
 	const path = route.split("/");
 	for (let i = 0; i < path.length; i++) {
@@ -651,7 +651,7 @@ const createRenderer = (getOptions) => {
 		return renderToStream(jsx, options);
 	};
 };
-const DocumentHeadTags = qrl(() => import("./index.qwik.mjs_DocumentHeadTags_component_LaCcLS5Bz4c.mjs"), "DocumentHeadTags_component_LaCcLS5Bz4c");
+const DocumentHeadTags = /*#__PURE__*/ componentQrl(q_DocumentHeadTags_component_LaCcLS5Bz4c);
 export { DocumentHeadTags, ErrorBoundary, Form, Link, QWIK_CITY_SCROLLER, QWIK_ROUTER_SCROLLER, QwikCityMockProvider, QwikCityProvider, QwikRouterMockProvider, QwikRouterProvider, RouterOutlet, ServiceWorkerRegister, createRenderer, globalAction$, globalActionQrl, omitProps, routeAction$, routeActionQrl, routeLoader$, routeLoaderQrl, server$, serverQrl, untypedAppUrl, useContent, useDocumentHead, useLocation, useNavigate, usePreventNavigate$, usePreventNavigateQrl, useQwikRouter, valibot$, valibotQrl, validator$, validatorQrl, zod$, zodQrl };
 
 ============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_ErrorBoundary_component_1_16K8z6DSSp8.mjs (ENTRY POINT) ==
@@ -798,7 +798,7 @@ import { jsx } from "@qwik.dev/core/jsx-runtime";
 import { useNavigate } from "./index.qwik.js";
 export const GetForm_component_2_hKjwJJIqHfA = ({ action: _0, spaReset, reloadDocument, onSubmit$, ...rest }) => {
 	const nav = useNavigate();
-	return /* @__PURE__ */ jsx("form", {
+	return /*#__PURE__*/ jsx("form", {
 		action: "get",
 		"preventdefault:submit": !reloadDocument,
 		"data-spa-reset": spaReset ? "true" : void 0,
@@ -830,7 +830,7 @@ export const GetForm_component_2_hKjwJJIqHfA = ({ action: _0, spaReset, reloadDo
 				}));
 			})
 		],
-		children: /* @__PURE__ */ jsx(Slot, {})
+		children: /*#__PURE__*/ jsx(Slot, {})
 	});
 };
 
@@ -880,7 +880,7 @@ export const RouterOutlet_component_hKWOEO9aIDM = () => {
 				cmp = jsx$1(contents[i].default, { children: cmp });
 			}
 		}
-		return /* @__PURE__ */ jsxs(Fragment, { children: [cmp, !__EXPERIMENTAL__.noSPA && /* @__PURE__ */ jsx("script", {
+		return /*#__PURE__*/ jsxs(Fragment, { children: [cmp, !__EXPERIMENTAL__.noSPA && /*#__PURE__*/ jsx("script", {
 			"document:onQCInit$": spaInit,
 			"document:onQInit$": sync$(() => {
 				((w, h) => {
@@ -1192,7 +1192,7 @@ import { Slot } from "@qwik.dev/core";
 import { jsx } from "@qwik.dev/core/jsx-runtime";
 export const QwikRouterMockProvider_component_kN7AQXV0aXo = (props) => {
 	useQwikMockRouter(props);
-	return /* @__PURE__ */ jsx(Slot, {});
+	return /*#__PURE__*/ jsx(Slot, {});
 };
 
 /*
@@ -1232,13 +1232,13 @@ export const DocumentHeadTags_component_LaCcLS5Bz4c = (props) => {
 			...props
 		};
 	}
-	return /* @__PURE__ */ jsxs(Fragment, { children: [
-		head.title && /* @__PURE__ */ jsx("title", { children: head.title }),
-		head.meta.map((m) => /* @__PURE__ */ jsx("meta", { ...m })),
-		head.links.map((l) => /* @__PURE__ */ jsx("link", { ...l })),
+	return /*#__PURE__*/ jsxs(Fragment, { children: [
+		head.title && /*#__PURE__*/ jsx("title", { children: head.title }),
+		head.meta.map((m) => /*#__PURE__*/ jsx("meta", { ...m })),
+		head.links.map((l) => /*#__PURE__*/ jsx("link", { ...l })),
 		head.styles.map((s) => {
 			const props2 = s.props || s;
-			return /* @__PURE__ */ createElement("style", {
+			return /*#__PURE__*/ createElement("style", {
 				...props2,
 				dangerouslySetInnerHTML: s.style || props2.dangerouslySetInnerHTML,
 				key: s.key
@@ -1246,7 +1246,7 @@ export const DocumentHeadTags_component_LaCcLS5Bz4c = (props) => {
 		}),
 		head.scripts.map((s) => {
 			const props2 = s.props || s;
-			return /* @__PURE__ */ createElement("script", {
+			return /*#__PURE__*/ createElement("script", {
 				...props2,
 				dangerouslySetInnerHTML: s.script || props2.dangerouslySetInnerHTML,
 				key: s.key
@@ -1361,7 +1361,7 @@ export const Link_component_nhj84CU1784 = (props) => {
 	const loc = useLocation();
 	const originalHref = props.href;
 	const anchorRef = useSignal();
-	const { onClick$, prefetch: prefetchProp, reload, replaceState, scroll, ...linkProps } = /* @__PURE__ */ (() => props)();
+	const { onClick$, prefetch: prefetchProp, reload, replaceState, scroll, ...linkProps } = /*#__PURE__*/ (() => props)();
 	const clientNavPath = untrack(getClientNavPath, {
 		...linkProps,
 		reload
@@ -1422,7 +1422,7 @@ export const Link_component_nhj84CU1784 = (props) => {
 			handlePrefetch?.(void 0, anchorRef.value);
 		}
 	});
-	return /* @__PURE__ */ jsx("a", {
+	return /*#__PURE__*/ jsx("a", {
 		ref: anchorRef,
 		...{ "q:link": !!clientNavPath },
 		...linkProps,
@@ -1436,7 +1436,7 @@ export const Link_component_nhj84CU1784 = (props) => {
 		onMouseOver$: [linkProps.onMouseOver$, handlePrefetch],
 		onFocus$: [linkProps.onFocus$, handlePrefetch],
 		onQVisible$: [],
-		children: /* @__PURE__ */ jsx(Slot, {})
+		children: /*#__PURE__*/ jsx(Slot, {})
 	});
 };
 
@@ -2471,7 +2471,7 @@ export const useQwikRouter_registerPreventNav_W0LIs8PUJoA = (fn$) => {
 			event.returnValue = true;
 		}
 	};
-	(preventNav.$cbs$ ||= /* @__PURE__ */ new Set()).add(fn$);
+	(preventNav.$cbs$ ||= /*#__PURE__*/ new Set()).add(fn$);
 	fn$.resolve();
 	window.addEventListener("beforeunload", preventNav.$handler$);
 	return () => {

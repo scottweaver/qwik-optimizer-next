@@ -10,8 +10,11 @@ import { Fragment } from "@qwik.dev/core";
 import { component$, useResource$, Resource } from "@qwik.dev/core";
 import { type ModelProps } from "./modelMenu";
 import { serverImg } from "~/routes/(authenticated)/layout";
-export const Image = qrl(() => import("./test.tsx_Image_component_CS20HgBlRYI"), "Image_component_CS20HgBlRYI");
-export const ModelImg = qrl<ModelProps>(() => import("./test.tsx_ModelImg_component_iJe6ICWVnyA"), "ModelImg_component_iJe6ICWVnyA");
+const q_Image_component_CS20HgBlRYI = /*#__PURE__*/ qrl(() => import("./test.tsx_Image_component_CS20HgBlRYI"), "Image_component_CS20HgBlRYI");
+const q_ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI = /*#__PURE__*/ qrl(() => import("./test.tsx_ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI"), "ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI");
+const q_ModelImg_component_iJe6ICWVnyA = /*#__PURE__*/ qrl(() => import("./test.tsx_ModelImg_component_iJe6ICWVnyA"), "ModelImg_component_iJe6ICWVnyA");
+export const Image = /*#__PURE__*/ componentQrl(q_Image_component_CS20HgBlRYI);
+export const ModelImg = /*#__PURE__*/ componentQrl(q_ModelImg_component_iJe6ICWVnyA);
 
 ============================= test.tsx_Image_component_CS20HgBlRYI.js (ENTRY POINT) ==
 export const Image_component_CS20HgBlRYI = (props) => {

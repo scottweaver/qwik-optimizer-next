@@ -7,23 +7,23 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /*#__PURE__*/ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-const q__2_sSArpd0iSRk = /*#__PURE__*/ qrl(() => import("./test.tsx__2_sSArpd0iSRk"), "_2_sSArpd0iSRk");
-const q__3_OyZ0gk5pkcU = /*#__PURE__*/ qrl(() => import("./test.tsx__3_OyZ0gk5pkcU"), "_3_OyZ0gk5pkcU");
-const q__4_Gairpaqi1qc = /*#__PURE__*/ qrl(() => import("./test.tsx__4_Gairpaqi1qc"), "_4_Gairpaqi1qc");
+const q_Nested_component_8cqIQQSPqhE = /*#__PURE__*/ qrl(() => import("./test.tsx_Nested_component_8cqIQQSPqhE"), "Nested_component_8cqIQQSPqhE");
+const q_RecursiveList_component_ignTe6QguYQ = /*#__PURE__*/ qrl(() => import("./test.tsx_RecursiveList_component_ignTe6QguYQ"), "RecursiveList_component_ignTe6QguYQ");
+const q_ComponentA_component_100sEyGkGuA = /*#__PURE__*/ qrl(() => import("./test.tsx_ComponentA_component_100sEyGkGuA"), "ComponentA_component_100sEyGkGuA");
+const q_ComponentB_component_WfCOFVxlmq4 = /*#__PURE__*/ qrl(() => import("./test.tsx_ComponentB_component_WfCOFVxlmq4"), "ComponentB_component_WfCOFVxlmq4");
+const q_MutualExample_component_LXt10RL0k44 = /*#__PURE__*/ qrl(() => import("./test.tsx_MutualExample_component_LXt10RL0k44"), "MutualExample_component_LXt10RL0k44");
 // Self-referential component: the Nested component references itself in its JSX
 // This should be migrated to its segment using two-phase emission (let + assign)
 // to avoid Temporal Dead Zone errors
-export const Nested = qrl(() => import("./test.tsx_Nested_component_8cqIQQSPqhE"), "Nested_component_8cqIQQSPqhE");
+export const Nested = /*#__PURE__*/ componentQrl(q_Nested_component_8cqIQQSPqhE);
 // Another self-referential component with conditional rendering
-export const RecursiveList = qrl(() => import("./test.tsx_RecursiveList_component_ignTe6QguYQ"), "RecursiveList_component_ignTe6QguYQ");
+export const RecursiveList = /*#__PURE__*/ componentQrl(q_RecursiveList_component_ignTe6QguYQ);
 // Mutually recursive components: A references B, B references A
-const ComponentA = qrl(() => import("./test.tsx_ComponentA_component_100sEyGkGuA"), "ComponentA_component_100sEyGkGuA");
-export const MutualExample = qrl(() => import("./test.tsx_MutualExample_component_LXt10RL0k44"), "MutualExample_component_LXt10RL0k44");
+const ComponentA = /*#__PURE__*/ componentQrl(q_ComponentA_component_100sEyGkGuA);
+const ComponentB = /*#__PURE__*/ componentQrl(q_ComponentB_component_WfCOFVxlmq4);
+export const MutualExample = /*#__PURE__*/ componentQrl(q_MutualExample_component_LXt10RL0k44);
 
 ============================= test.tsx_ComponentA_component_100sEyGkGuA.ts (ENTRY POINT) ==
-const ComponentB = qrl(() => import("./test.tsx_ComponentB_component_WfCOFVxlmq4"), "ComponentB_component_WfCOFVxlmq4");
 export const ComponentA_component_100sEyGkGuA = () => {
 	return (
 		<div>

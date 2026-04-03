@@ -7,15 +7,15 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$, h, Fragment } from "@qwik.dev/core";
-const q_component_ZUK1E201Ins = /*#__PURE__*/ qrl(() => import("./test.tsx_component_ZUK1E201Ins"), "component_ZUK1E201Ins");
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(() => import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
 export const Lightweight = (props) => {
 	return _jsxSorted("div", null, null, <>
 				<div />
 				<button {...props} />
 			</>, 1, "0");
 };
-export const Foo = qrl(() => import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_1_DvU6FitWglY);
 
 ============================= test.tsx_Foo_component_1_DvU6FitWglY.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
