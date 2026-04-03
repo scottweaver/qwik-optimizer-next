@@ -1,16 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.ts ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const Counter = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export const Counter = qrl(() => import("./test.tsx_Counter_component_zTmRHlL09Gg"), "Counter_component_zTmRHlL09Gg");
 
-============================= test.tsx__u6BtPnK76q4.ts (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+============================= test.tsx_Counter_component_zTmRHlL09Gg.ts (ENTRY POINT) ==
+export const Counter_component_zTmRHlL09Gg = () => {
 			const count = useSignal(0);
 
 			return (
@@ -25,11 +25,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Counter_component_zTmRHlL09Gg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Counter_component",
+  "hash": "zTmRHlL09Gg",
+  "canonicalFilename": "test.tsx_Counter_component_zTmRHlL09Gg",
   "path": "",
   "extension": "ts",
   "parent": null,

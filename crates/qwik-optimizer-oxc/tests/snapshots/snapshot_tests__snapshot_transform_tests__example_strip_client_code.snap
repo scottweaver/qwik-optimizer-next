@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= components/component.js ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -21,12 +22,12 @@ export const Parent = componentQrl(() => {
 	});
 	useTaskQrl(() => {
 		// Code
-	}, "component_MSsdDxJ8IdU");
+	}, "Parent_component_useTask_ngmvcygWux8");
 	return _jsxSorted("div", {
 		shouldRemove$: () => state.text,
 		onClick$: () => console.log("parent", state, threejs)
 	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
-}, "_7RMfCDur6ww");
+}, "Parent_component_t6Wy3C0Q0XM");
 
 == DIAGNOSTICS ==
 []

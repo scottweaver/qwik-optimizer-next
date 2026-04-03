@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
@@ -11,20 +12,20 @@ const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4")
 export const onGet = () => {
 	throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
 };
-export default /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
-export const _u6BtPnK76q4 = ()=> {
+============================= test.tsx_test_component_LUXeXe0DQrg.tsx (ENTRY POINT) ==
+export const test_component_LUXeXe0DQrg = ()=> {
 	return <div>cmp</div>
 };
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "tsx",
   "parent": null,

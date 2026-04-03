@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
@@ -8,13 +9,12 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { CustomComponent } from "./custom-component";
 import { AnotherComponent } from "./another-component";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const Greeter = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export const Greeter = qrl(() => import("./test.tsx_Greeter_component_n7HuG2hhU0Q"), "Greeter_component_n7HuG2hhU0Q");
 
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+============================= test.tsx_Greeter_component_n7HuG2hhU0Q.tsx (ENTRY POINT) ==
 import { AnotherComponent } from "./another-component";
 import { CustomComponent } from "./custom-component";
-export const _u6BtPnK76q4 = () => {
+export const Greeter_component_n7HuG2hhU0Q = () => {
 	return (
 		<div>
 			<CustomComponent onClick$={() => {}}/>
@@ -27,11 +27,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Greeter_component_n7HuG2hhU0Q",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Greeter_component",
+  "hash": "n7HuG2hhU0Q",
+  "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "tsx",
   "parent": null,

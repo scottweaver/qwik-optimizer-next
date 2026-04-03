@@ -1,18 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= components/main.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import { state } from "./sibling";
-const q__zp0HVfIhA50 = /*#__PURE__*/ qrl(() => import("./main.tsx__zp0HVfIhA50.tsx"), "_zp0HVfIhA50");
-export const Local = /*#__PURE__*/ componentQrl(q__zp0HVfIhA50);
+export const Local = qrl(() => import("./main.tsx_Local_component_jJ0v28bs0p8.tsx"), "Local_component_jJ0v28bs0p8");
 
-============================= components/main.tsx__zp0HVfIhA50.js (ENTRY POINT) ==
+============================= components/main.tsx_Local_component_jJ0v28bs0p8.js (ENTRY POINT) ==
 import { state } from "./sibling";
-export const _zp0HVfIhA50 = () => {
+export const Local_component_jJ0v28bs0p8 = () => {
 	return (
 		<div>{state}</div>
 	)
@@ -20,11 +20,11 @@ export const _zp0HVfIhA50 = () => {
 /*
 {
   "origin": "components/main.tsx",
-  "name": "_zp0HVfIhA50",
+  "name": "Local_component_jJ0v28bs0p8",
   "entry": null,
-  "displayName": "main.tsx_",
-  "hash": "zp0HVfIhA50",
-  "canonicalFilename": "main.tsx__zp0HVfIhA50",
+  "displayName": "main.tsx_Local_component",
+  "hash": "jJ0v28bs0p8",
+  "canonicalFilename": "main.tsx_Local_component_jJ0v28bs0p8",
   "path": "components",
   "extension": "js",
   "parent": null,

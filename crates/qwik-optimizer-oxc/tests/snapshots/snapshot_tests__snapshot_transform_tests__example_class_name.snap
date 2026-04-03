@@ -1,17 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(() => import("./test.tsx__u6BtPnK76q4.tsx"), "_u6BtPnK76q4");
-export const App2 = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export const App2 = qrl(() => import("./test.tsx_App2_component_3yveMqbQ3Fs.tsx"), "App2_component_3yveMqbQ3Fs");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+============================= test.tsx_App2_component_3yveMqbQ3Fs.js (ENTRY POINT) ==
+export const App2_component_3yveMqbQ3Fs = () => {
 	const signal = useSignal();
 	const computed = signal.value + 'foo';
 	return (
@@ -31,11 +31,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "App2_component_3yveMqbQ3Fs",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_App2_component",
+  "hash": "3yveMqbQ3Fs",
+  "canonicalFilename": "test.tsx_App2_component_3yveMqbQ3Fs",
   "path": "",
   "extension": "js",
   "parent": null,

@@ -1,24 +1,24 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= components\apps\apps.ts ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-const q__9HxOyz22pCE = /*#__PURE__*/ qrl(() => import("./componentsappsapps.tsx__9HxOyz22pCE"), "_9HxOyz22pCE");
-export const Greeter = /*#__PURE__*/ componentQrl(q__9HxOyz22pCE);
+export const Greeter = qrl(() => import("./components\\apps\\apps.tsx_Greeter_component_Q7eEoxaolmI"), "Greeter_component_Q7eEoxaolmI");
 
-============================= components\apps\apps.tsx__9HxOyz22pCE.ts (ENTRY POINT) ==
-export const _9HxOyz22pCE = () => <div/>;
+============================= components\apps\apps.tsx_Greeter_component_Q7eEoxaolmI.ts (ENTRY POINT) ==
+export const Greeter_component_Q7eEoxaolmI = () => <div/>;
 /*
 {
   "origin": "components\\apps\\apps.tsx",
-  "name": "_9HxOyz22pCE",
+  "name": "Greeter_component_Q7eEoxaolmI",
   "entry": null,
-  "displayName": "components\\apps\\apps.tsx_",
-  "hash": "9HxOyz22pCE",
-  "canonicalFilename": "components\\apps\\apps.tsx__9HxOyz22pCE",
+  "displayName": "components\\apps\\apps.tsx_Greeter_component",
+  "hash": "Q7eEoxaolmI",
+  "canonicalFilename": "components\\apps\\apps.tsx_Greeter_component_Q7eEoxaolmI",
   "path": "",
   "extension": "ts",
   "parent": null,

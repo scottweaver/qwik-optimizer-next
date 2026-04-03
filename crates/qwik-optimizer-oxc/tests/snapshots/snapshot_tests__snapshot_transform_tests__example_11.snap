@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= project/test.tsx ==
 import { qrl } from "@qwik.dev/core";
@@ -9,60 +10,24 @@ import { $, component$ } from "@qwik.dev/core";
 import { foo, bar as bbar } from "../state";
 import * as dep2 from "dep2";
 import dep3 from "dep3/something";
-const q_component_fA7aHBrXs7g = /*#__PURE__*/ qrl(() => import("./test.tsx_component_fA7aHBrXs7g"), "component_fA7aHBrXs7g");
-const q__cA4RUxLrFo0 = /*#__PURE__*/ qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
-const q__1_Vv7m2UfJ8NQ = /*#__PURE__*/ qrl(() => import("./test.tsx__1_Vv7m2UfJ8NQ"), "_1_Vv7m2UfJ8NQ");
-export const Header = /*#__PURE__*/ componentQrl(q__cA4RUxLrFo0);
-export const App = /*#__PURE__*/ componentQrl(q__1_Vv7m2UfJ8NQ);
+export const Header = qrl(() => import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
+export const App = qrl(() => import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
 
-============================= project/test.tsx__cA4RUxLrFo0.tsx ==
-import { $ } from "@qwik.dev/core";
-import { Header } from "./test";
-import { bar as bbar } from "../state";
-import { * as dep2 } from "dep2";
+============================= project/test.tsx_Header_component_onClick_FaGKP0YO8vk.tsx ==
 import { default as dep3 } from "dep3/something";
-export const _cA4RUxLrFo0 = () => {
-	return (
-		<Header onClick={$((ev) => dep3(ev))}>
-			{dep2.stuff()}{bbar()}
-		</Header>
-	);
-};
-/*
-{
-  "origin": "project/test.tsx",
-  "name": "_cA4RUxLrFo0",
-  "entry": "entry_segments",
-  "displayName": "test.tsx_",
-  "hash": "cA4RUxLrFo0",
-  "canonicalFilename": "test.tsx__cA4RUxLrFo0",
-  "path": "project",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    180,
-    294
-  ]
-}
-*/
-============================= project/test.tsx_component_fA7aHBrXs7g.tsx ==
-import { default as dep3 } from "dep3/something";
-export const component_fA7aHBrXs7g = (ev) => dep3(ev);
+export const Header_component_onClick_FaGKP0YO8vk = (ev) => dep3(ev);
 
 /*
 {
   "origin": "project/test.tsx",
-  "name": "component_fA7aHBrXs7g",
+  "name": "Header_component_onClick_FaGKP0YO8vk",
   "entry": "entry_segments",
-  "displayName": "test.tsx_component",
-  "hash": "fA7aHBrXs7g",
-  "canonicalFilename": "test.tsx_component_fA7aHBrXs7g",
+  "displayName": "test.tsx_Header_component_onClick",
+  "hash": "FaGKP0YO8vk",
+  "canonicalFilename": "test.tsx_Header_component_onClick_FaGKP0YO8vk",
   "path": "project",
   "extension": "tsx",
-  "parent": "_cA4RUxLrFo0",
+  "parent": "Header_component_UVBJuFYfvDo",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -75,10 +40,43 @@ export const component_fA7aHBrXs7g = (ev) => dep3(ev);
   ]
 }
 */
-============================= project/test.tsx__1_Vv7m2UfJ8NQ.tsx ==
+============================= project/test.tsx_Header_component_UVBJuFYfvDo.tsx ==
+import { $ } from "@qwik.dev/core";
+import { Header } from "./test";
+import { bar as bbar } from "../state";
+import { * as dep2 } from "dep2";
+import { default as dep3 } from "dep3/something";
+export const Header_component_UVBJuFYfvDo = () => {
+	return (
+		<Header onClick={$((ev) => dep3(ev))}>
+			{dep2.stuff()}{bbar()}
+		</Header>
+	);
+};
+/*
+{
+  "origin": "project/test.tsx",
+  "name": "Header_component_UVBJuFYfvDo",
+  "entry": "entry_segments",
+  "displayName": "test.tsx_Header_component",
+  "hash": "UVBJuFYfvDo",
+  "canonicalFilename": "test.tsx_Header_component_UVBJuFYfvDo",
+  "path": "project",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    180,
+    294
+  ]
+}
+*/
+============================= project/test.tsx_App_component_wGkRHWXaqjs.tsx ==
 import { Header } from "./test";
 import { foo } from "../state";
-export const _1_Vv7m2UfJ8NQ = () => {
+export const App_component_wGkRHWXaqjs = () => {
 	return (
 		<Header>{foo()}</Header>
 	);
@@ -86,11 +84,11 @@ export const _1_Vv7m2UfJ8NQ = () => {
 /*
 {
   "origin": "project/test.tsx",
-  "name": "_1_Vv7m2UfJ8NQ",
+  "name": "App_component_wGkRHWXaqjs",
   "entry": "entry_segments",
-  "displayName": "test.tsx__1",
-  "hash": "Vv7m2UfJ8NQ",
-  "canonicalFilename": "test.tsx__1_Vv7m2UfJ8NQ",
+  "displayName": "test.tsx_App_component",
+  "hash": "wGkRHWXaqjs",
+  "canonicalFilename": "test.tsx_App_component_wGkRHWXaqjs",
   "path": "project",
   "extension": "tsx",
   "parent": null,

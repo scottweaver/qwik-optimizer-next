@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -18,7 +19,7 @@ export const Greeter = componentQrl(() => {
 		<div>{value}</div>,
 		<div>{value.value}</div>
 	], 1, null);
-}, "s_u6BtPnK76q4");
+}, "s_n7HuG2hhU0Q");
 
 == DIAGNOSTICS ==
 []

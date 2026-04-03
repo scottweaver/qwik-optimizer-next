@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -10,21 +11,21 @@ const shared = { id: "abc" };
 export function readShared() {
 	return shared.id;
 }
-export const handler = q__u6BtPnK76q4;
+export const handler = qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
+export const handler_T7IDIUVU4lI = () => {
 	console.log(shared.id);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "handler_T7IDIUVU4lI",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_handler",
+  "hash": "T7IDIUVU4lI",
+  "canonicalFilename": "test.tsx_handler_T7IDIUVU4lI",
   "path": "",
   "extension": "js",
   "parent": null,
