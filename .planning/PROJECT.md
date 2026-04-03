@@ -12,18 +12,18 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Behavioral spec covers all 14 transformation types — Validated in Phases 1-4, 7
+- [x] Spec documents the public API contract (TransformModulesOptions, TransformOutput) — Validated in Phase 4
+- [x] Spec covers all 7 entry strategies with behavioral descriptions — Validated in Phase 3
+- [x] Spec includes NAPI and WASM binding contracts — Validated in Phase 4
+- [x] Spec includes 24+ representative input/output examples covering all 14 CONVs — Validated in Phase 4, 7
+- [x] Spec includes OXC migration notes per transformation section — Validated in Phase 4
+- [x] Feature-complete OXC implementation passes 201 behavioral tests — Validated in Phases 5, 8
+- [x] OXC implementation uses Traverse trait, arena allocators, SemanticBuilder, Codegen — Validated in Phase 5
 
 ### Active
 
-- [ ] Behavioral spec covers all 14 transformation types (dollar detection, QRL wrapping, capture analysis, props destructuring, segment extraction, JSX transforms, signal optimization, PURE annotations, const replacement, dead branch elimination, code stripping, import rewriting, sync$ serialization)
-- [ ] Spec documents the public API contract (TransformModulesOptions input, TransformOutput output, all config variants)
-- [ ] Spec covers all 6 entry strategies (Inline, Hoist, Single, Hook/Segment, Component, Smart) with behavioral descriptions
-- [ ] Spec includes NAPI and WASM binding contracts
-- [ ] Spec includes representative input/output examples extracted from Jack's 162 spec files
-- [ ] Spec includes OXC migration notes where SWC and OXC patterns diverge (visitor vs traverse, fold vs mutation, arena allocation, semantic analysis)
-- [ ] Feature-complete OXC implementation passes all behavioral tests derived from spec
-- [ ] OXC implementation is idiomatic — not a port of SWC patterns, but native OXC architecture (two-phase analyze-then-emit, arena allocators, TraverseCtx)
+(All v0.1.0 requirements validated — see Validated section above)
 
 ### Out of Scope
 
@@ -54,11 +54,11 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Behavioral spec, not technical | Spec describes what the optimizer does, not how SWC implements it — enables idiomatic OXC rewrite | — Pending |
-| Build on Jack's 162 spec files | Near-complete test corpus already exists with input/output pairs and metadata | — Pending |
-| Include OXC migration notes | Explicit guidance on SWC→OXC pattern differences prevents porting anti-patterns | — Pending |
-| Single comprehensive document | Easier to reference and maintain than scattered docs | — Pending |
-| Core + NAPI + WASM bindings | Full coverage needed for drop-in replacement | — Pending |
+| Behavioral spec, not technical | Spec describes what the optimizer does, not how SWC implements it — enables idiomatic OXC rewrite | Validated |
+| Build on Jack's 162 spec files | Near-complete test corpus already exists with input/output pairs and metadata | Validated — 201 fixtures + 24 spec examples |
+| Include OXC migration notes | Explicit guidance on SWC→OXC pattern differences prevents porting anti-patterns | Validated |
+| Single comprehensive document | Easier to reference and maintain than scattered docs | Validated |
+| Core + NAPI + WASM bindings | Full coverage needed for drop-in replacement | Validated — NAPI v3 + wasm-bindgen |
 
 ## Evolution
 
