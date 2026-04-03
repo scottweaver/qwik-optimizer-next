@@ -52,7 +52,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Specification — Cross-Cutting
 
 - [x] **SPEC-28**: Spec includes OXC migration notes per transformation — where SWC and OXC patterns diverge (Fold vs Traverse, SyntaxContext vs Scoping, ownership vs arena allocation)
-- [ ] **SPEC-29**: Spec includes representative input/output examples extracted from Jack's 162 spec files (minimum 20 covering all 14 CONVs)
+- [x] **SPEC-29**: Spec includes representative input/output examples extracted from Jack's 162 spec files (minimum 20 covering all 14 CONVs)
 - [x] **SPEC-30**: Spec includes capture analysis taxonomy with edge case examples for all 8 categories
 
 ### Implementation — Core
@@ -137,7 +137,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-26 | Phase 4 | Complete |
 | SPEC-27 | Phase 4 | Complete |
 | SPEC-28 | Phase 4 | Complete |
-| SPEC-29 | Phase 7 (gap closure) | Pending |
+| SPEC-29 | Phase 7 (gap closure) | Complete |
 | SPEC-30 | Phase 1 | Complete |
 | IMPL-01 | Phase 5 | Complete |
 | IMPL-02 | Phase 8 (gap closure) | Pending |
@@ -168,4 +168,4 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-03 after gap closure phase creation*
+*Last updated: 2026-04-03 after Phase 7 gap closure execution*
