@@ -140,10 +140,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | SPEC-29 | Phase 7 (gap closure) | Complete |
 | SPEC-30 | Phase 1 | Complete |
 | IMPL-01 | Phase 5 | Complete |
-| IMPL-02 | Phase 8 (gap closure) | Pending |
+| IMPL-02 | Phase 8 (gap closure) | Complete |
 | IMPL-03 | Phase 9 (gap closure) | Pending |
 | IMPL-04 | Phase 9 (gap closure) | Pending |
-| IMPL-05 | Phase 8 (gap closure) | Pending |
+| IMPL-05 | Phase 8 (gap closure) | Complete |
 | IMPL-06 | Phase 6 | Complete |
 | IMPL-07 | Phase 6 | Complete |
 | IMPL-08 | Phase 5 | Complete |
