@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 895
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -9,7 +9,7 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useStore } from "@qwik.dev/core";
 export const App = componentQrl((props) => {
 	return _jsxSorted(Cmp, null, null, <p class="stuff" onClick$={() => console.log("warn")}>Hello Qwik</p>, 1, "0");
-}, "_u6BtPnK76q4");
+}, "App_Jlq9hNxnCvw");
 
 == DIAGNOSTICS ==
 []

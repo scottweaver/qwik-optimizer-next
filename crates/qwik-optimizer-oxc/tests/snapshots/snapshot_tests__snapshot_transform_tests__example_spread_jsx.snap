@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 915
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -13,12 +13,12 @@ import { useDocumentHead, useLocation } from "@qwik.dev/router";
 /**
 * The RouterHead component is placed inside of the document `<head>` element.
 */
-export const RouterHead = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const RouterHead = qrl(() => import("./test.tsx_RouterHead_OveQ1EiDFHA"), "RouterHead_OveQ1EiDFHA");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_RouterHead_OveQ1EiDFHA.js (ENTRY POINT) ==
 import { useDocumentHead } from "@qwik.dev/router";
 import { useLocation } from "@qwik.dev/router";
-export const _u6BtPnK76q4 = () => {
+export const RouterHead_OveQ1EiDFHA = () => {
 	const head = useDocumentHead();
 	const loc = useLocation();
 
@@ -47,11 +47,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "RouterHead_OveQ1EiDFHA",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_RouterHead",
+  "hash": "OveQ1EiDFHA",
+  "canonicalFilename": "test.tsx_RouterHead_OveQ1EiDFHA",
   "path": "",
   "extension": "js",
   "parent": null,

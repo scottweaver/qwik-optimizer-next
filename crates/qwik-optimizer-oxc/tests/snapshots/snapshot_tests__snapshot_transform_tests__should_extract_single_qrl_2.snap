@@ -1,18 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 953
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useStore, useSignal } from "@qwik.dev/core";
-const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const Parent = qrl(() => import("./test.tsx_Parent_UhsrANEJoQg"), "Parent_UhsrANEJoQg");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_Parent_UhsrANEJoQg.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
+export const Parent_UhsrANEJoQg = () => {
       const cart = useStore<Cart>([]);
       const results = useSignal(['foo', 'bar']);
 
@@ -43,11 +43,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Parent_UhsrANEJoQg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Parent",
+  "hash": "UhsrANEJoQg",
+  "canonicalFilename": "test.tsx_Parent_UhsrANEJoQg",
   "path": "",
   "extension": "js",
   "parent": null,

@@ -1,18 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 848
 expression: output
+snapshot_kind: text
 ---
 ============================= src/routes/_repl/[id]/[[...slug]].js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 import { sibling } from "./sibling";
-export default qrl(() => import("./[[...slug]].tsx__W4MVsX0BY3o.tsx"), "_W4MVsX0BY3o");
+export default qrl(() => import("./[[...slug]].tsx_slug_SrP1sUhf7LE.tsx"), "slug_SrP1sUhf7LE");
 
-============================= src/routes/_repl/[id]/[[...slug]].tsx__W4MVsX0BY3o.js (ENTRY POINT) ==
+============================= src/routes/_repl/[id]/[[...slug]].tsx_slug_SrP1sUhf7LE.js ==
 import { sibling } from "./sibling";
-export const _W4MVsX0BY3o = () => {
+export const slug_SrP1sUhf7LE = () => {
 	return (
 		<div onClick$={() => console.log(mongodb, sibling)}>
 		</div>
@@ -21,11 +21,11 @@ export const _W4MVsX0BY3o = () => {
 /*
 {
   "origin": "src/routes/_repl/[id]/[[...slug]].tsx",
-  "name": "_W4MVsX0BY3o",
-  "entry": null,
-  "displayName": "[[...slug]].tsx_",
-  "hash": "W4MVsX0BY3o",
-  "canonicalFilename": "[[...slug]].tsx__W4MVsX0BY3o",
+  "name": "slug_SrP1sUhf7LE",
+  "entry": "src/routes/_repl/[id]/[[...slug]].tsx_entry_[[...slug]]",
+  "displayName": "[[...slug]].tsx_slug",
+  "hash": "SrP1sUhf7LE",
+  "canonicalFilename": "[[...slug]].tsx_slug_SrP1sUhf7LE",
   "path": "src/routes/_repl/[id]",
   "extension": "js",
   "parent": null,

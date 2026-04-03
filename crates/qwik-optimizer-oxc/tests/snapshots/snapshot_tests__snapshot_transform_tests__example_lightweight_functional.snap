@@ -1,13 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 883
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
-export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const Foo = qrl(() => import("./test.tsx_Foo_n07hoBxfni0"), "Foo_n07hoBxfni0");
 export function Button({ text, color }) {
 	return _jsxSorted("button", {
 		onColor$: color,
@@ -23,10 +23,10 @@ export const ButtonArrow = (_rawProps) => {
 	}, null, text, 1, "1");
 };
 
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+============================= test.tsx_Foo_n07hoBxfni0.tsx (ENTRY POINT) ==
 import { Button } from "./test";
 import { ButtonArrow } from "./test";
-export const _u6BtPnK76q4 = (props) => {
+export const Foo_n07hoBxfni0 = (props) => {
 	return (
 		<div>
 			<Button {...props} />
@@ -37,11 +37,11 @@ export const _u6BtPnK76q4 = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Foo_n07hoBxfni0",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Foo",
+  "hash": "n07hoBxfni0",
+  "canonicalFilename": "test.tsx_Foo_n07hoBxfni0",
   "path": "",
   "extension": "tsx",
   "parent": null,

@@ -1584,6 +1584,133 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Stack context push/pop for descriptive symbol naming (SWC parity)
+    // -----------------------------------------------------------------------
+
+    fn enter_variable_declarator(
+        &mut self,
+        node: &mut VariableDeclarator<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if let BindingPattern::BindingIdentifier(ident) = &node.id {
+            self.stack_ctxt.push(ident.name.to_string());
+        }
+    }
+
+    fn exit_variable_declarator(
+        &mut self,
+        node: &mut VariableDeclarator<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if matches!(&node.id, BindingPattern::BindingIdentifier(_)) {
+            self.stack_ctxt.pop();
+        }
+    }
+
+    fn enter_declaration(
+        &mut self,
+        node: &mut Declaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        match node {
+            Declaration::FunctionDeclaration(func) => {
+                if let Some(id) = &func.id {
+                    self.stack_ctxt.push(id.name.to_string());
+                }
+            }
+            Declaration::ClassDeclaration(class) => {
+                if let Some(id) = &class.id {
+                    self.stack_ctxt.push(id.name.to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn exit_declaration(
+        &mut self,
+        node: &mut Declaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        match node {
+            Declaration::FunctionDeclaration(func) => {
+                if func.id.is_some() {
+                    self.stack_ctxt.pop();
+                }
+            }
+            Declaration::ClassDeclaration(class) => {
+                if class.id.is_some() {
+                    self.stack_ctxt.pop();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn enter_jsx_opening_element(
+        &mut self,
+        node: &mut JSXOpeningElement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if let JSXElementName::Identifier(ident) = &node.name {
+            self.stack_ctxt.push(ident.name.to_string());
+        }
+    }
+
+    fn exit_jsx_opening_element(
+        &mut self,
+        node: &mut JSXOpeningElement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if matches!(&node.name, JSXElementName::Identifier(_)) {
+            self.stack_ctxt.pop();
+        }
+    }
+
+    fn enter_jsx_attribute(
+        &mut self,
+        node: &mut JSXAttribute<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if let JSXAttributeName::Identifier(ident) = &node.name {
+            self.stack_ctxt.push(ident.name.to_string());
+        }
+    }
+
+    fn exit_jsx_attribute(
+        &mut self,
+        node: &mut JSXAttribute<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if matches!(&node.name, JSXAttributeName::Identifier(_)) {
+            self.stack_ctxt.pop();
+        }
+    }
+
+    fn enter_export_default_declaration(
+        &mut self,
+        _node: &mut ExportDefaultDeclaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // Push file stem (e.g., "test" from "test.tsx") for export default context.
+        // SWC uses path_data.file_stem; we derive it from file_name.
+        let file_stem = self.file_name
+            .rsplit_once('.')
+            .map(|(stem, _ext)| stem)
+            .unwrap_or(&self.file_name)
+            .to_string();
+        self.stack_ctxt.push(file_stem);
+    }
+
+    fn exit_export_default_declaration(
+        &mut self,
+        _node: &mut ExportDefaultDeclaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        self.stack_ctxt.pop();
+    }
+
     fn exit_program(
         &mut self,
         program: &mut Program<'a>,

@@ -1,16 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 850
 expression: output
+snapshot_kind: text
 ---
 ============================= src/components/mongo/404.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
-export default qrl(() => import("./404.tsx__0BX5jYI256c"), "_0BX5jYI256c");
+export default qrl(() => import("./404.tsx__404_O0mnbX5bCtI"), "_404_O0mnbX5bCtI");
 
-============================= src/components/mongo/404.tsx__0BX5jYI256c.tsx (ENTRY POINT) ==
-export const _0BX5jYI256c = () => {
+============================= src/components/mongo/404.tsx__404_O0mnbX5bCtI.tsx (ENTRY POINT) ==
+export const _404_O0mnbX5bCtI = () => {
 	return (
 		<div onClick$={() => console.log(mongodb)}>
 		</div>
@@ -19,11 +19,11 @@ export const _0BX5jYI256c = () => {
 /*
 {
   "origin": "src/components/mongo/404.tsx",
-  "name": "_0BX5jYI256c",
+  "name": "_404_O0mnbX5bCtI",
   "entry": null,
-  "displayName": "404.tsx_",
-  "hash": "0BX5jYI256c",
-  "canonicalFilename": "404.tsx__0BX5jYI256c",
+  "displayName": "404.tsx__404",
+  "hash": "O0mnbX5bCtI",
+  "canonicalFilename": "404.tsx__404_O0mnbX5bCtI",
   "path": "src/components/mongo",
   "extension": "tsx",
   "parent": null,

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 981
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -9,21 +9,21 @@ import { wrapperFn, getEnv } from "utils";
 import { formAction$, valiForm$ } from "forms";
 const flagEnabled = getEnv().PUBLIC_FEATURE;
 export const FeatureSchema = wrapperFn(flagEnabled);
-export const featureAction = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const featureAction = qrl(() => import("./test.tsx_featureAction_2xV4qM2Xetg"), "featureAction_2xV4qM2Xetg");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = async (requestEvent) => {
+============================= test.tsx_featureAction_2xV4qM2Xetg.js (ENTRY POINT) ==
+export const featureAction_2xV4qM2Xetg = async (requestEvent) => {
 	return { status: "success" };
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "featureAction_2xV4qM2Xetg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_featureAction",
+  "hash": "2xV4qM2Xetg",
+  "canonicalFilename": "test.tsx_featureAction_2xV4qM2Xetg",
   "path": "",
   "extension": "js",
   "parent": null,

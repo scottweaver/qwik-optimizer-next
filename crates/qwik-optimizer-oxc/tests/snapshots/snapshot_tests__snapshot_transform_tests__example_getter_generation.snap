@@ -1,52 +1,20 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 867
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore } from "@qwik.dev/core";
-export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const Cmp = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const App = qrl(() => import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw");
+export const Cmp = qrl(() => import("./test.tsx_Cmp_VOFhWBnY6qQ"), "Cmp_VOFhWBnY6qQ");
 
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
-export const _1_iZVV0eoW44k = (props) => {
-	return (
-		<>
-			<p data-value={props.count}>{props.nested.count}</p>
-			<p>Value {props.count}<span></span></p>
-		</>
-	);
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
-  "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    446,
-    596
-  ],
-  "paramNames": [
-    "props"
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_App_Jlq9hNxnCvw.js (ENTRY POINT) ==
 import { Cmp } from "./test";
 import { useStore } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
+export const App_Jlq9hNxnCvw = () => {
 	const store = useStore({
 		count: 0,
 		stuff: 0,
@@ -70,11 +38,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "App_Jlq9hNxnCvw",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_App",
+  "hash": "Jlq9hNxnCvw",
+  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -84,6 +52,38 @@ export const _u6BtPnK76q4 = () => {
   "loc": [
     76,
     424
+  ]
+}
+*/
+============================= test.tsx_Cmp_VOFhWBnY6qQ.js (ENTRY POINT) ==
+export const Cmp_VOFhWBnY6qQ = (props) => {
+	return (
+		<>
+			<p data-value={props.count}>{props.nested.count}</p>
+			<p>Value {props.count}<span></span></p>
+		</>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Cmp_VOFhWBnY6qQ",
+  "entry": null,
+  "displayName": "test.tsx_Cmp",
+  "hash": "VOFhWBnY6qQ",
+  "canonicalFilename": "test.tsx_Cmp_VOFhWBnY6qQ",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    446,
+    596
+  ],
+  "paramNames": [
+    "props"
   ]
 }
 */

@@ -1,28 +1,28 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 870
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { component$, $ } from "@qwik.dev/core";
 import json from "./foo.json" assert { type: "json" };
-export const Greeter = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const Greeter = qrl(() => import("./test.tsx_Greeter_LDKOk8PWmEs"), "Greeter_LDKOk8PWmEs");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_Greeter_LDKOk8PWmEs.js (ENTRY POINT) ==
 import { default as json } from "./foo.json";
-export const _u6BtPnK76q4 = () => {
+export const Greeter_LDKOk8PWmEs = () => {
 	return json;
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Greeter_LDKOk8PWmEs",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Greeter",
+  "hash": "LDKOk8PWmEs",
+  "canonicalFilename": "test.tsx_Greeter_LDKOk8PWmEs",
   "path": "",
   "extension": "js",
   "parent": null,

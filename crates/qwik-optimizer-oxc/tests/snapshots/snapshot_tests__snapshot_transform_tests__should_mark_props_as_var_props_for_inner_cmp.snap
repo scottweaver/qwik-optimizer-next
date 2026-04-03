@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 966
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -10,15 +10,81 @@ import { Fragment } from "@qwik.dev/core";
 import { component$, useResource$, Resource } from "@qwik.dev/core";
 import { type ModelProps } from "./modelMenu";
 import { serverImg } from "~/routes/(authenticated)/layout";
-export const Image = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const ModelImg = qrl<ModelProps>(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const Image = qrl(() => import("./test.tsx_Image_qbKKr0yIt2E"), "Image_qbKKr0yIt2E");
+export const ModelImg = qrl<ModelProps>(() => import("./test.tsx_ModelImg_zta7SZXyW0s"), "ModelImg_zta7SZXyW0s");
 
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
+============================= test.tsx_ModelImg_component_imgLoc_esO2cJSbtaI.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { serverImg } from "~/routes/(authenticated)/layout";
+export const ModelImg_component_imgLoc_esO2cJSbtaI = async ({ track }) => {
+	const props = _captures[0];
+	track(() => props.store.model);
+	return await serverImg("some.png");
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ModelImg_component_imgLoc_esO2cJSbtaI",
+  "entry": null,
+  "displayName": "test.tsx_ModelImg_component_imgLoc",
+  "hash": "esO2cJSbtaI",
+  "canonicalFilename": "test.tsx_ModelImg_component_imgLoc_esO2cJSbtaI",
+  "path": "",
+  "extension": "js",
+  "parent": "ModelImg_zta7SZXyW0s",
+  "ctxKind": "function",
+  "ctxName": "useResource$",
+  "captures": true,
+  "captureNames": [
+    "props"
+  ],
+  "loc": [
+    372,
+    488
+  ],
+  "paramNames": [
+    "_rawProps"
+  ]
+}
+*/
+============================= test.tsx_Image_qbKKr0yIt2E.js (ENTRY POINT) ==
+export const Image_qbKKr0yIt2E = (props) => {
+  return (
+    <>
+      <img src={`${props.src}`} />
+    </>
+  );
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Image_qbKKr0yIt2E",
+  "entry": null,
+  "displayName": "test.tsx_Image",
+  "hash": "qbKKr0yIt2E",
+  "canonicalFilename": "test.tsx_Image_qbKKr0yIt2E",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    200,
+    292
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= test.tsx_ModelImg_zta7SZXyW0s.js (ENTRY POINT) ==
 import { Image } from "./test";
 import { Resource } from "@qwik.dev/core";
 import { serverImg } from "~/routes/(authenticated)/layout";
 import { useResource$ } from "@qwik.dev/core";
-export const _1_iZVV0eoW44k = (props) => {
+export const ModelImg_zta7SZXyW0s = (props) => {
   const imgLoc = useResource$(async ({ track }) => {
     track(() => props.store.model);
     return await serverImg('some.png');
@@ -44,11 +110,11 @@ export const _1_iZVV0eoW44k = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
+  "name": "ModelImg_zta7SZXyW0s",
   "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
+  "displayName": "test.tsx_ModelImg",
+  "hash": "zta7SZXyW0s",
+  "canonicalFilename": "test.tsx_ModelImg_zta7SZXyW0s",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -61,72 +127,6 @@ export const _1_iZVV0eoW44k = (props) => {
   ],
   "paramNames": [
     "props"
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = (props) => {
-  return (
-    <>
-      <img src={`${props.src}`} />
-    </>
-  );
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
-  "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    200,
-    292
-  ],
-  "paramNames": [
-    "props"
-  ]
-}
-*/
-============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-import { serverImg } from "~/routes/(authenticated)/layout";
-export const component_ZUK1E201Ins = async ({ track }) => {
-	const props = _captures[0];
-	track(() => props.store.model);
-	return await serverImg("some.png");
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "component_ZUK1E201Ins",
-  "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
-  "path": "",
-  "extension": "js",
-  "parent": "_1_iZVV0eoW44k",
-  "ctxKind": "function",
-  "ctxName": "useResource$",
-  "captures": true,
-  "captureNames": [
-    "props"
-  ],
-  "loc": [
-    372,
-    488
-  ],
-  "paramNames": [
-    "_rawProps"
   ]
 }
 */

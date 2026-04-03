@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 927
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -9,14 +9,46 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useTask$, useStore, useStyles$ } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
-export const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const Child = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const Parent = qrl(() => import("./test.tsx_Parent_UhsrANEJoQg"), "Parent_UhsrANEJoQg");
+export const Child = qrl(() => import("./test.tsx_Child_7e7u5mtQ0PI"), "Child_7e7u5mtQ0PI");
 
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
+============================= test.tsx_Parent_component_0TaiDayHrlo.js ==
+import { _captures } from "@qwik.dev/core";
+import { default as mongo } from "mongodb";
+export const Parent_component_0TaiDayHrlo = async () => {
+	const state = _captures[0];
+	state.text = await mongo.users();
+	redis.set(state.text);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Parent_component_0TaiDayHrlo",
+  "entry": "test.tsx_entry_Parent",
+  "displayName": "test.tsx_Parent_component",
+  "hash": "0TaiDayHrlo",
+  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
+  "path": "",
+  "extension": "js",
+  "parent": "Parent_UhsrANEJoQg",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "state"
+  ],
+  "loc": [
+    243,
+    330
+  ]
+}
+*/
+============================= test.tsx_Child_7e7u5mtQ0PI.js ==
 import { default as mongo } from "mongodb";
 import { useStore } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const _1_iZVV0eoW44k = () => {
+export const Child_7e7u5mtQ0PI = () => {
 	const state = useStore({
 		text: ''
 	});
@@ -35,11 +67,11 @@ export const _1_iZVV0eoW44k = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
-  "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
+  "name": "Child_7e7u5mtQ0PI",
+  "entry": "test.tsx_entry_Child",
+  "displayName": "test.tsx_Child",
+  "hash": "7e7u5mtQ0PI",
+  "canonicalFilename": "test.tsx_Child_7e7u5mtQ0PI",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -52,11 +84,42 @@ export const _1_iZVV0eoW44k = () => {
   ]
 }
 */
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_Child_component_9GyF01GDKqw.js ==
+import { _captures } from "@qwik.dev/core";
+import { default as mongo } from "mongodb";
+export const Child_component_9GyF01GDKqw = async () => {
+	const state = _captures[0];
+	state.text = await mongo.users();
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Child_component_9GyF01GDKqw",
+  "entry": "test.tsx_entry_Child",
+  "displayName": "test.tsx_Child_component",
+  "hash": "9GyF01GDKqw",
+  "canonicalFilename": "test.tsx_Child_component_9GyF01GDKqw",
+  "path": "",
+  "extension": "js",
+  "parent": "Child_7e7u5mtQ0PI",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "state"
+  ],
+  "loc": [
+    531,
+    593
+  ]
+}
+*/
+============================= test.tsx_Parent_UhsrANEJoQg.js ==
 import { default as mongo } from "mongodb";
 import { useStore } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
+export const Parent_UhsrANEJoQg = () => {
 	const state = useStore({
 		text: ''
 	});
@@ -76,11 +139,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
-  "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "name": "Parent_UhsrANEJoQg",
+  "entry": "test.tsx_entry_Parent",
+  "displayName": "test.tsx_Parent",
+  "hash": "UhsrANEJoQg",
+  "canonicalFilename": "test.tsx_Parent_UhsrANEJoQg",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -90,69 +153,6 @@ export const _u6BtPnK76q4 = () => {
   "loc": [
     157,
     421
-  ]
-}
-*/
-============================= test.tsx_component_1_vX1B9oMEgiI.js ==
-import { _captures } from "@qwik.dev/core";
-import { default as mongo } from "mongodb";
-export const component_1_vX1B9oMEgiI = async () => {
-	const state = _captures[0];
-	state.text = await mongo.users();
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "component_1_vX1B9oMEgiI",
-  "entry": "test.tsx_entry_component",
-  "displayName": "test.tsx_component_1",
-  "hash": "vX1B9oMEgiI",
-  "canonicalFilename": "test.tsx_component_1_vX1B9oMEgiI",
-  "path": "",
-  "extension": "js",
-  "parent": "_1_iZVV0eoW44k",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
-  "loc": [
-    531,
-    593
-  ]
-}
-*/
-============================= test.tsx_component_ZUK1E201Ins.js ==
-import { _captures } from "@qwik.dev/core";
-import { default as mongo } from "mongodb";
-export const component_ZUK1E201Ins = async () => {
-	const state = _captures[0];
-	state.text = await mongo.users();
-	redis.set(state.text);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "component_ZUK1E201Ins",
-  "entry": "test.tsx_entry_component",
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
-  "path": "",
-  "extension": "js",
-  "parent": "_u6BtPnK76q4",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
-  "loc": [
-    243,
-    330
   ]
 }
 */

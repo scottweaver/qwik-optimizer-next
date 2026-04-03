@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 842
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -9,12 +9,12 @@ import { component$, useStyles$ } from "@qwik.dev/core";
 import css1 from "./global.css";
 import css2 from "./style.css";
 import css3 from "./style.css";
-export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const App = qrl(() => import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_App_Jlq9hNxnCvw.js (ENTRY POINT) ==
 import { default as css1 } from "./global.css";
 import { useStyles$ } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
+export const App_Jlq9hNxnCvw = () => {
 	useStyles$(`${css1}${css2}`);
 	useStyles$(css3);
 };
@@ -22,11 +22,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "App_Jlq9hNxnCvw",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_App",
+  "hash": "Jlq9hNxnCvw",
+  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
   "path": "",
   "extension": "js",
   "parent": null,

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 849
 expression: output
+snapshot_kind: text
 ---
 ============================= src/components/mongo/index.tsx ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -9,7 +9,7 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 export default componentQrl(() => {
 	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
-}, "_0VZ6pAxegk0");
+}, "index_QZMqpWS0ou8");
 
 == DIAGNOSTICS ==
 []

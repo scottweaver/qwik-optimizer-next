@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 898
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -14,7 +14,7 @@ export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: 
 	useTaskQrl(({ track }) => {
 		track(() => count);
 		console.log(count, rest, hey, some, hey2);
-	}, "component_ZUK1E201Ins", [
+	}, "Works_component_t45qL4vNGv0", [
 		count,
 		hey,
 		hey2,
@@ -27,23 +27,23 @@ export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: 
 		class: count,
 		...rest
 	}, { override: true }, count, 1, null);
-}, "_u6BtPnK76q4");
+}, "Works_3wleYXX4dYQ");
 export const NoWorks2 = componentQrl(({ count, stuff: { hey } }) => {
 	console.log(hey);
 	useTaskQrl(({ track }) => {
 		track(() => count);
 		console.log(count);
-	}, "component_1_vX1B9oMEgiI", [count]);
+	}, "NoWorks2_component_JPD9t2HyEKg", [count]);
 	return _jsxSorted("div", { class: count }, null, count, 1, null);
-}, "_1_iZVV0eoW44k");
+}, "NoWorks2_Dmd3CdzYHzE");
 export const NoWorks3 = componentQrl(({ count, stuff = hola() }) => {
 	console.log(stuff);
 	useTaskQrl(({ track }) => {
 		track(() => count);
 		console.log(count);
-	}, "component_2_ivlVT3MNu2c", [count]);
+	}, "NoWorks3_component_fc13h5yYn14", [count]);
 	return _jsxSorted("div", { class: count }, null, count, 1, null);
-}, "_2_sSArpd0iSRk");
+}, "NoWorks3_3GqJuPahGZw");
 
 == DIAGNOSTICS ==
 []

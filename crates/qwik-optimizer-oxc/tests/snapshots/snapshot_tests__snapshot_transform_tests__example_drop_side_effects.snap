@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 858
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrlDEV } from "@qwik.dev/core";
@@ -19,12 +19,12 @@ import { sideEffect } from "./secret";
 	console.log("run");
 })();
 sideEffect();
-export const api = qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export default qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const api = qrlDEV(() => import("./test.tsx_api_okf08xCeyUA"), "api_okf08xCeyUA");
+export default qrlDEV(() => import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
 
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
+============================= test.tsx_test_5GvkoOCMrJc.js (ENTRY POINT) ==
 import { api } from "./test";
-export const _1_iZVV0eoW44k = () => {
+export const test_5GvkoOCMrJc = () => {
 	return (
 		<button onClick$={() => await api()}></button>
 	)
@@ -32,11 +32,11 @@ export const _1_iZVV0eoW44k = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
+  "name": "test_5GvkoOCMrJc",
   "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
+  "displayName": "test.tsx_test",
+  "hash": "5GvkoOCMrJc",
+  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -49,21 +49,21 @@ export const _1_iZVV0eoW44k = () => {
   ]
 }
 */
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_api_okf08xCeyUA.js (ENTRY POINT) ==
 const dfd = new Client(secret);
 const supabase = clientSupabase();
-export const _u6BtPnK76q4 = () => {
+export const api_okf08xCeyUA = () => {
 	supabase.from("ffg").do(dfd);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "api_okf08xCeyUA",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_api",
+  "hash": "okf08xCeyUA",
+  "canonicalFilename": "test.tsx_api_okf08xCeyUA",
   "path": "",
   "extension": "js",
   "parent": null,

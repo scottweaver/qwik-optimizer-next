@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 890
 expression: output
+snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -25,7 +25,7 @@ export const AtomStatus = componentQrl((_rawProps) => {
 			ctx.store[atom.ID] ? "selected" : null
 		]
 	}, null, null, 1, null);
-}, "_u6BtPnK76q4");
+}, "AtomStatus_BTLza9UlDQA");
 
 == DIAGNOSTICS ==
 []

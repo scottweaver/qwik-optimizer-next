@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 919
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -11,74 +11,57 @@ import { isServer } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
-export const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
+export const Parent = qrl(() => import("./test.tsx_Parent_UhsrANEJoQg"), "s_UhsrANEJoQg");
 
-============================= test.tsx_component_serverStuff_1_IOaKJyEUknw.js (ENTRY POINT) ==
-export const s_IOaKJyEUknw = () => {
-	// from clien$(), should not be removed
+============================= test.tsx_Parent_component_0TaiDayHrlo.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { default as mongo } from "mongodb";
+export const s_0TaiDayHrlo = async () => {
+	const state = _captures[0];
+	if (!isServer) return;
+	state.text = await mongo.users();
+	redis.set(state.text);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "s_IOaKJyEUknw",
+  "name": "s_0TaiDayHrlo",
   "entry": null,
-  "displayName": "test.tsx_component_serverStuff_1",
-  "hash": "IOaKJyEUknw",
-  "canonicalFilename": "test.tsx_component_serverStuff_1_IOaKJyEUknw",
+  "displayName": "test.tsx_Parent_component",
+  "hash": "0TaiDayHrlo",
+  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
   "path": "",
   "extension": "js",
-  "parent": "s_vX1B9oMEgiI",
-  "ctxKind": "function",
-  "ctxName": "client$",
-  "captures": false,
-  "loc": [
-    601,
-    664
-  ]
-}
-*/
-============================= test.tsx_component_2_ivlVT3MNu2c.js (ENTRY POINT) ==
-export const s_ivlVT3MNu2c = () => {
-	// Code
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "s_ivlVT3MNu2c",
-  "entry": null,
-  "displayName": "test.tsx_component_2",
-  "hash": "ivlVT3MNu2c",
-  "canonicalFilename": "test.tsx_component_2_ivlVT3MNu2c",
-  "path": "",
-  "extension": "js",
-  "parent": "s_u6BtPnK76q4",
+  "parent": "s_UhsrANEJoQg",
   "ctxKind": "function",
   "ctxName": "useTask$",
-  "captures": false,
+  "captures": true,
+  "captureNames": [
+    "state"
+  ],
   "loc": [
-    714,
-    744
+    353,
+    465
   ]
 }
 */
-============================= test.tsx_component_serverStuff_ojRqwHNSAtg.js (ENTRY POINT) ==
-export const s_ojRqwHNSAtg = () => {
+============================= test.tsx_Parent_component_serverStuff_a_2ca3HLDC7yc.js (ENTRY POINT) ==
+export const s_2ca3HLDC7yc = () => {
 	// from $(), should not be removed
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "s_ojRqwHNSAtg",
+  "name": "s_2ca3HLDC7yc",
   "entry": null,
-  "displayName": "test.tsx_component_serverStuff",
-  "hash": "ojRqwHNSAtg",
-  "canonicalFilename": "test.tsx_component_serverStuff_ojRqwHNSAtg",
+  "displayName": "test.tsx_Parent_component_serverStuff_a",
+  "hash": "2ca3HLDC7yc",
+  "canonicalFilename": "test.tsx_Parent_component_serverStuff_a_2ca3HLDC7yc",
   "path": "",
   "extension": "js",
-  "parent": "s_vX1B9oMEgiI",
+  "parent": "s_SsN9g9pINBY",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -88,7 +71,66 @@ export const s_ojRqwHNSAtg = () => {
   ]
 }
 */
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_Parent_component_2_J50qSrnCzt4.js (ENTRY POINT) ==
+export const s_J50qSrnCzt4 = () => {
+	// Code
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "s_J50qSrnCzt4",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_2",
+  "hash": "J50qSrnCzt4",
+  "canonicalFilename": "test.tsx_Parent_component_2_J50qSrnCzt4",
+  "path": "",
+  "extension": "js",
+  "parent": "s_UhsrANEJoQg",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": false,
+  "loc": [
+    714,
+    744
+  ]
+}
+*/
+============================= test.tsx_Parent_component_1_SsN9g9pINBY.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { client$ } from "@qwik.dev/core";
+export const s_SsN9g9pINBY = async () => {
+	// should be removed too
+	const a = $(() => {
+		// from $(), should not be removed
+	});
+	const b = client$(() => {
+		// from clien$(), should not be removed
+	});
+	return [a, b];
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "s_SsN9g9pINBY",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_1",
+  "hash": "SsN9g9pINBY",
+  "canonicalFilename": "test.tsx_Parent_component_1_SsN9g9pINBY",
+  "path": "",
+  "extension": "js",
+  "parent": "s_UhsrANEJoQg",
+  "ctxKind": "function",
+  "ctxName": "serverStuff$",
+  "captures": false,
+  "loc": [
+    469,
+    685
+  ]
+}
+*/
+============================= test.tsx_Parent_UhsrANEJoQg.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { client$ } from "@qwik.dev/core";
 import { handler } from "serverless";
@@ -97,7 +139,7 @@ import { serverLoader$ } from "@qwik.dev/core";
 import { serverStuff$ } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const s_u6BtPnK76q4 = () => {
+export const s_UhsrANEJoQg = () => {
 	const state = useStore({
 		text: ''
 	});
@@ -135,11 +177,11 @@ export const s_u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "s_u6BtPnK76q4",
+  "name": "s_UhsrANEJoQg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Parent",
+  "hash": "UhsrANEJoQg",
+  "canonicalFilename": "test.tsx_Parent_UhsrANEJoQg",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -152,70 +194,28 @@ export const s_u6BtPnK76q4 = () => {
   ]
 }
 */
-============================= test.tsx_component_1_vX1B9oMEgiI.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { client$ } from "@qwik.dev/core";
-export const s_vX1B9oMEgiI = async () => {
-	// should be removed too
-	const a = $(() => {
-		// from $(), should not be removed
-	});
-	const b = client$(() => {
-		// from clien$(), should not be removed
-	});
-	return [a, b];
+============================= test.tsx_Parent_component_serverStuff_b_w0zG9LrSlkA.js (ENTRY POINT) ==
+export const s_w0zG9LrSlkA = () => {
+	// from clien$(), should not be removed
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "s_vX1B9oMEgiI",
+  "name": "s_w0zG9LrSlkA",
   "entry": null,
-  "displayName": "test.tsx_component_1",
-  "hash": "vX1B9oMEgiI",
-  "canonicalFilename": "test.tsx_component_1_vX1B9oMEgiI",
+  "displayName": "test.tsx_Parent_component_serverStuff_b",
+  "hash": "w0zG9LrSlkA",
+  "canonicalFilename": "test.tsx_Parent_component_serverStuff_b_w0zG9LrSlkA",
   "path": "",
   "extension": "js",
-  "parent": "s_u6BtPnK76q4",
+  "parent": "s_SsN9g9pINBY",
   "ctxKind": "function",
-  "ctxName": "serverStuff$",
+  "ctxName": "client$",
   "captures": false,
   "loc": [
-    469,
-    685
-  ]
-}
-*/
-============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-import { default as mongo } from "mongodb";
-export const s_ZUK1E201Ins = async () => {
-	const state = _captures[0];
-	if (!isServer) return;
-	state.text = await mongo.users();
-	redis.set(state.text);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "s_ZUK1E201Ins",
-  "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
-  "path": "",
-  "extension": "js",
-  "parent": "s_u6BtPnK76q4",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
-  "loc": [
-    353,
-    465
+    601,
+    664
   ]
 }
 */

@@ -1,22 +1,22 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 930
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { inlinedQrl, $, component$, jsx, useStylesScoped$ } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /* @__PURE__ */ _noopQrl("_1_iZVV0eoW44k");
-const q__2_sSArpd0iSRk = /* @__PURE__ */ _noopQrl("_2_sSArpd0iSRk");
-q__u6BtPnK76q4.s(() => {
+const q_Lifecycle_3nYZNS6dG6o = /* @__PURE__ */ _noopQrl("Lifecycle_3nYZNS6dG6o");
+const q_Field_FIPfOhEtx3A = /* @__PURE__ */ _noopQrl("Field_FIPfOhEtx3A");
+const q_StyledComponent_PaW6AQ4sJb8 = /* @__PURE__ */ _noopQrl("StyledComponent_PaW6AQ4sJb8");
+q_Lifecycle_3nYZNS6dG6o.s(() => {
 	return /* @__PURE__ */ jsx(Slot, {});
 });
-q__1_iZVV0eoW44k.s((element) => {
+q_Field_FIPfOhEtx3A.s((element) => {
 	field.internal.elements.push(element);
 });
-q__2_sSArpd0iSRk.s(() => {
+q_StyledComponent_PaW6AQ4sJb8.s(() => {
 	const stylesScopedData = useStylesScoped$(STYLE_RED);
 	const store = useStore({ count: 10 });
 	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
@@ -30,7 +30,7 @@ export default () => {
 	console.log(qrl);
 };
 function Lifecycle(props, key, flags) {
-	return componentQrl(q__u6BtPnK76q4)(props, key, flags);
+	return componentQrl(q_Lifecycle_3nYZNS6dG6o)(props, key, flags);
 }
 export const rawFn = (event, element) => {
 	handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
@@ -44,7 +44,7 @@ export function Field({ children, name, type, ...props }) {
 		children: children(field, {
 			name,
 			autoFocus: isServer && !!field.error,
-			ref: Qrl(q__1_iZVV0eoW44k.w([field])),
+			ref: Qrl(q_Field_FIPfOhEtx3A.w([field])),
 			onInput$: $(rawFn)
 		})
 	}, name);
@@ -52,7 +52,7 @@ export function Field({ children, name, type, ...props }) {
 const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 	it("should render object style", async () => {
-		const StyledComponent = componentQrl(q__2_sSArpd0iSRk);
+		const StyledComponent = componentQrl(q_StyledComponent_PaW6AQ4sJb8);
 		const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
 	});
 });

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 900
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -21,7 +21,7 @@ export const Works = componentQrl((props: {
 			local: fromLocal
 		}
 	}, null, null, 1, null);
-}, "_u6BtPnK76q4");
+}, "Works_3wleYXX4dYQ");
 
 == DIAGNOSTICS ==
 []

@@ -1,26 +1,26 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 980
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
 import { component$, useComputed$, useTask$ } from "@qwik.dev/core";
-const q_component_ZUK1E201Ins = /* @__PURE__ */ _noopQrl("component_ZUK1E201Ins");
-const q_component_1_vX1B9oMEgiI = /* @__PURE__ */ _noopQrl("component_1_vX1B9oMEgiI");
-const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
-q_component_ZUK1E201Ins.s(() => color);
-q_component_1_vX1B9oMEgiI.s(() => {
+const q_test_component_LUXeXe0DQrg = /* @__PURE__ */ _noopQrl("test_component_LUXeXe0DQrg");
+const q_test_component_1_v8xOuDiT9Ag = /* @__PURE__ */ _noopQrl("test_component_1_v8xOuDiT9Ag");
+const q_test_5GvkoOCMrJc = /* @__PURE__ */ _noopQrl("test_5GvkoOCMrJc");
+q_test_component_LUXeXe0DQrg.s(() => color);
+q_test_component_1_v8xOuDiT9Ag.s(() => {
 	props.checked;
 });
-q__u6BtPnK76q4.s(({ color, ...props }) => {
+q_test_5GvkoOCMrJc.s(({ color, ...props }) => {
 	useComputed$(() => color);
 	useTask$(() => {
 		props.checked;
 	});
 	return "hi";
 });
-export default componentQrl(q__u6BtPnK76q4);
+export default componentQrl(q_test_5GvkoOCMrJc);
 
 == DIAGNOSTICS ==
 []
