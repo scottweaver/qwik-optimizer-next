@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1.0
+milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-04-03T20:22:35.977Z"
-last_activity: 2026-04-03
+status: completed
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-04-03T20:35:33.650Z"
+last_activity: 2026-04-02
 progress:
-  total_phases: 9
-  completed_phases: 7
-  total_plans: 30
-  completed_plans: 29
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 25
+  completed_plans: 25
   percent: 77
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** The specification must be comprehensive and precise enough that an OXC implementation can be built from it without referencing the SWC source code.
-**Current focus:** Phase 08 — implementation-gap-closure
+**Current focus:** Phase 05 — core-oxc-implementation
 
 ## Current Position
 
-Phase: 08 (implementation-gap-closure) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
-Last activity: 2026-04-03
+Phase: 06
+Plan: Not started
+Status: Plan 06-03 complete
+Last activity: 2026-04-02
 
 Progress: [########░░] 77%
 
@@ -62,9 +62,7 @@ Progress: [########░░] 77%
 | Phase 05 P07 | 25m | 3 tasks | 9 files |
 | Phase 06 P03 | 3m | 2 tasks | 7 files |
 | Phase 06 P02 | 6m | 2 tasks | 3 files |
-| Phase 07 P01 | 2m | 2 tasks | 1 files |
-| Phase 07 P02 | 2 | 1 tasks | 1 files |
-| Phase 08 P02 | 7m | 1 tasks | 2 files |
+| Phase 08 P03 | 10m | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -93,9 +91,7 @@ Recent decisions affecting current work:
 - [Phase 06 P03]: napi-build v2 compatible with napi v3 (v3 not published); async feature required for async fn
 - [Phase 06 P02]: HMR _useHmr injection via string-based prepend in code_move::inject_use_hmr
 - [Phase 06 P02]: Synthetic imports mechanism added to NewModuleCtx for segment-level import injection
-- [Phase 07]: Phase Coverage paragraph updated: Dollar Detection (CONV-01) and QRL Wrapping (CONV-02) correctly attributed to Phase 7 gap closure, not Phase 1
-- [Phase 07]: SPEC-29 confirmed complete: Appendix B has 24 representative examples covering all 14 CONVs, satisfying minimum 20 threshold
-- [Phase 08]: D-44: Signal optimization context passed via SignalOptContext struct, keeping JSX transform module decoupled from QwikTransform
+- [Phase 08]: All 24 spec examples pass without errors -- optimizer produces valid output for all 14 CONVs
 
 ### Pending Todos
 
@@ -108,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T20:22:35.974Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-04-03T20:35:33.647Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None
