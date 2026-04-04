@@ -17,11 +17,11 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 ### Segment Extraction
 
-- [ ] **SEG-01**: Dollar-sign expressions inside for/for-of/while loops produce separate segments per iteration handler
-- [ ] **SEG-02**: Multiple event handlers on JSX elements each produce separate segments
-- [ ] **SEG-03**: Nested loop and ternary dollar-sign expressions produce correct segment count
-- [ ] **SEG-04**: Spread props with additional handler props produce correct segments
-- [ ] **SEG-05**: Inline and inlined QRL strategies produce correct segment counts
+- [x] **SEG-01**: Dollar-sign expressions inside for/for-of/while loops produce separate segments per iteration handler
+- [x] **SEG-02**: Multiple event handlers on JSX elements each produce separate segments
+- [x] **SEG-03**: Nested loop and ternary dollar-sign expressions produce correct segment count
+- [x] **SEG-04**: Spread props with additional handler props produce correct segments
+- [x] **SEG-05**: Inline and inlined QRL strategies produce correct segment counts
 
 ### Diagnostics
 
@@ -57,11 +57,11 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 | ROOT-03 | Phase 11 | Pending |
 | ROOT-04 | Phase 11 | Pending |
 | ROOT-05 | Phase 11 | Pending |
-| SEG-01 | Phase 10 | Pending |
-| SEG-02 | Phase 10 | Pending |
-| SEG-03 | Phase 10 | Pending |
-| SEG-04 | Phase 10 | Pending |
-| SEG-05 | Phase 10 | Pending |
+| SEG-01 | Phase 10 | Complete |
+| SEG-02 | Phase 10 | Complete |
+| SEG-03 | Phase 10 | Complete |
+| SEG-04 | Phase 10 | Complete |
+| SEG-05 | Phase 10 | Complete |
 | DIAG-01 | Phase 12 | Pending |
 | DIAG-02 | Phase 12 | Pending |
 | ACC-01 | Phase 13 | Pending |
