@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 905
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core/what";
 //
@@ -105,6 +106,30 @@ export const Root_component_royhjYaCbYE = () => {
   "loc": [
     519,
     557
+  ]
+}
+*/
+============================= test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg.js (ENTRY POINT) ==
+import { qrl } from "@qwik.dev/core/what";
+export const Foo_component_div_q_e_click_YEa2A5ADUOg = () => console.log(qrl);
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_div_q_e_click_YEa2A5ADUOg",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_div_q_e_click",
+  "hash": "YEa2A5ADUOg",
+  "canonicalFilename": "test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg",
+  "path": "",
+  "extension": "js",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    390,
+    411
   ]
 }
 */

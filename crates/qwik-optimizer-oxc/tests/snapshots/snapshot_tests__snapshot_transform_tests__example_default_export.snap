@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 850
 expression: output
+snapshot_kind: text
 ---
 ============================= src/routes/_repl/[id]/[[...slug]].js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { sibling } from "./sibling";
 //
@@ -37,6 +38,30 @@ export const slug_component_0AM8HPnkNs4 = () => {
   "loc": [
     99,
     198
+  ]
+}
+*/
+============================= src/routes/_repl/[id]/[[...slug]].tsx_slug_component_div_q_e_click_bCwVPYSTQ0w.js (ENTRY POINT) ==
+import { sibling } from "./sibling";
+export const slug_component_div_q_e_click_bCwVPYSTQ0w = () => console.log(mongodb, sibling);
+
+/*
+{
+  "origin": "src/routes/_repl/[id]/[[...slug]].tsx",
+  "name": "slug_component_div_q_e_click_bCwVPYSTQ0w",
+  "entry": null,
+  "displayName": "[[...slug]].tsx_slug_component_div_q_e_click",
+  "hash": "bCwVPYSTQ0w",
+  "canonicalFilename": "[[...slug]].tsx_slug_component_div_q_e_click_bCwVPYSTQ0w",
+  "path": "src/routes/_repl/[id]",
+  "extension": "js",
+  "parent": "slug_component_0AM8HPnkNs4",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    145,
+    180
   ]
 }
 */

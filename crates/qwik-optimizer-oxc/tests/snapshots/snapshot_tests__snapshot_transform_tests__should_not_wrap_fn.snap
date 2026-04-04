@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 988
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { A } from "./componentA";
 //
@@ -12,6 +13,36 @@ const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp
 //
 export const Cmp = /*#__PURE__*/ componentQrl(q_Cmp_component_4ryKJTOKjWE);
 
+============================= test.tsx_Cmp_component_button_q_e_click_0O0tA6ahzDQ.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Cmp_component_button_q_e_click_0O0tA6ahzDQ = () => {
+	const currentType = _captures[0];
+	return currentType.value = "NEXT";
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Cmp_component_button_q_e_click_0O0tA6ahzDQ",
+  "entry": null,
+  "displayName": "test.tsx_Cmp_component_button_q_e_click",
+  "hash": "0O0tA6ahzDQ",
+  "canonicalFilename": "test.tsx_Cmp_component_button_q_e_click_0O0tA6ahzDQ",
+  "path": "",
+  "extension": "js",
+  "parent": "Cmp_component_4ryKJTOKjWE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "currentType"
+  ],
+  "loc": [
+    393,
+    427
+  ]
+}
+*/
 ============================= test.tsx_Cmp_component_4ryKJTOKjWE.js (ENTRY POINT) ==
 import { A } from "./componentA";
 import { useSignal } from "@qwik.dev/core";

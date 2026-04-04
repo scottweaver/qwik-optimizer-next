@@ -1,12 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 918
 expression: output
+snapshot_kind: text
 ---
 ============================= components/component.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
+import { renderQrl } from "@qwik.dev/core";
+import { shouldRemoveQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
@@ -25,9 +29,12 @@ export const Parent = componentQrl(() => {
 		// Code
 	}, "Parent_component_useTask_ngmvcygWux8");
 	return _jsxSorted("div", {
-		shouldRemove$: () => state.text,
-		onClick$: () => console.log("parent", state, threejs)
-	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
+		shouldRemove: inlinedQrl(() => state.text, "Parent_component_div_shouldRemove_EBj69wTX1do", [state]),
+		"q-e:click": _noopQrl("Parent_component_div_q_e_click_oqNnfO6ubjU")
+	}, null, [_jsxSorted(Div, {
+		onClick: _noopQrl("Parent_component_div_Div_q_e_click_X6MyAcIWaA4"),
+		render: inlinedQrl(() => state.text, "Parent_component_div_Div_render_CkMybN6xzQk", [state])
+	}, null, null, 1, "0"), state.text], 1, null);
 }, "Parent_component_t6Wy3C0Q0XM");
 
 == DIAGNOSTICS ==

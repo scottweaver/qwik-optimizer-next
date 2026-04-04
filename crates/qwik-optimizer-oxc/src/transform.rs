@@ -854,6 +854,582 @@ impl QwikTransform {
         matches!(self.entry_strategy, EntryStrategy::Inline | EntryStrategy::Hoist)
             || matches!(self.mode, EmitMode::Lib)
     }
+
+    // -----------------------------------------------------------------------
+    // JSX recursive transformation with dollar-attr segment extraction
+    // -----------------------------------------------------------------------
+
+    /// Recursively transform a JSXElement: extract dollar-attr segments at every
+    /// level and convert child JSXElements (which are `JSXChild::Element` nodes
+    /// that OXC Traverse does NOT call `exit_expression` on).
+    fn transform_jsx_with_segments<'a>(
+        &mut self,
+        el: oxc::ast::ast::JSXElement<'a>,
+        is_root: bool,
+        allocator: &'a oxc::allocator::Allocator,
+        ctx: &mut TraverseCtx<'a, ()>,
+    ) -> (Expression<'a>, crate::jsx_transform::JsxImportNeeds) {
+        // Build signal optimization context
+        let decl_stack_flat: Vec<TypedId> = self
+            .decl_stack
+            .iter()
+            .flat_map(|frame| frame.iter().cloned())
+            .collect();
+        let signal_ctx = crate::jsx_transform::SignalOptContext {
+            decl_stack_flat: &decl_stack_flat,
+            is_server: self.is_server,
+            allocator,
+        };
+
+        let mut parts = crate::jsx_transform::classify_jsx_element(
+            el,
+            &mut self.jsx_key_counter,
+            is_root,
+            allocator,
+            Some(&signal_ctx),
+        );
+
+        // Process dollar-attrs and children with tag name on stack_ctxt.
+        let dollar_attrs = std::mem::take(&mut parts.dollar_attrs);
+        let tag_name = parts.tag_name.clone();
+
+
+        let mut extra_var_props: Vec<(String, Expression<'a>)> = Vec::new();
+
+        // Push tag name for the entire scope of dollar-attr processing + children
+        self.stack_ctxt.push(tag_name.clone());
+
+        // Process dollar-attrs
+        for dollar_attr in dollar_attrs {
+            let replacement_prop = self.process_jsx_dollar_attr(
+                dollar_attr,
+                &decl_stack_flat,
+                allocator,
+                ctx,
+            );
+            if let Some((key, value)) = replacement_prop {
+                extra_var_props.push((key, value));
+            }
+        }
+
+
+        // Recursively transform any child JSXElement/Fragment nodes
+        if let Some(ref mut children_expr) = parts.children_opt {
+            self.transform_children_recursive(children_expr, allocator, ctx);
+        }
+
+        // Pop tag name
+        self.stack_ctxt.pop();
+
+        crate::jsx_transform::build_jsx_call_from_parts(
+            crate::jsx_transform::JsxElementParts {
+                has_spread: parts.has_spread,
+                tag_expr: parts.tag_expr,
+                var_props: parts.var_props,
+                const_props: parts.const_props,
+                children_opt: parts.children_opt,
+                final_key: parts.final_key,
+                flags: parts.flags,
+                needs: parts.needs,
+                dollar_attrs: Vec::new(),
+                tag_name: parts.tag_name,
+                is_fn: parts.is_fn,
+            },
+            extra_var_props,
+            allocator,
+        )
+    }
+
+    /// Recursively process child expressions, transforming any embedded
+    /// JSXElement or JSXFragment nodes.
+    fn transform_children_recursive<'a>(
+        &mut self,
+        expr: &mut Expression<'a>,
+        allocator: &'a oxc::allocator::Allocator,
+        ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        match expr {
+            Expression::JSXElement(el_box) => {
+                // Take the JSXElement, transform it recursively, replace in-place
+                let taken = std::mem::replace(
+                    expr,
+                    ctx.ast.expression_null_literal(SPAN),
+                );
+                if let Expression::JSXElement(el) = taken {
+                    let (new_expr, needs) = self.transform_jsx_with_segments(
+                        el.unbox(), false, allocator, ctx,
+                    );
+                    // Track import needs at root level
+                    if self.segment_stack.is_empty() {
+                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
+                        if needs.needs_jsx_split { self.needs_jsx_split_import = true; }
+                        if needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                    }
+                    *expr = new_expr;
+                }
+            }
+            Expression::JSXFragment(frag_box) => {
+                let taken = std::mem::replace(
+                    expr,
+                    ctx.ast.expression_null_literal(SPAN),
+                );
+                if let Expression::JSXFragment(frag) = taken {
+                    let (new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
+                        frag.unbox(),
+                        &mut self.jsx_key_counter,
+                        false,
+                        allocator,
+                    );
+                    if self.segment_stack.is_empty() {
+                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
+                        if needs.needs_fragment { self.needs_fragment_import = true; }
+                    }
+                    *expr = new_expr;
+                }
+            }
+            Expression::ArrayExpression(arr) => {
+                // Children array: process each element
+                for element in arr.elements.iter_mut() {
+                    // ArrayExpressionElement variants mirror Expression variants.
+                    // We only need to handle JSXElement and JSXFragment children.
+                    match element {
+                        ArrayExpressionElement::JSXElement(_) | ArrayExpressionElement::JSXFragment(_) => {
+                            // Convert to Expression, transform, convert back is complex.
+                            // Instead, handle the specific JSX cases directly.
+                            // For JSXElement children in an array, they need recursive processing.
+                            // We'll use a take-transform-replace pattern.
+                            let dummy = ArrayExpressionElement::NullLiteral(ctx.ast.alloc_null_literal(SPAN));
+                            let taken = std::mem::replace(element, dummy);
+                            match taken {
+                                ArrayExpressionElement::JSXElement(el) => {
+                                    let (new_expr, needs) = self.transform_jsx_with_segments(
+                                        el.unbox(), false, allocator, ctx,
+                                    );
+                                    if self.segment_stack.is_empty() {
+                                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
+                                        if needs.needs_jsx_split { self.needs_jsx_split_import = true; }
+                                        if needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                                    }
+                                    *element = ArrayExpressionElement::from(new_expr);
+                                }
+                                ArrayExpressionElement::JSXFragment(frag) => {
+                                    let (new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
+                                        frag.unbox(), &mut self.jsx_key_counter, false, allocator,
+                                    );
+                                    if self.segment_stack.is_empty() {
+                                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
+                                        if needs.needs_fragment { self.needs_fragment_import = true; }
+                                    }
+                                    *element = ArrayExpressionElement::from(new_expr);
+                                }
+                                other => {
+                                    *element = other;
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Expression::ConditionalExpression(cond) => {
+                // Ternary: process both branches
+                self.transform_children_recursive(&mut cond.consequent, allocator, ctx);
+                self.transform_children_recursive(&mut cond.alternate, allocator, ctx);
+            }
+            Expression::LogicalExpression(logical) => {
+                self.transform_children_recursive(&mut logical.right, allocator, ctx);
+            }
+            _ => {
+                // Other expressions: no JSX to process
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // JSX dollar-attr segment extraction
+    // -----------------------------------------------------------------------
+
+    /// Process a single `$`-suffixed JSX attribute. Creates a SegmentRecord and
+    /// returns a `(key, qrl_expression)` pair to inject into the JSX call props.
+    ///
+    /// For HTML elements: `onClick$` -> key="q-e:click", value=QRL
+    /// For components: `onClick$` -> key="onClick", value=QRL
+    fn process_jsx_dollar_attr<'a>(
+        &mut self,
+        dollar_attr: crate::jsx_transform::DollarAttr<'a>,
+        _decl_stack_flat: &[TypedId],
+        allocator: &'a oxc::allocator::Allocator,
+        ctx: &mut TraverseCtx<'a, ()>,
+    ) -> Option<(String, Expression<'a>)> {
+        // 1. Determine ctx_kind
+        let ctx_kind = if dollar_attr.html_attr.is_some() {
+            CtxKind::EventHandler
+        } else {
+            CtxKind::JSXProp
+        };
+
+        // 2. Collect descendent idents from the function expression
+        let descendent_idents = IdentCollector::collect(&dollar_attr.value_expr);
+
+        // 3. Flatten decl_stack for capture analysis
+        let all_decl: Vec<TypedId> = self
+            .decl_stack
+            .iter()
+            .flat_map(|frame| frame.iter().cloned())
+            .collect();
+
+        // 4. Compute scoped_idents (captures)
+        let mut scoped_idents = compute_scoped_idents(&descendent_idents, &all_decl);
+        let fn_params = get_function_params(&dollar_attr.value_expr);
+        scoped_idents.retain(|id| !fn_params.contains(id));
+
+        // 5. Determine the stack_ctxt name to push for this attribute.
+        // For HTML elements with event handlers: push the html_attr (e.g., "q-e:click")
+        // For components or non-event props: push the key WITHOUT $ (e.g., "onClick")
+        let attr_ctxt_name = if let Some(ref html_attr) = dollar_attr.html_attr {
+            html_attr.clone()
+        } else {
+            escape_dollar(&dollar_attr.key)
+        };
+
+        self.stack_ctxt.push(attr_ctxt_name);
+
+        // 6. Call register_context_name
+        let names = crate::hash::register_context_name(
+            &self.stack_ctxt,
+            &mut self.segment_names,
+            self.scope.as_deref(),
+            &self.rel_path,
+            &self.file_name,
+            &self.mode,
+            None,
+            None,
+            None,
+        );
+
+        // 7. Pop the attr name from stack_ctxt
+        self.stack_ctxt.pop();
+
+        // 8. Classify captures against GlobalCollect
+        let mut needed_imports = Vec::new();
+        let mut self_imports = Vec::new();
+        self.classify_captures(
+            &descendent_idents,
+            &mut scoped_idents,
+            &mut needed_imports,
+            &mut self_imports,
+        );
+
+        let has_captures = !scoped_idents.is_empty();
+
+        // 9. Check should_emit_segment (handles strip_ctx_name and strip_event_handlers)
+        let should_emit = self.should_emit_segment(&dollar_attr.key, &ctx_kind);
+
+        // 10. Compute entry key
+        let entry = self.compute_entry(
+            &ctx_kind,
+            &dollar_attr.key,
+            &scoped_idents,
+            &names.hash,
+            &names.symbol_name,
+        );
+
+        // 11. Extract expression code from source text
+        let expr_code: Option<String> = {
+            let src = unsafe { &*self.source_text };
+            let start = dollar_attr.value_span.start as usize;
+            let end = dollar_attr.value_span.end as usize;
+            if start <= end && end <= src.len() {
+                Some(src[start..end].to_string())
+            } else {
+                None
+            }
+        };
+
+        // 12. Compute local_idents
+        let mut local_idents: Vec<String> = self_imports.clone();
+        for ni in &needed_imports {
+            if !local_idents.contains(&ni.local_name) {
+                local_idents.push(ni.local_name.clone());
+            }
+        }
+
+        // 13. Determine parent segment
+        let parent_span = self.segment_stack.last().map(|s| s.span_start);
+
+        // 14. Get param_names from function expression parameters
+        let param_names = {
+            let mut name_set = HashSet::new();
+            get_function_params_to_set(&dollar_attr.value_expr, &mut name_set);
+            if name_set.is_empty() {
+                None
+            } else {
+                let mut names_vec: Vec<String> = name_set.into_iter().collect();
+                names_vec.sort();
+                Some(names_vec)
+            }
+        };
+
+        // 15. Determine replacement key name for the prop
+        let replacement_key = if let Some(ref html_attr) = dollar_attr.html_attr {
+            if !dollar_attr.is_component {
+                // HTML element: onClick$ -> q-e:click
+                html_attr.clone()
+            } else {
+                // Component with event handler: strip $
+                escape_dollar(&dollar_attr.key)
+            }
+        } else {
+            // Non-event prop on component: strip $
+            escape_dollar(&dollar_attr.key)
+        };
+
+        let call_span_end = dollar_attr.value_span.end;
+        let call_span_start = dollar_attr.value_span.start;
+
+        // 16. Build QRL expression based on entry strategy
+        let is_inline = self.is_inline_mode();
+        let is_hoist = matches!(self.entry_strategy, EntryStrategy::Hoist)
+            && !matches!(self.mode, EmitMode::Lib);
+
+        let qrl_wrapper_name = words::dollar_to_qrl_name(&dollar_attr.key);
+
+        if !should_emit {
+            // CONV-14: Noop QRL for stripped callbacks
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
+            let noop_code = format!(r#"{}("{}")"#, noop_fn, names.symbol_name);
+
+            self.needs_noop_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: None,
+                scoped_idents: vec![],
+                local_idents: local_idents.clone(),
+                ctx_name: dollar_attr.key.clone(),
+                ctx_kind: ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (call_span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+
+            let qrl_expr = crate::add_side_effect::parse_single_statement(
+                &format!("{};", noop_code), allocator
+            ).and_then(|stmt| {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    Some(es.unbox().expression)
+                } else {
+                    None
+                }
+            })?;
+
+            return Some((replacement_key, qrl_expr));
+        }
+
+        if is_hoist {
+            // Hoist strategy: _noopQrl const + .s() registration
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
+            let ident_name = format!("q_{}", names.symbol_name);
+
+            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
+
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                let is_root_level = self.segment_stack.is_empty();
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code: noop_rhs,
+                    symbol_name: names.symbol_name.clone(),
+                    is_root_level,
+                });
+            }
+
+            // .s() ref_assignment
+            if let Some(ref body_code) = expr_code {
+                let s_call = format!("{}.s({});", ident_name, body_code);
+                self.ref_assignments.push(s_call);
+            }
+
+            // Build replacement: q_sym or q_sym.w([caps])
+            let replacement = if has_captures {
+                let caps_str = scoped_idents.join(", ");
+                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+                let expr_stmt = format!("{};", w_expr_code);
+                crate::add_side_effect::parse_single_statement(&expr_stmt, allocator)
+                    .and_then(|stmt| {
+                        if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                            Some(es.unbox().expression)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_else(|| ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name)))
+            } else {
+                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+            };
+
+            self.needs_noop_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: dollar_attr.key.clone(),
+                ctx_kind: ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (call_span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+
+            return Some((replacement_key, replacement));
+        } else if is_inline {
+            // Inline strategy: inlinedQrl(fn_expr, "symbol_name"[, captures])
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
+
+            // Build: inlinedQrl(fn_expr, "symbol_name"[, [captures]])
+            let fn_body_code = expr_code.as_deref().unwrap_or("()=>{}");
+            let inlined_code = if has_captures {
+                let caps_str = scoped_idents.join(", ");
+                format!(r#"{}({}, "{}", [{}])"#, inlined_name, fn_body_code, names.symbol_name, caps_str)
+            } else {
+                format!(r#"{}({}, "{}")"#, inlined_name, fn_body_code, names.symbol_name)
+            };
+
+            self.needs_inlined_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: dollar_attr.key.clone(),
+                ctx_kind: ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (call_span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+
+            let qrl_expr = crate::add_side_effect::parse_single_statement(
+                &format!("{};", inlined_code), allocator
+            ).and_then(|stmt| {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    Some(es.unbox().expression)
+                } else {
+                    None
+                }
+            })?;
+
+            return Some((replacement_key, qrl_expr));
+        } else {
+            // Segment strategy: hoist QRL to module scope
+            let import_path = if self.explicit_extensions {
+                format!("./{}.{}", names.canonical_filename, self.extension)
+            } else {
+                format!("./{}", names.canonical_filename)
+            };
+
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
+            let ident_name = format!("q_{}", names.symbol_name);
+
+            let qrl_rhs = format!(
+                r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
+                qrl_callee_name, import_path, names.symbol_name
+            );
+
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                let is_root_level = self.segment_stack.is_empty();
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code: qrl_rhs,
+                    symbol_name: names.symbol_name.clone(),
+                    is_root_level,
+                });
+            }
+
+            // Build replacement: q_sym or q_sym.w([caps])
+            let replacement = if has_captures {
+                let caps_str = scoped_idents.join(", ");
+                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+                let expr_stmt = format!("{};", w_expr_code);
+                crate::add_side_effect::parse_single_statement(&expr_stmt, allocator)
+                    .and_then(|stmt| {
+                        if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                            Some(es.unbox().expression)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_else(|| ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name)))
+            } else {
+                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+            };
+
+            self.needs_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: dollar_attr.key.clone(),
+                ctx_kind: ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (call_span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: false,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+
+            return Some((replacement_key, replacement));
+        }
+    }
+}
+
+/// Helper to collect function parameter names into a set.
+fn get_function_params_to_set(expr: &Expression<'_>, out: &mut HashSet<String>) {
+    match expr {
+        Expression::ArrowFunctionExpression(arrow) => {
+            collect_formal_params(&arrow.params, out);
+        }
+        Expression::FunctionExpression(func) => {
+            collect_formal_params(&func.params, out);
+        }
+        _ => {}
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1057,67 +1633,117 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             let taken = std::mem::replace(expr, ctx.ast.expression_null_literal(SPAN));
             let is_root = self.segment_stack.is_empty();
 
-            // Build signal optimization context (CONV-07)
-            // Flatten decl_stack to get all Var-type entries for capture analysis
-            let decl_stack_flat: Vec<TypedId> = self
-                .decl_stack
-                .iter()
-                .flat_map(|frame| frame.iter().cloned())
-                .collect();
-            let signal_ctx = crate::jsx_transform::SignalOptContext {
-                decl_stack_flat: &decl_stack_flat,
-                is_server: self.is_server,
-                allocator,
-            };
-
-            let (new_expr, needs, dollar_attrs, _tag_name, _is_component) = if is_jsx_element {
+            if is_jsx_element {
                 if let Expression::JSXElement(el) = taken {
-                    crate::jsx_transform::transform_jsx_element(
+                    let (new_expr, needs) = self.transform_jsx_with_segments(
                         el.unbox(),
-                        &mut self.jsx_key_counter,
                         is_root,
                         allocator,
-                        Some(&signal_ctx),
-                    )
+                        ctx,
+                    );
+
+                    // Only set root module import flags when NOT inside a segment scope.
+                    if is_root {
+                        if needs.needs_jsx_sorted {
+                            self.needs_jsx_sorted_import = true;
+                        }
+                        if needs.needs_jsx_split {
+                            self.needs_jsx_split_import = true;
+                        }
+                        if needs.needs_fn_signal {
+                            self.needs_fn_signal_import = true;
+                        }
+                    }
+
+                    *expr = new_expr;
+                    return;
                 } else {
                     unreachable!()
                 }
             } else {
                 if let Expression::JSXFragment(frag) = taken {
-                    let (expr, needs) = crate::jsx_transform::transform_jsx_fragment(
+                    let (mut new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
                         frag.unbox(),
                         &mut self.jsx_key_counter,
                         is_root,
                         allocator,
                     );
-                    (expr, needs, Vec::new(), String::new(), false)
+
+                    // Recursively process child elements for dollar-attr extraction.
+                    // Fragment children may include JSXElements with $-suffixed attrs.
+                    if let Expression::CallExpression(ref mut call) = new_expr {
+                        // Children are arg[3] in _jsxSorted(tag, var, const, children, flags, key)
+                        if call.arguments.len() > 3 {
+                            // Get mutable ref to children arg
+                            let children_arg = &mut call.arguments[3];
+                            // Convert Argument to Expression for recursive processing
+                            // We need to handle the Argument enum
+                            match children_arg {
+                                Argument::ArrayExpression(arr) => {
+                                    for element in arr.elements.iter_mut() {
+                                        match element {
+                                            ArrayExpressionElement::JSXElement(el) => {
+                                                let dummy = ArrayExpressionElement::NullLiteral(ctx.ast.alloc_null_literal(SPAN));
+                                                let taken = std::mem::replace(element, dummy);
+                                                if let ArrayExpressionElement::JSXElement(el) = taken {
+                                                    let (transformed, child_needs) = self.transform_jsx_with_segments(
+                                                        el.unbox(), false, allocator, ctx,
+                                                    );
+                                                    if is_root {
+                                                        if child_needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
+                                                        if child_needs.needs_jsx_split { self.needs_jsx_split_import = true; }
+                                                        if child_needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                                                    }
+                                                    *element = ArrayExpressionElement::from(transformed);
+                                                }
+                                            }
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                // Single child (not in array) - could be a JSXElement
+                                Argument::JSXElement(el_box) => {
+                                    let dummy = Argument::NullLiteral(ctx.ast.alloc_null_literal(SPAN));
+                                    let taken = std::mem::replace(children_arg, dummy);
+                                    if let Argument::JSXElement(el) = taken {
+                                        let (transformed, child_needs) = self.transform_jsx_with_segments(
+                                            el.unbox(), false, allocator, ctx,
+                                        );
+                                        if is_root {
+                                            if child_needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
+                                            if child_needs.needs_jsx_split { self.needs_jsx_split_import = true; }
+                                            if child_needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                                        }
+                                        *children_arg = expr_to_argument(transformed);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+
+                    // Only set root module import flags when NOT inside a segment scope.
+                    if is_root {
+                        if needs.needs_jsx_sorted {
+                            self.needs_jsx_sorted_import = true;
+                        }
+                        if needs.needs_jsx_split {
+                            self.needs_jsx_split_import = true;
+                        }
+                        if needs.needs_fragment {
+                            self.needs_fragment_import = true;
+                        }
+                        if needs.needs_fn_signal {
+                            self.needs_fn_signal_import = true;
+                        }
+                    }
+
+                    *expr = new_expr;
+                    return;
                 } else {
                     unreachable!()
                 }
-            };
-
-            // dollar_attrs will be processed by Task 2 for segment extraction.
-            let _ = &dollar_attrs;
-
-            // Only set root module import flags when NOT inside a segment scope.
-            // JSX inside segments will have their imports handled by code_move.
-            if is_root {
-                if needs.needs_jsx_sorted {
-                    self.needs_jsx_sorted_import = true;
-                }
-                if needs.needs_jsx_split {
-                    self.needs_jsx_split_import = true;
-                }
-                if needs.needs_fragment {
-                    self.needs_fragment_import = true;
-                }
-                if needs.needs_fn_signal {
-                    self.needs_fn_signal_import = true;
-                }
             }
-
-            *expr = new_expr;
-            return;
         }
 
         // --- CONV-02: QRL Wrapping ---

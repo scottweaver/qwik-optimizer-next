@@ -1,16 +1,48 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1008
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
+import { onMouseOverQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 //
 const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 
+============================= test.tsx_Foo_component_div_q_e_mouseover_2avcXUo8nVI.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_div_q_e_mouseover_2avcXUo8nVI = () => {
+	const row = _captures[0];
+	return console.log("over" + row.value.id);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_div_q_e_mouseover_2avcXUo8nVI",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_div_q_e_mouseover",
+  "hash": "2avcXUo8nVI",
+  "canonicalFilename": "test.tsx_Foo_component_div_q_e_mouseover_2avcXUo8nVI",
+  "path": "",
+  "extension": "js",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onMouseOver$",
+  "captures": true,
+  "captureNames": [
+    "row"
+  ],
+  "loc": [
+    264,
+    304
+  ]
+}
+*/
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
@@ -41,6 +73,68 @@ export const Foo_component_HTDRsvUbLiE = function() {
   "loc": [
     77,
     412
+  ]
+}
+*/
+============================= test.tsx_Foo_component_div_p_q_e_click_RgE0spbLWDs.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_div_p_q_e_click_RgE0spbLWDs = () => {
+	const row = _captures[0];
+	return console.log("inner" + row.value.id);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_div_p_q_e_click_RgE0spbLWDs",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_div_p_q_e_click",
+  "hash": "RgE0spbLWDs",
+  "canonicalFilename": "test.tsx_Foo_component_div_p_q_e_click_RgE0spbLWDs",
+  "path": "",
+  "extension": "js",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "row"
+  ],
+  "loc": [
+    322,
+    363
+  ]
+}
+*/
+============================= test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_div_q_e_click_YEa2A5ADUOg = () => {
+	const idx = _captures[0];
+	const row = _captures[1];
+	return console.log(row.value.id, idx);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_div_q_e_click_YEa2A5ADUOg",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_div_q_e_click",
+  "hash": "YEa2A5ADUOg",
+  "canonicalFilename": "test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg",
+  "path": "",
+  "extension": "js",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "idx",
+    "row"
+  ],
+  "loc": [
+    212,
+    248
   ]
 }
 */

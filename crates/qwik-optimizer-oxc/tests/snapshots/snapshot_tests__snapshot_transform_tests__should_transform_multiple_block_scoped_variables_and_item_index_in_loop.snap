@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1005
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
@@ -42,6 +43,42 @@ export const test_component_LUXeXe0DQrg = () => {
   "loc": [
     73,
     357
+  ]
+}
+*/
+============================= test.tsx_test_component_div_q_e_click_omwK2O280Tk.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_q_e_click_omwK2O280Tk = () => {
+	const i = _captures[0];
+	const index = _captures[1];
+	const val = _captures[2];
+	const value = _captures[3];
+	return console.log(value, index, val, i);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_q_e_click_omwK2O280Tk",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_q_e_click",
+  "hash": "omwK2O280Tk",
+  "canonicalFilename": "test.tsx_test_component_div_q_e_click_omwK2O280Tk",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "i",
+    "index",
+    "val",
+    "value"
+  ],
+  "loc": [
+    276,
+    315
   ]
 }
 */

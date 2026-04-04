@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 958
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
@@ -50,6 +51,36 @@ export const Cmp_component_4ryKJTOKjWE = () => {
   "loc": [
     62,
     655
+  ]
+}
+*/
+============================= test.tsx_Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8 = () => {
+	const htmlSignal = _captures[0];
+	return htmlSignal.value = "<h2><span>I'm a updated signal value!</span></h2>";
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8",
+  "entry": null,
+  "displayName": "test.tsx_Cmp_component_div_div_button_q_e_click",
+  "hash": "kOQ2BgBVVS8",
+  "canonicalFilename": "test.tsx_Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8",
+  "path": "",
+  "extension": "js",
+  "parent": "Cmp_component_4ryKJTOKjWE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "htmlSignal"
+  ],
+  "loc": [
+    509,
+    595
   ]
 }
 */

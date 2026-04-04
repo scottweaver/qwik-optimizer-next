@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 874
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -11,11 +11,11 @@ export const Greeter = componentQrl(() => {
 	const checked = useSignal(false);
 	const stuff = useSignal();
 	return _jsxSorted(_Fragment, null, null, [
-		<input bind:value={value} />,
-		<input bind:checked={checked} />,
-		<input bind:stuff={stuff} />,
-		<div>{value}</div>,
-		<div>{value.value}</div>
+		_jsxSorted("input", { "bind:value": value }, null, null, 1, null),
+		_jsxSorted("input", { "bind:checked": checked }, null, null, 1, null),
+		_jsxSorted("input", { "bind:stuff": stuff }, null, null, 1, null),
+		_jsxSorted("div", null, null, value, 1, null),
+		_jsxSorted("div", null, null, value.value, 1, null)
 	], 1, null);
 }, "s_n7HuG2hhU0Q");
 

@@ -1,16 +1,50 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 953
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
+import { onHoverQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 //
 export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
+============================= test.tsx_test_component_div_q_e_hover_0TP9KjdOKfw.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_q_e_hover_0TP9KjdOKfw = () => {
+	const bar = _captures[0];
+	const index = _captures[1];
+	return console.log(bar.value, index);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_q_e_hover_0TP9KjdOKfw",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_q_e_hover",
+  "hash": "0TP9KjdOKfw",
+  "canonicalFilename": "test.tsx_test_component_div_q_e_hover_0TP9KjdOKfw",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onHover$",
+  "captures": true,
+  "captureNames": [
+    "bar",
+    "index"
+  ],
+  "loc": [
+    328,
+    363
+  ]
+}
+*/
 ============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 export const test_component_LUXeXe0DQrg = () => {
@@ -42,6 +76,38 @@ export const test_component_LUXeXe0DQrg = () => {
   "loc": [
     73,
     406
+  ]
+}
+*/
+============================= test.tsx_test_component_div_q_e_click_omwK2O280Tk.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_q_e_click_omwK2O280Tk = () => {
+	const foo = _captures[0];
+	const item = _captures[1];
+	return console.log(item, foo.value);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_q_e_click_omwK2O280Tk",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_q_e_click",
+  "hash": "omwK2O280Tk",
+  "canonicalFilename": "test.tsx_test_component_div_q_e_click_omwK2O280Tk",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "foo",
+    "item"
+  ],
+  "loc": [
+    282,
+    316
   ]
 }
 */

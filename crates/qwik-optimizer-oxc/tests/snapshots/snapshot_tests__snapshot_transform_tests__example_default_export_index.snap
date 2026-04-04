@@ -1,13 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 851
 expression: output
+snapshot_kind: text
 ---
 ============================= src/components/mongo/index.tsx ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 export default componentQrl(() => {
-	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
+	return _jsxSorted("div", { "q-e:click": inlinedQrl(() => console.log(mongodb), "index_component_div_q_e_click_zOcQbXWlwkY") }, null, null, 1, null);
 }, "index_component_SlchSt2Vxlo");
 
 == DIAGNOSTICS ==

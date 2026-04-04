@@ -1,16 +1,50 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1003
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
+import { onKeyDownQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 //
 export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
+============================= test.tsx_test_component_span_button_q_e_click_9NDVDUjYaQQ.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_span_button_q_e_click_9NDVDUjYaQQ = () => {
+	const cellIndex = _captures[0];
+	const rowIndex = _captures[1];
+	return console.log(rowIndex, cellIndex);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_span_button_q_e_click_9NDVDUjYaQQ",
+  "entry": null,
+  "displayName": "test.tsx_test_component_span_button_q_e_click",
+  "hash": "9NDVDUjYaQQ",
+  "canonicalFilename": "test.tsx_test_component_span_button_q_e_click_9NDVDUjYaQQ",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "cellIndex",
+    "rowIndex"
+  ],
+  "loc": [
+    501,
+    539
+  ]
+}
+*/
 ============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 export const test_component_LUXeXe0DQrg = () => {
@@ -54,6 +88,40 @@ export const test_component_LUXeXe0DQrg = () => {
   "loc": [
     73,
     757
+  ]
+}
+*/
+============================= test.tsx_test_component_span_span_q_e_keydown_zm0yVAYNXLo.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_span_span_q_e_keydown_zm0yVAYNXLo = () => {
+	const cellKey = _captures[0];
+	const i = _captures[1];
+	const j = _captures[2];
+	return console.log(cellKey, i, j);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_span_span_q_e_keydown_zm0yVAYNXLo",
+  "entry": null,
+  "displayName": "test.tsx_test_component_span_span_q_e_keydown",
+  "hash": "zm0yVAYNXLo",
+  "canonicalFilename": "test.tsx_test_component_span_span_q_e_keydown_zm0yVAYNXLo",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onKeyDown$",
+  "captures": true,
+  "captureNames": [
+    "cellKey",
+    "i",
+    "j"
+  ],
+  "loc": [
+    593,
+    625
   ]
 }
 */

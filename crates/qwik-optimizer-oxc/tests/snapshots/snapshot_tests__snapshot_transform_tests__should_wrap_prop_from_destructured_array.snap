@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1019
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { useForm, useForm2 } from "./some-file.ts";
@@ -15,6 +16,36 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_te
 export const Input = /*#__PURE__*/ componentQrl(q_Input_component_9metqqaxlN8);
 export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
+============================= test.tsx_test_component_div_button_q_e_click_2TvarUvNGmU.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_button_q_e_click_2TvarUvNGmU = () => {
+	const store = _captures[0];
+	store.errors.test = store.errors.test ? undefined : "ERROR TEST";
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_button_q_e_click_2TvarUvNGmU",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_button_q_e_click",
+  "hash": "2TvarUvNGmU",
+  "canonicalFilename": "test.tsx_test_component_div_button_q_e_click_2TvarUvNGmU",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "store"
+  ],
+  "loc": [
+    834,
+    920
+  ]
+}
+*/
 ============================= test.tsx_Input_component_9metqqaxlN8.js (ENTRY POINT) ==
 import { useTask$ } from "@qwik.dev/core";
 export const Input_component_9metqqaxlN8 = (props) => {

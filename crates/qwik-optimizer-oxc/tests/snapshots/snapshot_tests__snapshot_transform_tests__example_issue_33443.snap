@@ -1,15 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 877
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
 //
 const q_Issue3742_component_svSy0PlWTAw = /*#__PURE__*/ _noopQrl("Issue3742_component_svSy0PlWTAw");
 //
+q_Issue3742_component_div_button_q_e_click_95Hlm8WgsYY.s(() => counter.value++);
 q_Issue3742_component_svSy0PlWTAw.s(({ description = "", other }: any) => {
 	const counter = useSignal(0);
 	return <div title={description && "description" in other ? `Hello ${counter.value}` : `Bye ${counter.value}`}>

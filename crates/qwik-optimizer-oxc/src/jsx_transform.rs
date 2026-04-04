@@ -79,13 +79,33 @@ const FLAG_STATIC_SUBTREE: u32 = 2;
 ///
 /// Returns the replacement call expression and a `JsxImportNeeds` indicating
 /// which runtime imports are required.
-pub(crate) fn transform_jsx_element<'a>(
+/// Intermediate result from JSX element classification, before final call construction.
+/// This allows the caller to inject additional props (e.g., QRL replacements for dollar-attrs)
+/// before building the final `_jsxSorted`/`_jsxSplit` call expression.
+pub(crate) struct JsxElementParts<'a> {
+    pub has_spread: bool,
+    pub tag_expr: Expression<'a>,
+    pub var_props: Option<Expression<'a>>,
+    pub const_props: Option<Expression<'a>>,
+    pub children_opt: Option<Expression<'a>>,
+    pub final_key: Expression<'a>,
+    pub flags: u32,
+    pub needs: JsxImportNeeds,
+    pub dollar_attrs: Vec<DollarAttr<'a>>,
+    pub tag_name: String,
+    pub is_fn: bool,
+}
+
+/// Classify a JSX element's parts without building the final call expression.
+/// This returns the intermediate parts so that dollar-attr QRL replacement props
+/// can be injected before calling `build_jsx_call_from_parts`.
+pub(crate) fn classify_jsx_element<'a>(
     el: JSXElement<'a>,
     jsx_key_counter: &mut u32,
     is_root: bool,
     allocator: &'a Allocator,
     signal_ctx: Option<&SignalOptContext<'a, '_>>,
-) -> (Expression<'a>, JsxImportNeeds, Vec<DollarAttr<'a>>, String, bool) {
+) -> JsxElementParts<'a> {
     let ast = AstBuilder::new(allocator);
     let mut needs = JsxImportNeeds::default();
 
@@ -121,28 +141,135 @@ pub(crate) fn transform_jsx_element<'a>(
     // 5. Compute flags
     let flags: u32 = FLAG_DYNAMIC_CHILDREN;
 
-    // 6. Choose callee
+    // 6. Track callee needs
     if signal_used {
         needs.needs_fn_signal = true;
     }
 
-    let callee_name = if has_spread {
+    if has_spread {
         needs.needs_jsx_split = true;
-        "_jsxSplit"
     } else {
         needs.needs_jsx_sorted = true;
-        "_jsxSorted"
-    };
+    }
 
-    let call = build_jsx_call(
-        callee_name,
+    JsxElementParts {
+        has_spread,
         tag_expr,
         var_props,
         const_props,
         children_opt,
-        flags,
         final_key,
+        flags,
+        needs,
+        dollar_attrs,
+        tag_name,
+        is_fn,
+    }
+}
+
+/// Build the final JSX call expression from classified parts, optionally injecting
+/// additional var props (e.g., QRL replacement props for dollar-attrs).
+pub(crate) fn build_jsx_call_from_parts<'a>(
+    parts: JsxElementParts<'a>,
+    extra_var_props: Vec<(String, Expression<'a>)>,
+    allocator: &'a Allocator,
+) -> (Expression<'a>, JsxImportNeeds) {
+    let ast = AstBuilder::new(allocator);
+
+    let callee_name = if parts.has_spread {
+        "_jsxSplit"
+    } else {
+        "_jsxSorted"
+    };
+
+    // If we have extra var props, inject them into the var_props object
+    let var_props = if extra_var_props.is_empty() {
+        parts.var_props
+    } else {
+        // We need to build or extend the var_props object expression
+        let mut var_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
+
+        // Extract existing entries from var_props if present
+        if let Some(var_expr) = parts.var_props {
+            if let Expression::ObjectExpression(obj) = var_expr {
+                for prop in obj.unbox().properties {
+                    var_entries.push(prop);
+                }
+            } else {
+                // Shouldn't happen, but just wrap as a property
+                var_entries.push(ObjectPropertyKind::SpreadProperty(
+                    ast.alloc_spread_element(SPAN, var_expr),
+                ));
+            }
+        }
+
+        // Add extra props
+        for (key, value) in extra_var_props {
+            let prop_key = build_prop_key(&key, &ast, allocator);
+            let prop = ObjectPropertyKind::ObjectProperty(ast.alloc_object_property(
+                SPAN,
+                PropertyKind::Init,
+                prop_key,
+                value,
+                false,
+                false,
+                false,
+            ));
+            var_entries.push(prop);
+        }
+
+        Some(ast.expression_object(SPAN, var_entries))
+    };
+
+    let call = build_jsx_call(
+        callee_name,
+        parts.tag_expr,
+        var_props,
+        parts.const_props,
+        parts.children_opt,
+        parts.flags,
+        parts.final_key,
         &ast,
+        allocator,
+    );
+
+    (call, parts.needs)
+}
+
+/// Transform a JSXElement into a `_jsxSorted`/`_jsxSplit` call expression.
+/// Legacy API -- delegates to classify_jsx_element + build_jsx_call_from_parts.
+///
+/// Returns the replacement call expression and a `JsxImportNeeds` indicating
+/// which runtime imports are required.
+pub(crate) fn transform_jsx_element<'a>(
+    el: JSXElement<'a>,
+    jsx_key_counter: &mut u32,
+    is_root: bool,
+    allocator: &'a Allocator,
+    signal_ctx: Option<&SignalOptContext<'a, '_>>,
+) -> (Expression<'a>, JsxImportNeeds, Vec<DollarAttr<'a>>, String, bool) {
+    let parts = classify_jsx_element(el, jsx_key_counter, is_root, allocator, signal_ctx);
+    let dollar_attrs = parts.dollar_attrs;
+    let tag_name = parts.tag_name.clone();
+    let is_fn = parts.is_fn;
+
+    // If no dollar_attrs, build immediately. Otherwise, caller should use
+    // classify_jsx_element + build_jsx_call_from_parts directly.
+    let (call, needs) = build_jsx_call_from_parts(
+        JsxElementParts {
+            has_spread: parts.has_spread,
+            tag_expr: parts.tag_expr,
+            var_props: parts.var_props,
+            const_props: parts.const_props,
+            children_opt: parts.children_opt,
+            final_key: parts.final_key,
+            flags: parts.flags,
+            needs: parts.needs,
+            dollar_attrs: Vec::new(), // Don't pass dollar_attrs to builder
+            tag_name: tag_name.clone(),
+            is_fn,
+        },
+        Vec::new(),
         allocator,
     );
 
@@ -374,11 +501,9 @@ fn classify_props<'a>(
                 };
 
                 // Detect $-suffixed attribute with function/arrow value for segment extraction.
-                // We record the attribute metadata in dollar_attrs for later processing
-                // by QwikTransform (Task 2). For now, the attribute is ALSO included in
-                // var_entries so that output doesn't change until segment extraction is
-                // wired up. When Task 2 processes dollar_attrs, it will inject replacement
-                // QRL props instead.
+                // Extract the function expression and record in dollar_attrs for processing
+                // by QwikTransform in exit_expression. The prop is NOT added to var/const
+                // entries -- QwikTransform will inject a QRL replacement prop.
                 if key_name.ends_with('$') {
                     if matches!(&value_expr, Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)) {
                         let value_span = match &value_expr {
@@ -388,16 +513,13 @@ fn classify_props<'a>(
                         };
                         let html_attr = crate::transform::jsx_event_to_html_attribute(&key_name);
                         dollar_attrs.push(DollarAttr {
-                            key: key_name.clone(),
+                            key: key_name,
                             html_attr,
                             is_component: is_fn,
-                            // We don't take ownership of value_expr here since it's
-                            // still used below for prop classification. We pass a
-                            // placeholder and will extract the real expr in Task 2.
-                            value_expr: ast.expression_null_literal(SPAN),
+                            value_expr,
                             value_span,
                         });
-                        // Fall through to normal prop classification
+                        continue; // Skip normal prop classification
                     }
                 }
 

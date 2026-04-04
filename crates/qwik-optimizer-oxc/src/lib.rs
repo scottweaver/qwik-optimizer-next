@@ -235,10 +235,67 @@ fn transform_code(
         if record.is_inline {
             continue;
         }
-        // Skip noop segments (no expression to emit)
+
+        // Handle noop segments (stripped handlers): emit `export const NAME = null;`
         let expr_code = match &record.expr {
             Some(e) => e.as_str(),
-            None => continue,
+            None => {
+                // Noop segment: emit a null export module
+                let noop_code = format!("export const {} = null;", record.name);
+                let (final_code, map) = code_move::emit_segment(
+                    &noop_code,
+                    &record.canonical_filename,
+                    config.source_maps,
+                );
+
+                let segment_path = if path_data.rel_dir == std::path::PathBuf::new() {
+                    format!("{}.{}", record.canonical_filename, record_extension)
+                } else {
+                    format!(
+                        "{}/{}.{}",
+                        path_data.rel_dir.to_slash_lossy(),
+                        record.canonical_filename,
+                        record_extension
+                    )
+                };
+
+                let is_entry = record.entry.is_none();
+                let order = u64::from_str_radix(
+                    &record.hash[..std::cmp::min(8, record.hash.len())],
+                    36,
+                ).unwrap_or(0);
+
+                let seg_path = path_data.rel_dir.to_slash_lossy().to_string();
+
+                let segment_analysis = SegmentAnalysis {
+                    origin: record.origin.clone(),
+                    name: record.name.clone(),
+                    entry: record.entry.clone(),
+                    display_name: record.display_name.clone(),
+                    hash: record.hash.clone(),
+                    canonical_filename: record.canonical_filename.clone(),
+                    path: seg_path,
+                    extension: record_extension.to_string(),
+                    parent: record.parent.clone(),
+                    ctx_kind: record.ctx_kind.clone(),
+                    ctx_name: record.ctx_name.clone(),
+                    captures: false,
+                    loc: (record.span.0 + 1, record.span.1 + 1),
+                    param_names: record.param_names.clone(),
+                    capture_names: None,
+                };
+
+                segment_modules.push(TransformModule {
+                    path: segment_path,
+                    is_entry,
+                    code: final_code,
+                    map,
+                    segment: Some(segment_analysis),
+                    orig_path: None,
+                    order,
+                });
+                continue;
+            }
         };
 
         // HMR _useHmr() injection (D-41): inject into component$ segment bodies only.

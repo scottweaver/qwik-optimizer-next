@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 955
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
@@ -59,6 +60,68 @@ export const Parent_component_0TaiDayHrlo = () => {
   "loc": [
     91,
     762
+  ]
+}
+*/
+============================= test.tsx_Parent_component_button_q_e_click_4QYpcz0cFow.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Parent_component_button_q_e_click_4QYpcz0cFow = () => {
+	const cart = _captures[0];
+	const item = _captures[1];
+	cart.push(item);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Parent_component_button_q_e_click_4QYpcz0cFow",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_button_q_e_click",
+  "hash": "4QYpcz0cFow",
+  "canonicalFilename": "test.tsx_Parent_component_button_q_e_click_4QYpcz0cFow",
+  "path": "",
+  "extension": "js",
+  "parent": "Parent_component_0TaiDayHrlo",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "cart",
+    "item"
+  ],
+  "loc": [
+    447,
+    503
+  ]
+}
+*/
+============================= test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Parent_component_div_button_q_e_click_5khsVRINUws = () => {
+	const results = _captures[0];
+	return results.value = ["item1", "item2"];
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Parent_component_div_button_q_e_click_5khsVRINUws",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_div_button_q_e_click",
+  "hash": "5khsVRINUws",
+  "canonicalFilename": "test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws",
+  "path": "",
+  "extension": "js",
+  "parent": "Parent_component_0TaiDayHrlo",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "results"
+  ],
+  "loc": [
+    267,
+    309
   ]
 }
 */

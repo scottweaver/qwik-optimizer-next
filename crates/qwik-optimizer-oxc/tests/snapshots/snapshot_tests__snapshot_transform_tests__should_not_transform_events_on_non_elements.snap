@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 987
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { CustomComponent } from "./custom-component";
 import { AnotherComponent } from "./another-component";
@@ -43,6 +44,52 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
   "loc": [
     183,
     351
+  ]
+}
+*/
+============================= test.tsx_Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo.tsx (ENTRY POINT) ==
+export const Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo = () => {};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo",
+  "entry": null,
+  "displayName": "test.tsx_Greeter_component_div_CustomComponent_q_e_click",
+  "hash": "UHwM2jWlYYo",
+  "canonicalFilename": "test.tsx_Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo",
+  "path": "",
+  "extension": "tsx",
+  "parent": "Greeter_component_n7HuG2hhU0Q",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    250,
+    258
+  ]
+}
+*/
+============================= test.tsx_Greeter_component_AnotherComponent_q_e_click_VRb7zMuEa7k.tsx (ENTRY POINT) ==
+export const Greeter_component_AnotherComponent_q_e_click_VRb7zMuEa7k = () => {};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Greeter_component_AnotherComponent_q_e_click_VRb7zMuEa7k",
+  "entry": null,
+  "displayName": "test.tsx_Greeter_component_AnotherComponent_q_e_click",
+  "hash": "VRb7zMuEa7k",
+  "canonicalFilename": "test.tsx_Greeter_component_AnotherComponent_q_e_click_VRb7zMuEa7k",
+  "path": "",
+  "extension": "tsx",
+  "parent": "Greeter_component_n7HuG2hhU0Q",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    318,
+    326
   ]
 }
 */

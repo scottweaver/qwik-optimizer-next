@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 971
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onInputQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
@@ -42,6 +43,31 @@ export const FieldInput_component_V4XAtJSTRKg = () => {
   "loc": [
     84,
     273
+  ]
+}
+*/
+============================= test.tsx_FieldInput_component_input_q_e_input_wqR1xEjZjf4.js (ENTRY POINT) ==
+export const FieldInput_component_input_q_e_input_wqR1xEjZjf4 = () => {
+	console.log("test");
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "FieldInput_component_input_q_e_input_wqR1xEjZjf4",
+  "entry": null,
+  "displayName": "test.tsx_FieldInput_component_input_q_e_input",
+  "hash": "wqR1xEjZjf4",
+  "canonicalFilename": "test.tsx_FieldInput_component_input_q_e_input_wqR1xEjZjf4",
+  "path": "",
+  "extension": "js",
+  "parent": "FieldInput_component_V4XAtJSTRKg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onInput$",
+  "captures": false,
+  "loc": [
+    181,
+    225
   ]
 }
 */

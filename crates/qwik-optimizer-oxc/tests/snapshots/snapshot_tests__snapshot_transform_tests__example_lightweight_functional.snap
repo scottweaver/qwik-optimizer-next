@@ -1,31 +1,66 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 885
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 //
 const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+const q_Button_button_q_e_click_6YaNiKLqRnQ = /*#__PURE__*/ qrl(()=>import("./test.tsx_Button_button_q_e_click_6YaNiKLqRnQ"), "Button_button_q_e_click_6YaNiKLqRnQ");
+const q_ButtonArrow_button_q_e_click_rEE0GCaea7M = /*#__PURE__*/ qrl(()=>import("./test.tsx_ButtonArrow_button_q_e_click_rEE0GCaea7M"), "ButtonArrow_button_q_e_click_rEE0GCaea7M");
 //
 export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 export function Button({ text, color }) {
 	return _jsxSorted("button", {
 		onColor$: color,
-		onClick$: () => console.log(text, color)
-	}, null, text, 1, "0");
+		"q-e:click": q_Button_button_q_e_click_6YaNiKLqRnQ.w([color, text])
+	}, null, text, 1, "2");
 }
 export const ButtonArrow = (_rawProps) => {
 	const text = _rawProps.text;
 	const color = _rawProps.color;
 	return _jsxSorted("button", {
 		onColor$: color,
-		onClick$: () => console.log(text, color)
-	}, null, text, 1, "1");
+		"q-e:click": q_ButtonArrow_button_q_e_click_rEE0GCaea7M.w([color, text])
+	}, null, text, 1, "3");
 };
 
+============================= test.tsx_Button_button_q_e_click_6YaNiKLqRnQ.tsx (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Button_button_q_e_click_6YaNiKLqRnQ = () => {
+	const color = _captures[0];
+	const text = _captures[1];
+	return console.log(text, color);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Button_button_q_e_click_6YaNiKLqRnQ",
+  "entry": null,
+  "displayName": "test.tsx_Button_button_q_e_click",
+  "hash": "6YaNiKLqRnQ",
+  "canonicalFilename": "test.tsx_Button_button_q_e_click_6YaNiKLqRnQ",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "color",
+    "text"
+  ],
+  "loc": [
+    296,
+    324
+  ]
+}
+*/
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.tsx (ENTRY POINT) ==
 import { Button } from "./test";
 import { ButtonArrow } from "./test";
@@ -57,6 +92,38 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
   ],
   "paramNames": [
     "props"
+  ]
+}
+*/
+============================= test.tsx_ButtonArrow_button_q_e_click_rEE0GCaea7M.tsx (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const ButtonArrow_button_q_e_click_rEE0GCaea7M = () => {
+	const color = _captures[0];
+	const text = _captures[1];
+	return console.log(text, color);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ButtonArrow_button_q_e_click_rEE0GCaea7M",
+  "entry": null,
+  "displayName": "test.tsx_ButtonArrow_button_q_e_click",
+  "hash": "rEE0GCaea7M",
+  "canonicalFilename": "test.tsx_ButtonArrow_button_q_e_click_rEE0GCaea7M",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "color",
+    "text"
+  ],
+  "loc": [
+    444,
+    472
   ]
 }
 */

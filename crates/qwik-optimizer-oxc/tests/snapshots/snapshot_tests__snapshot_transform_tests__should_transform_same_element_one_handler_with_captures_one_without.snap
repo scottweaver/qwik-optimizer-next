@@ -1,16 +1,41 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1012
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { onClickQrl } from "@qwik.dev/core";
+import { onKeyDownQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 //
 export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
+============================= test.tsx_test_component_div_q_e_keydown_0rh0T4g2Pt8.js (ENTRY POINT) ==
+export const test_component_div_q_e_keydown_0rh0T4g2Pt8 = () => console.log("no capture");
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_q_e_keydown_0rh0T4g2Pt8",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_q_e_keydown",
+  "hash": "0rh0T4g2Pt8",
+  "canonicalFilename": "test.tsx_test_component_div_q_e_keydown_0rh0T4g2Pt8",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onKeyDown$",
+  "captures": false,
+  "loc": [
+    318,
+    349
+  ]
+}
+*/
 ============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 export const test_component_LUXeXe0DQrg = () => {
@@ -48,6 +73,36 @@ export const test_component_LUXeXe0DQrg = () => {
   "loc": [
     73,
     437
+  ]
+}
+*/
+============================= test.tsx_test_component_div_q_e_click_omwK2O280Tk.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_q_e_click_omwK2O280Tk = () => {
+	const index = _captures[0];
+	return console.log(index);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_q_e_click_omwK2O280Tk",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_q_e_click",
+  "hash": "omwK2O280Tk",
+  "canonicalFilename": "test.tsx_test_component_div_q_e_click_omwK2O280Tk",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "index"
+  ],
+  "loc": [
+    268,
+    292
   ]
 }
 */
