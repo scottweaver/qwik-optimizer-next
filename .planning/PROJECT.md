@@ -25,7 +25,7 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 - [ ] Achieve 201/201 full SWC parity — every fixture's root module, segment count, and diagnostics match the SWC reference
 - [ ] Fix root module code generation mismatches (95 fixtures)
-- [ ] Fix segment extraction for dollar-sign expressions in loops, ternaries, nested scopes, and spread props (76 fixtures)
+- [x] Fix segment extraction for dollar-sign expressions in loops, ternaries, nested scopes, and spread props — Validated in Phase 10 (195/201 segment count parity, 97%)
 - [ ] Fix diagnostics parity (4 fixtures)
 
 ### Out of Scope
@@ -49,10 +49,10 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 **Baseline:** 28/201 (14%) full match | 57/201 root match | 125/201 segment count match | 197/201 diagnostics match
 
-**Current state (v0.1.0 shipped 2026-04-03):**
+**Current state (Phase 10 complete 2026-04-04):**
 - ~190K LOC Rust across 3 crates (qwik-optimizer-oxc, qwik-optimizer-napi, qwik-optimizer-wasm)
-- 444 tests passing (211 snapshot fixtures + 233 unit tests)
-- 28/201 full SWC parity (14%) — root module, segment count, and diagnostics all matching
+- 511 tests passing (264 unit + 223 snapshot + 24 spec)
+- 195/201 segment count parity (97%) — up from 125/201 (62%) at v0.1.0
 - Comprehensive spec document covering all 14 CONVs with 24+ examples
 
 **Source material:**
@@ -98,4 +98,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after v0.2.0 milestone start*
+*Last updated: 2026-04-04 after Phase 10 completion*
