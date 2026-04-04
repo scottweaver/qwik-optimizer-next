@@ -6,12 +6,14 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
+import { useStylesScopedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { inlinedQrl, jsx } from "@qwik.dev/core";
 //
 const q_Lifecycle_component_r7jPBpjrWLc = /*#__PURE__*/ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
 const q_Field_FIPfOhEtx3A = /*#__PURE__*/ _noopQrl("Field_FIPfOhEtx3A");
+const q_Field_1_6RtkEWquHu0 = /*#__PURE__*/ _noopQrl("Field_1_6RtkEWquHu0");
 const q_StyledComponent_component_Wg7SquUqgAE = /*#__PURE__*/ _noopQrl("StyledComponent_component_Wg7SquUqgAE");
 //
 q_Lifecycle_component_r7jPBpjrWLc.s(() => {
@@ -50,7 +52,7 @@ export function Field({ children, name, type, ...props }) {
 			name,
 			autoFocus: isServer && !!field.error,
 			ref: Qrl(q_Field_FIPfOhEtx3A.w([field])),
-			onInput$: $(rawFn)
+			onInput$: Qrl(q_Field_1_6RtkEWquHu0)
 		})
 	}, name);
 }
@@ -63,4 +65,19 @@ describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 });
 
 == DIAGNOSTICS ==
-[]
+[
+  {
+    "scope": "optimizer",
+    "category": "error",
+    "code": "C03",
+    "file": "test.tsx",
+    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: STYLE_RED"
+  },
+  {
+    "scope": "optimizer",
+    "category": "error",
+    "code": "C03",
+    "file": "test.tsx",
+    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: rawFn"
+  }
+]

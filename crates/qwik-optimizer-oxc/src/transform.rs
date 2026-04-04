@@ -682,8 +682,9 @@ impl QwikTransform {
     /// Determine if a $ call should be emitted as a segment
     /// (not stripped by strip_ctx_name or strip_event_handlers).
     fn should_emit_segment(&self, ctx_name: &str, ctx_kind: &CtxKind) -> bool {
-        // Check strip_ctx_name
-        if self.strip_ctx_name.iter().any(|s| s == ctx_name) {
+        // Check strip_ctx_name -- SWC uses starts_with prefix matching,
+        // e.g. strip_ctx_name: ["server"] matches "serverStuff$", "serverAuth$", etc.
+        if self.strip_ctx_name.iter().any(|s| ctx_name.starts_with(s.as_str())) {
             return false;
         }
 
@@ -700,18 +701,43 @@ impl QwikTransform {
     // -----------------------------------------------------------------------
 
     /// Collect all identifier references from the first argument of a $ call.
+    /// Works for both function/arrow expressions and non-function args
+    /// (identifiers, template literals, objects, etc.).
     fn collect_descendent_idents(first_arg: &Argument<'_>) -> HashSet<String> {
+        // Convert Argument to a temporary Expression reference for IdentCollector.
+        // SAFETY: We only read; the borrows are temporary and don't outlive the call.
         match first_arg {
             Argument::ArrowFunctionExpression(arrow) => {
                 IdentCollector::collect(&Expression::ArrowFunctionExpression(
-                    // SAFETY: We only read; the borrow is temporary.
                     unsafe { std::ptr::read(arrow as *const _) },
                 ))
             }
             Argument::FunctionExpression(func) => {
                 IdentCollector::collect(&Expression::FunctionExpression(
-                    // SAFETY: We only read; the borrow is temporary.
                     unsafe { std::ptr::read(func as *const _) },
+                ))
+            }
+            Argument::Identifier(ident) => {
+                let mut set = HashSet::new();
+                let name = ident.name.as_str();
+                if !GLOBAL_BUILTINS.contains(&name) {
+                    set.insert(name.to_string());
+                }
+                set
+            }
+            Argument::TemplateLiteral(tpl) => {
+                IdentCollector::collect(&Expression::TemplateLiteral(
+                    unsafe { std::ptr::read(tpl as *const _) },
+                ))
+            }
+            Argument::ObjectExpression(obj) => {
+                IdentCollector::collect(&Expression::ObjectExpression(
+                    unsafe { std::ptr::read(obj as *const _) },
+                ))
+            }
+            Argument::CallExpression(call) => {
+                IdentCollector::collect(&Expression::CallExpression(
+                    unsafe { std::ptr::read(call as *const _) },
                 ))
             }
             _ => HashSet::new(),
@@ -1202,6 +1228,9 @@ impl QwikTransform {
 
             self.needs_noop_qrl_import = true;
 
+            // Noop segments always get their own module file (is_inline: false)
+            // even in Inline/Hoist strategies. SWC produces `export const NAME = null;`
+            // files for all stripped handlers regardless of entry strategy.
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
@@ -1215,7 +1244,7 @@ impl QwikTransform {
                 origin: self.rel_path.clone(),
                 span: (call_span_start, call_span_end),
                 hash: names.hash.clone(),
-                is_inline: true,
+                is_inline: false,
                 migrated_root_vars: Vec::new(),
                 parent: None,
                 pending_parent_span: parent_span,
@@ -1591,27 +1620,62 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 self.consumed_imports.insert(ident.name.as_str().to_string());
             }
 
-            // 2. Verify first argument is a function/arrow expression
-            if Self::first_arg_is_function(&node.arguments) {
+            // 2. Require at least one argument for segment extraction
+            if !node.arguments.is_empty() {
                 let ctx_kind = words::classify_ctx_kind(&ctx_name);
 
-                // 3. Check if this segment should be emitted (not stripped)
-                if self.should_emit_segment(&ctx_name, &ctx_kind) {
-                    // Collect descendent identifiers from the callback body
-                    let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
-
-                    // Push context name for display_name building
-                    self.stack_ctxt.push(escape_dollar(&ctx_name));
-
-                    // 4. Push a SegmentScope onto segment_stack
-                    self.segment_stack.push(SegmentScope {
-                        ctx_name,
-                        ctx_kind,
-                        span_start: node.span.start,
-                        is_sync,
-                        descendent_idents,
-                    });
+                // C05: For locally-defined marker functions (not imported from core),
+                // verify the Qrl counterpart exists as an export. If not, produce
+                // a diagnostic and skip segment creation.
+                let callee_local = if let Expression::Identifier(ident) = &node.callee {
+                    Some(ident.name.as_str().to_string())
+                } else {
+                    None
+                };
+                let is_imported = callee_local.as_ref().map_or(false, |name| {
+                    let collect = unsafe { &*self.global_collect_ptr };
+                    collect.imports.contains_key(name)
+                });
+                if !is_imported && !is_sync {
+                    // Locally-defined marker: check for Qrl counterpart
+                    let qrl_name = words::dollar_to_qrl_name(&ctx_name);
+                    let collect = unsafe { &*self.global_collect_ptr };
+                    if !collect.has_export_symbol(&qrl_name) {
+                        // C05: Missing Qrl implementation
+                        self.diagnostics.push(crate::types::Diagnostic {
+                            scope: "optimizer".to_string(),
+                            category: crate::types::DiagnosticCategory::Error,
+                            code: Some("C05".to_string()),
+                            file: self.file_name.clone(),
+                            message: format!(
+                                "Found '{}' but did not find the corresponding '{}' exported in the same file. Please check that it is exported and spelled correctly",
+                                ctx_name, qrl_name
+                            ),
+                            highlights: None,
+                            suggestions: None,
+                        });
+                        // Don't create a segment -- just consume the import and continue
+                        return;
+                    }
                 }
+
+                // Collect descendent identifiers from the first argument
+                // (works for both function and non-function args)
+                let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
+
+                // Push context name for display_name building
+                self.stack_ctxt.push(escape_dollar(&ctx_name));
+
+                // 3. Push a SegmentScope onto segment_stack.
+                // We push regardless of should_emit -- noop segments for
+                // stripped functions are created in exit_expression.
+                self.segment_stack.push(SegmentScope {
+                    ctx_name,
+                    ctx_kind,
+                    span_start: node.span.start,
+                    is_sync,
+                    descendent_idents,
+                });
             }
         }
     }
@@ -1863,23 +1927,20 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             _ => return,
         };
 
-        // Extract the function expression body from source text using span
+        // Extract the first argument's source text using its span.
+        // Works for both function expressions and non-function args
+        // (strings, identifiers, template literals, objects, etc.).
         let expr_code: Option<String> = if !call.arguments.is_empty() {
-            let first_arg_span = match &call.arguments[0] {
-                Argument::ArrowFunctionExpression(a) => Some(a.span),
-                Argument::FunctionExpression(f) => Some(f.span),
-                _ => None,
-            };
-            first_arg_span.and_then(|span| {
-                let src = unsafe { &*self.source_text };
-                let start = span.start as usize;
-                let end = span.end as usize;
-                if start <= end && end <= src.len() {
-                    Some(src[start..end].to_string())
-                } else {
-                    None
-                }
-            })
+            use oxc::span::GetSpan;
+            let span = call.arguments[0].span();
+            let src = unsafe { &*self.source_text };
+            let start = span.start as usize;
+            let end = span.end as usize;
+            if start <= end && end <= src.len() {
+                Some(src[start..end].to_string())
+            } else {
+                None
+            }
         } else {
             None
         };
@@ -1950,6 +2011,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             self.needs_noop_qrl_import = true;
 
+            // Noop segments always get their own module file (is_inline: false)
+            // even in Inline/Hoist strategies. SWC produces `export const NAME = null;`
+            // files for all stripped handlers regardless of entry strategy.
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
@@ -1963,7 +2027,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 origin: self.rel_path.clone(),
                 span: (pending.span_start, call_span_end),
                 hash: names.hash.clone(),
-                is_inline: true,
+                is_inline: false,
                 migrated_root_vars: Vec::new(),
                 parent: None,
                 pending_parent_span: parent_span,

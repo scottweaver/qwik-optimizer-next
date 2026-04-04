@@ -8,6 +8,7 @@ import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
 import { renderQrl } from "@qwik.dev/core";
 import { shouldRemoveQrl } from "@qwik.dev/core";
+import { useClientMountQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
@@ -21,10 +22,7 @@ import { c } from "../../remove";
 export const Parent = componentQrl(() => {
 	const state = useStore({ text: "" });
 	// Double count watch
-	useClientMount$(async () => {
-		state.text = await mongo.users();
-		redis.set(state.text, a, b, c);
-	});
+	_noopQrl("Parent_component_useClientMount_Yn2kIDABoYw");
 	useTaskQrl(() => {
 		// Code
 	}, "Parent_component_useTask_ngmvcygWux8");
@@ -37,5 +35,74 @@ export const Parent = componentQrl(() => {
 	}, null, null, 1, "0"), state.text], 1, null);
 }, "Parent_component_t6Wy3C0Q0XM");
 
+============================= components/component.tsx_Parent_component_div_q_e_click_oqNnfO6ubjU.js ==
+export const Parent_component_div_q_e_click_oqNnfO6ubjU = null;
+
+/*
+{
+  "origin": "components/component.tsx",
+  "name": "Parent_component_div_q_e_click_oqNnfO6ubjU",
+  "entry": "entry_segments",
+  "displayName": "component.tsx_Parent_component_div_q_e_click",
+  "hash": "oqNnfO6ubjU",
+  "canonicalFilename": "component.tsx_Parent_component_div_q_e_click_oqNnfO6ubjU",
+  "path": "components",
+  "extension": "js",
+  "parent": "Parent_component_t6Wy3C0Q0XM",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    577,
+    620
+  ]
+}
+*/
+============================= components/component.tsx_Parent_component_div_Div_q_e_click_X6MyAcIWaA4.js ==
+export const Parent_component_div_Div_q_e_click_X6MyAcIWaA4 = null;
+
+/*
+{
+  "origin": "components/component.tsx",
+  "name": "Parent_component_div_Div_q_e_click_X6MyAcIWaA4",
+  "entry": "entry_segments",
+  "displayName": "component.tsx_Parent_component_div_Div_q_e_click",
+  "hash": "X6MyAcIWaA4",
+  "canonicalFilename": "component.tsx_Parent_component_div_Div_q_e_click_X6MyAcIWaA4",
+  "path": "components",
+  "extension": "js",
+  "parent": "Parent_component_t6Wy3C0Q0XM",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    648,
+    673
+  ]
+}
+*/
+============================= components/component.tsx_Parent_component_useClientMount_Yn2kIDABoYw.js ==
+export const Parent_component_useClientMount_Yn2kIDABoYw = null;
+
+/*
+{
+  "origin": "components/component.tsx",
+  "name": "Parent_component_useClientMount_Yn2kIDABoYw",
+  "entry": "entry_segments",
+  "displayName": "component.tsx_Parent_component_useClientMount",
+  "hash": "Yn2kIDABoYw",
+  "canonicalFilename": "component.tsx_Parent_component_useClientMount_Yn2kIDABoYw",
+  "path": "components",
+  "extension": "js",
+  "parent": "Parent_component_t6Wy3C0Q0XM",
+  "ctxKind": "function",
+  "ctxName": "useClientMount$",
+  "captures": false,
+  "loc": [
+    371,
+    474
+  ]
+}
+*/
 == DIAGNOSTICS ==
 []

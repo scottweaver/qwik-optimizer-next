@@ -7,9 +7,11 @@ snapshot_kind: text
 import { clientQrl } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
+import { serverLoaderQrl } from "@qwik.dev/core";
 import { serverStuffQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
@@ -140,6 +142,29 @@ export const s_gDH1EtUWqBU = async () => {
   ]
 }
 */
+============================= test.tsx_Parent_component_serverLoader_k1L0DiPQV1I.js (ENTRY POINT) ==
+export const s_k1L0DiPQV1I = null;
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "s_k1L0DiPQV1I",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_serverLoader",
+  "hash": "k1L0DiPQV1I",
+  "canonicalFilename": "test.tsx_Parent_component_serverLoader_k1L0DiPQV1I",
+  "path": "",
+  "extension": "js",
+  "parent": "s_0TaiDayHrlo",
+  "ctxKind": "function",
+  "ctxName": "serverLoader$",
+  "captures": false,
+  "loc": [
+    688,
+    710
+  ]
+}
+*/
 ============================= test.tsx_Parent_component_useTask_1_P8oRQhHsurk.js (ENTRY POINT) ==
 export const s_P8oRQhHsurk = () => {
 	// Code
@@ -166,18 +191,7 @@ export const s_P8oRQhHsurk = () => {
 }
 */
 ============================= test.tsx_Parent_component_serverStuff_r1qAHX7Opp0.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { client$ } from "@qwik.dev/core";
-export const s_r1qAHX7Opp0 = async () => {
-	// should be removed too
-	const a = $(() => {
-		// from $(), should not be removed
-	});
-	const b = client$(() => {
-		// from clien$(), should not be removed
-	});
-	return [a, b];
-};
+export const s_r1qAHX7Opp0 = null;
 
 /*
 {

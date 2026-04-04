@@ -1,16 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 884
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { serverQrl } from "@qwik.dev/core";
+import { useStyleQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
-	useStyle$(STYLES);
+	useStyleQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg");
 	const text = "hola";
 	const sig = useSignal("hola");
 	useTaskQrl(() => {
@@ -21,4 +22,12 @@ export const Works = componentQrl((props) => {
 const STYLES = ".class {}";
 
 == DIAGNOSTICS ==
-[]
+[
+  {
+    "scope": "optimizer",
+    "category": "error",
+    "code": "C03",
+    "file": "test.tsx",
+    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: STYLES"
+  }
+]

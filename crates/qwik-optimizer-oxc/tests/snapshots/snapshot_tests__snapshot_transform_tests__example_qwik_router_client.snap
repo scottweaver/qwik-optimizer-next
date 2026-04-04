@@ -1,11 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 908
 expression: output
+snapshot_kind: text
 ---
 ============================= ../node_modules/@qwik.dev/router/index.qwik.mjs ==
 import { componentQrl } from "@qwik.dev/core";
 import { eventQrl } from "@qwik.dev/core";
+import { useStylesQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { useVisibleTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
@@ -22,6 +23,7 @@ const q_ErrorBoundary_component_1_16K8z6DSSp8 = /*#__PURE__*/ qrl(()=>import("./
 const q_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_usePreventNavigateQrl_useVisibleTask_no0bm2fybZo.mjs"), "usePreventNavigateQrl_useVisibleTask_no0bm2fybZo");
 const q_Link_component_nhj84CU1784 = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_Link_component_nhj84CU1784.mjs"), "Link_component_nhj84CU1784");
 const q_spaInit_event_Js1cotabL5I = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_spaInit_event_Js1cotabL5I.mjs"), "spaInit_event_Js1cotabL5I");
+const q_useQwikRouter_useStyles_XNocHv0sxCQ = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_useStyles_XNocHv0sxCQ.mjs"), "useQwikRouter_useStyles_XNocHv0sxCQ");
 const q_useQwikRouter_registerPreventNav_W0LIs8PUJoA = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_registerPreventNav_W0LIs8PUJoA.mjs"), "useQwikRouter_registerPreventNav_W0LIs8PUJoA");
 const q_useQwikRouter_goto_OSnb99dm7Ow = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_goto_OSnb99dm7Ow.mjs"), "useQwikRouter_goto_OSnb99dm7Ow");
 const q_useQwikRouter_useTask_omhKiQfdzZU = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_useQwikRouter_useTask_omhKiQfdzZU.mjs"), "useQwikRouter_useTask_omhKiQfdzZU");
@@ -137,7 +139,6 @@ const createDocumentHead = (defaults) => ({
 	scripts: [...defaults?.scripts || []],
 	frontmatter: { ...defaults?.frontmatter }
 });
-const transitionCss = "@layer qwik{@supports selector(html:active-view-transition-type(type)){html:active-view-transition-type(qwik-navigation){:root{view-transition-name:none}}}@supports not selector(html:active-view-transition-type(type)){:root{view-transition-name:none}}}";
 const restoreScroll = (type, toUrl, fromUrl, scroller, scrollState) => {
 	if (type === "popstate" && scrollState) {
 		scroller.scrollTo(scrollState.x, scrollState.y);
@@ -179,7 +180,7 @@ const useQwikRouter = (props) => {
 	if (!isServer) {
 		throw new Error("useQwikRouter can only run during SSR on the server. If you are seeing this, it means you are re-rendering the root of your application. Fix that or use the <QwikRouterProvider> component around the root of your application.");
 	}
-	useStyles$(transitionCss);
+	useStylesQrl(q_useQwikRouter_useStyles_XNocHv0sxCQ);
 	const env = useQwikRouterEnv();
 	if (!env?.params) {
 		throw new Error(`Missing Qwik Router Env Data for help visit https://github.com/QwikDev/qwik/issues/6237`);
@@ -2508,6 +2509,30 @@ export const useQwikRouter_registerPreventNav_W0LIs8PUJoA = (fn$) => {
   ]
 }
 */
+============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_useQwikRouter_useStyles_XNocHv0sxCQ.mjs (ENTRY POINT) ==
+const transitionCss = "@layer qwik{@supports selector(html:active-view-transition-type(type)){html:active-view-transition-type(qwik-navigation){:root{view-transition-name:none}}}@supports not selector(html:active-view-transition-type(type)){:root{view-transition-name:none}}}";
+export const useQwikRouter_useStyles_XNocHv0sxCQ = transitionCss;
+
+/*
+{
+  "origin": "../node_modules/@qwik.dev/router/index.qwik.mjs",
+  "name": "useQwikRouter_useStyles_XNocHv0sxCQ",
+  "entry": null,
+  "displayName": "index.qwik.mjs_useQwikRouter_useStyles",
+  "hash": "XNocHv0sxCQ",
+  "canonicalFilename": "index.qwik.mjs_useQwikRouter_useStyles_XNocHv0sxCQ",
+  "path": "../node_modules/@qwik.dev/router",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "useStyles$",
+  "captures": false,
+  "loc": [
+    16543,
+    16568
+  ]
+}
+*/
 ============================= ../node_modules/@qwik.dev/router/index.qwik.mjs_ErrorBoundary_component_yTCHi5s1o00.mjs (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const ErrorBoundary_component_yTCHi5s1o00 = (e) => {
@@ -2543,6 +2568,13 @@ export const ErrorBoundary_component_yTCHi5s1o00 = (e) => {
 */
 == DIAGNOSTICS ==
 [
+  {
+    "scope": "optimizer",
+    "category": "error",
+    "code": "C03",
+    "file": "index.qwik.mjs",
+    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: transitionCss"
+  },
   {
     "scope": "optimizer",
     "category": "error",

@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 946
 expression: output
+snapshot_kind: text
 ---
 ============================= test.ts ==
 import { componentQrl } from "@qwik.dev/core";
+import { qwikifyQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { isDev } from "@qwik.dev/core/build";
 import { stuff } from "@qwik.dev/router";
@@ -12,12 +13,37 @@ import { moreStuff } from "@qwik.dev/router/more/here";
 import { qwikify$ } from "@qwik.dev/react";
 import sdk from "@builder.io/sdk";
 //
+const q_Foo_qwikify_0Yoy9qA0SC0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_qwikify_0Yoy9qA0SC0"), "Foo_qwikify_0Yoy9qA0SC0");
+const q_Bar_GXXnVUtURSw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Bar_GXXnVUtURSw"), "Bar_GXXnVUtURSw");
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
 //
-export const Foo = qwikify$(MyReactComponent);
-export const Bar = $("a thing");
+export const Foo = qwikifyQrl(q_Foo_qwikify_0Yoy9qA0SC0);
+export const Bar = q_Bar_GXXnVUtURSw;
 export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 
+============================= test.tsx_Foo_qwikify_0Yoy9qA0SC0.ts (ENTRY POINT) ==
+export const Foo_qwikify_0Yoy9qA0SC0 = MyReactComponent;
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_qwikify_0Yoy9qA0SC0",
+  "entry": null,
+  "displayName": "test.tsx_Foo_qwikify",
+  "hash": "0Yoy9qA0SC0",
+  "canonicalFilename": "test.tsx_Foo_qwikify_0Yoy9qA0SC0",
+  "path": "",
+  "extension": "ts",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "qwikify$",
+  "captures": false,
+  "loc": [
+    327,
+    353
+  ]
+}
+*/
 ============================= test.tsx_App_component_ckEPmXZlub0.ts (ENTRY POINT) ==
 import { isDev } from "@qwik.dev/core/build";
 import { moreStuff } from "@qwik.dev/router/more/here";
@@ -50,6 +76,29 @@ export const App_component_ckEPmXZlub0 = () => {
   "loc": [
     413,
     529
+  ]
+}
+*/
+============================= test.tsx_Bar_GXXnVUtURSw.ts (ENTRY POINT) ==
+export const Bar_GXXnVUtURSw = "a thing";
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Bar_GXXnVUtURSw",
+  "entry": null,
+  "displayName": "test.tsx_Bar",
+  "hash": "GXXnVUtURSw",
+  "canonicalFilename": "test.tsx_Bar_GXXnVUtURSw",
+  "path": "",
+  "extension": "ts",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    377,
+    389
   ]
 }
 */
