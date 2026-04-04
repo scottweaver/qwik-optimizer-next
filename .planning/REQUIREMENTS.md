@@ -1,4 +1,4 @@
-# Requirements: Qwik Optimizer OXC — Full SWC Parity
+# Requirements: Qwik Optimizer OXC -- Full SWC Parity
 
 **Defined:** 2026-04-03
 **Core Value:** The OXC implementation must produce functionally equivalent output to the SWC version for all 201 test fixtures.
@@ -36,7 +36,7 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 ### Performance & Parallelism
 
-- **PERF-01**: Performance benchmarking — OXC optimizer vs SWC optimizer on representative Qwik applications
+- **PERF-01**: Performance benchmarking -- OXC optimizer vs SWC optimizer on representative Qwik applications
 - **PERF-02**: Parallel module processing via rayon (feature-gated behind `parallel`)
 
 ## Out of Scope
@@ -52,25 +52,25 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOT-01 | — | Pending |
-| ROOT-02 | — | Pending |
-| ROOT-03 | — | Pending |
-| ROOT-04 | — | Pending |
-| ROOT-05 | — | Pending |
-| SEG-01 | — | Pending |
-| SEG-02 | — | Pending |
-| SEG-03 | — | Pending |
-| SEG-04 | — | Pending |
-| SEG-05 | — | Pending |
-| DIAG-01 | — | Pending |
-| DIAG-02 | — | Pending |
-| ACC-01 | — | Pending |
+| ROOT-01 | Phase 11 | Pending |
+| ROOT-02 | Phase 11 | Pending |
+| ROOT-03 | Phase 11 | Pending |
+| ROOT-04 | Phase 11 | Pending |
+| ROOT-05 | Phase 11 | Pending |
+| SEG-01 | Phase 10 | Pending |
+| SEG-02 | Phase 10 | Pending |
+| SEG-03 | Phase 10 | Pending |
+| SEG-04 | Phase 10 | Pending |
+| SEG-05 | Phase 10 | Pending |
+| DIAG-01 | Phase 12 | Pending |
+| DIAG-02 | Phase 12 | Pending |
+| ACC-01 | Phase 13 | Pending |
 
 **Coverage:**
 - v0.2.0 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13
+- Mapped to phases: 13
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-03*
-*Last updated: 2026-04-03 after initial definition*
+*Last updated: 2026-04-03 after roadmap creation*
