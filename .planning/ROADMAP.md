@@ -30,7 +30,7 @@ Full details: [v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md)
 
 **Baseline:** 28/201 (14%) full match | 57/201 root match | 125/201 segment count match | 197/201 diagnostics match
 
-- [ ] **Phase 10: Segment Extraction** - Fix dollar-sign expression detection in loops, JSX handlers, ternaries, spread props, and inline strategies
+- [x] **Phase 10: Segment Extraction** - Fix dollar-sign expression detection in loops, JSX handlers, ternaries, spread props, and inline strategies (completed 2026-04-04)
 - [ ] **Phase 11: Root Module Code Generation** - Fix import ordering, declarations, exports, QRL references, and comment structure
 - [ ] **Phase 12: Diagnostics Parity** - Fix error reporting to match SWC for all 201 fixtures
 - [ ] **Phase 13: Final Acceptance** - Verify 201/201 full match and fix any remaining stragglers
@@ -51,7 +51,7 @@ Full details: [v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md)
 
 Plans:
 - [x] 10-01-PLAN.md — JSX attribute segment extraction: port jsx_event_to_html_attribute, restructure classify_props, implement segment extraction for $-suffixed JSX attributes
-- [ ] 10-02-PLAN.md — Straggler fixes: diagnose and fix remaining segment count mismatches (loop captures, bind expansion, inline strategy edge cases)
+- [x] 10-02-PLAN.md — Straggler fixes: diagnose and fix remaining segment count mismatches (loop captures, bind expansion, inline strategy edge cases)
 
 ### Phase 11: Root Module Code Generation
 **Goal**: The root module output for every fixture matches SWC in import ordering, variable declarations, export structure, QRL references, and comment separators
@@ -110,7 +110,7 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 7. Spec Gap Closure | v0.1.0 | 2/2 | Complete | 2026-04-03 |
 | 8. Implementation Gap Closure | v0.1.0 | 5/5 | Complete | 2026-04-03 |
 | 9. Metadata & Verification Cleanup | v0.1.0 | 3/3 | Complete | 2026-04-03 |
-| 10. Segment Extraction | v0.2.0 | 1/2 | In Progress|  |
+| 10. Segment Extraction | v0.2.0 | 2/2 | Complete   | 2026-04-04 |
 | 11. Root Module Code Generation | v0.2.0 | 0/2 | Not started | - |
 | 12. Diagnostics Parity | v0.2.0 | 0/1 | Not started | - |
 | 13. Final Acceptance | v0.2.0 | 0/1 | Not started | - |
