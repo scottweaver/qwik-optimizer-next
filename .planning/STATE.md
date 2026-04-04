@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1.0
-milestone_name: Qwik Optimizer Spec & OXC Implementation
-status: completed
-stopped_at: Milestone v0.1.0 shipped
-last_updated: "2026-04-03T23:30:00.000Z"
+milestone: v0.2.0
+milestone_name: Full SWC Parity
+status: active
+last_updated: "2026-04-03T00:00:00.000Z"
 last_activity: 2026-04-03
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 35
-  completed_plans: 35
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,18 +20,19 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** The specification must be comprehensive and precise enough that an OXC implementation can be built from it without referencing the SWC source code.
-**Current focus:** Planning next milestone
+**Current focus:** Defining requirements for v0.2.0 Full SWC Parity
 
 ## Current Position
 
-Milestone: v0.1.0 SHIPPED (2026-04-03)
-Status: Complete — ready for next milestone
-Last activity: 2026-04-03
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-03 — Milestone v0.2.0 started
 
-Progress: [##########] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
 Last session: 2026-04-03
-Stopped at: Milestone v0.1.0 shipped
+Stopped at: Milestone v0.2.0 started — defining requirements
 Resume file: None

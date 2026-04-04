@@ -23,9 +23,10 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 ### Active
 
-- [ ] Improve SWC parity from 57/201 (28%) to 150+/201 (75%+) — remaining mismatches are structural (import ordering, whitespace, comment placement)
-- [ ] Performance benchmarking: OXC optimizer vs SWC optimizer on representative Qwik applications
-- [ ] Parallel module processing via rayon (feature-gated behind `parallel`)
+- [ ] Achieve 201/201 full SWC parity — every fixture's root module, segment count, and diagnostics match the SWC reference
+- [ ] Fix root module code generation mismatches (95 fixtures)
+- [ ] Fix segment extraction for dollar-sign expressions in loops, ternaries, nested scopes, and spread props (76 fixtures)
+- [ ] Fix diagnostics parity (4 fixtures)
 
 ### Out of Scope
 
@@ -33,13 +34,25 @@ The specification must be comprehensive and precise enough that an OXC implement
 - TypeScript plugin integration (platform.ts binding swap) — separate concern from core optimizer
 - Qwik build pipeline integration — the optimizer is a standalone transform, not a bundler plugin
 - Performance benchmarking against SWC — correctness first, optimization later
+- Parallel module processing (rayon) — deferred to post-parity milestone
 
 ## Context
+
+## Current Milestone: v0.2.0 Full SWC Parity
+
+**Goal:** Achieve 201/201 full SWC parity — every OXC-transformed fixture produces output matching the SWC reference.
+
+**Target features:**
+- Fix 95 root-module-only mismatches (code generation differences)
+- Fix ~76 segment count mismatches (missing segment extraction)
+- Fix 4 diagnostics mismatches (error reporting parity)
+
+**Baseline:** 28/201 (14%) full match | 57/201 root match | 125/201 segment count match | 197/201 diagnostics match
 
 **Current state (v0.1.0 shipped 2026-04-03):**
 - ~190K LOC Rust across 3 crates (qwik-optimizer-oxc, qwik-optimizer-napi, qwik-optimizer-wasm)
 - 444 tests passing (211 snapshot fixtures + 233 unit tests)
-- 57/201 SWC root module parity (28%)
+- 28/201 full SWC parity (14%) — root module, segment count, and diagnostics all matching
 - Comprehensive spec document covering all 14 CONVs with 24+ examples
 
 **Source material:**
@@ -85,4 +98,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after v0.1.0 milestone*
+*Last updated: 2026-04-03 after v0.2.0 milestone start*
