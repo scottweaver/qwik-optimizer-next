@@ -25,6 +25,25 @@ use crate::is_const::is_const_expression;
 use crate::transform::{IdentCollector, TypedId, compute_scoped_idents};
 
 // ---------------------------------------------------------------------------
+// DollarAttr -- $-suffixed JSX attribute requiring segment extraction
+// ---------------------------------------------------------------------------
+
+/// A `$`-suffixed JSX attribute whose value is a function expression,
+/// requiring segment extraction by QwikTransform.
+pub(crate) struct DollarAttr<'a> {
+    /// The original attribute key (e.g., "onClick$").
+    pub key: String,
+    /// The HTML attribute name from jsx_event_to_html_attribute, or None for non-event props.
+    pub html_attr: Option<String>,
+    /// Whether the parent element is a component (true) or HTML element (false).
+    pub is_component: bool,
+    /// The function/arrow expression value.
+    pub value_expr: Expression<'a>,
+    /// Span of the value expression.
+    pub value_span: oxc::span::Span,
+}
+
+// ---------------------------------------------------------------------------
 // Signal optimization context
 // ---------------------------------------------------------------------------
 
@@ -66,7 +85,7 @@ pub(crate) fn transform_jsx_element<'a>(
     is_root: bool,
     allocator: &'a Allocator,
     signal_ctx: Option<&SignalOptContext<'a, '_>>,
-) -> (Expression<'a>, JsxImportNeeds) {
+) -> (Expression<'a>, JsxImportNeeds, Vec<DollarAttr<'a>>, String, bool) {
     let ast = AstBuilder::new(allocator);
     let mut needs = JsxImportNeeds::default();
 
@@ -75,6 +94,9 @@ pub(crate) fn transform_jsx_element<'a>(
 
     // 1. Classify element type (component vs intrinsic)
     let (is_fn, tag_expr) = classify_tag(&opening.name, &ast, allocator);
+
+    // Extract tag name for stack_ctxt re-push in exit_expression
+    let tag_name = extract_tag_name(&opening.name);
 
     // 2. Key generation
     let should_emit_key = is_fn || is_root;
@@ -87,8 +109,8 @@ pub(crate) fn transform_jsx_element<'a>(
 
     // 3. Process attributes
     let attrs = opening.attributes;
-    let (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used) =
-        classify_props(attrs, &ast, allocator, signal_ctx);
+    let (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used, dollar_attrs) =
+        classify_props(attrs, &ast, allocator, signal_ctx, is_fn);
 
     // Use extracted key if present, otherwise use generated key
     let final_key = extracted_key.unwrap_or(key_expr);
@@ -124,7 +146,32 @@ pub(crate) fn transform_jsx_element<'a>(
         allocator,
     );
 
-    (call, needs)
+    (call, needs, dollar_attrs, tag_name, is_fn)
+}
+
+/// Extract the tag name string from JSXElementName for stack_ctxt push.
+fn extract_tag_name(name: &JSXElementName<'_>) -> String {
+    match name {
+        JSXElementName::Identifier(id) => id.name.as_str().to_string(),
+        JSXElementName::IdentifierReference(id) => id.name.as_str().to_string(),
+        JSXElementName::MemberExpression(me) => {
+            // For Foo.Bar, return "Foo.Bar" (or just property for simpler names)
+            format_jsx_member_name(me)
+        }
+        JSXElementName::NamespacedName(nn) => {
+            format!("{}:{}", nn.namespace.name.as_str(), nn.name.name.as_str())
+        }
+        JSXElementName::ThisExpression(_) => "this".to_string(),
+    }
+}
+
+fn format_jsx_member_name(me: &JSXMemberExpression<'_>) -> String {
+    let object_name = match &me.object {
+        JSXMemberExpressionObject::IdentifierReference(id) => id.name.as_str().to_string(),
+        JSXMemberExpressionObject::MemberExpression(inner) => format_jsx_member_name(inner),
+        JSXMemberExpressionObject::ThisExpression(_) => "this".to_string(),
+    };
+    format!("{}.{}", object_name, me.property.name.as_str())
 }
 
 /// Transform a JSXFragment into a `_jsxSorted(_Fragment, ...)` call expression.
@@ -263,6 +310,7 @@ fn classify_props<'a>(
     ast: &AstBuilder<'a>,
     allocator: &'a Allocator,
     signal_ctx: Option<&SignalOptContext<'a, '_>>,
+    is_fn: bool,
 ) -> (
     bool,
     Option<Expression<'a>>,
@@ -270,6 +318,7 @@ fn classify_props<'a>(
     Option<Expression<'a>>,
     Option<Expression<'a>>,
     bool,
+    Vec<DollarAttr<'a>>,
 ) {
     let mut has_spread = false;
     let mut var_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
@@ -277,6 +326,7 @@ fn classify_props<'a>(
     let mut extracted_key: Option<Expression<'a>> = None;
     let mut children_from_props: Option<Expression<'a>> = None;
     let mut signal_used = false;
+    let mut dollar_attrs: Vec<DollarAttr<'a>> = Vec::new();
 
     for attr in attrs {
         match attr {
@@ -322,6 +372,34 @@ fn classify_props<'a>(
                     // No value means `true` (e.g., `<input disabled />`)
                     ast.expression_boolean_literal(SPAN, true)
                 };
+
+                // Detect $-suffixed attribute with function/arrow value for segment extraction.
+                // We record the attribute metadata in dollar_attrs for later processing
+                // by QwikTransform (Task 2). For now, the attribute is ALSO included in
+                // var_entries so that output doesn't change until segment extraction is
+                // wired up. When Task 2 processes dollar_attrs, it will inject replacement
+                // QRL props instead.
+                if key_name.ends_with('$') {
+                    if matches!(&value_expr, Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)) {
+                        let value_span = match &value_expr {
+                            Expression::ArrowFunctionExpression(a) => a.span,
+                            Expression::FunctionExpression(f) => f.span,
+                            _ => unreachable!(),
+                        };
+                        let html_attr = crate::transform::jsx_event_to_html_attribute(&key_name);
+                        dollar_attrs.push(DollarAttr {
+                            key: key_name.clone(),
+                            html_attr,
+                            is_component: is_fn,
+                            // We don't take ownership of value_expr here since it's
+                            // still used below for prop classification. We pass a
+                            // placeholder and will extract the real expr in Task 2.
+                            value_expr: ast.expression_null_literal(SPAN),
+                            value_span,
+                        });
+                        // Fall through to normal prop classification
+                    }
+                }
 
                 // Classify as const or var
                 let is_const = is_const_expression(&value_expr);
@@ -374,7 +452,7 @@ fn classify_props<'a>(
         Some(ast.expression_object(SPAN, const_entries))
     };
 
-    (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used)
+    (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used, dollar_attrs)
 }
 
 // ---------------------------------------------------------------------------

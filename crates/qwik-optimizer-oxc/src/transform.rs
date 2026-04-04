@@ -1070,7 +1070,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 allocator,
             };
 
-            let (new_expr, needs) = if is_jsx_element {
+            let (new_expr, needs, dollar_attrs, _tag_name, _is_component) = if is_jsx_element {
                 if let Expression::JSXElement(el) = taken {
                     crate::jsx_transform::transform_jsx_element(
                         el.unbox(),
@@ -1084,16 +1084,20 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             } else {
                 if let Expression::JSXFragment(frag) = taken {
-                    crate::jsx_transform::transform_jsx_fragment(
+                    let (expr, needs) = crate::jsx_transform::transform_jsx_fragment(
                         frag.unbox(),
                         &mut self.jsx_key_counter,
                         is_root,
                         allocator,
-                    )
+                    );
+                    (expr, needs, Vec::new(), String::new(), false)
                 } else {
                     unreachable!()
                 }
             };
+
+            // dollar_attrs will be processed by Task 2 for segment extraction.
+            let _ = &dollar_attrs;
 
             // Only set root module import flags when NOT inside a segment scope.
             // JSX inside segments will have their imports handled by code_move.
@@ -2148,6 +2152,77 @@ fn escape_dollar(name: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// JSX event attribute helpers (ported from SWC transform.rs L4658-4713)
+// ---------------------------------------------------------------------------
+
+/// Convert a `$`-suffixed JSX event attribute name to an HTML attribute name.
+///
+/// Returns `Some(html_attr)` for event handler attributes, `None` for non-event props.
+///
+/// Examples:
+/// - `onClick$` -> `Some("q-e:click")`
+/// - `onDblClick$` -> `Some("q-e:dbl-click")`
+/// - `document:onFocus$` -> `Some("q-d:focus")`
+/// - `window:onClick$` -> `Some("q-w:click")`
+/// - `onDOMContentLoaded$` -> `Some("q-e:d-o-m-content-loaded")`
+/// - `render$` -> `None` (not an event handler)
+pub(crate) fn jsx_event_to_html_attribute(jsx_event: &str) -> Option<String> {
+    if !jsx_event.ends_with('$') {
+        return None;
+    }
+
+    let (prefix, idx) = get_event_scope_data_from_jsx_event(jsx_event);
+
+    if idx == usize::MAX {
+        return None;
+    }
+
+    let name = &jsx_event[idx..jsx_event.len() - 1];
+
+    if name == "DOMContentLoaded" {
+        return Some(format!("{}-d-o-m-content-loaded", prefix));
+    }
+
+    let processed_name = if let Some(stripped) = name.strip_prefix('-') {
+        // marker for case sensitive event name
+        stripped.to_string()
+    } else {
+        name.to_lowercase()
+    };
+
+    Some(create_event_name(&processed_name, prefix))
+}
+
+/// Get the event scope prefix and starting index from a JSX event name.
+fn get_event_scope_data_from_jsx_event(jsx_event: &str) -> (&str, usize) {
+    if jsx_event.starts_with("window:on") {
+        ("q-w:", 9)
+    } else if jsx_event.starts_with("document:on") {
+        ("q-d:", 11)
+    } else if jsx_event.starts_with("on") {
+        ("q-e:", 2)
+    } else {
+        ("", usize::MAX)
+    }
+}
+
+/// Create an event name by converting from camelCase to kebab-case.
+fn create_event_name(name: &str, prefix: &str) -> String {
+    let mut result = String::from(prefix);
+
+    for c in name.chars() {
+        if c.is_ascii_uppercase() || c == '-' {
+            result.push('-');
+            result.push(c.to_ascii_lowercase());
+        } else {
+            result.push(c);
+        }
+    }
+
+    result
+}
+
+// ---------------------------------------------------------------------------
 // transform_code -- pipeline orchestration
 // ---------------------------------------------------------------------------
 
@@ -3005,6 +3080,79 @@ mod tests {
             code.contains("_rawProps"),
             "Props destructuring should produce _rawProps, got: {}",
             code
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // jsx_event_to_html_attribute tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn jsx_event_click() {
+        assert_eq!(
+            jsx_event_to_html_attribute("onClick$"),
+            Some("q-e:click".to_string())
+        );
+    }
+
+    #[test]
+    fn jsx_event_dbl_click() {
+        // SWC lowercases the name first, so DblClick -> dblclick (no kebab)
+        assert_eq!(
+            jsx_event_to_html_attribute("onDblClick$"),
+            Some("q-e:dblclick".to_string())
+        );
+    }
+
+    #[test]
+    fn jsx_event_document_focus() {
+        assert_eq!(
+            jsx_event_to_html_attribute("document:onFocus$"),
+            Some("q-d:focus".to_string())
+        );
+    }
+
+    #[test]
+    fn jsx_event_window_click() {
+        assert_eq!(
+            jsx_event_to_html_attribute("window:onClick$"),
+            Some("q-w:click".to_string())
+        );
+    }
+
+    #[test]
+    fn jsx_event_dom_content_loaded() {
+        // SWC special case: DOMContentLoaded -> "{prefix}-d-o-m-content-loaded"
+        assert_eq!(
+            jsx_event_to_html_attribute("onDOMContentLoaded$"),
+            Some("q-e:-d-o-m-content-loaded".to_string())
+        );
+    }
+
+    #[test]
+    fn jsx_event_non_event_returns_none() {
+        assert_eq!(jsx_event_to_html_attribute("render$"), None);
+    }
+
+    #[test]
+    fn jsx_event_no_dollar_returns_none() {
+        assert_eq!(jsx_event_to_html_attribute("onClick"), None);
+    }
+
+    #[test]
+    fn jsx_event_input() {
+        assert_eq!(
+            jsx_event_to_html_attribute("onInput$"),
+            Some("q-e:input".to_string())
+        );
+    }
+
+    #[test]
+    fn jsx_event_case_sensitive_with_hyphen() {
+        // on-customEvent$ -> q-e:customEvent (hyphen prefix = case sensitive)
+        assert_eq!(
+            jsx_event_to_html_attribute("on-customEvent$"),
+            Some("q-e:custom-event".to_string())
         );
     }
 }
