@@ -289,6 +289,10 @@ pub(crate) struct SegmentScope {
     /// Whether we pushed the ctx_name onto stack_ctxt (true for named marker calls,
     /// false for bare `$` and `sync$` which don't contribute to display_name).
     pub pushed_ctx_name: bool,
+    /// Pre-registered naming result, computed at enter time to ensure outer segments
+    /// register their names before inner nested segments. This matches SWC's Fold
+    /// ordering where outer nodes process before children.
+    pub pre_registered_name: Option<crate::hash::ContextNameResult>,
 }
 
 // ---------------------------------------------------------------------------
@@ -934,6 +938,34 @@ impl QwikTransform {
             || matches!(self.mode, EmitMode::Lib)
     }
 
+    /// Extract source text for extra arguments (beyond the first) from a call expression.
+    /// Used to preserve options like `{ tagName: "my-foo" }` in componentQrl() calls.
+    fn extract_extra_args_code(&self, call: &CallExpression<'_>, skip: usize) -> Option<String> {
+        if call.arguments.len() <= skip {
+            return None;
+        }
+        let src = unsafe { &*self.source_text };
+        let mut parts = Vec::new();
+        for arg in call.arguments.iter().skip(skip) {
+            let span = match arg {
+                Argument::SpreadElement(s) => s.span,
+                _ => arg.as_expression().map_or(oxc::span::Span::new(0, 0), |e| {
+                    oxc::span::GetSpan::span(e)
+                }),
+            };
+            let start = span.start as usize;
+            let end = span.end as usize;
+            if start <= end && end <= src.len() {
+                parts.push(src[start..end].to_string());
+            }
+        }
+        if parts.is_empty() {
+            None
+        } else {
+            Some(parts.join(", "))
+        }
+    }
+
     // -----------------------------------------------------------------------
     // JSX recursive transformation with dollar-attr segment extraction
     // -----------------------------------------------------------------------
@@ -1043,6 +1075,7 @@ impl QwikTransform {
                         if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
                         if needs.needs_jsx_split { self.needs_jsx_split_import = true; }
                         if needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                        if needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
                     }
                     *expr = new_expr;
                 }
@@ -1088,6 +1121,7 @@ impl QwikTransform {
                                         if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
                                         if needs.needs_jsx_split { self.needs_jsx_split_import = true; }
                                         if needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                                        if needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
                                     }
                                     *element = ArrayExpressionElement::from(new_expr);
                                 }
@@ -1383,20 +1417,46 @@ impl QwikTransform {
 
             return Some((replacement_key, replacement));
         } else if is_inline {
-            // Inline strategy: inlinedQrl(fn_expr, "symbol_name"[, captures])
+            // Inline strategy: same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
+            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
+            let ident_name = format!("q_{}", names.symbol_name);
 
-            // Build: inlinedQrl(fn_expr, "symbol_name"[, [captures]])
-            let fn_body_code = expr_code.as_deref().unwrap_or("()=>{}");
-            let inlined_code = if has_captures {
+            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
+
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                let is_root_level = self.segment_stack.is_empty();
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code: noop_rhs,
+                    symbol_name: names.symbol_name.clone(),
+                    is_root_level,
+                });
+            }
+
+            if let Some(ref body_code) = expr_code {
+                let s_call = format!("{}.s({});", ident_name, body_code);
+                self.ref_assignments.push(s_call);
+            }
+
+            let replacement = if has_captures {
                 let caps_str = scoped_idents.join(", ");
-                format!(r#"{}({}, "{}", [{}])"#, inlined_name, fn_body_code, names.symbol_name, caps_str)
+                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+                let expr_stmt = format!("{};", w_expr_code);
+                crate::add_side_effect::parse_single_statement(&expr_stmt, allocator)
+                    .and_then(|stmt| {
+                        if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                            Some(es.unbox().expression)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_else(|| ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name)))
             } else {
-                format!(r#"{}({}, "{}")"#, inlined_name, fn_body_code, names.symbol_name)
+                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
             };
 
-            self.needs_inlined_qrl_import = true;
+            self.needs_noop_qrl_import = true;
 
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
@@ -1418,17 +1478,7 @@ impl QwikTransform {
                 param_names: param_names.clone(),
             });
 
-            let qrl_expr = crate::add_side_effect::parse_single_statement(
-                &format!("{};", inlined_code), allocator
-            ).and_then(|stmt| {
-                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                    Some(es.unbox().expression)
-                } else {
-                    None
-                }
-            })?;
-
-            return Some((replacement_key, qrl_expr));
+            return Some((replacement_key, replacement));
         } else {
             // Segment strategy: hoist QRL to module scope
             let import_path = if self.explicit_extensions {
@@ -1845,7 +1895,23 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         self.stack_ctxt.push(escape_dollar(&ctx_name));
                     }
 
-                    // 4. Push a SegmentScope onto segment_stack
+                    // 4. Pre-register the name NOW (at enter time) to ensure outer
+                    // segments reserve their collision counter slot before inner nested
+                    // segments. This matches SWC's Fold ordering where outer nodes call
+                    // register_context_name before folding children.
+                    let pre_registered_name = Some(crate::hash::register_context_name(
+                        &self.stack_ctxt,
+                        &mut self.segment_names,
+                        self.scope.as_deref(),
+                        &self.rel_path,
+                        &self.file_name,
+                        &self.mode,
+                        None,
+                        None,
+                        None,
+                    ));
+
+                    // 5. Push a SegmentScope onto segment_stack
                     self.segment_stack.push(SegmentScope {
                         ctx_name,
                         ctx_kind,
@@ -1853,6 +1919,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         is_sync,
                         descendent_idents,
                         pushed_ctx_name,
+                        pre_registered_name,
                     });
                     // Don't push callee ident separately -- the marker name push handles it
                     self.call_name_pushed.push(false);
@@ -1876,6 +1943,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     is_sync,
                     descendent_idents,
                     pushed_ctx_name: true,
+                    pre_registered_name: None,
                 });
             }
             // Dollar call detected but not emitted (stripped or not a function arg)
@@ -1942,6 +2010,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         if needs.needs_fn_signal {
                             self.needs_fn_signal_import = true;
                         }
+                        if needs.needs_wrap_prop {
+                            self.needs_wrap_prop_import = true;
+                        }
                     }
 
                     *expr = new_expr;
@@ -1982,6 +2053,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                                                         if child_needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
                                                         if child_needs.needs_jsx_split { self.needs_jsx_split_import = true; }
                                                         if child_needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                                                        if child_needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
                                                     }
                                                     *element = ArrayExpressionElement::from(transformed);
                                                 }
@@ -2002,6 +2074,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                                             if child_needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
                                             if child_needs.needs_jsx_split { self.needs_jsx_split_import = true; }
                                             if child_needs.needs_fn_signal { self.needs_fn_signal_import = true; }
+                                            if child_needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
                                         }
                                         *children_arg = expr_to_argument(transformed);
                                     }
@@ -2024,6 +2097,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         }
                         if needs.needs_fn_signal {
                             self.needs_fn_signal_import = true;
+                        }
+                        if needs.needs_wrap_prop {
+                            self.needs_wrap_prop_import = true;
                         }
                     }
 
@@ -2160,17 +2236,24 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         }
 
         // --- Compute names via register_context_name ---
-        let names = crate::hash::register_context_name(
-            &self.stack_ctxt,
-            &mut self.segment_names,
-            self.scope.as_deref(),
-            &self.rel_path,
-            &self.file_name,
-            &self.mode,
-            None,
-            None,
-            None,
-        );
+        // Use the pre-registered name if available (computed at enter time to match
+        // SWC's Fold ordering). For bare `$` calls which don't pre-register,
+        // compute the name now.
+        let names = if let Some(pre_names) = pending.pre_registered_name {
+            pre_names
+        } else {
+            crate::hash::register_context_name(
+                &self.stack_ctxt,
+                &mut self.segment_names,
+                self.scope.as_deref(),
+                &self.rel_path,
+                &self.file_name,
+                &self.mode,
+                None,
+                None,
+                None,
+            )
+        };
 
         // Now pop the marker function name from stack_ctxt (after name computation)
         if pending.pushed_ctx_name {
@@ -2714,9 +2797,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         if self.needs_jsx_split_import {
             imports_to_add.push(("_jsxSplit", "_jsxSplit"));
         }
-        if self.needs_fragment_import {
-            imports_to_add.push(("Fragment", "Fragment"));
-        }
+        // Fragment import is handled separately below (from jsx-runtime, not core)
         if self.needs_fn_signal_import {
             imports_to_add.push(("_fnSignal", "_fnSignal"));
         }
@@ -2757,6 +2838,19 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         for wrapper in wrapper_imports.into_iter().rev() {
             let source = self.find_wrapper_source(&wrapper);
             let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, source);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
+                program.body.insert(0, stmt);
+            }
+        }
+
+        // 2b. Fragment import from jsx-runtime (not core module).
+        //     SWC emits: import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
+        if self.needs_fragment_import {
+            let jsx_runtime_source = format!("{}/jsx-runtime", self.core_module);
+            let import_str = format!(
+                r#"import {{ Fragment as _Fragment }} from "{}";"#,
+                jsx_runtime_source
+            );
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
                 program.body.insert(0, stmt);
             }
@@ -2887,7 +2981,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             // Standard synthetic imports
             for name in ["qrl", "qrlDEV", "inlinedQrl", "inlinedQrlDEV",
                          "_noopQrl", "_noopQrlDEV", "_jsxSorted", "_jsxSplit",
-                         "Fragment", "_fnSignal", "_wrapProp"] {
+                         "Fragment", "_Fragment", "_fnSignal", "_wrapProp"] {
                 synthetic_names.insert(name.to_string());
             }
             // Add collect.synthetic names to the protection set

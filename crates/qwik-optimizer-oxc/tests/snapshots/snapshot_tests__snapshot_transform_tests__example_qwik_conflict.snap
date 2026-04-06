@@ -9,26 +9,21 @@ import { qrl } from "@qwik.dev/core";
 import { qrl } from '@qwik.dev/core/what';
 //
 const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-const q_Root_component_1_cBpQNYDUHI4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Root_component_1_cBpQNYDUHI4"), "Root_component_1_cBpQNYDUHI4");
+const q_Root_component_royhjYaCbYE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Root_component_royhjYaCbYE"), "Root_component_royhjYaCbYE");
 //
 export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
 /*#__PURE__*/ componentQrl();
 export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
-export const Root = /*#__PURE__*/ componentQrl(q_Root_component_1_cBpQNYDUHI4);
+export const Root = /*#__PURE__*/ componentQrl(q_Root_component_royhjYaCbYE);
 
 ============================= test.tsx_Root_component_1_cBpQNYDUHI4.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { useStyles } from "@qwik.dev/core";
 export const Root_component_1_cBpQNYDUHI4 = () => {
-	useStyles($('thing'));
-	return $(() => {
 		return (
 			<div/>
 		)
-	});
-};
+	};
 /*
 {
   "origin": "test.tsx",
@@ -39,13 +34,13 @@ export const Root_component_1_cBpQNYDUHI4 = () => {
   "canonicalFilename": "test.tsx_Root_component_1_cBpQNYDUHI4",
   "path": "",
   "extension": "js",
-  "parent": null,
+  "parent": "Root_component_royhjYaCbYE",
   "ctxKind": "function",
-  "ctxName": "component$",
+  "ctxName": "$",
   "captures": false,
   "loc": [
-    468,
-    586
+    519,
+    557
   ]
 }
 */
@@ -83,11 +78,16 @@ export const Foo_component_HTDRsvUbLiE = () => {
 }
 */
 ============================= test.tsx_Root_component_royhjYaCbYE.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { useStyles } from "@qwik.dev/core";
 export const Root_component_royhjYaCbYE = () => {
+	useStyles($('thing'));
+	return $(() => {
 		return (
 			<div/>
 		)
-	};
+	});
+};
 /*
 {
   "origin": "test.tsx",
@@ -98,13 +98,13 @@ export const Root_component_royhjYaCbYE = () => {
   "canonicalFilename": "test.tsx_Root_component_royhjYaCbYE",
   "path": "",
   "extension": "js",
-  "parent": "Root_component_1_cBpQNYDUHI4",
+  "parent": null,
   "ctxKind": "function",
-  "ctxName": "$",
+  "ctxName": "component$",
   "captures": false,
   "loc": [
-    519,
-    557
+    468,
+    586
   ]
 }
 */
@@ -121,7 +121,7 @@ export const Root_component_useStyles_u5DkUxGrGnU = "thing";
   "canonicalFilename": "test.tsx_Root_component_useStyles_u5DkUxGrGnU",
   "path": "",
   "extension": "js",
-  "parent": "Root_component_1_cBpQNYDUHI4",
+  "parent": "Root_component_royhjYaCbYE",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,

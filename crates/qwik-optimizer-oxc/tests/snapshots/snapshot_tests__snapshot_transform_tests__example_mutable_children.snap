@@ -4,10 +4,10 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
+import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { Fragment } from '@qwik.dev/core';
 import { Slot, Fragment } from '@qwik.dev/core';
 import Image from "./image.jpg?jsx";
 //

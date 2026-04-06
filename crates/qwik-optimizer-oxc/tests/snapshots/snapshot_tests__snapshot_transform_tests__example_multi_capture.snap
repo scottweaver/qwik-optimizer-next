@@ -7,23 +7,21 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");
-const q_Bar_component_1_0xSyNSnVu3k = /*#__PURE__*/ qrl(()=>import("./test.tsx_Bar_component_1_0xSyNSnVu3k"), "Bar_component_1_0xSyNSnVu3k");
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+const q_Bar_component_L80pS8Hxf1Y = /*#__PURE__*/ qrl(()=>import("./test.tsx_Bar_component_L80pS8Hxf1Y"), "Bar_component_L80pS8Hxf1Y");
 //
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_1_DvU6FitWglY);
-export const Bar = /*#__PURE__*/ componentQrl(q_Bar_component_1_0xSyNSnVu3k);
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+export const Bar = /*#__PURE__*/ componentQrl(q_Bar_component_L80pS8Hxf1Y);
 
 ============================= test.tsx_Bar_component_1_0xSyNSnVu3k.jsx (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-export const Bar_component_1_0xSyNSnVu3k = ({bar}) => {
-	return $(() => {
+import { _captures } from "@qwik.dev/core";
+export const Bar_component_1_0xSyNSnVu3k = () => {
 		return (
 			<div>
 				{bar}
 			</div>
 		)
-	});
-};
+	};
 /*
 {
   "origin": "test.tsx",
@@ -34,22 +32,57 @@ export const Bar_component_1_0xSyNSnVu3k = ({bar}) => {
   "canonicalFilename": "test.tsx_Bar_component_1_0xSyNSnVu3k",
   "path": "",
   "extension": "jsx",
-  "parent": null,
+  "parent": "Bar_component_L80pS8Hxf1Y",
   "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    242,
-    335
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "bar"
   ],
-  "paramNames": [
-    "_rawProps"
+  "loc": [
+    274,
+    331
   ]
 }
 */
 ============================= test.tsx_Foo_component_1_DvU6FitWglY.jsx (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_1_DvU6FitWglY = () => {
+		const fn = ({aaa}) => aaa;
+		return (
+			<div>
+				{foo}{fn()}{arg0}
+			</div>
+		)
+	};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_1_DvU6FitWglY",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_1",
+  "hash": "DvU6FitWglY",
+  "canonicalFilename": "test.tsx_Foo_component_1_DvU6FitWglY",
+  "path": "",
+  "extension": "jsx",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "_rawProps",
+    "arg0",
+    "foo"
+  ],
+  "loc": [
+    119,
+    217
+  ]
+}
+*/
+============================= test.tsx_Foo_component_HTDRsvUbLiE.jsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
-export const Foo_component_1_DvU6FitWglY = ({foo}) => {
+export const Foo_component_HTDRsvUbLiE = ({foo}) => {
 	const arg0 = 20;
 	return $(() => {
 		const fn = ({aaa}) => aaa;
@@ -63,11 +96,11 @@ export const Foo_component_1_DvU6FitWglY = ({foo}) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_component_1_DvU6FitWglY",
+  "name": "Foo_component_HTDRsvUbLiE",
   "entry": null,
-  "displayName": "test.tsx_Foo_component_1",
-  "hash": "DvU6FitWglY",
-  "canonicalFilename": "test.tsx_Foo_component_1_DvU6FitWglY",
+  "displayName": "test.tsx_Foo_component",
+  "hash": "HTDRsvUbLiE",
+  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "jsx",
   "parent": null,
@@ -83,50 +116,17 @@ export const Foo_component_1_DvU6FitWglY = ({foo}) => {
   ]
 }
 */
-============================= test.tsx_Foo_component_HTDRsvUbLiE.jsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Foo_component_HTDRsvUbLiE = () => {
-		const fn = ({aaa}) => aaa;
-		return (
-			<div>
-				{foo}{fn()}{arg0}
-			</div>
-		)
-	};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_HTDRsvUbLiE",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component",
-  "hash": "HTDRsvUbLiE",
-  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
-  "path": "",
-  "extension": "jsx",
-  "parent": "Foo_component_1_DvU6FitWglY",
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": true,
-  "captureNames": [
-    "_rawProps",
-    "arg0",
-    "foo"
-  ],
-  "loc": [
-    119,
-    217
-  ]
-}
-*/
 ============================= test.tsx_Bar_component_L80pS8Hxf1Y.jsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Bar_component_L80pS8Hxf1Y = () => {
+import { $ } from "@qwik.dev/core";
+export const Bar_component_L80pS8Hxf1Y = ({bar}) => {
+	return $(() => {
 		return (
 			<div>
 				{bar}
 			</div>
 		)
-	};
+	});
+};
 /*
 {
   "origin": "test.tsx",
@@ -137,16 +137,16 @@ export const Bar_component_L80pS8Hxf1Y = () => {
   "canonicalFilename": "test.tsx_Bar_component_L80pS8Hxf1Y",
   "path": "",
   "extension": "jsx",
-  "parent": "Bar_component_1_0xSyNSnVu3k",
+  "parent": null,
   "ctxKind": "function",
-  "ctxName": "$",
-  "captures": true,
-  "captureNames": [
-    "bar"
-  ],
+  "ctxName": "component$",
+  "captures": false,
   "loc": [
-    274,
-    331
+    242,
+    335
+  ],
+  "paramNames": [
+    "_rawProps"
   ]
 }
 */
