@@ -129,21 +129,23 @@ pub(crate) fn classify_jsx_element<'a>(
 
     // 3. Process attributes
     let attrs = opening.attributes;
-    let (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used, dollar_attrs) =
+    let (has_spread, var_props, const_props, extracted_key, children_from_props, signal_opt_result, dollar_attrs) =
         classify_props(attrs, &ast, allocator, signal_ctx, is_fn);
 
     // Use extracted key if present, otherwise use generated key
     let final_key = extracted_key.unwrap_or(key_expr);
 
-    // 4. Process children
-    let children_opt = build_children(children_vec, children_from_props, &ast, allocator);
+    // 4. Process children (with signal optimization)
+    let children_opt = build_children(children_vec, children_from_props, &ast, allocator, signal_ctx);
 
     // 5. Compute flags
     let flags: u32 = FLAG_DYNAMIC_CHILDREN;
 
-    // 6. Track callee needs
-    if signal_used {
-        needs.needs_fn_signal = true;
+    // 6. Track callee needs from prop signal optimization
+    match &signal_opt_result {
+        SignalOptResult::FnSignal => { needs.needs_fn_signal = true; }
+        SignalOptResult::WrapProp => { needs.needs_wrap_prop = true; }
+        SignalOptResult::None => {}
     }
 
     if has_spread {
@@ -324,7 +326,7 @@ pub(crate) fn transform_jsx_fragment<'a>(
         ast.expression_null_literal(SPAN)
     };
 
-    let children_opt = build_children(frag.children, None, &ast, allocator);
+    let children_opt = build_children(frag.children, None, &ast, allocator, None);
     let flags: u32 = FLAG_DYNAMIC_CHILDREN;
 
     let call = build_jsx_call(
@@ -444,7 +446,7 @@ fn classify_props<'a>(
     Option<Expression<'a>>,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
-    bool,
+    SignalOptResult,
     Vec<DollarAttr<'a>>,
 ) {
     let mut has_spread = false;
@@ -452,7 +454,7 @@ fn classify_props<'a>(
     let mut const_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
     let mut extracted_key: Option<Expression<'a>> = None;
     let mut children_from_props: Option<Expression<'a>> = None;
-    let mut signal_used = false;
+    let mut signal_opt_result = SignalOptResult::None;
     let mut dollar_attrs: Vec<DollarAttr<'a>> = Vec::new();
 
     for attr in attrs {
@@ -532,7 +534,7 @@ fn classify_props<'a>(
                         try_signal_optimize(
                             value_expr,
                             ctx,
-                            &mut signal_used,
+                            &mut signal_opt_result,
                             allocator,
                         )
                     } else {
@@ -574,13 +576,22 @@ fn classify_props<'a>(
         Some(ast.expression_object(SPAN, const_entries))
     };
 
-    (has_spread, var_props, const_props, extracted_key, children_from_props, signal_used, dollar_attrs)
+    (has_spread, var_props, const_props, extracted_key, children_from_props, signal_opt_result, dollar_attrs)
 }
 
 // ---------------------------------------------------------------------------
 // Signal optimization helper (CONV-07)
 // ---------------------------------------------------------------------------
 
+/// Result of signal optimization indicating which import is needed.
+pub(crate) enum SignalOptResult {
+    /// No optimization applied.
+    None,
+    /// `_fnSignal(...)` was used.
+    FnSignal,
+    /// `_wrapProp(...)` was used.
+    WrapProp,
+}
 /// Attempt to wrap a dynamic prop value expression as a `_fnSignal()` call.
 ///
 /// Collects identifiers from the expression, computes scoped_idents against
@@ -589,12 +600,30 @@ fn classify_props<'a>(
 fn try_signal_optimize<'a>(
     value_expr: Expression<'a>,
     ctx: &SignalOptContext<'a, '_>,
-    signal_used: &mut bool,
+    signal_result: &mut SignalOptResult,
     allocator: &'a Allocator,
 ) -> Expression<'a> {
     // Skip call expressions -- they can't be signal-optimized
     if matches!(&value_expr, Expression::CallExpression(_)) {
         return value_expr;
+
+    // Simple ident -> no wrapping needed
+    if matches!(&value_expr, Expression::Identifier(_)) {
+        return value_expr;
+    }
+
+    // Template literals that are not const cannot be wrapped
+    if matches!(&value_expr, Expression::TemplateLiteral(_)) {
+        return value_expr;
+    }
+
+    // _wrapProp fast path: simple obj.prop or obj["prop"] where obj is a scoped ident
+    if let Some(wrap_code) = try_wrap_prop(&value_expr, ctx) {
+        if let Some(parsed_expr) = parse_signal_expr(&wrap_code, allocator) {
+            *signal_result = SignalOptResult::WrapProp;
+            return parsed_expr;
+        }
+    }
     }
 
     // Collect identifiers referenced in this expression
@@ -621,7 +650,7 @@ fn try_signal_optimize<'a>(
     if let Some(code) = fn_signal_code {
         // Parse the generated _fnSignal(...) code into an expression
         if let Some(parsed_expr) = parse_signal_expr(&code, allocator) {
-            *signal_used = true;
+            *signal_result = SignalOptResult::FnSignal;
             return parsed_expr;
         }
     }
@@ -629,6 +658,52 @@ fn try_signal_optimize<'a>(
     value_expr
 }
 
+/// Try the _wrapProp fast path for a simple member expression obj.prop.
+fn try_wrap_prop<'a>(
+    expr: &Expression<'a>,
+    ctx: &SignalOptContext<'a, '_>,
+) -> Option<String> {
+    let (obj_name, prop_name) = match expr {
+        Expression::StaticMemberExpression(member) => {
+            let obj = match &member.object {
+                Expression::ParenthesizedExpression(paren) => &paren.expression,
+                other => other,
+            };
+            if let Expression::Identifier(id) = obj {
+                (id.name.as_str(), member.property.name.as_str())
+            } else {
+                return None;
+            }
+        }
+        Expression::ComputedMemberExpression(member) => {
+            let obj = match &member.object {
+                Expression::ParenthesizedExpression(paren) => &paren.expression,
+                other => other,
+            };
+            if let Expression::Identifier(id) = obj {
+                if let Expression::StringLiteral(s) = &member.expression {
+                    (id.name.as_str(), s.value.as_str())
+                } else {
+                    return None;
+                }
+            } else {
+                return None;
+            }
+        }
+        _ => return None,
+    };
+    let is_scoped = ctx.decl_stack_flat.iter().any(|(name, typ)| {
+        name == obj_name && matches!(typ, crate::transform::IdentType::Const | crate::transform::IdentType::Let)
+    });
+    if !is_scoped {
+        return None;
+    }
+    if prop_name == "value" {
+        Some(format!("_wrapProp({})", obj_name))
+    } else {
+        Some(format!("_wrapProp({}, \"{}\")", obj_name, prop_name))
+    }
+}
 /// Parse a code string (e.g., `_fnSignal(p0 => p0.value, [obj])`) into an AST expression.
 fn parse_signal_expr<'a>(code: &str, allocator: &'a Allocator) -> Option<Expression<'a>> {
     use oxc::parser::Parser;
@@ -649,6 +724,7 @@ fn build_children<'a>(
     children_from_props: Option<Expression<'a>>,
     ast: &AstBuilder<'a>,
     allocator: &'a Allocator,
+    signal_ctx: Option<&SignalOptContext<'a, '_>>,
 ) -> Option<Expression<'a>> {
     let mut child_exprs: Vec<Expression<'a>> = Vec::new();
 
@@ -666,6 +742,17 @@ fn build_children<'a>(
                     continue;
                 }
                 if let Some(expr) = jsx_expression_to_expr(container.unbox().expression) {
+                    // Apply signal optimization to child expressions
+                    let expr = if let Some(ctx) = signal_ctx {
+                        if !is_const_expression(&expr) {
+                            let mut _result = SignalOptResult::None;
+                            try_signal_optimize(expr, ctx, &mut _result, allocator)
+                        } else {
+                            expr
+                        }
+                    } else {
+                        expr
+                    };
                     child_exprs.push(expr);
                 }
             }
