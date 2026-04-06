@@ -5,7 +5,6 @@ expression: output
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { component$ } from "@qwik.dev/core";
 // This shared variable is used by multiple segments, so it should stay at root
 const SHARED_CONFIG = { value: 42 };
 // This is an export, so it must stay at root
@@ -14,7 +13,6 @@ export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export const Other = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
 export { SHARED_CONFIG as _auto_SHARED_CONFIG };
 export { helperFn as _auto_helperFn };
-
 ============================= test.tsx__1_iZVV0eoW44k.tsx (ENTRY POINT) ==
 export const _1_iZVV0eoW44k = () => {
 	return <div>{SHARED_CONFIG.value}</div>;

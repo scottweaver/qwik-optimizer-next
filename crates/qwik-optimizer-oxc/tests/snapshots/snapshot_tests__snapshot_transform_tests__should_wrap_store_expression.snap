@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1018
 expression: output
 ---
 ============================= test.js ==
@@ -14,7 +13,6 @@ export const PANELS: ActivePanel[] = [
 	"Output",
 	"Console"
 ];
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { PANELS } from "./test";
 import { useStore } from "@qwik.dev/core";

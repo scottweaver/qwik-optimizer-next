@@ -1,11 +1,9 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 980
 expression: output
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
-import { component$, useComputed$, useTask$ } from "@qwik.dev/core";
 const q_component_ZUK1E201Ins = /* @__PURE__ */ _noopQrl("component_ZUK1E201Ins");
 const q_component_1_vX1B9oMEgiI = /* @__PURE__ */ _noopQrl("component_1_vX1B9oMEgiI");
 const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
@@ -21,6 +19,5 @@ q__u6BtPnK76q4.s(({ color, ...props }) => {
 	return "hi";
 });
 export default componentQrl(q__u6BtPnK76q4);
-
 == DIAGNOSTICS ==
 []

@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 919
 expression: output
 ---
 ============================= test.js ==
@@ -12,7 +11,6 @@ import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
 export const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
-
 ============================= test.tsx_component_serverStuff_1_IOaKJyEUknw.js (ENTRY POINT) ==
 export const s_IOaKJyEUknw = () => {
 	// from clien$(), should not be removed

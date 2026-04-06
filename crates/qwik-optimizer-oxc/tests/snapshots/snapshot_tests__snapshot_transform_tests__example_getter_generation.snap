@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 867
 expression: output
 ---
 ============================= test.js ==
@@ -10,7 +9,6 @@ import { Fragment } from "@qwik.dev/core";
 import { component$, useStore } from "@qwik.dev/core";
 export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export const Cmp = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 export const _1_iZVV0eoW44k = (props) => {
 	return (

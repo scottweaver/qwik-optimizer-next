@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 984
 expression: output
 ---
 ============================= test.js ==
@@ -9,7 +8,6 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { $, component$, useSignal } from "@qwik.dev/core";
 export const FieldInput = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 export const _u6BtPnK76q4 = (props) => {

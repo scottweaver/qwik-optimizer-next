@@ -44,7 +44,7 @@ pub(crate) fn emit_module<'a>(
         let map = codegen_result.map.map(|sm| sm.to_json_string());
 
         EmitResult {
-            code: codegen_result.code,
+            code: collapse_single_prop_objects(&codegen_result.code),
             map,
         }
     } else {
@@ -53,10 +53,64 @@ pub(crate) fn emit_module<'a>(
             .build(program);
 
         EmitResult {
-            code: codegen_result.code,
+            code: collapse_single_prop_objects(&codegen_result.code),
             map: None,
         }
     }
+}
+
+/// Post-process emitted code to collapse single-property object literals to one line.
+///
+/// OXC codegen renders `{ key: value }` as:
+/// ```text
+/// {
+///     key: value
+/// }
+/// ```
+/// SWC renders them inline: `{ key: value }`.
+/// This function collapses such patterns for parity.
+pub(crate) fn collapse_single_prop_objects(code: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    let mut result = Vec::new();
+    let mut i = 0;
+
+    while i < lines.len() {
+        // Look for pattern: line ending with `{`, next line with single prop, next line with `}`
+        if i + 2 < lines.len() {
+            let line1 = lines[i];
+            let line2 = lines[i + 1];
+            let line3 = lines[i + 2];
+
+            let trimmed1 = line1.trim_end();
+            let trimmed2 = line2.trim();
+            let trimmed3 = line3.trim();
+
+            // Pattern: `...{` / `key: value` / `}`  or  `...{` / `key: value,` / `}`
+            if trimmed1.ends_with('{')
+                && (trimmed3 == "}" || trimmed3 == "},")
+                && !trimmed2.is_empty()
+                && !trimmed2.contains('{')
+                && !trimmed2.contains('}')
+                && !trimmed2.starts_with("//")
+            {
+                // Remove trailing comma from the property if closing has no comma
+                let prop = if trimmed2.ends_with(',') {
+                    &trimmed2[..trimmed2.len() - 1]
+                } else {
+                    trimmed2
+                };
+                let suffix = if trimmed3 == "}," { "," } else { "" };
+                let prefix = &trimmed1[..trimmed1.len() - 1]; // remove `{`
+                result.push(format!("{}{{ {} }}{}", prefix, prop, suffix));
+                i += 3;
+                continue;
+            }
+        }
+        result.push(lines[i].to_string());
+        i += 1;
+    }
+
+    result.join("\n")
 }
 
 // ---------------------------------------------------------------------------

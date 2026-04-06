@@ -4,11 +4,9 @@ expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-import { formAction$ } from "forms";
 import { translate } from "i18n";
 export const action = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export { t as _auto_t };
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { translate } from "i18n";
 const t = translate();

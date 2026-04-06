@@ -9,7 +9,6 @@ import { Fragment } from "@qwik.dev/core";
 import { component$, useSignal } from "@qwik.dev/core";
 export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export { useFoo as _auto_useFoo };
-
 ============================= test.tsx__u6BtPnK76q4.ts (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 const useFoo = (count) => {

@@ -1,15 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 993
 expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSplit } from "@qwik.dev/core";
-import { component$ } from "@qwik.dev/core";
 import { Foo } from "./foo";
 export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { Foo } from "./foo";
 export const _u6BtPnK76q4 = (props) => {

@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 913
 expression: output
 ---
 ============================= test.tsx ==
@@ -36,6 +35,5 @@ export const { onRequest, logout, getSession, signup } = auth$({ providers: [
 		clientSecret: process.env.GOOGLE_SECRET
 	})
 ] });
-
 == DIAGNOSTICS ==
 []

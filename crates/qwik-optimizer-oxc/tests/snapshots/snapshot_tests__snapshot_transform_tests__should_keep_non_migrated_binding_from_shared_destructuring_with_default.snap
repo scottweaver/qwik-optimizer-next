@@ -4,12 +4,10 @@ expression: output
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-import { $ } from "@qwik.dev/core";
 const { a = 1, b } = { b: 2 };
 console.log("root", b);
 export const handler = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export { a as _auto_a };
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 export const _u6BtPnK76q4 = () => {
 	console.log("qrl", a);

@@ -28,9 +28,7 @@ export default () => {
 	const qrl = inlinedQrl(null, serverFnHash, data.slice(1));
 	console.log(qrl);
 };
-function Lifecycle(props, key, flags) {
-	return componentQrl(q__u6BtPnK76q4)(props, key, flags);
-}
+function Lifecycle(props, key, flags) { return componentQrl(q__u6BtPnK76q4)(props, key, flags); }
 export const rawFn = (event, element) => {
 	handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
 };
@@ -56,6 +54,5 @@ describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 	});
 });
 export { STYLE_RED as _auto_STYLE_RED };
-
 == DIAGNOSTICS ==
 []

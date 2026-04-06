@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 851
 expression: output
 ---
 ============================= test.js ==
@@ -46,6 +45,5 @@ q__1_iZVV0eoW44k.s(() => {
 });
 export const TextContent = componentQrl(q__u6BtPnK76q4);
 export const App = componentQrl(q__1_iZVV0eoW44k);
-
 == DIAGNOSTICS ==
 []

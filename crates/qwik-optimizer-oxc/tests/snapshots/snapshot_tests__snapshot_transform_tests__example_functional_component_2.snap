@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 865
 expression: output
 ---
 ============================= test.js ==
@@ -12,7 +11,6 @@ export const useCounter = () => {
 };
 export const STEP = 1;
 export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { STEP } from "./test";
 import { useCounter } from "./test";

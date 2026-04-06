@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 916
 expression: output
 ---
 ============================= components/component.js ==
@@ -28,6 +27,5 @@ export const Parent = componentQrl(() => {
 		onClick$: () => console.log("parent", state, threejs)
 	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
 }, "_7RMfCDur6ww");
-
 == DIAGNOSTICS ==
 []

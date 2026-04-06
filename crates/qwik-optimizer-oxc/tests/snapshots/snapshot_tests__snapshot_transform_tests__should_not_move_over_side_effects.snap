@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 982
 expression: output
 ---
 ============================= test.tsx ==
@@ -13,6 +12,5 @@ export const $promoteToRoot$ = (ref: SeenRef) => {
 	ref.$index$ = idx;
 	return idx;
 };
-
 == DIAGNOSTICS ==
 []

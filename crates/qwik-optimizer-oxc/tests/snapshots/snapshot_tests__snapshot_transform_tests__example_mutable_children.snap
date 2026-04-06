@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 887
 expression: output
 ---
 ============================= test.js ==
@@ -23,15 +22,11 @@ q__1_iZVV0eoW44k.s((props: Stuff) => {
 	return <div>{prop.value && <Stuff></Stuff>}<div></div></div>;
 });
 q__2_sSArpd0iSRk.s((props: Stuff) => {
-	if (prop.value) {
-		return <Stuff></Stuff>;
-	}
+	if (prop.value) { return <Stuff></Stuff>; }
 	return <div></div>;
 });
 q__3_OyZ0gk5pkcU.s((props: Stuff) => {
-	if (prop.value) {
-		return <div></div>;
-	}
+	if (prop.value) { return <div></div>; }
 	return <Stuff></Stuff>;
 });
 q__4_Gairpaqi1qc.s((props: Stuff) => {
@@ -53,19 +48,13 @@ q__4_Gairpaqi1qc.s((props: Stuff) => {
 export function Fn1(props: Stuff) {
 	return _jsxSorted(_Fragment, null, null, <div>{prop < 2 ? _jsxSorted("p", null, null, "1", 1, "0") : _jsxSorted(Stuff, null, null, "2", 1, "1")}</div>, 1, "2");
 }
-export function Fn2(props: Stuff) {
-	return _jsxSorted("div", null, null, [prop.value && _jsxSorted(Stuff, null, null, null, 1, "3"), <div></div>], 1, "4");
-}
+export function Fn2(props: Stuff) { return _jsxSorted("div", null, null, [prop.value && _jsxSorted(Stuff, null, null, null, 1, "3"), <div></div>], 1, "4"); }
 export function Fn3(props: Stuff) {
-	if (prop.value) {
-		return _jsxSorted(Stuff, null, null, null, 1, "5");
-	}
+	if (prop.value) { return _jsxSorted(Stuff, null, null, null, 1, "5"); }
 	return _jsxSorted("div", null, null, null, 1, "6");
 }
 export function Fn4(props: Stuff) {
-	if (prop.value) {
-		return _jsxSorted("div", null, null, null, 1, "7");
-	}
+	if (prop.value) { return _jsxSorted("div", null, null, null, 1, "7"); }
 	return _jsxSorted(Stuff, null, null, null, 1, "8");
 }
 export const Arrow = (props: Stuff) => _jsxSorted("div", null, null, prop < 2 ? _jsxSorted("p", null, null, "1", 1, "9") : _jsxSorted(Stuff, null, null, "2", 1, "10"), 1, "11");
@@ -74,6 +63,5 @@ export const AppDynamic2 = componentQrl(q__1_iZVV0eoW44k);
 export const AppDynamic3 = componentQrl(q__2_sSArpd0iSRk);
 export const AppDynamic4 = componentQrl(q__3_OyZ0gk5pkcU);
 export const AppStatic = componentQrl(q__4_Gairpaqi1qc);
-
 == DIAGNOSTICS ==
 []

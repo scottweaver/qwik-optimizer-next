@@ -31,9 +31,7 @@ const useDocumentHead = () => useContext(DocumentHeadContext);
 const useLocation = () => useContext(RouteLocationContext);
 const useNavigate = () => useContext(RouteNavigateContext);
 const usePreventNavigateQrl = (fn) => {
-	if (!__EXPERIMENTAL__.preventNavigate) {
-		throw new Error("usePreventNavigate$ is experimental and must be enabled with `experimental: [\"preventNavigate\"]` in the `qwikVite` plugin.");
-	}
+	if (!__EXPERIMENTAL__.preventNavigate) { throw new Error("usePreventNavigate$ is experimental and must be enabled with `experimental: [\"preventNavigate\"]` in the `qwikVite` plugin."); }
 	const registerPreventNav = useContext(RoutePreventNavigateContext);
 	qrl(() => import("./index.qwik.mjs__1_pRA3IJzkWnc.mjs"), "_1_pRA3IJzkWnc", [fn, registerPreventNav]);
 };
@@ -46,14 +44,10 @@ const resolveHead = (endpoint, routeLocation, contentModules, locale, defaults) 
 	const getData = (loaderOrAction) => {
 		const id = loaderOrAction.__id;
 		if (loaderOrAction.__brand === "server_loader") {
-			if (!(id in endpoint.loaders)) {
-				throw new Error("You can not get the returned data of a loader that has not been executed for this request.");
-			}
+			if (!(id in endpoint.loaders)) { throw new Error("You can not get the returned data of a loader that has not been executed for this request."); }
 		}
 		const data = endpoint.loaders[id];
-		if (isPromise(data)) {
-			throw new Error("Loaders returning a promise can not be resolved for the head function.");
-		}
+		if (isPromise(data)) { throw new Error("Loaders returning a promise can not be resolved for the head function."); }
 		return data;
 	};
 	const fns = [];
@@ -62,9 +56,7 @@ const resolveHead = (endpoint, routeLocation, contentModules, locale, defaults) 
 		if (contentModuleHead) {
 			if (typeof contentModuleHead === "function") {
 				fns.unshift(contentModuleHead);
-			} else if (typeof contentModuleHead === "object") {
-				resolveDocumentHead(head, contentModuleHead);
-			}
+			} else if (typeof contentModuleHead === "object") { resolveDocumentHead(head, contentModuleHead); }
 		}
 	}
 	if (fns.length) {
@@ -74,16 +66,12 @@ const resolveHead = (endpoint, routeLocation, contentModules, locale, defaults) 
 			resolveValue: getData,
 			...routeLocation
 		};
-		for (const fn of fns) {
-			resolveDocumentHead(head, fn(headProps));
-		}
+		for (const fn of fns) { resolveDocumentHead(head, fn(headProps)); }
 	}
 	return head;
 });
 const resolveDocumentHead = (resolvedHead, updatedHead) => {
-	if (typeof updatedHead.title === "string") {
-		resolvedHead.title = updatedHead.title;
-	}
+	if (typeof updatedHead.title === "string") { resolvedHead.title = updatedHead.title; }
 	mergeArray(resolvedHead.meta, updatedHead.meta);
 	mergeArray(resolvedHead.links, updatedHead.links);
 	mergeArray(resolvedHead.styles, updatedHead.styles);
@@ -117,9 +105,7 @@ const restoreScroll = (type, toUrl, fromUrl, scroller, scrollState) => {
 	if (type === "popstate" && scrollState) {
 		scroller.scrollTo(scrollState.x, scrollState.y);
 	} else if (type === "link" || type === "form") {
-		if (!hashScroll(toUrl, fromUrl)) {
-			scroller.scrollTo(0, 0);
-		}
+		if (!hashScroll(toUrl, fromUrl)) { scroller.scrollTo(0, 0); }
 	}
 };
 const hashScroll = (toUrl, fromUrl) => {
@@ -128,9 +114,7 @@ const hashScroll = (toUrl, fromUrl) => {
 	if (elm) {
 		elm.scrollIntoView();
 		return true;
-	} else if (!elm && toUrl.hash && isSamePath(toUrl, fromUrl)) {
-		return true;
-	}
+	} else if (!elm && toUrl.hash && isSamePath(toUrl, fromUrl)) { return true; }
 	return false;
 };
 const currentScrollState = (elm) => {
@@ -151,22 +135,14 @@ const QWIK_ROUTER_SCROLLER = "_qRouterScroller";
 const preventNav = {};
 const internalState = { navCount: 0 };
 const useQwikRouter = (props) => {
-	if (!isServer) {
-		throw new Error("useQwikRouter can only run during SSR on the server. If you are seeing this, it means you are re-rendering the root of your application. Fix that or use the <QwikRouterProvider> component around the root of your application.");
-	}
+	if (!isServer) { throw new Error("useQwikRouter can only run during SSR on the server. If you are seeing this, it means you are re-rendering the root of your application. Fix that or use the <QwikRouterProvider> component around the root of your application."); }
 	useStyles$(transitionCss);
 	const env = useQwikRouterEnv();
-	if (!env?.params) {
-		throw new Error(`Missing Qwik Router Env Data for help visit https://github.com/QwikDev/qwik/issues/6237`);
-	}
+	if (!env?.params) { throw new Error(`Missing Qwik Router Env Data for help visit https://github.com/QwikDev/qwik/issues/6237`); }
 	const urlEnv = useServerData("url");
-	if (!urlEnv) {
-		throw new Error(`Missing Qwik URL Env Data`);
-	}
+	if (!urlEnv) { throw new Error(`Missing Qwik URL Env Data`); }
 	const serverHead = useServerData("documentHead");
-	if (env.ev.originalUrl.pathname !== env.ev.url.pathname && !__EXPERIMENTAL__.enableRequestRewrite) {
-		throw new Error(`enableRequestRewrite is an experimental feature and is not enabled. Please enable the feature flag by adding \`experimental: ["enableRequestRewrite"]\` to your qwikVite plugin options.`);
-	}
+	if (env.ev.originalUrl.pathname !== env.ev.url.pathname && !__EXPERIMENTAL__.enableRequestRewrite) { throw new Error(`enableRequestRewrite is an experimental feature and is not enabled. Please enable the feature flag by adding \`experimental: ["enableRequestRewrite"]\` to your qwikVite plugin options.`); }
 	const url = new URL(urlEnv);
 	const routeLocationTarget = {
 		url,
@@ -188,9 +164,7 @@ const useQwikRouter = (props) => {
 	}
 	loadersObject[SerializerSymbol] = (obj) => {
 		const loadersSerializationObject = {};
-		for (const [k, v] of Object.entries(obj)) {
-			loadersSerializationObject[k] = getSerializationStrategy(k) === "always" ? v : _UNINITIALIZED;
-		}
+		for (const [k, v] of Object.entries(obj)) { loadersSerializationObject[k] = getSerializationStrategy(k) === "always" ? v : _UNINITIALIZED; }
 		return loadersSerializationObject;
 	};
 	const routeInternal = useSignal({
@@ -305,9 +279,7 @@ const routeActionQrl = (actionQrl, ...rest) => {
 			const value = currentAction.value;
 			if (value && value?.id === id) {
 				const data = value.data;
-				if (data instanceof FormData) {
-					initialState.formData = data;
-				}
+				if (data instanceof FormData) { initialState.formData = data; }
 				if (value.output) {
 					const { status, result } = value.output;
 					initialState.status = status;
@@ -335,9 +307,7 @@ const routeActionQrl = (actionQrl, ...rest) => {
 const globalActionQrl = (actionQrl, ...rest) => {
 	const action = routeActionQrl(actionQrl, ...rest);
 	if (isServer) {
-		if (typeof globalThis._qwikActionsMap === "undefined") {
-			globalThis._qwikActionsMap = /* @__PURE__ */ new Map();
-		}
+		if (typeof globalThis._qwikActionsMap === "undefined") { globalThis._qwikActionsMap = /* @__PURE__ */ new Map(); }
 		globalThis._qwikActionsMap.set(action.__id, action);
 	}
 	return action;
@@ -386,21 +356,15 @@ const flattenValibotIssues = (issues) => {
 				const keySuffix = issue.expected === "Array" ? "[]" : "";
 				const key = issue.path.map((item) => item.type === "array" ? "*" : item.key).join(".").replace(/\.\*/g, "[]") + keySuffix;
 				acc[key] = acc[key] || [];
-				if (Array.isArray(acc[key])) {
-					acc[key].push(issue.message);
-				}
+				if (Array.isArray(acc[key])) { acc[key].push(issue.message); }
 				return acc;
-			} else {
-				acc[issue.path.map((item) => item.key).join(".")] = issue.message;
-			}
+			} else { acc[issue.path.map((item) => item.key).join(".")] = issue.message; }
 		}
 		return acc;
 	}, {});
 };
 const valibotQrl = (qrl) => {
-	if (!__EXPERIMENTAL__.valibot) {
-		throw new Error("Valibot is an experimental feature and is not enabled. Please enable the feature flag by adding `experimental: [\"valibot\"]` to your qwikVite plugin options.");
-	}
+	if (!__EXPERIMENTAL__.valibot) { throw new Error("Valibot is an experimental feature and is not enabled. Please enable the feature flag by adding `experimental: [\"valibot\"]` to your qwikVite plugin options."); }
 	if (isServer) {
 		return {
 			__brand: "valibot",
@@ -414,9 +378,7 @@ const valibotQrl = (qrl) => {
 						data: result.output
 					};
 				} else {
-					if (isDev) {
-						console.error("ERROR: Valibot validation failed", result.issues);
-					}
+					if (isDev) { console.error("ERROR: Valibot validation failed", result.issues); }
 					return {
 						success: false,
 						status: 400,
@@ -441,13 +403,9 @@ const flattenZodIssues = (issues) => {
 			const keySuffix = "expected" in issue && issue.expected === "array" ? "[]" : "";
 			const key = issue.path.map((path) => typeof path === "number" ? "*" : path).join(".").replace(/\.\*/g, "[]") + keySuffix;
 			acc[key] = acc[key] || [];
-			if (Array.isArray(acc[key])) {
-				acc[key].push(issue.message);
-			}
+			if (Array.isArray(acc[key])) { acc[key].push(issue.message); }
 			return acc;
-		} else {
-			acc[issue.path.join(".")] = issue.message;
-		}
+		} else { acc[issue.path.join(".")] = issue.message; }
 		return acc;
 	}, {});
 };
@@ -457,23 +415,17 @@ const zodQrl = (qrl) => {
 			__brand: "zod",
 			async validate(ev, inputData) {
 				const schema = await qrl.resolve().then((obj) => {
-					if (typeof obj === "function") {
-						obj = obj(z, ev);
-					}
+					if (typeof obj === "function") { obj = obj(z, ev); }
 					if (obj instanceof z.Schema) {
 						return obj;
-					} else {
-						return z.object(obj);
-					}
+					} else { return z.object(obj); }
 				});
 				const data = inputData ?? await ev.parseBody();
 				const result = await withLocale(ev.locale(), () => schema.safeParseAsync(data));
 				if (result.success) {
 					return result;
 				} else {
-					if (isDev) {
-						console.error("ERROR: Zod validation failed", result.error.issues);
-					}
+					if (isDev) { console.error("ERROR: Zod validation failed", result.error.issues); }
 					return {
 						success: false,
 						status: 400,
@@ -492,9 +444,7 @@ const zod$ = /* @__PURE__ */ implicit$FirstArg(zodQrl);
 const serverQrl = (qrl, options) => {
 	if (isServer) {
 		const captured = qrl.getCaptured();
-		if (captured && captured.length > 0 && !_getContextHostElement()) {
-			throw new Error("For security reasons, we cannot serialize QRLs that capture lexical scope.");
-		}
+		if (captured && captured.length > 0 && !_getContextHostElement()) { throw new Error("For security reasons, we cannot serialize QRLs that capture lexical scope."); }
 	}
 	const method = options?.method?.toUpperCase?.() || "POST";
 	const headers = options?.headers || {};
@@ -521,17 +471,11 @@ const getValidators = (rest, qrl) => {
 				validators.push(options);
 			} else {
 				id = options.id;
-				if (options.serializationStrategy) {
-					serializationStrategy = options.serializationStrategy;
-				}
-				if (options.validation) {
-					validators.push(...options.validation);
-				}
+				if (options.serializationStrategy) { serializationStrategy = options.serializationStrategy; }
+				if (options.validation) { validators.push(...options.validation); }
 			}
 		}
-	} else if (rest.length > 1) {
-		validators.push(...rest.filter((v2) => !!v2));
-	}
+	} else if (rest.length > 1) { validators.push(...rest.filter((v2) => !!v2)); }
 	if (typeof id === "string") {
 		if (isDev) {
 			if (!/^[\w/.-]+$/.test(id)) {
@@ -539,9 +483,7 @@ const getValidators = (rest, qrl) => {
 			}
 		}
 		id = `id_${id}`;
-	} else {
-		id = qrl.getHash();
-	}
+	} else { id = qrl.getHash(); }
 	return {
 		validators: validators.reverse(),
 		id,
@@ -594,19 +536,13 @@ const untypedAppUrl = function appUrl(route, params, paramsPrefix = "") {
 			const value = params ? params[paramsPrefix + key] || params[key] : "";
 			path[i] = isSpread ? value : encodeURIComponent(value);
 		}
-		if (segment.startsWith("(") && segment.endsWith(")")) {
-			path.splice(i, 1);
-		}
+		if (segment.startsWith("(") && segment.endsWith(")")) { path.splice(i, 1); }
 	}
 	let url = path.join("/");
 	let baseURL = "/";
 	if (baseURL) {
-		if (!baseURL.endsWith("/")) {
-			baseURL += "/";
-		}
-		while (url.startsWith("/")) {
-			url = url.substring(1);
-		}
+		if (!baseURL.endsWith("/")) { baseURL += "/"; }
+		while (url.startsWith("/")) { url = url.substring(1); }
 		url = baseURL + url;
 	}
 	return url;
@@ -614,9 +550,7 @@ const untypedAppUrl = function appUrl(route, params, paramsPrefix = "") {
 function omitProps(obj, keys) {
 	const omittedObj = {};
 	for (const key in obj) {
-		if (!key.startsWith("param:") && !keys.includes(key)) {
-			omittedObj[key] = obj[key];
-		}
+		if (!key.startsWith("param:") && !keys.includes(key)) { omittedObj[key] = obj[key]; }
 	}
 	return omittedObj;
 }
@@ -642,7 +576,6 @@ export { useQwikMockRouter as _auto_useQwikMockRouter };
 export { ContentInternalContext as _auto_ContentInternalContext };
 export { deserializeStream as _auto_deserializeStream };
 export { useQwikRouterEnv as _auto_useQwikRouterEnv };
-
 ============================= ../node_modules/@qwik.dev/router/index.qwik.mjs__0KNkylTSj1o.mjs (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core/jsx-runtime";
@@ -750,22 +683,16 @@ const saveScrollHistory = (scrollState) => {
 	history.replaceState(state, "");
 };
 const startViewTransition = (params) => {
-	if (!params.update) {
-		return;
-	}
+	if (!params.update) { return; }
 	if ("startViewTransition" in document) {
 		let transition;
 		try {
 			transition = document.startViewTransition(params);
-		} catch {
-			transition = document.startViewTransition(params.update);
-		}
+		} catch { transition = document.startViewTransition(params.update); }
 		const event = new CustomEvent("qviewtransition", { detail: transition });
 		document.dispatchEvent(event);
 		return transition;
-	} else {
-		params.update?.();
-	}
+	} else { params.update?.(); }
 };
 export const _6_40K6kutq1q0 = ({ track }) => { const actionState = _captures[0];
 const content = _captures[1];

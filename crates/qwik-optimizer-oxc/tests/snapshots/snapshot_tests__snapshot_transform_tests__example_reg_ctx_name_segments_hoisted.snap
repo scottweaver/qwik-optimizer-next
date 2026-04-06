@@ -5,7 +5,6 @@ expression: output
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { $, component$, server$, useStyle$ } from "@qwik.dev/core";
 const q_component_ZUK1E201Ins = /* @__PURE__ */ _noopQrl("component_ZUK1E201Ins");
 const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
 q_component_ZUK1E201Ins.s(() => console.log("in server", text));
@@ -17,6 +16,5 @@ q__u6BtPnK76q4.s((props) => {
 export const Works = componentQrl(q__u6BtPnK76q4);
 const STYLES = ".class {}";
 export { STYLES as _auto_STYLES };
-
 == DIAGNOSTICS ==
 []

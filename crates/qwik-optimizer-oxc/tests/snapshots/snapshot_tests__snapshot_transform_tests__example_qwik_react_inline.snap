@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 905
 expression: output
 ---
 ============================= ../node_modules/@qwik.dev/react/index.qwik.mjs ==
@@ -73,6 +72,5 @@ async function renderToString(rootNode, opts) {
 	};
 }
 export { qwikify$, qwikifyQrl, renderToString };
-
 == DIAGNOSTICS ==
 []

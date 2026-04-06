@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 857
 expression: output
 ---
 ============================= test.js ==
@@ -10,6 +9,5 @@ import { component$, useStore } from "@qwik.dev/core";
 export const App = componentQrl(() => {
 	return _jsxSorted(Cmp, null, null, <p class="stuff" onClick$={() => console.log("warn")}>Hello Qwik</p>, 1, "0");
 }, "_u6BtPnK76q4");
-
 == DIAGNOSTICS ==
 []

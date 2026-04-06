@@ -5,7 +5,6 @@ expression: output
 ============================= project/test.jsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { $, component$ } from "@qwik.dev/core";
 export const [a, { b, v1: [c], d = v2, ...e }, f = v3, ...g] = obj;
 const exp1 = 1;
 const internal = 2;
@@ -15,7 +14,6 @@ export class bar {}
 export default function DefaultFn() {}
 export const Header = qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
 export const Footer = component$();
-
 ============================= project/test.tsx__cA4RUxLrFo0.jsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { Footer } from "./test";

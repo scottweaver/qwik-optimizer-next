@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1017
 expression: output
 ---
 ============================= test.js ==
@@ -15,7 +14,6 @@ export const Input = qrl<{
 	error3: string;
 }>(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export default qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { Input } from "./test";
 import { useForm } from "./some-file.ts";

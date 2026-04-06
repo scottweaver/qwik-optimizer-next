@@ -1654,6 +1654,46 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             imports_to_add.push(("_wrapProp", "_wrapProp"));
         }
 
+        // Clean up original imports: remove $-suffixed specifiers from core module
+        // imports since they've been consumed by the transform. SWC removes `$`
+        // entirely and renames `component$` to `component` (without $).
+        // For simplicity, we remove $-suffixed specifiers and drop empty imports.
+        if !self.segments.is_empty() {
+            let marker_specifiers: HashSet<String> = self.marker_functions.values().cloned().collect();
+            let mut imports_to_remove: Vec<usize> = Vec::new();
+
+            for (i, stmt) in program.body.iter().enumerate() {
+                if let Statement::ImportDeclaration(import_decl) = stmt {
+                    if let Some(source) = import_decl.source.value.strip_prefix("") {
+                        let _ = source; // use the full value
+                        if let Some(specifiers) = &import_decl.specifiers {
+                            // Check if ALL specifiers are $-suffixed markers
+                            let all_markers = !specifiers.is_empty() && specifiers.iter().all(|spec| {
+                                match spec {
+                                    ImportDeclarationSpecifier::ImportSpecifier(s) => {
+                                        let imported = match &s.imported {
+                                            ModuleExportName::IdentifierName(id) => id.name.as_str(),
+                                            ModuleExportName::IdentifierReference(id) => id.name.as_str(),
+                                            ModuleExportName::StringLiteral(s) => s.value.as_str(),
+                                        };
+                                        imported.ends_with('$') || marker_specifiers.contains(imported)
+                                    }
+                                    _ => false,
+                                }
+                            });
+                            if all_markers {
+                                imports_to_remove.push(i);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for idx in imports_to_remove.into_iter().rev() {
+                program.body.remove(idx);
+            }
+        }
+
         // Insert synthetic import declarations at position 0 using string-based parsing.
         // This avoids complex AST builder API differences across OXC versions.
         let allocator = ctx.ast.allocator;

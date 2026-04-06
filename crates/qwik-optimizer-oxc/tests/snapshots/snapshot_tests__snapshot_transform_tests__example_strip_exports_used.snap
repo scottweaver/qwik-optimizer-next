@@ -1,18 +1,15 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 918
 expression: output
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useResource$ } from "@qwik.dev/core";
 import mongodb from "mongodb";
 export const onGet = () => {
 	throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
 };
 export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-
 ============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { onGet } from "./test";
 import { useResource$ } from "@qwik.dev/core";

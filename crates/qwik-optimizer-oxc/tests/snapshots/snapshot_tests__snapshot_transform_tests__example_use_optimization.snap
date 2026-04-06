@@ -1,12 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 926
 expression: output
 ---
 ============================= test.jsx ==
 import { inlinedQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { $, component$, useTask$ } from "@qwik.dev/core";
 import { CONST } from "const";
 export const Works = componentQrl((props) => {
 	const { countNested } = useStore({ value: { count: 0 } }).value;
@@ -16,6 +14,5 @@ export const Works = componentQrl((props) => {
 	const { ciao } = bye.italian;
 	return _jsxSorted("div", { ciao }, null, foo, 1, null);
 }, "_u6BtPnK76q4");
-
 == DIAGNOSTICS ==
 []

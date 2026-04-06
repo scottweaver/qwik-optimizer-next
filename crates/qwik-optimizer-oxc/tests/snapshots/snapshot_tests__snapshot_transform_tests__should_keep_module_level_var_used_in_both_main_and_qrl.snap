@@ -11,16 +11,13 @@ const state = {
 };
 console.log("Module init, id:", state.id);
 export function doSomething() {
-	if (!isServer) {
-		state.counter++;
-	}
+	if (!isServer) { state.counter++; }
 }
 export function useHook() {
 	const fn = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 	return fn;
 }
 export { state as _auto_state };
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 export const _u6BtPnK76q4 = () => {
 	state.counter++;

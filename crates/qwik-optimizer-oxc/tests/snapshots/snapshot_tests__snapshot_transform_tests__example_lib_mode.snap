@@ -16,6 +16,5 @@ export const Works = componentQrl((props) => {
 	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "component_1_vX1B9oMEgiI", [sig, text]) }, null, null, 1, null);
 }, "_u6BtPnK76q4");
 const STYLES = ".class {}";
-
 == DIAGNOSTICS ==
 []

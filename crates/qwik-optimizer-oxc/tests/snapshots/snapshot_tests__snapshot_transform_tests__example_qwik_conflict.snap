@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 903
 expression: output
 ---
 ============================= test.js ==
@@ -14,7 +13,6 @@ const componentQrl = () => console.log("not this", qrl());
 componentQrl();
 export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export const Root = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useStyles } from "@qwik.dev/core";

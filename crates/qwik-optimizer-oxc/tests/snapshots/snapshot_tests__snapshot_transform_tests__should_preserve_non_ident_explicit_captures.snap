@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 989
 expression: output
 ---
 ============================= test.tsx ==
@@ -17,6 +16,5 @@ export const task = inlinedQrl(() => {
 	true,
 	right
 ]);
-
 == DIAGNOSTICS ==
 []

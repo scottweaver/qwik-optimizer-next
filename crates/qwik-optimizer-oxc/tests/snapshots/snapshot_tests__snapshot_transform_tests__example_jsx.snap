@@ -1,6 +1,5 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 877
 expression: output
 ---
 ============================= test.js ==
@@ -14,7 +13,6 @@ export const Lightweight = (props) => {
 			</>, 1, "0");
 };
 export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { Lightweight } from "./test";
