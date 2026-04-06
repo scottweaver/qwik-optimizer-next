@@ -58,7 +58,7 @@ const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render })=>{
     it("should render object style", async ()=>{
         const StyledComponent = /*#__PURE__*/ componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
-        const { vNode, getStyles, document } = await render(/*#__PURE__*/ _jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
+        const { vNode, getStyles, document } = await render(/*#__PURE__*/ _jsxSorted(StyledComponent, null, null, null, 1, "u6_0"), { debug });
     });
 });
 

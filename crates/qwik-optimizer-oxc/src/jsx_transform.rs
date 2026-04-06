@@ -102,6 +102,7 @@ pub(crate) struct JsxElementParts<'a> {
 pub(crate) fn classify_jsx_element<'a>(
     el: JSXElement<'a>,
     jsx_key_counter: &mut u32,
+    key_prefix: &str,
     is_root: bool,
     allocator: &'a Allocator,
     signal_ctx: Option<&SignalOptContext<'a, '_>>,
@@ -121,7 +122,7 @@ pub(crate) fn classify_jsx_element<'a>(
     // 2. Key generation
     let should_emit_key = is_fn || is_root;
     let key_expr = if should_emit_key {
-        let key = gen_jsx_key(jsx_key_counter);
+        let key = gen_jsx_key(jsx_key_counter, key_prefix);
         ast.expression_string_literal(SPAN, allocator.alloc_str(&key), None)
     } else {
         ast.expression_null_literal(SPAN)
@@ -246,11 +247,12 @@ pub(crate) fn build_jsx_call_from_parts<'a>(
 pub(crate) fn transform_jsx_element<'a>(
     el: JSXElement<'a>,
     jsx_key_counter: &mut u32,
+    key_prefix: &str,
     is_root: bool,
     allocator: &'a Allocator,
     signal_ctx: Option<&SignalOptContext<'a, '_>>,
 ) -> (Expression<'a>, JsxImportNeeds, Vec<DollarAttr<'a>>, String, bool) {
-    let parts = classify_jsx_element(el, jsx_key_counter, is_root, allocator, signal_ctx);
+    let parts = classify_jsx_element(el, jsx_key_counter, key_prefix, is_root, allocator, signal_ctx);
     let dollar_attrs = parts.dollar_attrs;
     let tag_name = parts.tag_name.clone();
     let is_fn = parts.is_fn;
@@ -307,6 +309,7 @@ fn format_jsx_member_name(me: &JSXMemberExpression<'_>) -> String {
 pub(crate) fn transform_jsx_fragment<'a>(
     frag: JSXFragment<'a>,
     jsx_key_counter: &mut u32,
+    key_prefix: &str,
     is_root: bool,
     allocator: &'a Allocator,
 ) -> (Expression<'a>, JsxImportNeeds) {
@@ -320,7 +323,7 @@ pub(crate) fn transform_jsx_fragment<'a>(
 
     let should_emit_key = is_root;
     let key_expr = if should_emit_key {
-        let key = gen_jsx_key(jsx_key_counter);
+        let key = gen_jsx_key(jsx_key_counter, key_prefix);
         ast.expression_string_literal(SPAN, allocator.alloc_str(&key), None)
     } else {
         ast.expression_null_literal(SPAN)
@@ -958,8 +961,8 @@ fn jsx_expression_to_expr<'a>(jsx_expr: JSXExpression<'a>) -> Option<Expression<
 }
 
 /// Generate a deterministic JSX key.
-fn gen_jsx_key(counter: &mut u32) -> String {
-    let key = format!("{counter}");
+fn gen_jsx_key(counter: &mut u32, prefix: &str) -> String {
+    let key = format!("{}_{counter}", prefix);
     *counter += 1;
     key
 }
@@ -1037,9 +1040,9 @@ mod tests {
     #[test]
     fn jsx_transform_gen_key_increments() {
         let mut counter = 0u32;
-        assert_eq!(gen_jsx_key(&mut counter), "0");
-        assert_eq!(gen_jsx_key(&mut counter), "1");
-        assert_eq!(gen_jsx_key(&mut counter), "2");
+        assert_eq!(gen_jsx_key(&mut counter, "u6"), "u6_0");
+        assert_eq!(gen_jsx_key(&mut counter, "u6"), "u6_1");
+        assert_eq!(gen_jsx_key(&mut counter, "u6"), "u6_2");
     }
 
     #[test]
@@ -1129,7 +1132,7 @@ mod tests {
         let frag = ast.jsx_fragment(SPAN, opening, children, closing);
 
         let mut counter = 0;
-        let (expr, needs) = transform_jsx_fragment(frag, &mut counter, false, &allocator);
+        let (expr, needs) = transform_jsx_fragment(frag, &mut counter, "u6", false, &allocator);
 
         assert!(needs.needs_jsx_sorted, "Fragment should need _jsxSorted");
         assert!(needs.needs_fragment, "Fragment should need _Fragment import");

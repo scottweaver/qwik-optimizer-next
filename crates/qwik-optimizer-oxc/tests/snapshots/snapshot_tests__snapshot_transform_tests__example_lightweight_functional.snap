@@ -17,7 +17,7 @@ export function Button({ text, color }) {
     return /*#__PURE__*/ _jsxSorted("button", {
         onColor$: color,
         "q-e:click": q_Button_button_q_e_click_6YaNiKLqRnQ.w([color, text])
-    }, null, text, 1, "2");
+    }, null, text, 1, "u6_2");
 }
 export const ButtonArrow = (_rawProps)=>{
     const text = _rawProps.text;
@@ -25,7 +25,7 @@ export const ButtonArrow = (_rawProps)=>{
     return /*#__PURE__*/ _jsxSorted("button", {
         onColor$: color,
         "q-e:click": q_ButtonArrow_button_q_e_click_rEE0GCaea7M.w([color, text])
-    }, null, text, 1, "3");
+    }, null, text, 1, "u6_3");
 };
 
 ============================= test.tsx_Button_button_q_e_click_6YaNiKLqRnQ.tsx (ENTRY POINT) ==

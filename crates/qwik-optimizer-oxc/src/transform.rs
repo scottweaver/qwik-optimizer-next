@@ -469,6 +469,9 @@ pub(crate) struct QwikTransform {
     // ---- JSX state -----------------------------------------------------------
     /// Counter for deterministic JSX key generation.
     pub(crate) jsx_key_counter: u32,
+    /// 2-character file hash prefix for JSX keys (e.g., "u6").
+    /// SWC uses `base64(file_hash)[0..2]` to prefix keys like `"u6_0"`.
+    pub(crate) jsx_key_prefix: String,
 
     // ---- Entry policy (for segment grouping) --------------------------------
     pub(crate) entry_policy: Box<dyn EntryPolicy>,
@@ -590,6 +593,10 @@ impl QwikTransform {
             needs_fn_signal_import: false,
             needs_wrap_prop_import: false,
             jsx_key_counter: 0,
+            jsx_key_prefix: crate::hash::compute_file_hash_prefix(
+                config.scope.as_deref(),
+                rel_path,
+            ),
             mode: config.mode.clone(),
             entry_strategy: config.entry_strategy.clone(),
             is_server: config.is_server,
@@ -1019,6 +1026,7 @@ impl QwikTransform {
         let mut parts = crate::jsx_transform::classify_jsx_element(
             el,
             &mut self.jsx_key_counter,
+            &self.jsx_key_prefix,
             is_root,
             allocator,
             Some(&signal_ctx),
@@ -1113,6 +1121,7 @@ impl QwikTransform {
                     let (new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
                         frag.unbox(),
                         &mut self.jsx_key_counter,
+                        &self.jsx_key_prefix,
                         false,
                         allocator,
                     );
@@ -1151,7 +1160,7 @@ impl QwikTransform {
                                 }
                                 ArrayExpressionElement::JSXFragment(frag) => {
                                     let (new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
-                                        frag.unbox(), &mut self.jsx_key_counter, false, allocator,
+                                        frag.unbox(), &mut self.jsx_key_counter, &self.jsx_key_prefix, false, allocator,
                                     );
                                     if self.segment_stack.is_empty() {
                                         if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
@@ -2349,6 +2358,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     let (mut new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
                         frag.unbox(),
                         &mut self.jsx_key_counter,
+                        &self.jsx_key_prefix,
                         is_root,
                         allocator,
                     );

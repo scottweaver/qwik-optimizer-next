@@ -22,6 +22,24 @@ use siphasher::sip::SipHasher13;
 
 use crate::types::EmitMode;
 
+/// Compute the 2-character file hash prefix used for JSX dev keys.
+///
+/// SWC computes `base64(file_hash)[0..2]` where `file_hash` is derived from
+/// `scope? + rel_path` (without display_name). This prefix is prepended to
+/// the JSX key counter: e.g., `"u6_0"`, `"u6_1"`.
+pub(crate) fn compute_file_hash_prefix(scope: Option<&str>, rel_path: &str) -> String {
+    let mut hasher = SipHasher13::new_with_keys(0, 0);
+    if let Some(s) = scope {
+        hasher.write(s.as_bytes());
+    }
+    hasher.write(rel_path.as_bytes());
+    let hash_value = hasher.finish();
+    let encoded =
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(hash_value.to_le_bytes());
+    let sanitized = encoded.replace(['-', '_'], "0");
+    sanitized[..2.min(sanitized.len())].to_string()
+}
+
 /// Result of the `register_context_name` naming pipeline.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ContextNameResult {

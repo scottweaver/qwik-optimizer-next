@@ -16,7 +16,7 @@ export default (props: {
     return /*#__PURE__*/ _jsxSorted("div", {
         "data-is-active": data.selectedOutputDetail === "options",
         "q-e:click": q_test_div_q_e_click_pFqTss400MA.w([data])
-    }, null, null, 1, "0");
+    }, null, null, 1, "u6_0");
 };
 
 ============================= test.tsx_test_div_q_e_click_pFqTss400MA.js (ENTRY POINT) ==
