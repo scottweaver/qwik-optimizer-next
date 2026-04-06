@@ -7,14 +7,14 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Cmp_VOFhWBnY6qQ = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_VOFhWBnY6qQ"), "Cmp_VOFhWBnY6qQ");
+const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
 //
-export const Cmp = /*#__PURE__*/ componentQrl(q_Cmp_VOFhWBnY6qQ);
+export const Cmp = /*#__PURE__*/ componentQrl(q_Cmp_component_4ryKJTOKjWE);
 
-============================= test.tsx_Cmp_VOFhWBnY6qQ.ts (ENTRY POINT) ==
+============================= test.tsx_Cmp_component_4ryKJTOKjWE.ts (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
-export const Cmp_VOFhWBnY6qQ = () => {
+export const Cmp_component_4ryKJTOKjWE = () => {
 			const toggleSig = useSignal(false);
 
 			const handleClick$ = $(() => {
@@ -30,11 +30,11 @@ export const Cmp_VOFhWBnY6qQ = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Cmp_VOFhWBnY6qQ",
+  "name": "Cmp_component_4ryKJTOKjWE",
   "entry": null,
-  "displayName": "test.tsx_Cmp",
-  "hash": "VOFhWBnY6qQ",
-  "canonicalFilename": "test.tsx_Cmp_VOFhWBnY6qQ",
+  "displayName": "test.tsx_Cmp_component",
+  "hash": "4ryKJTOKjWE",
+  "canonicalFilename": "test.tsx_Cmp_component_4ryKJTOKjWE",
   "path": "",
   "extension": "ts",
   "parent": null,
@@ -64,7 +64,7 @@ export const Cmp_component_handleClick_WawHV3HwS1A = () => {
   "canonicalFilename": "test.tsx_Cmp_component_handleClick_WawHV3HwS1A",
   "path": "",
   "extension": "ts",
-  "parent": "Cmp_VOFhWBnY6qQ",
+  "parent": "Cmp_component_4ryKJTOKjWE",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,

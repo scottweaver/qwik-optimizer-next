@@ -7,9 +7,9 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(()=>import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
+/*#__PURE__*/ qrl(()=>import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
 //
-const ManyEventsComponent = /*#__PURE__*/ componentQrl(q_ManyEventsComponent_component_ndbrzxiyG3g);
+/*#__PURE__*/ componentQrl(q_ManyEventsComponent_component_ndbrzxiyG3g);
 
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA.js (ENTRY POINT) ==
 export const ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA = () => {};

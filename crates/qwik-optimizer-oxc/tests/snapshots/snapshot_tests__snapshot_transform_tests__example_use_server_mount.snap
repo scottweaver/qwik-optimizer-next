@@ -7,40 +7,58 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Parent_UhsrANEJoQg = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_UhsrANEJoQg"), "Parent_UhsrANEJoQg");
-const q_Child_7e7u5mtQ0PI = /*#__PURE__*/ qrl(()=>import("./test.tsx_Child_7e7u5mtQ0PI"), "Child_7e7u5mtQ0PI");
+const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
 //
-export const Parent = /*#__PURE__*/ componentQrl(q_Parent_UhsrANEJoQg);
-export const Child = /*#__PURE__*/ componentQrl(q_Child_7e7u5mtQ0PI);
+export const Parent = /*#__PURE__*/ componentQrl(q_Parent_component_0TaiDayHrlo);
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
 
-============================= test.tsx_Parent_div_q_e_click_0pujqQLHsK4.js (ENTRY POINT) ==
-export const Parent_div_q_e_click_0pujqQLHsK4 = () => console.log("parent");
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Parent_div_q_e_click_0pujqQLHsK4",
-  "entry": null,
-  "displayName": "test.tsx_Parent_div_q_e_click",
-  "hash": "0pujqQLHsK4",
-  "canonicalFilename": "test.tsx_Parent_div_q_e_click_0pujqQLHsK4",
-  "path": "",
-  "extension": "js",
-  "parent": "Parent_UhsrANEJoQg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    360,
-    387
-  ]
-}
-*/
-============================= test.tsx_Child_7e7u5mtQ0PI.js (ENTRY POINT) ==
+============================= test.tsx_Parent_component_0TaiDayHrlo.js ==
 import { default as mongo } from "mongodb";
 import { useStore } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const Child_7e7u5mtQ0PI = () => {
+export const Parent_component_0TaiDayHrlo = () => {
+	const state = useStore({
+		text: ''
+	});
+
+	// Double count watch
+	useTask$(async () => {
+		state.text = await mongo.users();
+		redis.set(state.text);
+	});
+
+	return (
+		<div onClick$={() => console.log('parent')}>
+			{state.text}
+		</div>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Parent_component_0TaiDayHrlo",
+  "entry": "test.tsx_entry_Parent",
+  "displayName": "test.tsx_Parent_component",
+  "hash": "0TaiDayHrlo",
+  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    157,
+    421
+  ]
+}
+*/
+============================= test.tsx_Child_component_9GyF01GDKqw.js ==
+import { default as mongo } from "mongodb";
+import { useStore } from "@qwik.dev/core";
+import { useTask$ } from "@qwik.dev/core";
+export const Child_component_9GyF01GDKqw = () => {
 	const state = useStore({
 		text: ''
 	});
@@ -59,11 +77,11 @@ export const Child_7e7u5mtQ0PI = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Child_7e7u5mtQ0PI",
-  "entry": null,
-  "displayName": "test.tsx_Child",
-  "hash": "7e7u5mtQ0PI",
-  "canonicalFilename": "test.tsx_Child_7e7u5mtQ0PI",
+  "name": "Child_component_9GyF01GDKqw",
+  "entry": "test.tsx_entry_Child",
+  "displayName": "test.tsx_Child_component",
+  "hash": "9GyF01GDKqw",
+  "canonicalFilename": "test.tsx_Child_component_9GyF01GDKqw",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -73,6 +91,29 @@ export const Child_7e7u5mtQ0PI = () => {
   "loc": [
     445,
     683
+  ]
+}
+*/
+============================= test.tsx_Child_component_div_q_e_click_cROa4sult1s.js (ENTRY POINT) ==
+export const Child_component_div_q_e_click_cROa4sult1s = () => console.log("child");
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Child_component_div_q_e_click_cROa4sult1s",
+  "entry": null,
+  "displayName": "test.tsx_Child_component_div_q_e_click",
+  "hash": "cROa4sult1s",
+  "canonicalFilename": "test.tsx_Child_component_div_q_e_click_cROa4sult1s",
+  "path": "",
+  "extension": "js",
+  "parent": "Child_component_9GyF01GDKqw",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    623,
+    649
   ]
 }
 */
@@ -95,7 +136,7 @@ export const Parent_component_useTask_gDH1EtUWqBU = async () => {
   "canonicalFilename": "test.tsx_Parent_component_useTask_gDH1EtUWqBU",
   "path": "",
   "extension": "js",
-  "parent": "Parent_UhsrANEJoQg",
+  "parent": "Parent_component_0TaiDayHrlo",
   "ctxKind": "function",
   "ctxName": "useTask$",
   "captures": true,
@@ -126,7 +167,7 @@ export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
   "canonicalFilename": "test.tsx_Child_component_useTask_Oh4n7ZeqJkU",
   "path": "",
   "extension": "js",
-  "parent": "Child_7e7u5mtQ0PI",
+  "parent": "Child_component_9GyF01GDKqw",
   "ctxKind": "function",
   "ctxName": "useTask$",
   "captures": true,
@@ -139,67 +180,26 @@ export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
   ]
 }
 */
-============================= test.tsx_Parent_UhsrANEJoQg.js (ENTRY POINT) ==
-import { default as mongo } from "mongodb";
-import { useStore } from "@qwik.dev/core";
-import { useTask$ } from "@qwik.dev/core";
-export const Parent_UhsrANEJoQg = () => {
-	const state = useStore({
-		text: ''
-	});
-
-	// Double count watch
-	useTask$(async () => {
-		state.text = await mongo.users();
-		redis.set(state.text);
-	});
-
-	return (
-		<div onClick$={() => console.log('parent')}>
-			{state.text}
-		</div>
-	);
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Parent_UhsrANEJoQg",
-  "entry": null,
-  "displayName": "test.tsx_Parent",
-  "hash": "UhsrANEJoQg",
-  "canonicalFilename": "test.tsx_Parent_UhsrANEJoQg",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    157,
-    421
-  ]
-}
-*/
-============================= test.tsx_Child_div_q_e_click_wIAUrS07aY0.js (ENTRY POINT) ==
-export const Child_div_q_e_click_wIAUrS07aY0 = () => console.log("child");
+============================= test.tsx_Parent_component_div_q_e_click_zM9okM0TYrA.js (ENTRY POINT) ==
+export const Parent_component_div_q_e_click_zM9okM0TYrA = () => console.log("parent");
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Child_div_q_e_click_wIAUrS07aY0",
+  "name": "Parent_component_div_q_e_click_zM9okM0TYrA",
   "entry": null,
-  "displayName": "test.tsx_Child_div_q_e_click",
-  "hash": "wIAUrS07aY0",
-  "canonicalFilename": "test.tsx_Child_div_q_e_click_wIAUrS07aY0",
+  "displayName": "test.tsx_Parent_component_div_q_e_click",
+  "hash": "zM9okM0TYrA",
+  "canonicalFilename": "test.tsx_Parent_component_div_q_e_click_zM9okM0TYrA",
   "path": "",
   "extension": "js",
-  "parent": "Child_7e7u5mtQ0PI",
+  "parent": "Parent_component_0TaiDayHrlo",
   "ctxKind": "eventHandler",
   "ctxName": "onClick$",
   "captures": false,
   "loc": [
-    623,
-    649
+    360,
+    387
   ]
 }
 */

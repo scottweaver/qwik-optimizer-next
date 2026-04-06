@@ -7,9 +7,9 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+/*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 //
-const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+/*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";

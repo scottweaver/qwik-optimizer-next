@@ -7,7 +7,12 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrlDEV } from "@qwik.dev/core";
 //
-const q_App_component_KGLYFBhvJc0 = /*#__PURE__*/ qrlDEV(()=>import("./index.tsx_App_component_KGLYFBhvJc0.tsx"), "App_component_KGLYFBhvJc0");
+const q_App_component_KGLYFBhvJc0 = /*#__PURE__*/ qrlDEV(()=>import("./index.tsx_App_component_KGLYFBhvJc0.js"), "App_component_KGLYFBhvJc0", {
+    file: "/src/projectindex.tsx",
+    lo: 75,
+    hi: 282,
+    displayName: "index.tsx_App_component"
+});
 //
 export const App = /*#__PURE__*/ componentQrl(q_App_component_KGLYFBhvJc0);
 

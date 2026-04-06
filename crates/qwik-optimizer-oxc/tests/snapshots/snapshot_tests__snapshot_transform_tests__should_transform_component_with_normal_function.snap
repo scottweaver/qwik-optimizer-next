@@ -7,9 +7,9 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Foo_n07hoBxfni0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_n07hoBxfni0"), "Foo_n07hoBxfni0");
+/*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 //
-const Foo = /*#__PURE__*/ componentQrl(q_Foo_n07hoBxfni0);
+/*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 
 ============================= test.tsx_Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
@@ -59,7 +59,7 @@ export const Foo_component_Inner_component_AuJ9mTBx5YA = function(props) {
   "canonicalFilename": "test.tsx_Foo_component_Inner_component_AuJ9mTBx5YA",
   "path": "",
   "extension": "js",
-  "parent": "Foo_n07hoBxfni0",
+  "parent": "Foo_component_HTDRsvUbLiE",
   "ctxKind": "function",
   "ctxName": "component$",
   "captures": true,
@@ -75,11 +75,11 @@ export const Foo_component_Inner_component_AuJ9mTBx5YA = function(props) {
   ]
 }
 */
-============================= test.tsx_Foo_n07hoBxfni0.js (ENTRY POINT) ==
+============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
-export const Foo_n07hoBxfni0 = function() {
+export const Foo_component_HTDRsvUbLiE = function() {
   const data = useSignal<Signal<any>[]>([]);
   const Inner = component$(function(props) {
     const _ref = {};
@@ -92,11 +92,11 @@ export const Foo_n07hoBxfni0 = function() {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_n07hoBxfni0",
+  "name": "Foo_component_HTDRsvUbLiE",
   "entry": null,
-  "displayName": "test.tsx_Foo",
-  "hash": "n07hoBxfni0",
-  "canonicalFilename": "test.tsx_Foo_n07hoBxfni0",
+  "displayName": "test.tsx_Foo_component",
+  "hash": "HTDRsvUbLiE",
+  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "js",
   "parent": null,

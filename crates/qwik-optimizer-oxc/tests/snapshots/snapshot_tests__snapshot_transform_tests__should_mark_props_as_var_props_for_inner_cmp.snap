@@ -8,10 +8,10 @@ import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Image_component_CS20HgBlRYI = /*#__PURE__*/ qrl(()=>import("./test.tsx_Image_component_CS20HgBlRYI"), "Image_component_CS20HgBlRYI");
-const q_ModelImg_zta7SZXyW0s = /*#__PURE__*/ qrl(()=>import("./test.tsx_ModelImg_zta7SZXyW0s"), "ModelImg_zta7SZXyW0s");
+const q_ModelImg_component_iJe6ICWVnyA = /*#__PURE__*/ qrl(()=>import("./test.tsx_ModelImg_component_iJe6ICWVnyA"), "ModelImg_component_iJe6ICWVnyA");
 //
 export const Image = /*#__PURE__*/ componentQrl(q_Image_component_CS20HgBlRYI);
-export const ModelImg = /*#__PURE__*/ componentQrl(q_ModelImg_zta7SZXyW0s);
+export const ModelImg = /*#__PURE__*/ componentQrl(q_ModelImg_component_iJe6ICWVnyA);
 
 ============================= test.tsx_Image_component_CS20HgBlRYI.js (ENTRY POINT) ==
 export const Image_component_CS20HgBlRYI = (props) => {
@@ -44,47 +44,12 @@ export const Image_component_CS20HgBlRYI = (props) => {
   ]
 }
 */
-============================= test.tsx_ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-import { serverImg } from "~/routes/(authenticated)/layout";
-export const ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI = async ({ track }) => {
-	const props = _captures[0];
-	track(() => props.store.model);
-	return await serverImg("some.png");
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI",
-  "entry": null,
-  "displayName": "test.tsx_ModelImg_component_imgLoc_useResource",
-  "hash": "Ogi9hEJvtmI",
-  "canonicalFilename": "test.tsx_ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI",
-  "path": "",
-  "extension": "js",
-  "parent": "ModelImg_zta7SZXyW0s",
-  "ctxKind": "function",
-  "ctxName": "useResource$",
-  "captures": true,
-  "captureNames": [
-    "props"
-  ],
-  "loc": [
-    372,
-    488
-  ],
-  "paramNames": [
-    "_rawProps"
-  ]
-}
-*/
-============================= test.tsx_ModelImg_zta7SZXyW0s.js (ENTRY POINT) ==
+============================= test.tsx_ModelImg_component_iJe6ICWVnyA.js (ENTRY POINT) ==
 import { Image } from "./test";
 import { Resource } from "@qwik.dev/core";
 import { serverImg } from "~/routes/(authenticated)/layout";
 import { useResource$ } from "@qwik.dev/core";
-export const ModelImg_zta7SZXyW0s = (props) => {
+export const ModelImg_component_iJe6ICWVnyA = (props) => {
   const imgLoc = useResource$(async ({ track }) => {
     track(() => props.store.model);
     return await serverImg('some.png');
@@ -110,11 +75,11 @@ export const ModelImg_zta7SZXyW0s = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "ModelImg_zta7SZXyW0s",
+  "name": "ModelImg_component_iJe6ICWVnyA",
   "entry": null,
-  "displayName": "test.tsx_ModelImg",
-  "hash": "zta7SZXyW0s",
-  "canonicalFilename": "test.tsx_ModelImg_zta7SZXyW0s",
+  "displayName": "test.tsx_ModelImg_component",
+  "hash": "iJe6ICWVnyA",
+  "canonicalFilename": "test.tsx_ModelImg_component_iJe6ICWVnyA",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -127,6 +92,41 @@ export const ModelImg_zta7SZXyW0s = (props) => {
   ],
   "paramNames": [
     "props"
+  ]
+}
+*/
+============================= test.tsx_ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { serverImg } from "~/routes/(authenticated)/layout";
+export const ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI = async ({ track }) => {
+	const props = _captures[0];
+	track(() => props.store.model);
+	return await serverImg("some.png");
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI",
+  "entry": null,
+  "displayName": "test.tsx_ModelImg_component_imgLoc_useResource",
+  "hash": "Ogi9hEJvtmI",
+  "canonicalFilename": "test.tsx_ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI",
+  "path": "",
+  "extension": "js",
+  "parent": "ModelImg_component_iJe6ICWVnyA",
+  "ctxKind": "function",
+  "ctxName": "useResource$",
+  "captures": true,
+  "captureNames": [
+    "props"
+  ],
+  "loc": [
+    372,
+    488
+  ],
+  "paramNames": [
+    "_rawProps"
   ]
 }
 */

@@ -7,15 +7,15 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 //
-const q__u6BtPnK76q4 = /*#__PURE__*/ _noopQrl("_u6BtPnK76q4");
+const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
 //
-q_Works_div_div_onClick_server_Fsp0RFImyok.s(() => console.log("in server", text));
-q__u6BtPnK76q4.s((props) => {
+q_Works_component_div_div_onClick_server_lFRg0PjqeUM.s(() => console.log("in server", text));
+q_Works_component_t45qL4vNGv0.s((props) => {
 	useStyle$(STYLES);
 	const text = "hola";
 	return <div onClick$={server$(() => console.log("in server", text))}></div>;
 });
-export const Works = componentQrl(q__u6BtPnK76q4);
+export const Works = componentQrl(q_Works_component_t45qL4vNGv0);
 const STYLES = ".class {}";
 
 == DIAGNOSTICS ==

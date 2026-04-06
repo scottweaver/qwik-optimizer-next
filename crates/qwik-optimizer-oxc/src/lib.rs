@@ -105,11 +105,11 @@ fn transform_code(
         format!("{}/{}", path_data.rel_dir.to_slash_lossy(), path_data.file_name)
     };
 
-    let file_extension = path_data
-        .file_name
-        .rsplit('.')
-        .next()
-        .unwrap_or("js")
+    // Use output extension (not raw input extension) for QRL import paths.
+    // SWC maps .tsx -> .js when both transpile_ts and transpile_jsx are true,
+    // so the dynamic import("./foo.js") reflects the transpiled output, not the source.
+    let file_extension = source_path::SourcePath(input_path)
+        .output_extension(config.transpile_ts, config.transpile_jsx)
         .to_string();
 
     // Stage 11 (pre-pass): mark pre-transform call/new expression spans for
@@ -174,7 +174,7 @@ fn transform_code(
     let did_transform = !xfrm.segments.is_empty();
 
     // Emit: codegen the transformed AST back to JavaScript.
-    let emit_result = emit::emit_module(
+    let mut emit_result = emit::emit_module(
         &program,
         source_in_arena,
         &EmitOptions {
@@ -182,6 +182,21 @@ fn transform_code(
         },
         input_path,
     );
+
+    // Post-emit: strip unreferenced const declarations to bare expression statements.
+    // SWC's DCE simplifier converts `const X = wrapper(q_...)` to just
+    // `wrapper(q_...)` when X is not exported or referenced elsewhere in root.
+    if !matches!(config.mode, EmitMode::Lib) && did_transform {
+        emit_result.code = strip_unreferenced_wrapper_consts_text(&emit_result.code);
+    }
+
+    // Post-emit: inject dev mode metadata into qrlDEV/qrlDEV calls.
+    // OXC codegen's sourcemap builder panics on span violations if we embed
+    // large format strings into parsed AST nodes, so we inject the metadata
+    // as a text post-processing step after codegen.
+    if !xfrm.dev_metadata.is_empty() {
+        emit_result.code = inject_dev_metadata(&emit_result.code, &xfrm.dev_metadata);
+    }
 
     // Compute output path.
     let output_path = if did_transform && !config.preserve_filenames {
@@ -727,6 +742,183 @@ fn remove_unused_qrl_declarations(program: &mut oxc::ast::ast::Program<'_>) {
             break; // No more items removed, stable
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// inject_dev_metadata -- qrlDEV post-emit metadata injection
+// ---------------------------------------------------------------------------
+
+/// Inject dev mode metadata objects into qrlDEV calls after codegen.
+///
+/// Transforms: `qrlDEV(()=>import("./path"), "sym")` into
+/// `qrlDEV(()=>import("./path"), "sym", {\n    file: "...",\n    lo: N,\n    hi: N,\n    displayName: "..."\n})`
+///
+/// This is done as text post-processing because OXC's codegen sourcemap builder
+/// panics on span violations when large format strings are parsed into AST nodes.
+fn inject_dev_metadata(
+    code: &str,
+    metadata: &std::collections::HashMap<String, (String, u32, u32, String)>,
+) -> String {
+    let mut result = code.to_string();
+    for (sym, (file, lo, hi, display_name)) in metadata {
+        // Match: qrlDEV(()=>import("..."), "SYM")
+        let search = format!(r#"qrlDEV(()=>import("{}"), "{}")"#,
+            // We don't know the exact import path, so search by symbol name
+            "", sym);
+        // Actually, we can't match the import path. Let's use a more targeted approach:
+        // Search for `"SYM")` and replace the closing `)` with `, { ... })`
+        let search_pattern = format!(r#", "{}")"#, sym);
+        let replacement = format!(
+            r#", "{}", {{
+    file: "{}",
+    lo: {},
+    hi: {},
+    displayName: "{}"
+}})"#,
+            sym, file, lo, hi, display_name
+        );
+        // Only replace in qrlDEV lines (not in other contexts)
+        let mut new_result = String::with_capacity(result.len() + 200);
+        for line in result.lines() {
+            if line.contains("qrlDEV") && line.contains(&search_pattern) {
+                new_result.push_str(&line.replace(&search_pattern, &replacement));
+            } else {
+                new_result.push_str(line);
+            }
+            new_result.push('\n');
+        }
+        // Trim trailing newline if original didn't have one
+        if !result.ends_with('\n') && new_result.ends_with('\n') {
+            new_result.pop();
+        }
+        result = new_result;
+    }
+    result
+}
+
+// ---------------------------------------------------------------------------
+// strip_unreferenced_wrapper_consts_text -- SWC DCE parity (text-level)
+// ---------------------------------------------------------------------------
+
+/// Text-level pass: convert unreferenced `const X = EXPR;` to bare `EXPR;`.
+///
+/// SWC's simplifier strips const declarations when the declared name is neither
+/// exported nor referenced elsewhere in the root module. This text-based approach
+/// operates on the codegen output because OXC's arena allocation makes in-place
+/// AST node type changes impractical.
+///
+/// Algorithm:
+/// 1. Parse lines to find `const NAME = EXPR;` patterns (not `const q_*`, not `export const`)
+/// 2. Collect all identifier references from other lines
+/// 3. For declarations where NAME appears nowhere else, strip to `EXPR;`
+fn strip_unreferenced_wrapper_consts_text(code: &str) -> String {
+    use std::collections::{HashMap, HashSet};
+
+    let mut current = code.to_string();
+
+    // Fixpoint loop: stripping one const may make others unreferenced.
+    // Limited to 5 iterations to prevent infinite loops.
+    for _ in 0..5 {
+        let lines: Vec<&str> = current.lines().collect();
+        if lines.is_empty() {
+            return current;
+        }
+
+        // 1. Find candidate const declarations.
+        // Only non-exported consts with call expression or PURE annotation RHS,
+        // OR simple identifier assignment (e.g., `const X = q_Y;`).
+        let mut candidates: HashMap<usize, String> = HashMap::new();
+        for (i, line) in lines.iter().enumerate() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("export ") || !trimmed.starts_with("const ") {
+                continue;
+            }
+            let rest = &trimmed[6..]; // skip "const "
+            if let Some(eq_pos) = rest.find(" = ") {
+                let name = rest[..eq_pos].trim();
+                if name.starts_with('{') || name.starts_with('[') {
+                    continue;
+                }
+                let rhs = &rest[eq_pos + 3..];
+                // Include: call expressions, PURE annotations, or simple q_ identifier assignments
+                let is_call = rhs.contains('(');
+                let is_pure = rhs.contains("__PURE__");
+                let rhs_ident = rhs.trim_end_matches(';').trim();
+                let is_simple_q_ref = rhs_ident.starts_with("q_")
+                    && rhs_ident.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+                if is_call || is_pure || is_simple_q_ref {
+                    candidates.insert(i, name.to_string());
+                }
+            }
+        }
+
+        if candidates.is_empty() {
+            return current;
+        }
+
+        // 2. Collect all identifier occurrences from non-candidate lines.
+        let mut referenced: HashSet<String> = HashSet::new();
+        for (i, line) in lines.iter().enumerate() {
+            if candidates.contains_key(&i) {
+                continue;
+            }
+            let mut chars = line.chars().peekable();
+            while let Some(&ch) = chars.peek() {
+                if ch.is_ascii_alphabetic() || ch == '_' || ch == '$' {
+                    let mut word = String::new();
+                    while let Some(&c) = chars.peek() {
+                        if c.is_ascii_alphanumeric() || c == '_' || c == '$' {
+                            word.push(c);
+                            chars.next();
+                        } else {
+                            break;
+                        }
+                    }
+                    referenced.insert(word);
+                } else {
+                    chars.next();
+                }
+            }
+        }
+
+        // 3. Strip unreferenced candidates.
+        let mut any_stripped = false;
+        let mut result_lines: Vec<String> = Vec::with_capacity(lines.len());
+        for (i, line) in lines.iter().enumerate() {
+            if let Some(name) = candidates.get(&i) {
+                if !referenced.contains(name) {
+                    let trimmed = line.trim();
+                    let prefix = format!("const {} = ", name);
+                    if trimmed.starts_with(&prefix) {
+                        let expr = &trimmed[prefix.len()..];
+                        // If expr is just a simple identifier (e.g., `q_foo;`),
+                        // remove the entire line (dead assignment to dead value).
+                        let expr_trimmed = expr.trim_end_matches(';').trim();
+                        if expr_trimmed.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                            any_stripped = true;
+                            continue; // Remove line entirely
+                        }
+                        // Otherwise, keep just the expression (strip the const decl prefix)
+                        result_lines.push(expr.to_string());
+                        any_stripped = true;
+                        continue;
+                    }
+                }
+            }
+            result_lines.push(line.to_string());
+        }
+
+        if !any_stripped {
+            return current;
+        }
+
+        current = result_lines.join("\n");
+        if code.ends_with('\n') && !current.ends_with('\n') {
+            current.push('\n');
+        }
+    }
+
+    current
 }
 
 // ---------------------------------------------------------------------------

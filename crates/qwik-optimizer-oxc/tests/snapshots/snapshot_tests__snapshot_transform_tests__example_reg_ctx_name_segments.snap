@@ -10,23 +10,23 @@ import { serverQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	const text = "hola";
-	return _jsxSorted(_Fragment, null, null, [_jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [text]) }, null, null, 1, null), _jsxSorted("div", { "q-e:click": _noopQrl("Works_div_q_e_click_c4akzVPCPrQ") }, null, null, 1, null)], 1, null);
-}, "Works_3wleYXX4dYQ");
+	return _jsxSorted(_Fragment, null, null, [_jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [text]) }, null, null, 1, null), _jsxSorted("div", { "q-e:click": _noopQrl("Works_component_div_q_e_click_XuNgFdV2Umk") }, null, null, 1, null)], 1, null);
+}, "Works_component_t45qL4vNGv0");
 
-============================= test.tsx_Works_div_q_e_click_c4akzVPCPrQ.js ==
-export const Works_div_q_e_click_c4akzVPCPrQ = null;
+============================= test.tsx_Works_component_div_q_e_click_XuNgFdV2Umk.js ==
+export const Works_component_div_q_e_click_XuNgFdV2Umk = null;
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Works_div_q_e_click_c4akzVPCPrQ",
+  "name": "Works_component_div_q_e_click_XuNgFdV2Umk",
   "entry": "entry_segments",
-  "displayName": "test.tsx_Works_div_q_e_click",
-  "hash": "c4akzVPCPrQ",
-  "canonicalFilename": "test.tsx_Works_div_q_e_click_c4akzVPCPrQ",
+  "displayName": "test.tsx_Works_component_div_q_e_click",
+  "hash": "XuNgFdV2Umk",
+  "canonicalFilename": "test.tsx_Works_component_div_q_e_click_XuNgFdV2Umk",
   "path": "",
   "extension": "js",
-  "parent": "Works_3wleYXX4dYQ",
+  "parent": "Works_component_t45qL4vNGv0",
   "ctxKind": "eventHandler",
   "ctxName": "onClick$",
   "captures": false,

@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_slug_component_0AM8HPnkNs4 = /*#__PURE__*/ qrl(()=>import("./[[...slug]].tsx_slug_component_0AM8HPnkNs4.tsx"), "slug_component_0AM8HPnkNs4");
+const q_slug_component_0AM8HPnkNs4 = /*#__PURE__*/ qrl(()=>import("./[[...slug]].tsx_slug_component_0AM8HPnkNs4.js"), "slug_component_0AM8HPnkNs4");
 //
 export default /*#__PURE__*/ componentQrl(q_slug_component_0AM8HPnkNs4);
 

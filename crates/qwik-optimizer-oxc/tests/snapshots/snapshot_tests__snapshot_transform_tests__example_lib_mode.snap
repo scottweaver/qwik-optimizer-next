@@ -16,9 +16,9 @@ export const Works = componentQrl((props) => {
 	const sig = useSignal("hola");
 	useTaskQrl(() => {
 		console.log(sig.value, text);
-	}, "Works_useTask_6VlCzdQbOIw", [sig, text]);
-	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "div_div_onClick_server_fYmbj95YuG4", [sig, text]) }, null, null, 1, null);
-}, "_u6BtPnK76q4");
+	}, "Works_component_useTask_pjo5U5Ikll0", [sig, text]);
+	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [sig, text]) }, null, null, 1, null);
+}, "Works_component_t45qL4vNGv0");
 const STYLES = ".class {}";
 
 == DIAGNOSTICS ==

@@ -7,13 +7,41 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_App_Header_PzePpx0uX0Y = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_Header_PzePpx0uX0Y"), "App_Header_PzePpx0uX0Y");
+/*#__PURE__*/ qrl(()=>import("./test.tsx_App_Header_component_B9F3YeqcO1w"), "App_Header_component_B9F3YeqcO1w");
 //
 export function App() {
-	const Header = /*#__PURE__*/ componentQrl(q_App_Header_PzePpx0uX0Y);
+	const Header = /*#__PURE__*/ componentQrl(q_App_Header_component_B9F3YeqcO1w);
 	return Header;
 }
 
+============================= test.tsx_App_Header_component_B9F3YeqcO1w.tsx (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+export const App_Header_component_B9F3YeqcO1w = () => {
+		console.log("mount");
+		return (
+			<div onClick={$((ctx) => console.log(ctx))}/>
+		);
+	};
+/*
+{
+  "origin": "test.tsx",
+  "name": "App_Header_component_B9F3YeqcO1w",
+  "entry": null,
+  "displayName": "test.tsx_App_Header_component",
+  "hash": "B9F3YeqcO1w",
+  "canonicalFilename": "test.tsx_App_Header_component_B9F3YeqcO1w",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    89,
+    200
+  ]
+}
+*/
 ============================= test.tsx_App_Header_component_div_div_onClick_gb005Xy9YAw.tsx (ENTRY POINT) ==
 export const App_Header_component_div_div_onClick_gb005Xy9YAw = (ctx) => console.log(ctx);
 
@@ -27,7 +55,7 @@ export const App_Header_component_div_div_onClick_gb005Xy9YAw = (ctx) => console
   "canonicalFilename": "test.tsx_App_Header_component_div_div_onClick_gb005Xy9YAw",
   "path": "",
   "extension": "tsx",
-  "parent": "App_Header_PzePpx0uX0Y",
+  "parent": "App_Header_component_B9F3YeqcO1w",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -37,34 +65,6 @@ export const App_Header_component_div_div_onClick_gb005Xy9YAw = (ctx) => console
   ],
   "paramNames": [
     "ctx"
-  ]
-}
-*/
-============================= test.tsx_App_Header_PzePpx0uX0Y.tsx (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-export const App_Header_PzePpx0uX0Y = () => {
-		console.log("mount");
-		return (
-			<div onClick={$((ctx) => console.log(ctx))}/>
-		);
-	};
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_Header_PzePpx0uX0Y",
-  "entry": null,
-  "displayName": "test.tsx_App_Header",
-  "hash": "PzePpx0uX0Y",
-  "canonicalFilename": "test.tsx_App_Header_PzePpx0uX0Y",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    89,
-    200
   ]
 }
 */

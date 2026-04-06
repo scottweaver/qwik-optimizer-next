@@ -9,15 +9,46 @@ import { qrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core/what";
 //
 const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(()=>import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q_Root_component_1_cBpQNYDUHI4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Root_component_1_cBpQNYDUHI4"), "Root_component_1_cBpQNYDUHI4");
 //
 export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
 componentQrl();
 export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
-export const Root = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
+export const Root = /*#__PURE__*/ componentQrl(q_Root_component_1_cBpQNYDUHI4);
 
+============================= test.tsx_Root_component_1_cBpQNYDUHI4.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { useStyles } from "@qwik.dev/core";
+export const Root_component_1_cBpQNYDUHI4 = () => {
+	useStyles($('thing'));
+	return $(() => {
+		return (
+			<div/>
+		)
+	});
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Root_component_1_cBpQNYDUHI4",
+  "entry": null,
+  "displayName": "test.tsx_Root_component_1",
+  "hash": "cBpQNYDUHI4",
+  "canonicalFilename": "test.tsx_Root_component_1_cBpQNYDUHI4",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    468,
+    586
+  ]
+}
+*/
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { hW } from "./test";
 import { handleWatch } from "./test";
@@ -51,8 +82,8 @@ export const Foo_component_HTDRsvUbLiE = () => {
   ]
 }
 */
-============================= test.tsx_Root_jdhzAEvAMGA.js (ENTRY POINT) ==
-export const Root_jdhzAEvAMGA = () => {
+============================= test.tsx_Root_component_royhjYaCbYE.js (ENTRY POINT) ==
+export const Root_component_royhjYaCbYE = () => {
 		return (
 			<div/>
 		)
@@ -60,14 +91,14 @@ export const Root_jdhzAEvAMGA = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Root_jdhzAEvAMGA",
+  "name": "Root_component_royhjYaCbYE",
   "entry": null,
-  "displayName": "test.tsx_Root",
-  "hash": "jdhzAEvAMGA",
-  "canonicalFilename": "test.tsx_Root_jdhzAEvAMGA",
+  "displayName": "test.tsx_Root_component",
+  "hash": "royhjYaCbYE",
+  "canonicalFilename": "test.tsx_Root_component_royhjYaCbYE",
   "path": "",
   "extension": "js",
-  "parent": "_u6BtPnK76q4",
+  "parent": "Root_component_1_cBpQNYDUHI4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -90,44 +121,13 @@ export const Root_component_useStyles_u5DkUxGrGnU = "thing";
   "canonicalFilename": "test.tsx_Root_component_useStyles_u5DkUxGrGnU",
   "path": "",
   "extension": "js",
-  "parent": "_u6BtPnK76q4",
+  "parent": "Root_component_1_cBpQNYDUHI4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
   "loc": [
     498,
     508
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { useStyles } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
-	useStyles($('thing'));
-	return $(() => {
-		return (
-			<div/>
-		)
-	});
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
-  "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    468,
-    586
   ]
 }
 */

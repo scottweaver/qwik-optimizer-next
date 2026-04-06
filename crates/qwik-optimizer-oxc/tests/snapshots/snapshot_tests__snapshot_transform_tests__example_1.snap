@@ -7,11 +7,11 @@ snapshot_kind: text
 import { qrl } from "@qwik.dev/core";
 import { component } from "@qwik.dev/core";
 //
-const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(()=>import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q_renderHeader2_component_Ay6ibkfFYsw = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw");
+const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
+/*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw");
 //
-export const renderHeader1 = q__u6BtPnK76q4;
-const renderHeader2 = component(q_renderHeader2_component_Ay6ibkfFYsw);
+export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
+component(q_renderHeader2_component_Ay6ibkfFYsw);
 
 ============================= test.tsx_renderHeader1_div_div_onClick_4G8036HZRPA.tsx (ENTRY POINT) ==
 export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx) => console.log(ctx);
@@ -26,7 +26,7 @@ export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx) => console.log(ct
   "canonicalFilename": "test.tsx_renderHeader1_div_div_onClick_4G8036HZRPA",
   "path": "",
   "extension": "tsx",
-  "parent": "_u6BtPnK76q4",
+  "parent": "renderHeader1_jMxQsjbyDss",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -65,9 +65,9 @@ export const renderHeader2_component_Ay6ibkfFYsw = () => {
   ]
 }
 */
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+============================= test.tsx_renderHeader1_jMxQsjbyDss.tsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
+export const renderHeader1_jMxQsjbyDss = () => {
 	return (
 		<div onClick={$((ctx) => console.log(ctx))}/>
 	);
@@ -75,11 +75,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "renderHeader1_jMxQsjbyDss",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_renderHeader1",
+  "hash": "jMxQsjbyDss",
+  "canonicalFilename": "test.tsx_renderHeader1_jMxQsjbyDss",
   "path": "",
   "extension": "tsx",
   "parent": null,

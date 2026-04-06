@@ -7,16 +7,15 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Greeter_LDKOk8PWmEs = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_LDKOk8PWmEs"), "Greeter_LDKOk8PWmEs");
-const q_d_wKNFJEIQVUA = /*#__PURE__*/ qrl(()=>import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
+const q_Greeter_component_1_krCndSwhX4U = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_component_1_krCndSwhX4U"), "Greeter_component_1_krCndSwhX4U");
+/*#__PURE__*/ qrl(()=>import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
 //
-export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_LDKOk8PWmEs);
-const d = q_d_wKNFJEIQVUA;
+export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_1_krCndSwhX4U);
 
-============================= test.tsx_Greeter_LDKOk8PWmEs.js (ENTRY POINT) ==
+============================= test.tsx_Greeter_component_1_krCndSwhX4U.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const Greeter_LDKOk8PWmEs = () => {
+export const Greeter_component_1_krCndSwhX4U = () => {
 	const stuff = useStore();
 	return $(() => {
 		return (
@@ -33,11 +32,11 @@ export const Greeter_LDKOk8PWmEs = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Greeter_LDKOk8PWmEs",
+  "name": "Greeter_component_1_krCndSwhX4U",
   "entry": null,
-  "displayName": "test.tsx_Greeter",
-  "hash": "LDKOk8PWmEs",
-  "canonicalFilename": "test.tsx_Greeter_LDKOk8PWmEs",
+  "displayName": "test.tsx_Greeter_component_1",
+  "hash": "krCndSwhX4U",
+  "canonicalFilename": "test.tsx_Greeter_component_1_krCndSwhX4U",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -74,7 +73,7 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
   "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "js",
-  "parent": "Greeter_LDKOk8PWmEs",
+  "parent": "Greeter_component_1_krCndSwhX4U",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,

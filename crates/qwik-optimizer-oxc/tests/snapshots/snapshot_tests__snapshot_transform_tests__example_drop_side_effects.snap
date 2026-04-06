@@ -9,7 +9,12 @@ import { qrlDEV } from "@qwik.dev/core";
 import { _noopQrlDEV } from "@qwik.dev/core";
 import { sideEffect } from "./secret";
 //
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg", {
+    file: "/user/qwik/src/test.tsx",
+    lo: 490,
+    hi: 574,
+    displayName: "test.tsx_test_component"
+});
 //
 (function() {
 	console.log("run");

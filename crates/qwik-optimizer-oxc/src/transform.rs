@@ -466,6 +466,11 @@ pub(crate) struct QwikTransform {
     pub(crate) strip_event_handlers: bool,
     pub(crate) scope: Option<String>,
     pub(crate) explicit_extensions: bool,
+    /// Source directory (e.g., "/user/qwik/src/") for building absolute paths in dev metadata.
+    pub(crate) src_dir: String,
+    /// Dev metadata for qrlDEV post-processing: map from symbol_name to (file, lo, hi, displayName).
+    /// Only populated in Dev/Hmr modes. Applied as text post-processing after codegen.
+    pub(crate) dev_metadata: HashMap<String, (String, u32, u32, String)>,
     /// Pointer to the original source text (valid for traversal lifetime).
     pub(crate) source_text: *const str,
 }
@@ -571,6 +576,8 @@ impl QwikTransform {
             strip_event_handlers: config.strip_event_handlers,
             scope: config.scope.clone(),
             explicit_extensions: config.explicit_extensions,
+            src_dir: config.src_dir.clone(),
+            dev_metadata: HashMap::new(),
             source_text: source_text as *const str,
         }
     }
@@ -1442,6 +1449,14 @@ impl QwikTransform {
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
                 });
+                // Store dev metadata for post-emit injection
+                if is_dev {
+                    let dev_file = format!("{}{}", self.src_dir, self.file_name);
+                    self.dev_metadata.insert(
+                        names.symbol_name.clone(),
+                        (dev_file, call_span_start, call_span_end, names.display_name.clone()),
+                    );
+                }
             }
 
             // Build replacement: q_sym or q_sym.w([caps])
@@ -2122,11 +2137,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             &names.symbol_name,
         );
 
-        // Pop the context name we pushed in enter_call_expression.
-        // Deferred until after register_context_name and compute_entry
-        // to match SWC's naming and entry policy behavior.
-        self.stack_ctxt.pop();
-
         // --- Extract expr code from source text ---
         let call = match expr {
             Expression::CallExpression(call) => call,
@@ -2269,7 +2279,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             let ident_name = format!("q_{}", names.symbol_name);
 
             // 1. Build _noopQrl("sym") as a HoistedConst
-            //    For dev mode: _noopQrlDEV("sym", { file: ..., lo: ..., hi: ..., displayName: ... })
             let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
 
             // Deduplicate by symbol_name
@@ -2467,6 +2476,14 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
                 });
+                // Store dev metadata for post-emit injection
+                if is_dev {
+                    let dev_file = format!("{}{}", self.src_dir, self.file_name);
+                    self.dev_metadata.insert(
+                        names.symbol_name.clone(),
+                        (dev_file, pending.span_start, call_span_end, names.display_name.clone()),
+                    );
+                }
             }
 
             // 2. Build the replacement expression for the call site
