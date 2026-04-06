@@ -9,11 +9,11 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 ### Root Module Code Generation
 
-- [ ] **ROOT-01**: Root module import statements match SWC ordering and format for all fixtures
+- [x] **ROOT-01**: Root module import statements match SWC ordering and format for all fixtures
 - [ ] **ROOT-02**: Root module variable declarations and expressions match SWC output
 - [ ] **ROOT-03**: Root module export structure matches SWC output (default exports, re-exports, named exports)
 - [ ] **ROOT-04**: Root module QRL references and hoisted declarations match SWC format
-- [ ] **ROOT-05**: Root module comment separators and whitespace structure match SWC output
+- [x] **ROOT-05**: Root module comment separators and whitespace structure match SWC output
 
 ### Segment Extraction
 
@@ -52,11 +52,11 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOT-01 | Phase 11 | Pending |
+| ROOT-01 | Phase 11 | Complete |
 | ROOT-02 | Phase 11 | Pending |
 | ROOT-03 | Phase 11 | Pending |
 | ROOT-04 | Phase 11 | Pending |
-| ROOT-05 | Phase 11 | Pending |
+| ROOT-05 | Phase 11 | Complete |
 | SEG-01 | Phase 10 | Complete |
 | SEG-02 | Phase 10 | Complete |
 | SEG-03 | Phase 10 | Complete |
