@@ -33,7 +33,7 @@ Full details: [v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md)
 - [x] **Phase 10: Segment Extraction** - Fix dollar-sign expression detection in loops, JSX handlers, ternaries, spread props, and inline strategies (completed 2026-04-04)
 - [x] **Phase 11: Root Module Code Generation** - Fix import ordering, declarations, exports, QRL references, and comment structure (completed 2026-04-06)
 - [x] **Phase 12: Diagnostics Parity** - Fix error reporting to match SWC for all 201 fixtures (completed 2026-04-06)
-- [ ] **Phase 13: Final Acceptance** - Verify 201/201 full match and fix any remaining stragglers
+- [x] **Phase 13: Final Acceptance** - Verify 201/201 full match and fix any remaining stragglers (completed 2026-04-06)
 
 ## Phase Details
 
@@ -101,7 +101,7 @@ Plans:
 - [x] 13-05-PLAN.md — Import count + _wrapProp + Fragment: fix import differences, add _wrapProp generation, add Fragment import for JSX fragments
 - [x] 13-06-PLAN.md — Inline strategy + tagName: rework Inline entry strategy to _noopQrl/.s()/.w() format, preserve component tagName option
 - [x] 13-07-PLAN.md — Remaining feature gaps: import conflict renaming, dev mode offsets, dead code stripping, TS enum, jsxImportSource, segment extraction bug (D-04)
-- [ ] 13-08-PLAN.md — Final straggler sweep: diagnose and fix any remaining mismatches to reach 201/201
+- [x] 13-08-PLAN.md — Final straggler sweep: diagnose and fix any remaining mismatches to reach 201/201
 
 ## Progress
 
@@ -122,4 +122,4 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
 | 11. Root Module Code Generation | v0.2.0 | 4/4 | Complete   | 2026-04-06 |
 | 12. Diagnostics Parity | v0.2.0 | 1/1 | Complete    | 2026-04-06 |
-| 13. Final Acceptance | v0.2.0 | 7/8 | In Progress|  |
+| 13. Final Acceptance | v0.2.0 | 8/8 | Complete   | 2026-04-06 |
