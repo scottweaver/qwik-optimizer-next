@@ -58,8 +58,8 @@ export const App_component_ckEPmXZlub0 = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    169,
-    580
+    180,
+    579
   ],
   "paramNames": [
     "props"

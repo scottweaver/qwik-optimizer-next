@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 885
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
@@ -86,8 +86,8 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    69,
-    206
+    80,
+    180
   ],
   "paramNames": [
     "props"

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 883
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -144,8 +144,8 @@ export const Foo_component_1_DvU6FitWglY = () => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    97,
-    841
+    99,
+    840
   ]
 }
 */
@@ -190,8 +190,8 @@ export const Foo_component_handler_H10xZtD0e7w = () => console.log("reused");
   "ctxName": "$",
   "captures": false,
   "loc": [
-    125,
-    155
+    127,
+    154
   ]
 }
 */
@@ -239,8 +239,8 @@ export const Foo_component_HTDRsvUbLiE = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    69,
-    870
+    80,
+    844
   ]
 }
 */

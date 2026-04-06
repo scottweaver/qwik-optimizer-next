@@ -28,8 +28,8 @@ export const sym1_aXUrPXX5Lak = (ctx) => console.log("1");
   "ctxName": "$",
   "captures": false,
   "loc": [
-    69,
-    97
+    71,
+    96
   ],
   "paramNames": [
     "ctx"

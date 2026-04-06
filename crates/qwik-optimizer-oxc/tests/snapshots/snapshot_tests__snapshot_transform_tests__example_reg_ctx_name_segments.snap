@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 909
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -38,8 +38,8 @@ export const Works_component_div_q_e_click_XuNgFdV2Umk = null;
   "ctxName": "onClick$",
   "captures": false,
   "loc": [
-    257,
-    268
+    258,
+    269
   ]
 }
 */

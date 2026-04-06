@@ -36,8 +36,8 @@ export const Image_component_CS20HgBlRYI = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    200,
-    292
+    211,
+    291
   ],
   "paramNames": [
     "props"
@@ -87,8 +87,8 @@ export const ModelImg_component_iJe6ICWVnyA = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    319,
-    780
+    342,
+    779
   ],
   "paramNames": [
     "props"
@@ -122,8 +122,8 @@ export const ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI = async ({ track 
     "props"
   ],
   "loc": [
-    372,
-    488
+    385,
+    487
   ],
   "paramNames": [
     "_rawProps"

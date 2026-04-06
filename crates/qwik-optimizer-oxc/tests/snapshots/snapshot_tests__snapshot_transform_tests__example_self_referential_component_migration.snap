@@ -48,8 +48,8 @@ export const ComponentA_component_100sEyGkGuA = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    692,
-    767
+    703,
+    766
   ]
 }
 */
@@ -77,8 +77,8 @@ export const Nested_component_8cqIQQSPqhE = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    270,
-    336
+    281,
+    335
   ]
 }
 */
@@ -108,8 +108,8 @@ export const RecursiveList_component_ignTe6QguYQ = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    433,
-    605
+    444,
+    604
   ],
   "paramNames": [
     "props"
@@ -135,8 +135,8 @@ export const MutualExample_component_LXt10RL0k44 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    896,
-    941
+    907,
+    940
   ]
 }
 */
@@ -164,8 +164,8 @@ export const ComponentB_component_WfCOFVxlmq4 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    789,
-    864
+    800,
+    863
   ]
 }
 */

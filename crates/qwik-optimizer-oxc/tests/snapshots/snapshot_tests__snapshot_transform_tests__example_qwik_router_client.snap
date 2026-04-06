@@ -697,8 +697,8 @@ export const Link_component_useVisibleTask_6K6z063D0C4 = ({ track }) => {
     "loc"
   ],
   "loc": [
-    5184,
-    5651
+    5200,
+    5650
   ],
   "paramNames": [
     "track"
@@ -790,8 +790,8 @@ Action.run() can only be called on the browser, for example when a user clicks a
     "state"
   ],
   "loc": [
-    39775,
-    41468
+    39777,
+    41467
   ],
   "paramNames": [
     "input"
@@ -826,8 +826,8 @@ export const GetForm_component_jsx_1_DfrmX6UJG2I = (_evt, form) => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    55124,
-    55499
+    55126,
+    55498
   ],
   "paramNames": [
     "_evt",
@@ -869,8 +869,8 @@ export const Link_component_handlePrefetch_Evus9ZlzXpQ = (_, elm) => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    4025,
-    4437
+    4027,
+    4436
   ],
   "paramNames": [
     "_",
@@ -903,8 +903,8 @@ export const ErrorBoundary_component_useOnWindow_GYhPAutMLGk = (e) => {
     "store"
   ],
   "loc": [
-    1702,
-    1755
+    1704,
+    1754
   ],
   "paramNames": [
     "e"
@@ -968,8 +968,8 @@ export const RouterOutlet_component_hKWOEO9aIDM = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    37636,
-    38910
+    37647,
+    38909
   ]
 }
 */
@@ -1139,8 +1139,8 @@ export const spaInit_event_Js1cotabL5I = (_, el) => {
   "ctxName": "event$",
   "captures": false,
   "loc": [
-    10225,
-    15589
+    10232,
+    15588
   ],
   "paramNames": [
     "_",
@@ -1171,8 +1171,8 @@ export const QwikRouterMockProvider_component_kN7AQXV0aXo = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    37465,
-    37559
+    37476,
+    37558
   ],
   "paramNames": [
     "props"
@@ -1231,8 +1231,8 @@ export const DocumentHeadTags_component_LaCcLS5Bz4c = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    56848,
-    57778
+    56859,
+    57777
   ],
   "paramNames": [
     "props"
@@ -1263,8 +1263,8 @@ export const QwikRouterProvider_component_lCQXGdS0iZM = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    35629,
-    35719
+    35640,
+    35718
   ],
   "paramNames": [
     "props"
@@ -1293,8 +1293,8 @@ export const Link_component_handlePreload_MhXmSxzp4GE = (_, elm) => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    5083,
-    5180
+    5085,
+    5179
   ],
   "paramNames": [
     "_",
@@ -1416,8 +1416,8 @@ export const Link_component_nhj84CU1784 = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    3312,
-    6188
+    3323,
+    6187
   ],
   "paramNames": [
     "props"
@@ -1451,8 +1451,8 @@ export const usePreventNavigateQrl_useVisibleTask_no0bm2fybZo = () => {
     "registerPreventNav"
   ],
   "loc": [
-    3049,
-    3094
+    3065,
+    3093
   ]
 }
 */
@@ -1515,8 +1515,8 @@ export const GetForm_component_OIWHwJ5eKxg = ({ action: _0, spaReset, reloadDocu
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    54400,
-    55583
+    54411,
+    55582
   ],
   "paramNames": [
     "_rawProps"
@@ -1543,8 +1543,8 @@ export const useQwikMockRouter_goto_ojVznvSDqoM = async () => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    36287,
-    36374
+    36289,
+    36373
   ]
 }
 */
@@ -1972,8 +1972,8 @@ const value = _captures[15];
     "value"
   ],
   "loc": [
-    23179,
-    35597
+    23188,
+    35596
   ],
   "paramNames": [
     "track"
@@ -2015,8 +2015,8 @@ export const useQwikMockRouter_useTask_oml2hW1aK6I = async ({ track }) => {
     "actionsMocks"
   ],
   "loc": [
-    37152,
-    37429
+    37161,
+    37428
   ],
   "paramNames": [
     "track"
@@ -2151,8 +2151,8 @@ const routeLocation = _captures[3];
     "routeLocation"
   ],
   "loc": [
-    19894,
-    22719
+    19896,
+    22718
   ],
   "paramNames": [
     "opt",
@@ -2310,8 +2310,8 @@ export const serverQrl_RA3PmZ4Oyak = async function(...args) {
     "qrl"
   ],
   "loc": [
-    48018,
-    51035
+    48020,
+    51034
   ]
 }
 */
@@ -2357,8 +2357,8 @@ export const Link_component_handleClientSideNavigation_rMfmL7bFMLU = (event, elm
     "scroll"
   ],
   "loc": [
-    4723,
-    5044
+    4725,
+    5043
   ],
   "paramNames": [
     "elm",
@@ -2401,8 +2401,8 @@ export const GetForm_component_jsx_SGEAz7VSSJ8 = async (_evt, form) => {
     "nav"
   ],
   "loc": [
-    54761,
-    55116
+    54763,
+    55115
   ],
   "paramNames": [
     "_evt",
@@ -2437,8 +2437,8 @@ export const Form_jsx_1_TsExYUdj0nQ = (evt) => {
     "action"
   ],
   "loc": [
-    53385,
-    53526
+    53387,
+    53525
   ],
   "paramNames": [
     "evt"
@@ -2491,8 +2491,8 @@ export const useQwikRouter_registerPreventNav_W0LIs8PUJoA = (fn$) => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    19042,
-    19877
+    19044,
+    19876
   ],
   "paramNames": [
     "fn$"
@@ -2518,8 +2518,8 @@ export const useQwikRouter_useStyles_XNocHv0sxCQ = transitionCss;
   "ctxName": "useStyles$",
   "captures": false,
   "loc": [
-    16543,
-    16568
+    16554,
+    16567
   ]
 }
 */
@@ -2556,8 +2556,8 @@ export const ErrorBoundary_component_yTCHi5s1o00 = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    1609,
-    1933
+    1620,
+    1932
   ],
   "paramNames": [
     "props"

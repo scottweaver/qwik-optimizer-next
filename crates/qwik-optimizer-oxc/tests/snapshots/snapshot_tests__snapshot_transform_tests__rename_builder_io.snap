@@ -34,8 +34,8 @@ export const Foo_qwikify_0Yoy9qA0SC0 = MyReactComponent;
   "ctxName": "qwikify$",
   "captures": false,
   "loc": [
-    327,
-    353
+    336,
+    352
   ]
 }
 */
@@ -69,8 +69,8 @@ export const App_component_ckEPmXZlub0 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    413,
-    529
+    424,
+    528
   ]
 }
 */
@@ -92,8 +92,8 @@ export const Bar_GXXnVUtURSw = "a thing";
   "ctxName": "$",
   "captures": false,
   "loc": [
-    377,
-    389
+    379,
+    388
   ]
 }
 */

@@ -41,8 +41,8 @@ export const Child_component_useBrowserVisibleTask_0IGFPOyJmQA = () => {
     "state"
   ],
   "loc": [
-    200,
-    344
+    223,
+    343
   ]
 }
 */
@@ -85,8 +85,8 @@ export const Child_component_9GyF01GDKqw = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    114,
-    395
+    125,
+    394
   ]
 }
 */

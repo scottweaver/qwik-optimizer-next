@@ -67,8 +67,8 @@ export const Foo_component_Inner_component_AuJ9mTBx5YA = (props) => {
     "data"
   ],
   "loc": [
-    160,
-    331
+    171,
+    330
   ],
   "paramNames": [
     "props"
@@ -104,8 +104,8 @@ export const Foo_component_HTDRsvUbLiE = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    80,
-    365
+    91,
+    364
   ]
 }
 */

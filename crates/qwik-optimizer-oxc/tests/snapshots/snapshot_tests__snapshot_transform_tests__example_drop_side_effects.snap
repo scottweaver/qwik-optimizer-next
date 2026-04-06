@@ -11,8 +11,8 @@ import { sideEffect } from './secret';
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg", {
     file: "/user/qwik/src/test.tsx",
-    lo: 490,
-    hi: 574,
+    lo: 503,
+    hi: 575,
     displayName: "test.tsx_test_component"
 });
 //
@@ -44,7 +44,7 @@ export const api_server_JonPp043gH0 = null;
   "ctxName": "server$",
   "captures": false,
   "loc": [
-    424,
+    433,
     473
   ]
 }
@@ -71,8 +71,8 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    491,
-    575
+    502,
+    574
   ]
 }
 */

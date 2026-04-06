@@ -33,8 +33,8 @@ export const test_component_LUXeXe0DQrg = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    97,
-    214
+    108,
+    213
   ],
   "paramNames": [
     "props"

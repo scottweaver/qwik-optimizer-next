@@ -36,8 +36,8 @@ export const Other_component_C1my3EIdP1k = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    596,
-    659
+    607,
+    658
   ]
 }
 */
@@ -65,8 +65,8 @@ export const App_component_ckEPmXZlub0 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    465,
-    572
+    476,
+    571
   ]
 }
 */

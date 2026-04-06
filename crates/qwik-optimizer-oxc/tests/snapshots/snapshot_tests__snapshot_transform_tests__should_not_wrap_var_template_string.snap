@@ -42,8 +42,8 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    131,
-    418
+    142,
+    417
   ]
 }
 */
@@ -67,8 +67,8 @@ export const test_component_productTitle_useComputed_ZVQVUkxqtiQ = () => {
   "ctxName": "useComputed$",
   "captures": false,
   "loc": [
-    207,
-    258
+    220,
+    257
   ]
 }
 */

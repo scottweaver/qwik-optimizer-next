@@ -41,8 +41,8 @@ export const App_component_ckEPmXZlub0 = ({count}) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    177,
-    346
+    188,
+    345
   ],
   "paramNames": [
     "_rawProps"
@@ -70,8 +70,8 @@ export const App_component_1_w0t0o3QMovU = () => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    299,
-    342
+    301,
+    341
   ]
 }
 */

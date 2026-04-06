@@ -542,6 +542,7 @@ mod tests {
             parent: None,
             pending_parent_span: None,
             param_names: None,
+            first_arg_span: None,
         }
     }
 

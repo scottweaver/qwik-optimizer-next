@@ -37,8 +37,8 @@ export const Cmp_component_4ryKJTOKjWE = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    446,
-    596
+    457,
+    595
   ],
   "paramNames": [
     "props"
@@ -84,8 +84,8 @@ export const App_component_ckEPmXZlub0 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    76,
-    424
+    87,
+    423
   ]
 }
 */

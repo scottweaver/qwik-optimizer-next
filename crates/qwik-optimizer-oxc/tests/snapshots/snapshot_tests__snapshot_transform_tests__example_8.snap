@@ -36,8 +36,8 @@ export const Header_component_1_2B8d0oH9ZWc = (hola) => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    99,
-    245
+    101,
+    244
   ],
   "paramNames": [
     "hola"
@@ -72,8 +72,8 @@ export const Header_component_J4uyIhaBNR4 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    72,
-    249
+    83,
+    248
   ]
 }
 */

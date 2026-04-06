@@ -31,8 +31,8 @@ export const Cmp_component_4ryKJTOKjWE = () =>
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    72,
-    153
+    83,
+    152
   ]
 }
 */
@@ -54,8 +54,8 @@ export const Cmp_component_Cmp_foo_iPpdemxi0uE = () => console.log("hi there");
   "ctxName": "$",
   "captures": false,
   "loc": [
-    102,
-    134
+    104,
+    133
   ]
 }
 */

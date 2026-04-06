@@ -49,8 +49,8 @@ export const Parent_component_0TaiDayHrlo = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    157,
-    421
+    168,
+    420
   ]
 }
 */
@@ -89,8 +89,8 @@ export const Child_component_9GyF01GDKqw = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    445,
-    683
+    456,
+    682
   ]
 }
 */
@@ -144,8 +144,8 @@ export const Parent_component_useTask_gDH1EtUWqBU = async () => {
     "state"
   ],
   "loc": [
-    243,
-    330
+    252,
+    329
   ]
 }
 */
@@ -175,8 +175,8 @@ export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
     "state"
   ],
   "loc": [
-    531,
-    593
+    540,
+    592
   ]
 }
 */

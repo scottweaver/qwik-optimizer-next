@@ -35,8 +35,8 @@ export const App_component_ckEPmXZlub0 = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    81,
-    165
+    92,
+    164
   ],
   "paramNames": [
     "props"
@@ -61,8 +61,8 @@ export const App_component_useStyles_t35nSa5UV7U = "hola";
   "ctxName": "useStyles$",
   "captures": false,
   "loc": [
-    106,
-    124
+    117,
+    123
   ]
 }
 */
@@ -85,8 +85,8 @@ export const App_component_1_w0t0o3QMovU = () => (
   "ctxName": "$",
   "captures": false,
   "loc": [
-    134,
-    161
+    136,
+    160
   ]
 }
 */

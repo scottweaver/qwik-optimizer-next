@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 918
 expression: output
+snapshot_kind: text
 ---
 ============================= components/component.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -51,8 +51,8 @@ export const Parent_component_div_q_e_click_oqNnfO6ubjU = null;
   "ctxName": "onClick$",
   "captures": false,
   "loc": [
-    577,
-    620
+    578,
+    621
   ]
 }
 */
@@ -74,8 +74,8 @@ export const Parent_component_div_Div_q_e_click_X6MyAcIWaA4 = null;
   "ctxName": "onClick$",
   "captures": false,
   "loc": [
-    648,
-    673
+    649,
+    674
   ]
 }
 */
@@ -97,7 +97,7 @@ export const Parent_component_useClientMount_Yn2kIDABoYw = null;
   "ctxName": "useClientMount$",
   "captures": false,
   "loc": [
-    371,
+    388,
     474
   ]
 }

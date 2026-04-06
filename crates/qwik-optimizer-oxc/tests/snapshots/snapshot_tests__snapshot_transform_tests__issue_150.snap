@@ -44,8 +44,8 @@ export const Greeter_component_1_krCndSwhX4U = () => {
     "stuff"
   ],
   "loc": [
-    157,
-    303
+    159,
+    302
   ]
 }
 */
@@ -81,8 +81,8 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    103,
-    307
+    114,
+    306
   ]
 }
 */
@@ -104,8 +104,8 @@ export const d_wKNFJEIQVUA = () => console.log("thing");
   "ctxName": "$",
   "captures": false,
   "loc": [
-    320,
-    347
+    322,
+    346
   ]
 }
 */

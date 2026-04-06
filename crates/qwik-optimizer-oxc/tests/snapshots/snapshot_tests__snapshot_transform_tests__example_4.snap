@@ -37,8 +37,8 @@ export const App_Header_component_B9F3YeqcO1w = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    89,
-    200
+    100,
+    199
   ]
 }
 */
@@ -60,8 +60,8 @@ export const App_Header_component_div_div_onClick_gb005Xy9YAw = (ctx) => console
   "ctxName": "$",
   "captures": false,
   "loc": [
-    160,
-    188
+    162,
+    187
   ],
   "paramNames": [
     "ctx"

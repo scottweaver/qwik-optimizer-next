@@ -36,8 +36,8 @@ export const test_component_useTask_jewzFYh3XmQ = () => {
     "props"
   ],
   "loc": [
-    113,
-    151
+    122,
+    150
   ]
 }
 */
@@ -66,8 +66,8 @@ export const test_component_LUXeXe0DQrg = ({ ...props }) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    75,
-    171
+    91,
+    170
   ],
   "paramNames": [
     "_rawProps"

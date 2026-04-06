@@ -9,14 +9,14 @@ import { qrlDEV } from "@qwik.dev/core";
 //
 const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"), "TestGetsHmr_component_jBUoou0sxX4", {
     file: "/user/qwik/src/test.tsx",
-    lo: 92,
-    hi: 142,
+    lo: 105,
+    hi: 143,
     displayName: "test.tsx_TestGetsHmr_component"
 });
 const q_TestNoHmr_componentQrl_Uqk3jGTNmYs = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs"), "TestNoHmr_componentQrl_Uqk3jGTNmYs", {
     file: "/user/qwik/src/test.tsx",
-    lo: 184,
-    hi: 225,
+    lo: 188,
+    hi: 226,
     displayName: "test.tsx_TestNoHmr_componentQrl"
 });
 //
@@ -45,8 +45,8 @@ _useHmr("/user/qwik/src/test.tsx");
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    93,
-    143
+    104,
+    142
   ]
 }
 */
@@ -69,8 +69,8 @@ export const TestNoHmr_componentQrl_Uqk3jGTNmYs = () => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    185,
-    226
+    187,
+    225
   ]
 }
 */

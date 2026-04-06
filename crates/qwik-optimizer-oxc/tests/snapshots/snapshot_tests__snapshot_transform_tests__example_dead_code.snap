@@ -38,8 +38,8 @@ export const Foo_component_HTDRsvUbLiE = ({foo}) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    95,
-    199
+    106,
+    198
   ],
   "paramNames": [
     "_rawProps"

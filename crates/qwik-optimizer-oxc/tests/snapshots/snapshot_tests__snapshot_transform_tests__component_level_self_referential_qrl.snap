@@ -41,8 +41,8 @@ export const Foo_component_sig_useAsync_f0BGwWm4eeY = async ({ cleanup }) => {
     "sig"
   ],
   "loc": [
-    162,
-    313
+    172,
+    312
   ],
   "paramNames": [
     "_rawProps"
@@ -78,8 +78,8 @@ export const Foo_component_other_useAsync_fsHooibmyyE = async ({ cleanup }) => {
     "other"
   ],
   "loc": [
-    330,
-    482
+    340,
+    481
   ],
   "paramNames": [
     "_rawProps"
@@ -124,8 +124,8 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    125,
-    534
+    136,
+    533
   ],
   "paramNames": [
     "props"

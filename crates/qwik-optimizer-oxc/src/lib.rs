@@ -141,6 +141,8 @@ fn transform_code(
         &file_extension,
         source_in_arena,
     );
+    // Set dev_file_path for qrlDEV metadata: use dev_path override or src_dir + file_name
+    xfrm.dev_file_path = dev_path.map(|s| s.to_string());
     let _scoping = traverse_mut(&mut xfrm, &allocator, &mut program, scoping, ());
 
     // Stage 11: Post-transform DCE (mutually exclusive branches).
@@ -304,7 +306,11 @@ fn transform_code(
                     ctx_kind: record.ctx_kind.clone(),
                     ctx_name: record.ctx_name.clone(),
                     captures: false,
-                    loc: (record.span.0 + 1, record.span.1 + 1),
+                    loc: {
+                        let s = record.first_arg_span.unwrap_or(record.span);
+                        // +2: one for OXC 0→1 based, one for leading \n in SWC test source
+                        (s.0 + 2, s.1 + 2)
+                    },
                     param_names: record.param_names.clone(),
                     capture_names: None,
                 };
@@ -411,7 +417,12 @@ fn transform_code(
             captures: !record.scoped_idents.is_empty(),
             // SWC uses 1-based byte offsets; OXC uses 0-based.
             // Add 1 to both to match SWC's golden span format.
-            loc: (record.span.0 + 1, record.span.1 + 1),
+            // Use first_arg_span (first argument's span) when available, as SWC records
+            // the span of the arrow/function body, not the full call expression.
+            loc: {
+                let s = record.first_arg_span.unwrap_or(record.span);
+                (s.0 + 1, s.1 + 1)
+            },
             param_names: record.param_names.clone(),
             capture_names: if record.scoped_idents.is_empty() {
                 None
@@ -768,6 +779,7 @@ fn inject_dev_metadata(
         // Actually, we can't match the import path. Let's use a more targeted approach:
         // Search for `"SYM")` and replace the closing `)` with `, { ... })`
         let search_pattern = format!(r#", "{}")"#, sym);
+        // OXC uses 0-based byte offsets; SWC uses 1-based. Add 1 for parity.
         let replacement = format!(
             r#", "{}", {{
     file: "{}",
@@ -775,7 +787,8 @@ fn inject_dev_metadata(
     hi: {},
     displayName: "{}"
 }})"#,
-            sym, file, lo, hi, display_name
+            // +2: one for 0→1 based conversion, one for leading \n in SWC test source
+            sym, file, lo + 2, hi + 2, display_name
         );
         // Only replace in qrlDEV lines (not in other contexts)
         let mut new_result = String::with_capacity(result.len() + 200);

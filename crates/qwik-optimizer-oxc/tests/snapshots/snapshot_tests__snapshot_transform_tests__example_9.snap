@@ -37,8 +37,8 @@ export const Header_WjUaUQN7Oxg = (decl1, { decl2 }, [decl3]) => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    64,
-    344
+    66,
+    343
   ],
   "paramNames": [
     "decl1",

@@ -36,8 +36,8 @@ export const Header_component_J4uyIhaBNR4 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    71,
-    212
+    82,
+    211
   ]
 }
 */
@@ -59,8 +59,8 @@ export const Header_component_div_div_onClick_MQvnAt86M4Y = (ctx) => console.log
   "ctxName": "$",
   "captures": false,
   "loc": [
-    168,
-    196
+    170,
+    195
   ],
   "paramNames": [
     "ctx"

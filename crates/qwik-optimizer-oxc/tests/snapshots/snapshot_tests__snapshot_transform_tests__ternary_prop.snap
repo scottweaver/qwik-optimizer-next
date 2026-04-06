@@ -42,8 +42,8 @@ export const Cmp_component_4ryKJTOKjWE = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    83,
-    379
+    94,
+    378
   ]
 }
 */
@@ -72,8 +72,8 @@ export const Cmp_component_handleClick_WawHV3HwS1A = () => {
     "toggleSig"
   ],
   "loc": [
-    166,
-    221
+    168,
+    220
   ]
 }
 */

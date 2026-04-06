@@ -36,8 +36,8 @@ export const App_component_ckEPmXZlub0 = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    104,
-    224
+    114,
+    223
   ],
   "paramNames": [
     "props"
@@ -67,8 +67,8 @@ export const App_component_1_w0t0o3QMovU = () => (
     "state"
   ],
   "loc": [
-    173,
-    220
+    182,
+    219
   ]
 }
 */

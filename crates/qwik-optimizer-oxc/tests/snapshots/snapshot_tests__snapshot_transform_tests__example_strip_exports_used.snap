@@ -35,8 +35,8 @@ export const test_component_useResource_4a8wVY7wh38 = () => {
   "ctxName": "useResource$",
   "captures": false,
   "loc": [
-    236,
-    278
+    249,
+    277
   ]
 }
 */
@@ -64,8 +64,8 @@ export const test_component_LUXeXe0DQrg = ()=> {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    217,
-    304
+    228,
+    303
   ]
 }
 */

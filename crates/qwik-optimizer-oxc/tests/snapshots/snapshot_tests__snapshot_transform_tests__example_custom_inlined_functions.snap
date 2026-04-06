@@ -46,8 +46,8 @@ export const App_component_useMemo_6Sc9KVki3Y0 = () => {
     "state"
   ],
   "loc": [
-    259,
-    307
+    268,
+    306
   ]
 }
 */
@@ -79,8 +79,8 @@ export const App_component_ckEPmXZlub0 = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    197,
-    361
+    208,
+    360
   ],
   "paramNames": [
     "props"
@@ -107,8 +107,8 @@ export const Lightweight_useMemo_UIcxVTQF1a8 = () => {
   "ctxName": "useMemo$",
   "captures": false,
   "loc": [
-    405,
-    453
+    414,
+    452
   ]
 }
 */
@@ -135,8 +135,8 @@ export const App_component_1_w0t0o3QMovU = () => (
     "state"
   ],
   "loc": [
-    317,
-    357
+    319,
+    356
   ]
 }
 */

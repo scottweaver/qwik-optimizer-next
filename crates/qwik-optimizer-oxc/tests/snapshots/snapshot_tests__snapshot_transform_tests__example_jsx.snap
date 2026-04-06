@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 879
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
@@ -59,8 +59,8 @@ export const Foo_component_1_DvU6FitWglY = () => {
     "props"
   ],
   "loc": [
-    237,
-    577
+    239,
+    576
   ]
 }
 */
@@ -106,8 +106,8 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    205,
-    606
+    216,
+    580
   ],
   "paramNames": [
     "props"

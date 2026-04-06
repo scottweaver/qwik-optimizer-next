@@ -45,8 +45,8 @@ export const test_component_LUXeXe0DQrg = ({ message, id, count: c, ...rest }: R
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    169,
-    525
+    180,
+    521
   ],
   "paramNames": [
     "_rawProps"

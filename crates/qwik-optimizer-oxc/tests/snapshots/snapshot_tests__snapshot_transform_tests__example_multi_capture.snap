@@ -40,8 +40,8 @@ export const Bar_component_1_0xSyNSnVu3k = () => {
     "bar"
   ],
   "loc": [
-    274,
-    331
+    276,
+    330
   ]
 }
 */
@@ -75,8 +75,8 @@ export const Foo_component_1_DvU6FitWglY = () => {
     "foo"
   ],
   "loc": [
-    119,
-    217
+    121,
+    216
   ]
 }
 */
@@ -108,8 +108,8 @@ export const Foo_component_HTDRsvUbLiE = ({foo}) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    69,
-    221
+    80,
+    220
   ],
   "paramNames": [
     "_rawProps"
@@ -142,8 +142,8 @@ export const Bar_component_L80pS8Hxf1Y = ({bar}) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    242,
-    335
+    253,
+    334
   ],
   "paramNames": [
     "_rawProps"

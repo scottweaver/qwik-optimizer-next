@@ -9,8 +9,8 @@ import { qrlDEV } from "@qwik.dev/core";
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0", {
     file: "/user/qwik/src/test.tsx",
-    lo: 75,
-    hi: 199,
+    lo: 88,
+    hi: 200,
     displayName: "test.tsx_App_component"
 });
 //
@@ -39,8 +39,8 @@ export const App_component_ckEPmXZlub0 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    76,
-    200
+    87,
+    199
   ]
 }
 */

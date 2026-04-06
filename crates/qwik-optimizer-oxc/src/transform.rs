@@ -346,6 +346,10 @@ pub(crate) struct SegmentRecord {
     pub origin: String,
     /// Byte span `(start, end)` of the original call expression.
     pub span: (u32, u32),
+    /// Byte span `(start, end)` of the first argument to the `$()` call.
+    /// SWC uses the first argument's span for `loc` and dev metadata (`lo`/`hi`),
+    /// not the full call expression span. Falls back to `span` if not set.
+    pub first_arg_span: Option<(u32, u32)>,
     /// 11-character SipHash-based segment hash.
     pub hash: String,
     /// Whether this segment was created via create_inline_qrl (not its own module).
@@ -472,6 +476,8 @@ pub(crate) struct QwikTransform {
     pub(crate) explicit_extensions: bool,
     /// Source directory (e.g., "/user/qwik/src/") for building absolute paths in dev metadata.
     pub(crate) src_dir: String,
+    /// Override dev file path for qrlDEV metadata. When set, used instead of src_dir + file_name.
+    pub(crate) dev_file_path: Option<String>,
     /// Dev metadata for qrlDEV post-processing: map from symbol_name to (file, lo, hi, displayName).
     /// Only populated in Dev/Hmr modes. Applied as text post-processing after codegen.
     pub(crate) dev_metadata: HashMap<String, (String, u32, u32, String)>,
@@ -581,6 +587,7 @@ impl QwikTransform {
             scope: config.scope.clone(),
             explicit_extensions: config.explicit_extensions,
             src_dir: config.src_dir.clone(),
+            dev_file_path: None, // Set by caller after construction
             dev_metadata: HashMap::new(),
             source_text: source_text as *const str,
         }
@@ -1336,6 +1343,7 @@ impl QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: None,
             });
 
             let qrl_expr = crate::add_side_effect::parse_single_statement(
@@ -1413,6 +1421,7 @@ impl QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: None,
             });
 
             return Some((replacement_key, replacement));
@@ -1476,6 +1485,7 @@ impl QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: None,
             });
 
             return Some((replacement_key, replacement));
@@ -1512,6 +1522,7 @@ impl QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: None,
             });
 
             let qrl_expr = crate::add_side_effect::parse_single_statement(
@@ -1552,7 +1563,8 @@ impl QwikTransform {
                 });
                 // Store dev metadata for post-emit injection
                 if is_dev {
-                    let dev_file = format!("{}{}", self.src_dir, self.file_name);
+                    let dev_file = self.dev_file_path.clone()
+                        .unwrap_or_else(|| format!("{}{}", self.src_dir, self.file_name));
                     self.dev_metadata.insert(
                         names.symbol_name.clone(),
                         (dev_file, call_span_start, call_span_end, names.display_name.clone()),
@@ -1598,6 +1610,7 @@ impl QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: None,
             });
 
             return Some((replacement_key, replacement));
@@ -2362,6 +2375,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         // Save span end before branches that may reassign *expr (breaks borrow)
         let call_span_end = call.span.end;
+        // For dev metadata (lo/hi), SWC uses the first argument's span (the arrow/function body),
+        // not the full call expression span. Compute it here before any borrowing issues.
+        let first_arg_span = if !call.arguments.is_empty() {
+            use oxc::span::GetSpan;
+            let s = call.arguments[0].span();
+            (s.start, s.end)
+        } else {
+            (pending.span_start, call_span_end)
+        };
         let _allocator: &'a oxc::allocator::Allocator = ctx.ast.allocator;
 
         // --- QRL wrapping (CONV-02) ---
@@ -2388,6 +2410,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: Some(first_arg_span),
             });
             return;
         }
@@ -2429,6 +2452,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: Some(first_arg_span),
             });
             return;
         }
@@ -2596,6 +2620,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: Some(first_arg_span),
             });
         } else if matches!(self.entry_strategy, EntryStrategy::Inline) && !matches!(self.mode, EmitMode::Lib) {
             // Inline strategy (non-Lib): same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
@@ -2728,6 +2753,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: Some(first_arg_span),
             });
         } else if is_inline {
             // Lib mode inline: inlinedQrl(fn_expr, "symbol_name"[, captures])
@@ -2767,6 +2793,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: Some(first_arg_span),
             });
         } else {
             // Segment strategy: hoist QRL creation to module scope as
@@ -2802,10 +2829,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 });
                 // Store dev metadata for post-emit injection
                 if is_dev {
-                    let dev_file = format!("{}{}", self.src_dir, self.file_name);
+                    let dev_file = self.dev_file_path.clone()
+                        .unwrap_or_else(|| format!("{}{}", self.src_dir, self.file_name));
                     self.dev_metadata.insert(
                         names.symbol_name.clone(),
-                        (dev_file, pending.span_start, call_span_end, names.display_name.clone()),
+                        (dev_file, first_arg_span.0, first_arg_span.1, names.display_name.clone()),
                     );
                 }
             }
@@ -2892,6 +2920,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
+                first_arg_span: Some(first_arg_span),
             });
         }
     }
