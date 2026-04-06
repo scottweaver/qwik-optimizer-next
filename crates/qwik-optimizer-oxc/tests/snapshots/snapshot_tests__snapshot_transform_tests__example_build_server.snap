@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
@@ -10,6 +11,7 @@ import { isServer, isBrowser as isb } from "@qwik.dev/core/build";
 import { mongodb } from "mondodb";
 import { threejs } from "threejs";
 import L from "leaflet";
+const q_s_u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
 export const functionThatNeedsWindow = () => {
 	if (false) {
 		console.log("l", L);
@@ -17,7 +19,7 @@ export const functionThatNeedsWindow = () => {
 		window.alert("hey");
 	}
 };
-export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
+export const App = componentQrl(q_s_u6BtPnK76q4);
 ============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { mongodb } from "mondodb";
 import { threejs } from "threejs";

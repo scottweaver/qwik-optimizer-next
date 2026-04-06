@@ -1,9 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= components/component.js ==
-import { inlinedQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useClientMount$, useStore, useTask$ } from "@qwik.dev/core";
 import mongo from "mongodb";
@@ -12,20 +13,19 @@ import threejs from "threejs";
 import { a } from "./keep";
 import { b } from "../keep2";
 import { c } from "../../remove";
-export const Parent = componentQrl(() => {
+const q__7RMfCDur6ww = /* @__PURE__ */ _noopQrl("_7RMfCDur6ww");
+q__7RMfCDur6ww.s(() => {
 	const state = useStore({ text: "" });
-	// Double count watch
 	useClientMount$(async () => {
 		state.text = await mongo.users();
 		redis.set(state.text, a, b, c);
 	});
-	useTaskQrl(() => {
-		// Code
-	}, "component_MSsdDxJ8IdU");
+	useTaskQrl(() => {});
 	return _jsxSorted("div", {
 		shouldRemove$: () => state.text,
 		onClick$: () => console.log("parent", state, threejs)
 	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
-}, "_7RMfCDur6ww");
+});
+export const Parent = componentQrl(q__7RMfCDur6ww);
 == DIAGNOSTICS ==
 []

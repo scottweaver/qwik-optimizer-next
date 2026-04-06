@@ -1,16 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$, useStore } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export const useCounter = () => {
 	return useStore({ count: 0 });
 };
 export const STEP = 1;
-export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const App = componentQrl(q__u6BtPnK76q4);
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { STEP } from "./test";
 import { useCounter } from "./test";

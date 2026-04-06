@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -8,8 +9,10 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useTask$, useStore, useStyles$ } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
-export const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const Child = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const Parent = componentQrl(q__u6BtPnK76q4);
+export const Child = componentQrl(q__1_iZVV0eoW44k);
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { default as mongo } from "mongodb";
 import { useStore } from "@qwik.dev/core";

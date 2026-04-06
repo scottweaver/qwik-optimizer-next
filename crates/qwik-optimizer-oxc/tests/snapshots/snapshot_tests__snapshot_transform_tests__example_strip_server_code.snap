@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -10,7 +11,8 @@ import { isServer } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
-export const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
+const q_s_u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
+export const Parent = componentQrl(q_s_u6BtPnK76q4);
 ============================= test.tsx_component_serverStuff_1_IOaKJyEUknw.js (ENTRY POINT) ==
 export const s_IOaKJyEUknw = () => {
 	// from clien$(), should not be removed

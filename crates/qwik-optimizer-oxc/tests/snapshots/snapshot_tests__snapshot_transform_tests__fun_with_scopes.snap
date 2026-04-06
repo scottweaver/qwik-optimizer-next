@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
@@ -18,9 +19,10 @@ q__1_iZVV0eoW44k.s((element) => {
 q__2_sSArpd0iSRk.s(() => {
 	const stylesScopedData = useStylesScoped$(STYLE_RED);
 	const store = useStore({ count: 10 });
-	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
-								Hello world
-							</button>;
+	return _jsxSorted("button", {
+		class: ["container", `count-${store.count}`],
+		onClick$: () => store.count++
+	}, null, "Hello world", 1, null);
 });
 export default () => {
 	const serverFnHash = globalThis.foo();
@@ -41,7 +43,7 @@ export function Field({ children, name, type, ...props }) {
 		children: children(field, {
 			name,
 			autoFocus: isServer && !!field.error,
-			ref: Qrl(q__1_iZVV0eoW44k.w([field])),
+			ref: q__1_iZVV0eoW44k.w([field]),
 			onInput$: $(rawFn)
 		})
 	}, name);

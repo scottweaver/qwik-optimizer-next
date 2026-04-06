@@ -1,13 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const Greeter = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const d = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const Greeter = componentQrl(q__u6BtPnK76q4);
+const d = q__1_iZVV0eoW44k;
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 export const _1_iZVV0eoW44k = () => console.log("thing");
 

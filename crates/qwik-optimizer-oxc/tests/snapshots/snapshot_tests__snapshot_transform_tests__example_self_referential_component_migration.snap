@@ -1,19 +1,26 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.ts ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const q__2_sSArpd0iSRk = /* @__PURE__ */ qrl(() => import("./test.tsx__2_sSArpd0iSRk"), "_2_sSArpd0iSRk");
+const q__3_OyZ0gk5pkcU = /* @__PURE__ */ qrl(() => import("./test.tsx__3_OyZ0gk5pkcU"), "_3_OyZ0gk5pkcU");
+const q__4_Gairpaqi1qc = /* @__PURE__ */ qrl(() => import("./test.tsx__4_Gairpaqi1qc"), "_4_Gairpaqi1qc");
 // Self-referential component: the Nested component references itself in its JSX
 // This should be migrated to its segment using two-phase emission (let + assign)
 // to avoid Temporal Dead Zone errors
-export const Nested = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const Nested = componentQrl(q__u6BtPnK76q4);
 // Another self-referential component with conditional rendering
-export const RecursiveList = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const RecursiveList = componentQrl(q__1_iZVV0eoW44k);
 // Mutually recursive components: A references B, B references A
-const ComponentA = qrl(() => import("./test.tsx__2_sSArpd0iSRk"), "_2_sSArpd0iSRk");
-export const MutualExample = qrl(() => import("./test.tsx__4_Gairpaqi1qc"), "_4_Gairpaqi1qc");
+const ComponentA = componentQrl(q__2_sSArpd0iSRk);
+const ComponentB = componentQrl(q__3_OyZ0gk5pkcU);
+export const MutualExample = componentQrl(q__4_Gairpaqi1qc);
 export { ComponentB as _auto_ComponentB };
 export { ComponentA as _auto_ComponentA };
 ============================= test.tsx__4_Gairpaqi1qc.ts (ENTRY POINT) ==
@@ -104,7 +111,6 @@ export const _3_OyZ0gk5pkcU = () => {
 }
 */
 ============================= test.tsx__2_sSArpd0iSRk.ts (ENTRY POINT) ==
-const ComponentB = qrl(() => import("./test.tsx__3_OyZ0gk5pkcU"), "_3_OyZ0gk5pkcU");
 export const _2_sSArpd0iSRk = () => {
 	return (
 		<div>

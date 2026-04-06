@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
@@ -11,37 +12,34 @@ import { dep } from "./file";
 const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
 const q__1_iZVV0eoW44k = /* @__PURE__ */ _noopQrl("_1_iZVV0eoW44k");
 q__u6BtPnK76q4.s((props) => {
-	return <>
-			<div>data-nu: {props["data-nu"]}</div>
-			<div>class: {props.class}</div>
-		</>;
+	return _jsxSorted(_Fragment, null, null, [<div>data-nu: {props["data-nu"]}</div>, <div>class: {props.class}</div>], 1, null);
 });
 q__1_iZVV0eoW44k.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});
-	return <>
-			<div>text</div>
-			<div>{`text`}</div>
-			<div>{1}</div>
-			<div>{true}</div>
-			<div>{`text${12}`}</div>
-			<div>{typeof `text${12}` === "string" ? 12 : 43}</div>
-			<div>{signal}</div>
-			<div>{signal.value}</div>
-			<div>{12 + signal.value}</div>
-			<div>{store.address.city.name}</div>
-			<div>{store.address.city.name ? "true" : "false"}</div>
-			<div>{dep}</div>
-			<div>{dep.thing}</div>
-			<div>{dep.thing + "stuff"}</div>
-			<div>{globalThing}</div>
-			<div>{globalThing.thing}</div>
-			<div>{globalThing.thing + "stuff"}</div>
-			<div>{signal.value()}</div>
-			<div>{signal.value + unknown()}</div>
-			<div>{mutable(signal)}</div>
-			<div>{signal.value + dep}</div>
-		</>;
+	return _jsxSorted(_Fragment, null, null, [
+		<div>text</div>,
+		<div>{`text`}</div>,
+		<div>{1}</div>,
+		<div>{true}</div>,
+		<div>{`text${12}`}</div>,
+		<div>{typeof `text${12}` === "string" ? 12 : 43}</div>,
+		<div>{signal}</div>,
+		<div>{signal.value}</div>,
+		<div>{12 + signal.value}</div>,
+		<div>{store.address.city.name}</div>,
+		<div>{store.address.city.name ? "true" : "false"}</div>,
+		<div>{dep}</div>,
+		<div>{dep.thing}</div>,
+		<div>{dep.thing + "stuff"}</div>,
+		<div>{globalThing}</div>,
+		<div>{globalThing.thing}</div>,
+		<div>{globalThing.thing + "stuff"}</div>,
+		<div>{signal.value()}</div>,
+		<div>{signal.value + unknown()}</div>,
+		<div>{mutable(signal)}</div>,
+		<div>{signal.value + dep}</div>
+	], 1, null);
 });
 export const TextContent = componentQrl(q__u6BtPnK76q4);
 export const App = componentQrl(q__1_iZVV0eoW44k);

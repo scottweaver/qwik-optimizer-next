@@ -1,13 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
-import { inlinedQrlDEV } from "@qwik.dev/core";
+import { _noopQrlDEV } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, useStore } from "@qwik.dev/core";
-export const App = componentQrl(() => {
+const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrlDEV("_u6BtPnK76q4");
+q__u6BtPnK76q4.s(() => {
 	return _jsxSorted(Cmp, null, null, <p class="stuff" onClick$={() => console.log("warn")}>Hello Qwik</p>, 1, "0");
-}, "_u6BtPnK76q4");
+});
+export const App = componentQrl(q__u6BtPnK76q4);
 == DIAGNOSTICS ==
 []

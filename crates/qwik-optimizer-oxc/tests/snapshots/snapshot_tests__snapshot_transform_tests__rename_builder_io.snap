@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.ts ==
 import { qrl } from "@qwik.dev/core";
@@ -8,9 +9,10 @@ import { isDev } from "@qwik.dev/core/build";
 import { stuff } from "@qwik.dev/router";
 import { moreStuff } from "@qwik.dev/router/more/here";
 import sdk from "@builder.io/sdk";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export const Foo = qwikify$(MyReactComponent);
 export const Bar = $("a thing");
-export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const App = componentQrl(q__u6BtPnK76q4);
 ============================= test.tsx__u6BtPnK76q4.ts (ENTRY POINT) ==
 import { isDev } from "@qwik.dev/core/build";
 import { moreStuff } from "@qwik.dev/router/more/here";

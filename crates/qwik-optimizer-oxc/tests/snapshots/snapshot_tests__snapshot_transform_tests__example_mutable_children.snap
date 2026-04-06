@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
@@ -14,36 +15,33 @@ const q__2_sSArpd0iSRk = /* @__PURE__ */ _noopQrl("_2_sSArpd0iSRk");
 const q__3_OyZ0gk5pkcU = /* @__PURE__ */ _noopQrl("_3_OyZ0gk5pkcU");
 const q__4_Gairpaqi1qc = /* @__PURE__ */ _noopQrl("_4_Gairpaqi1qc");
 q__u6BtPnK76q4.s((props: Stuff) => {
-	return <>
-			<div>{prop < 2 ? <p>1</p> : <Stuff>2</Stuff>}</div>
-		</>;
+	return _jsxSorted(_Fragment, null, null, <div>{prop < 2 ? _jsxSorted("p", null, null, "1", 1, null) : _jsxSorted(Stuff, null, null, "2", 1, "12")}</div>, 1, null);
 });
 q__1_iZVV0eoW44k.s((props: Stuff) => {
-	return <div>{prop.value && <Stuff></Stuff>}<div></div></div>;
+	return _jsxSorted("div", null, null, [prop.value && _jsxSorted(Stuff, null, null, null, 1, "13"), <div></div>], 1, null);
 });
 q__2_sSArpd0iSRk.s((props: Stuff) => {
-	if (prop.value) { return <Stuff></Stuff>; }
-	return <div></div>;
+	if (prop.value) { return _jsxSorted(Stuff, null, null, null, 1, "14"); }
+	return _jsxSorted("div", null, null, null, 1, null);
 });
 q__3_OyZ0gk5pkcU.s((props: Stuff) => {
-	if (prop.value) { return <div></div>; }
-	return <Stuff></Stuff>;
+	if (prop.value) { return _jsxSorted("div", null, null, null, 1, null); }
+	return _jsxSorted(Stuff, null, null, null, 1, "15");
 });
 q__4_Gairpaqi1qc.s((props: Stuff) => {
-	return <>
-			<div>Static {f ? 1 : 3}</div>
-			<div>{prop < 2 ? <p>1</p> : <p>2</p>}</div>
-
-			<div>{prop.value && <div></div>}</div>
-			<div>{prop.value && <Fragment><Slot></Slot></Fragment>}</div>
-			<div>{prop.value && <><div></div></>}</div>
-			<div>{prop.value && <Image />}</div>
-			<div>Static {f ? 1 : 3}</div>
-			<div>Static</div>
-			<div>Static {props.value}</div>
-			<div>Static {stuff()}</div>
-			<div>Static {stuff()}</div>
-		</>;
+	return _jsxSorted(_Fragment, null, null, [
+		<div>Static {f ? 1 : 3}</div>,
+		<div>{prop < 2 ? _jsxSorted("p", null, null, "1", 1, null) : _jsxSorted("p", null, null, "2", 1, null)}</div>,
+		<div>{prop.value && _jsxSorted("div", null, null, null, 1, null)}</div>,
+		<div>{prop.value && _jsxSorted(Fragment, null, null, <Slot></Slot>, 1, "16")}</div>,
+		<div>{prop.value && _jsxSorted(_Fragment, null, null, <div></div>, 1, null)}</div>,
+		<div>{prop.value && _jsxSorted(Image, null, null, null, 1, "17")}</div>,
+		<div>Static {f ? 1 : 3}</div>,
+		<div>Static</div>,
+		<div>Static {props.value}</div>,
+		<div>Static {stuff()}</div>,
+		<div>Static {stuff()}</div>
+	], 1, null);
 });
 export function Fn1(props: Stuff) {
 	return _jsxSorted(_Fragment, null, null, <div>{prop < 2 ? _jsxSorted("p", null, null, "1", 1, "0") : _jsxSorted(Stuff, null, null, "2", 1, "1")}</div>, 1, "2");

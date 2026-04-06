@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrlDEV } from "@qwik.dev/core";
@@ -9,6 +10,8 @@ import { clientSupabase } from "supabase";
 import { Client } from "openai";
 import { secret } from "./secret";
 import { sideEffect } from "./secret";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /* @__PURE__ */ qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
 (function() {
 	console.log("run");
 })();
@@ -16,8 +19,8 @@ import { sideEffect } from "./secret";
 	console.log("run");
 })();
 sideEffect();
-export const api = qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export default qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const api = serverQrl(q__u6BtPnK76q4);
+export default componentQrl(q__1_iZVV0eoW44k);
 export { dfd as _auto_dfd };
 export { supabase as _auto_supabase };
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==

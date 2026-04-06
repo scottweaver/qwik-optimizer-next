@@ -1316,37 +1316,86 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             return;
         }
 
-        // Determine QRL creation path
-        let is_inline = self.is_inline_mode();
+        // ---------------------------------------------------------------
+        // QRL hoisting: ALL strategies hoist to module-scope const q_X = ...
+        // Matches SWC's universal hoist_qrl_to_module_scope behavior.
+        // ---------------------------------------------------------------
 
-        // Rename callee to Qrl suffix (component$ -> componentQrl)
         let qrl_wrapper_name = words::dollar_to_qrl_name(&pending.ctx_name);
-        if let Expression::Identifier(id) = &mut call.callee {
-            id.name = arena_ident(ctx, &qrl_wrapper_name);
+        let is_inline = self.is_inline_mode();
+        let is_lib = matches!(self.mode, EmitMode::Lib);
+        let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+        let ident_name = format!("q_{}", names.symbol_name);
+        let allocator = ctx.ast.allocator;
+
+        // Only hoist to module scope when at the top level (no parent segment scope).
+        // Nested QRLs (inside another $ call) stay inline because they'll be in
+        // a segment module, not the root module.
+        let is_top_level = self.segment_stack.is_empty();
+
+        // Determine the is_inline_qrl flag (Inline or Hoist, non-Lib mode)
+        let use_noop_pattern = is_inline && !is_lib;
+
+        // ---------------------------------------------------------------
+        // Nested QRLs or Lib mode: keep the call inline (no hoisting)
+        // ---------------------------------------------------------------
+        if !is_top_level || is_lib {
+            // Rename callee to Qrl suffix (component$ -> componentQrl)
+            if let Expression::Identifier(id) = &mut call.callee {
+                id.name = arena_ident(ctx, &qrl_wrapper_name);
+            }
+
+            if is_lib {
+                // Lib mode: inlinedQrl(fn_expr, "symbol_name"[, captures])
+                call.arguments.push(Argument::StringLiteral(
+                    ctx.ast.alloc_string_literal(
+                        SPAN,
+                        arena_str(ctx, &names.symbol_name),
+                        None,
+                    ),
+                ));
+                if has_captures {
+                    let captures_array = build_capture_array_expr(&scoped_idents, ctx);
+                    call.arguments.push(expr_to_argument(captures_array));
+                }
+                self.needs_inlined_qrl_import = true;
+            }
+            // For nested non-Lib: the callee was already renamed to wrapperQrl.
+            // The first arg stays as the function expression. The call stays inline
+            // because it will end up in the segment module (not the root module).
+            // For Segment strategy nested QRLs, is_inline=false so they get their own module.
+            // For Inline/Hoist strategy, is_inline=true since they stay in parent module.
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: pending.ctx_name.clone(),
+                ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (pending.span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: is_lib || use_noop_pattern,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+            return;
         }
 
-        // CONV-08: PURE annotation -- only on componentQrl
-        // The actual comment injection is deferred to codegen; we track which
-        // calls need it. For now, we note it in the SegmentRecord.
-        let _needs_pure = qrl_wrapper_name == "componentQrl";
-
-        // Check for Hoist strategy (separate path from Inline)
-        let is_hoist = matches!(self.entry_strategy, EntryStrategy::Hoist)
-            && !matches!(self.mode, EmitMode::Lib);
-
-        if is_hoist {
-            // ---------------------------------------------------------------
-            // Hoist strategy: _noopQrl const + .s() registration (CONV-14/D-40)
-            // ---------------------------------------------------------------
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+        // ---------------------------------------------------------------
+        // Top-level hoisting: push const q_X = ... to extra_top_items
+        // ---------------------------------------------------------------
+        if use_noop_pattern {
+            // Inline/Hoist path: _noopQrl("sym") + .s(fn_body)
             let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
-            let ident_name = format!("q_{}", names.symbol_name);
-
-            // 1. Build _noopQrl("sym") as a HoistedConst
-            //    For dev mode: _noopQrlDEV("sym", { file: ..., lo: ..., hi: ..., displayName: ... })
             let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
 
-            // Deduplicate by symbol_name
             if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
                 self.extra_top_items.push(HoistedConst {
                     name: ident_name.clone(),
@@ -1355,252 +1404,98 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 });
             }
 
-            // 2. Extract fn_body code from source text for .s()
-            let fn_body_code: Option<String> = if !call.arguments.is_empty() {
-                let first_arg_span = match &call.arguments[0] {
-                    Argument::ArrowFunctionExpression(a) => Some(a.span),
-                    Argument::FunctionExpression(f) => Some(f.span),
-                    _ => None,
-                };
-                first_arg_span.and_then(|span| {
-                    let src = unsafe { &*self.source_text };
-                    let start = span.start as usize;
-                    let end = span.end as usize;
-                    if start <= end && end <= src.len() {
-                        Some(src[start..end].to_string())
-                    } else {
-                        None
-                    }
-                })
-            } else {
-                // Non-function argument (e.g., useStyles$('string'))
-                let first_arg_span = match &call.arguments[0] {
-                    Argument::StringLiteral(s) => Some(s.span),
-                    _ => None,
-                };
-                first_arg_span.and_then(|span| {
-                    let src = unsafe { &*self.source_text };
-                    let start = span.start as usize;
-                    let end = span.end as usize;
-                    if start <= end && end <= src.len() {
-                        Some(src[start..end].to_string())
-                    } else {
-                        None
-                    }
-                })
-            };
-
-            // 3. Determine if fn_body ident is global (for .s() placement)
-            //    Check: is the fn_body a reference to a known global-scope ident?
-            //    For Hoist strategy nested QRLs, the fn_body is a function expression
-            //    (not an ident), so it is NOT a hoisted segment ident.
-            //    The SWC code checks if fn_body_expr is an Ident in
-            //    hoisted_segment_idents -- that case arises when an inner $-call
-            //    was already hoisted and its fn_body was replaced with q_X ident.
-            //    For now, all .s() calls go to ref_assignments (module scope) since
-            //    the fn_body is typically a function/arrow expression (globally accessible).
+            // Generate the .s() body by codegen'ing the TRANSFORMED first argument
+            let fn_body_code = codegen_first_arg(&call.arguments, allocator);
             if let Some(ref body_code) = fn_body_code {
                 let s_call = format!("{}.s({});", ident_name, body_code);
                 self.ref_assignments.push(s_call);
             }
 
-            // 4. Build the replacement expression
-            //    Base: q_{sym} identifier
-            //    If captures: q_{sym}.w([cap1, cap2, ...])
-            let allocator = ctx.ast.allocator;
+            self.needs_noop_qrl_import = true;
+        } else {
+            // Segment path: qrl(() => import("./path"), "sym")
+            let import_path = if self.explicit_extensions {
+                format!("./{}.{}", names.canonical_filename, self.extension)
+            } else {
+                format!("./{}", names.canonical_filename)
+            };
+            let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
 
-            let replacement = if has_captures {
-                // Build: q_sym.w([cap1, cap2, ...])
-                let caps_str = scoped_idents.join(", ");
-                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
-                // Parse this expression
-                let expr_stmt = format!("{};", w_expr_code);
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
-                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                        es.unbox().expression
-                    } else {
-                        ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-                    }
+            let rhs_code = format!(
+                r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
+                qrl_callee_name, import_path, names.symbol_name
+            );
+
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code,
+                    symbol_name: names.symbol_name.clone(),
+                });
+            }
+
+            self.needs_qrl_import = true;
+        }
+
+        // ---------------------------------------------------------------
+        // Build replacement expression for non-Lib modes
+        // Replace the original call with: wrapperQrl(q_X) or wrapperQrl(q_X.w([...]))
+        // ---------------------------------------------------------------
+        let replacement = if has_captures {
+            let caps_str = scoped_idents.join(", ");
+            let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+            let expr_stmt = format!("{};", w_expr_code);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    es.unbox().expression
                 } else {
                     ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
                 }
             } else {
                 ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-            };
+            }
+        } else {
+            ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+        };
 
-            // 5. Wrap in wrapperQrl(replacement) -- e.g., componentQrl(q_sym)
+        // Wrap in wrapperQrl(replacement) -- e.g., componentQrl(q_sym)
+        // For bare `$()` calls, there's no wrapper -- the QRL ident IS the result.
+        if pending.ctx_name == "$" {
+            *expr = replacement;
+        } else {
             let wrapper_call_code = format!("{}(0)", qrl_wrapper_name);
             let wrapper_stmt = format!("{};", wrapper_call_code);
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_stmt, allocator) {
                 if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
                     let mut wrapper_expr = es.unbox().expression;
                     if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
-                        // Replace the dummy 0 arg with our replacement
                         wrapper_call.arguments.clear();
                         wrapper_call.arguments.push(expr_to_argument(replacement));
                     }
                     *expr = wrapper_expr;
                 }
             }
-
-            self.needs_noop_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: pending.ctx_name.clone(),
-                ctx_kind: pending.ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (pending.span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: true,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-            });
-        } else if is_inline {
-            // Inline strategy: inlinedQrl(fn_expr, "symbol_name"[, captures])
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let _inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
-
-            // Replace callee with inlinedQrl wrapper
-            // The first arg stays as the function expression
-            // Insert symbol name as second arg
-            call.arguments.push(Argument::StringLiteral(
-                ctx.ast.alloc_string_literal(
-                    SPAN,
-                    arena_str(ctx, &names.symbol_name),
-                    None,
-                ),
-            ));
-
-            if has_captures {
-                // Build captures array: [capture1, capture2, ...]
-                let captures_array = build_capture_array_expr(&scoped_idents, ctx);
-                call.arguments.push(expr_to_argument(captures_array));
-            }
-
-            self.needs_inlined_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: pending.ctx_name.clone(),
-                ctx_kind: pending.ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (pending.span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: true,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-            });
-        } else {
-            // Segment strategy: qrl(() => import("./path"), "symbol_name")
-            // The callback body is extracted to a separate segment module.
-            // Replace the call args with:
-            //   1. () => import("./canonical_filename")
-            //   2. "symbol_name"
-
-            let import_path = if self.explicit_extensions {
-                format!("./{}.{}", names.canonical_filename, self.extension)
-            } else {
-                format!("./{}", names.canonical_filename)
-            };
-
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
-
-            // Build the import arrow: () => import("./path")
-            let import_path_str = arena_str(ctx, &import_path);
-            let import_expr = ctx.ast.expression_import(
-                SPAN,
-                ctx.ast.expression_string_literal(SPAN, import_path_str, None),
-                None,
-                None,
-            );
-            let arrow_params = ctx.ast.formal_parameters(
-                SPAN,
-                FormalParameterKind::ArrowFormalParameters,
-                ctx.ast.vec(),
-                None::<FormalParameterRest<'a>>,
-            );
-            let import_stmt = ctx.ast.statement_expression(SPAN, import_expr);
-            let arrow_body = ctx.ast.function_body(
-                SPAN,
-                ctx.ast.vec(),
-                ctx.ast.vec1(import_stmt),
-            );
-            let arrow = ctx.ast.expression_arrow_function(
-                SPAN,
-                true,
-                false,
-                None::<TSTypeParameterDeclaration<'a>>,
-                arrow_params,
-                None::<TSTypeAnnotation<'a>>,
-                arrow_body,
-            );
-
-            // Replace call arguments
-            call.arguments.clear();
-
-            // Arg 1: arrow function with dynamic import
-            call.arguments.push(expr_to_argument(arrow));
-
-            // Arg 2: symbol name string
-            call.arguments.push(Argument::StringLiteral(
-                ctx.ast.alloc_string_literal(
-                    SPAN,
-                    arena_str(ctx, &names.symbol_name),
-                    None,
-                ),
-            ));
-
-            if has_captures {
-                // Arg 3: captures array
-                let captures_array = build_capture_array_expr(&scoped_idents, ctx);
-                call.arguments.push(expr_to_argument(captures_array));
-            }
-
-            // Replace callee with qrl/qrlDEV
-            if let Expression::Identifier(id) = &mut call.callee {
-                id.name = arena_ident(ctx, qrl_callee_name);
-            }
-
-            self.needs_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: pending.ctx_name.clone(),
-                ctx_kind: pending.ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (pending.span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: false,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-            });
         }
+
+        self.segments.push(SegmentRecord {
+            name: names.symbol_name.clone(),
+            display_name: names.display_name.clone(),
+            canonical_filename: names.canonical_filename.clone(),
+            entry: entry.clone(),
+            expr: expr_code.clone(),
+            scoped_idents: scoped_idents.clone(),
+            local_idents: local_idents.clone(),
+            ctx_name: pending.ctx_name.clone(),
+            ctx_kind: pending.ctx_kind.clone(),
+            origin: self.rel_path.clone(),
+            span: (pending.span_start, call_span_end),
+            hash: names.hash.clone(),
+            is_inline: use_noop_pattern,
+            migrated_root_vars: Vec::new(),
+            parent: None,
+            pending_parent_span: parent_span,
+            param_names: param_names.clone(),
+        });
     }
 
     fn exit_program(
@@ -1704,17 +1599,16 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             }
         }
 
-        // Hoist strategy: emit extra_top_items const declarations and
+        // ALL non-Lib strategies: emit extra_top_items const declarations and
         // ref_assignments (.s() calls) into the root module.
+        // SWC universally hoists QRL calls to module scope via hoist_qrl_to_module_scope.
         //
         // Ordering (critical per Pitfall 1):
         //   1. Import declarations (already inserted above)
-        //   2. const q_sym = _noopQrl("sym") declarations (extra_top_items)
-        //   3. q_sym.s(fn_body) expression statements (ref_assignments)
+        //   2. const q_sym = _noopQrl("sym") / qrl(...) declarations (extra_top_items)
+        //   3. q_sym.s(fn_body) expression statements (ref_assignments, Inline/Hoist only)
         //   4. Original module body (exports, etc.)
-        if matches!(self.entry_strategy, EntryStrategy::Hoist)
-            && !matches!(self.mode, EmitMode::Lib)
-        {
+        if !matches!(self.mode, EmitMode::Lib) {
             // Find the insertion point: after imports, before everything else.
             let first_non_import = program.body.iter().position(|stmt| {
                 !matches!(
@@ -1783,6 +1677,88 @@ fn collect_binding_to_decl(pat: &BindingPattern<'_>, frame: &mut Vec<TypedId>, i
         BindingPattern::AssignmentPattern(assign) => {
             collect_binding_to_decl(&assign.left, frame, is_const);
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: codegen_first_arg -- serialize the transformed first argument to string
+// ---------------------------------------------------------------------------
+
+/// Serialize the first argument of a call expression to a JavaScript string
+/// using OXC Codegen. This captures the TRANSFORMED AST (after JSX transform, etc.)
+/// rather than the original source text.
+///
+/// Used to generate the .s() body for Hoist/Inline strategy QRLs.
+fn codegen_first_arg(arguments: &[Argument<'_>], allocator: &oxc::allocator::Allocator) -> Option<String> {
+    if arguments.is_empty() {
+        return None;
+    }
+
+    // Get the span of the first argument in the TRANSFORMED AST
+    let first_arg = &arguments[0];
+
+    // Build a string representation by wrapping the argument in a dummy expression statement
+    // and codegen'ing it. We use a fresh allocator + parser to avoid lifetime issues.
+    //
+    // Strategy: Codegen the first arg by wrapping it as `(0, expr);` in a mini program,
+    // then extract the expression from the output.
+    //
+    // Since we can't easily move the expression out of the borrowed arguments vec,
+    // we use the span to extract from the ALREADY-TRANSFORMED source.
+    // But the spans point to the ORIGINAL source text, not the transformed one.
+    //
+    // Alternative approach: Use the source text span for non-JSX bodies (which haven't
+    // been modified), and for JSX-containing bodies, we need to codegen the AST.
+    //
+    // For now, we use a pragmatic approach: build the expression string by
+    // reconstructing from the AST using OXC's Codegen on a cloned subtree.
+    // OXC supports CloneIn for arena types.
+
+    // Use CloneIn to copy the expression to a fresh allocator, then codegen it
+    let temp_alloc = oxc::allocator::Allocator::default();
+    use oxc::allocator::CloneIn;
+
+    // Clone the argument into the temp allocator
+    let cloned_arg: Argument<'_> = first_arg.clone_in(&temp_alloc);
+
+    // Convert Argument to Expression
+    let expr_opt: Option<oxc::ast::ast::Expression<'_>> = match cloned_arg {
+        Argument::ArrowFunctionExpression(a) => Some(oxc::ast::ast::Expression::ArrowFunctionExpression(a)),
+        Argument::FunctionExpression(f) => Some(oxc::ast::ast::Expression::FunctionExpression(f)),
+        Argument::StringLiteral(s) => Some(oxc::ast::ast::Expression::StringLiteral(s)),
+        Argument::NumericLiteral(n) => Some(oxc::ast::ast::Expression::NumericLiteral(n)),
+        Argument::Identifier(id) => Some(oxc::ast::ast::Expression::Identifier(id)),
+        _ => None,
+    };
+
+    let expression = expr_opt?;
+
+    // Build a mini program: just `expr;`
+    let source_type = oxc::span::SourceType::mjs();
+    let ast_builder = oxc::ast::AstBuilder::new(&temp_alloc);
+    let expr_stmt = ast_builder.statement_expression(SPAN, expression);
+    let directives: oxc::allocator::Vec<'_, oxc::ast::ast::Directive<'_>> = ast_builder.vec();
+    let comments: oxc::allocator::Vec<'_, oxc::ast::Comment> = ast_builder.vec();
+    let body = ast_builder.vec1(expr_stmt);
+    let source_text_arena: &str = temp_alloc.alloc_str("");
+    let program = ast_builder.program(
+        SPAN,
+        source_type,
+        source_text_arena,
+        comments,
+        None,
+        directives,
+        body,
+    );
+
+    let code = oxc::codegen::Codegen::new().build(&program).code;
+
+    // Strip trailing semicolon and newline
+    let trimmed = code.trim_end().trim_end_matches(';').to_string();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed)
     }
 }
 

@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -8,10 +9,11 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { _jsxSplit } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { useDocumentHead, useLocation } from "@qwik.dev/router";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 /**
 * The RouterHead component is placed inside of the document `<head>` element.
 */
-export const RouterHead = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const RouterHead = componentQrl(q__u6BtPnK76q4);
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { useDocumentHead } from "@qwik.dev/router";
 import { useLocation } from "@qwik.dev/router";

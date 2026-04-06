@@ -1,11 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { translate } from "i18n";
-export const action = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const action = formActionQrl(q__u6BtPnK76q4);
 export { t as _auto_t };
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { translate } from "i18n";

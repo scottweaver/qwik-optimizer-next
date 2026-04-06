@@ -1,11 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= src/components/mongo/404.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-export default qrl(() => import("./404.tsx__0BX5jYI256c"), "_0BX5jYI256c");
+const q__0BX5jYI256c = /* @__PURE__ */ qrl(() => import("./404.tsx__0BX5jYI256c"), "_0BX5jYI256c");
+export default componentQrl(q__0BX5jYI256c);
 ============================= src/components/mongo/404.tsx__0BX5jYI256c.tsx (ENTRY POINT) ==
 export const _0BX5jYI256c = () => {
 	return (

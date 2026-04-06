@@ -1,6 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
@@ -12,13 +13,13 @@ const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
 q__u6BtPnK76q4.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});
-	return <>
-			<ul id="issue-2800-result">
-				{Object.entries(store).map(([key, value]) => <li>
-					{key} - {value}
-				</li>)}
-			</ul>
-		</>;
+	return _jsxSorted(_Fragment, null, null, <ul id="issue-2800-result">
+				{Object.entries(store).map(([key, value]) => _jsxSorted("li", null, null, [
+		key,
+		"-",
+		value
+	], 1, null))}
+			</ul>, 1, null);
 });
 export const App = componentQrl(q__u6BtPnK76q4);
 == DIAGNOSTICS ==

@@ -1,11 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.jsx ==
-import { inlinedQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-export const AtomStatus = componentQrl((_rawProps) => {
+const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
+q__u6BtPnK76q4.s((_rawProps) => {
 	const ctx = _rawProps.ctx;
 	const atom = _rawProps.atom;
 	let status = atom.status;
@@ -21,6 +23,7 @@ export const AtomStatus = componentQrl((_rawProps) => {
 			ctx.store[atom.ID] ? "selected" : null
 		]
 	}, null, null, 1, null);
-}, "_u6BtPnK76q4");
+});
+export const AtomStatus = componentQrl(q__u6BtPnK76q4);
 == DIAGNOSTICS ==
 []

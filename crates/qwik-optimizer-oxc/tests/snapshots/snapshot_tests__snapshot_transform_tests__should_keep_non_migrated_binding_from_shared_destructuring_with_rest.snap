@@ -1,16 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 const { a, ...rest } = {
 	a: 1,
 	b: 2,
 	c: 3
 };
 console.log("root", rest.b, rest.c);
-export const handler = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const handler = q__u6BtPnK76q4;
 export { a as _auto_a };
 ============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 export const _u6BtPnK76q4 = () => {

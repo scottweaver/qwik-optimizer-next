@@ -1,18 +1,21 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$, $, useStore, wrap, useEffect } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
 export const useMemoQrl = (qrt) => {
 	useEffect(qrt);
 };
 export const useMemo$ = wrap(useMemoQrl);
-export const App = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const App = componentQrl(q__u6BtPnK76q4);
 export const Lightweight = (props) => {
-	qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+	useMemoQrl(q__1_iZVV0eoW44k);
 };
 ============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 export const _1_iZVV0eoW44k = () => {

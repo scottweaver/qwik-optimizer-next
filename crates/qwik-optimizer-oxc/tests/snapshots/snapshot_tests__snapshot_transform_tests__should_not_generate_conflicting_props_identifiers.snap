@@ -1,19 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
-const q_component_ZUK1E201Ins = /* @__PURE__ */ _noopQrl("component_ZUK1E201Ins");
-const q_component_1_vX1B9oMEgiI = /* @__PURE__ */ _noopQrl("component_1_vX1B9oMEgiI");
 const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
-q_component_ZUK1E201Ins.s(() => color);
-q_component_1_vX1B9oMEgiI.s(() => {
-	props.checked;
-});
-q__u6BtPnK76q4.s(({ color, ...props }) => {
-	useComputed$(() => color);
-	useTask$(() => {
+q__u6BtPnK76q4.s((_rawProps) => {
+	const props = _restProps(_rawProps, ["color"]);
+	const color = _rawProps.color;
+	useComputedQrl(() => color);
+	useTaskQrl(() => {
 		props.checked;
 	});
 	return "hi";
