@@ -11,6 +11,73 @@ const q_Local_component_jJ0v28bs0p8 = /*#__PURE__*/ qrl(()=>import("./main.tsx_L
 //
 export const Local = /*#__PURE__*/ componentQrl(q_Local_component_jJ0v28bs0p8);
 
+============================= ../../node_modules/dep/dist/lib.mjs_App_component_div_p_button_onClick_8dWUa0cJAr4_App_component_div_p_button_onClick_8dWUa0cJAr4.mjs (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const App_component_div_p_button_onClick_8dWUa0cJAr4 = () => {
+    const store = _captures[0];
+    const [store] = useLexicalScope();
+    return store.count++;
+};
+
+/*
+{
+  "origin": "../../node_modules/dep/dist/lib.mjs",
+  "name": "App_component_div_p_button_onClick_8dWUa0cJAr4",
+  "entry": null,
+  "displayName": "lib.mjs_App_component_div_p_button_onClick_8dWUa0cJAr4",
+  "hash": "App_component_div_p_button_onClick_8dWUa0cJAr4",
+  "canonicalFilename": "lib.mjs_App_component_div_p_button_onClick_8dWUa0cJAr4_App_component_div_p_button_onClick_8dWUa0cJAr4",
+  "path": "../../node_modules/dep/dist",
+  "extension": "mjs",
+  "parent": "App_component_AkbU84a8zes",
+  "ctxKind": "function",
+  "ctxName": "jsx",
+  "captures": true,
+  "captureNames": [
+    "store"
+  ],
+  "loc": [
+    569,
+    650
+  ]
+}
+*/
+============================= ../../node_modules/dep/dist/lib.mjs_App_component_AkbU84a8zes_App_component_AkbU84a8zes.mjs (ENTRY POINT) ==
+var App_component_div_p_button_onClick_8dWUa0cJAr4 = inlinedQrl(() => {
+    const [store] = useLexicalScope();
+    return store.count++;
+}, "App_component_div_p_button_onClick_8dWUa0cJAr4", [store]);
+const useData = () => {
+    return useStore({ count: 0 });
+};
+export const App_component_AkbU84a8zes = () => {
+    const store = useData();
+    return /*#__PURE__*/ jsxs("div", { children: [/*#__PURE__*/ jsxs("p", { children: ["Count: ", store.count] }), /*#__PURE__*/ jsx("p", { children: /*#__PURE__*/ jsx("button", {
+        onClick$: App_component_div_p_button_onClick_8dWUa0cJAr4,
+        children: "Click"
+    }) })] });
+};
+
+/*
+{
+  "origin": "../../node_modules/dep/dist/lib.mjs",
+  "name": "App_component_AkbU84a8zes",
+  "entry": null,
+  "displayName": "lib.mjs_App_component_AkbU84a8zes",
+  "hash": "App_component_AkbU84a8zes",
+  "canonicalFilename": "lib.mjs_App_component_AkbU84a8zes_App_component_AkbU84a8zes",
+  "path": "../../node_modules/dep/dist",
+  "extension": "mjs",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    298,
+    771
+  ]
+}
+*/
 ============================= components/main.tsx_Local_component_jJ0v28bs0p8.js (ENTRY POINT) ==
 import { state } from "./sibling";
 export const Local_component_jJ0v28bs0p8 = () => {

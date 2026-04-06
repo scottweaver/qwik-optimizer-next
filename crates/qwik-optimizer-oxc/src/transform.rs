@@ -293,6 +293,9 @@ pub(crate) struct SegmentScope {
     /// register their names before inner nested segments. This matches SWC's Fold
     /// ordering where outer nodes process before children.
     pub pre_registered_name: Option<crate::hash::ContextNameResult>,
+    /// Whether this is an inlinedQrl() call (pre-compiled QRL from user code).
+    /// When true, captures are taken from the third argument instead of auto-computed.
+    pub is_inlined_qrl: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -399,6 +402,10 @@ pub(crate) struct QwikTransform {
     pub(crate) qsegment_fn: Option<String>,
     /// Local name for `sync$`.
     pub(crate) sync_qrl_fn: Option<String>,
+    /// Local name for `inlinedQrl` import from the core module.
+    /// When present, `inlinedQrl(fn, "name", [captures])` calls are processed
+    /// as pre-compiled QRL segments (SWC's handle_inlined_qsegment).
+    pub(crate) inlined_qrl_fn: Option<String>,
 
     // ---- Traversal state --------------------------------------------------
     /// Context name stack; each entry is pushed when entering a named call or
@@ -532,6 +539,9 @@ impl QwikTransform {
         let sync_qrl_fn = collect
             .get_imported_local("sync$", &config.core_module)
             .map(|s| s.to_string());
+        let inlined_qrl_fn = collect
+            .get_imported_local("inlinedQrl", &config.core_module)
+            .map(|s| s.to_string());
 
         // Build initial decl_stack from module-level declarations
         // Root scope frame includes all top-level var/fn/class declarations
@@ -552,6 +562,7 @@ impl QwikTransform {
             consumed_imports: HashSet::new(),
             qsegment_fn,
             sync_qrl_fn,
+            inlined_qrl_fn,
             stack_ctxt: Vec::new(),
             call_name_pushed: Vec::new(),
             segment_stack: Vec::new(),
@@ -1632,6 +1643,178 @@ fn get_function_params_to_set(expr: &Expression<'_>, out: &mut HashSet<String>) 
 }
 
 // ---------------------------------------------------------------------------
+// inlinedQrl handling
+// ---------------------------------------------------------------------------
+
+impl QwikTransform {
+    /// Handle inlinedQrl() call at exit time.
+    ///
+    /// Extracts the pre-compiled QRL into a segment file and replaces the call
+    /// with a `qrl()/qrlDEV()` import reference, matching SWC's handle_inlined_qsegment.
+    fn handle_inlined_qrl_exit<'a>(
+        &mut self,
+        expr: &mut Expression<'a>,
+        ctx: &mut TraverseCtx<'a, ()>,
+        pending: SegmentScope,
+    ) {
+        let call = match expr {
+            Expression::CallExpression(call) => call,
+            _ => return,
+        };
+
+        let names = match pending.pre_registered_name {
+            Some(n) => n,
+            None => return,
+        };
+
+        // Extract first arg's source code (the callback body)
+        let expr_code: Option<String> = if !call.arguments.is_empty() {
+            use oxc::span::GetSpan;
+            let span = call.arguments[0].span();
+            let src = unsafe { &*self.source_text };
+            let start = span.start as usize;
+            let end = span.end as usize;
+            if start <= end && end <= src.len() {
+                Some(src[start..end].to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        // Extract captures from third arg (if present)
+        let mut scoped_idents: Vec<String> = Vec::new();
+        if call.arguments.len() >= 3 {
+            if let Argument::ArrayExpression(arr) = &call.arguments[2] {
+                for elem in &arr.elements {
+                    if let ArrayExpressionElement::Identifier(ident) = elem {
+                        scoped_idents.push(ident.name.as_str().to_string());
+                    }
+                }
+            }
+        }
+
+        let has_captures = !scoped_idents.is_empty();
+        let local_idents: Vec<String> = Vec::new();
+        let parent_span = self.segment_stack.last().map(|s| s.span_start);
+        let call_span_end = call.span.end;
+        let first_arg_span = if !call.arguments.is_empty() {
+            use oxc::span::GetSpan;
+            let s = call.arguments[0].span();
+            (s.start, s.end)
+        } else {
+            (pending.span_start, call_span_end)
+        };
+
+        let entry = self.compute_entry(
+            &pending.ctx_kind,
+            &pending.ctx_name,
+            &scoped_idents,
+            &names.hash,
+            &names.symbol_name,
+        );
+
+        let import_path = if self.explicit_extensions {
+            format!("./{}.{}", names.canonical_filename, self.extension)
+        } else {
+            format!("./{}", names.canonical_filename)
+        };
+
+        let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+        let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
+        let ident_name = format!("q_{}", names.symbol_name);
+
+        let qrl_rhs = format!(
+            r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
+            qrl_callee_name, import_path, names.symbol_name
+        );
+
+        if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+            let is_root_level = self.segment_stack.is_empty();
+            self.extra_top_items.push(HoistedConst {
+                name: ident_name.clone(),
+                rhs_code: qrl_rhs,
+                symbol_name: names.symbol_name.clone(),
+                is_root_level,
+            });
+            if is_dev {
+                let dev_file = self.dev_file_path.clone()
+                    .unwrap_or_else(|| format!("{}{}", self.src_dir, self.file_name));
+                self.dev_metadata.insert(
+                    names.symbol_name.clone(),
+                    (dev_file, first_arg_span.0, first_arg_span.1, names.display_name.clone()),
+                );
+            }
+        }
+        self.needs_qrl_import = true;
+
+        let allocator = ctx.ast.allocator;
+        let replacement = if has_captures {
+            let src = unsafe { &*self.source_text };
+            let caps_code = if call.arguments.len() >= 3 {
+                use oxc::span::GetSpan;
+                let span = call.arguments[2].span();
+                let start = span.start as usize;
+                let end = span.end as usize;
+                if start <= end && end <= src.len() {
+                    src[start..end].to_string()
+                } else {
+                    format!("[{}]", scoped_idents.join(", "))
+                }
+            } else {
+                format!("[{}]", scoped_idents.join(", "))
+            };
+            let w_expr_code = format!("{}.w({})", ident_name, caps_code);
+            crate::add_side_effect::parse_single_statement(
+                &format!("{};", w_expr_code), allocator
+            ).and_then(|stmt| {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    Some(es.unbox().expression)
+                } else {
+                    None
+                }
+            })
+        } else {
+            crate::add_side_effect::parse_single_statement(
+                &format!("{};", ident_name), allocator
+            ).and_then(|stmt| {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    Some(es.unbox().expression)
+                } else {
+                    None
+                }
+            })
+        };
+
+        self.segments.push(SegmentRecord {
+            name: names.symbol_name.clone(),
+            display_name: names.display_name.clone(),
+            canonical_filename: names.canonical_filename.clone(),
+            entry,
+            expr: expr_code,
+            scoped_idents: scoped_idents.clone(),
+            local_idents,
+            ctx_name: pending.ctx_name.clone(),
+            ctx_kind: pending.ctx_kind.clone(),
+            origin: self.rel_path.clone(),
+            span: (pending.span_start, call_span_end),
+            hash: names.hash.clone(),
+            is_inline: false,
+            migrated_root_vars: Vec::new(),
+            parent: None,
+            pending_parent_span: parent_span,
+            param_names: None,
+            first_arg_span: Some(first_arg_span),
+        });
+
+        if let Some(replacement) = replacement {
+            *expr = replacement;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Traverse implementation
 // ---------------------------------------------------------------------------
 
@@ -1928,6 +2111,72 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         node: &mut CallExpression<'a>,
         _ctx: &mut TraverseCtx<'a, ()>,
     ) {
+        // Handle inlinedQrl() calls from user code (pre-compiled QRLs from libraries).
+        // SWC's handle_inlined_qsegment extracts the callback as a segment.
+        // Skip in Lib mode (pass through unchanged).
+        if !matches!(self.mode, EmitMode::Lib) {
+            if let Expression::Identifier(ident) = &node.callee {
+                if self.inlined_qrl_fn.as_deref() == Some(ident.name.as_str()) {
+                    // Validate: must have at least 2 args, second must be string literal
+                    if node.arguments.len() >= 2 {
+                        let first_is_null = matches!(
+                            &node.arguments[0],
+                            Argument::NullLiteral(_)
+                        );
+                        let second_is_string = matches!(
+                            &node.arguments[1],
+                            Argument::StringLiteral(_)
+                        );
+                        if !first_is_null && second_is_string {
+                            // Mark as consumed import
+                            self.consumed_imports.insert(ident.name.as_str().to_string());
+
+                            // Extract symbol name from second arg
+                            let symbol_name = if let Argument::StringLiteral(s) = &node.arguments[1] {
+                                s.value.as_str().to_string()
+                            } else {
+                                unreachable!()
+                            };
+
+                            // Determine ctx_name from stack context
+                            let ctx_name = self.stack_ctxt.last()
+                                .map(|s| {
+                                    if s.ends_with("Qrl") {
+                                        format!("{}$", &s[..s.len() - 3])
+                                    } else {
+                                        s.clone()
+                                    }
+                                })
+                                .unwrap_or_else(|| "$".to_string());
+
+                            let ctx_kind = words::classify_ctx_kind(&ctx_name);
+                            let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
+
+                            self.segment_stack.push(SegmentScope {
+                                ctx_name,
+                                ctx_kind,
+                                span_start: node.span.start,
+                                is_sync: false,
+                                descendent_idents,
+                                pushed_ctx_name: false,
+                                pre_registered_name: Some(crate::hash::ContextNameResult {
+                                    symbol_name: symbol_name.clone(),
+                                    display_name: format!("{}_{}", self.file_name, symbol_name),
+                                    hash: symbol_name.clone(),
+                                    // canonical_filename = display_name + "_" + hash
+                                    // For inlinedQrl, hash is the same as symbol_name
+                                    canonical_filename: format!("{}_{}_{}", self.file_name, symbol_name, symbol_name),
+                                }),
+                                is_inlined_qrl: true,
+                            });
+                            self.call_name_pushed.push(false);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
         // CONV-01: Dollar detection
         // 1. Check if callee is a known $ marker function
         if let Some((ctx_name, is_sync)) = self.detect_dollar_call(&node.callee) {
@@ -1979,6 +2228,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         descendent_idents,
                         pushed_ctx_name,
                         pre_registered_name,
+                        is_inlined_qrl: false,
                     });
                     // Don't push callee ident separately -- the marker name push handles it
                     self.call_name_pushed.push(false);
@@ -2003,6 +2253,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     descendent_idents,
                     pushed_ctx_name: true,
                     pre_registered_name: None,
+                    is_inlined_qrl: false,
                 });
             }
             // Dollar call detected but not emitted (stripped or not a function arg)
@@ -2188,6 +2439,13 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         }
 
         let pending = self.segment_stack.pop().unwrap();
+
+        // Handle inlinedQrl() calls specially: extract captures from third arg,
+        // create segment with explicit symbol name.
+        if pending.is_inlined_qrl {
+            self.handle_inlined_qrl_exit(expr, ctx, pending);
+            return;
+        }
 
         // C05: Check for missing Qrl implementation for locally-defined $-suffixed functions.
         // SWC transform.rs:4066-4094 -- only for non-imported marker functions.
