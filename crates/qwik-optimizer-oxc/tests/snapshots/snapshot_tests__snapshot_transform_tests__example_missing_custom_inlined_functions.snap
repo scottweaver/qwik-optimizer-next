@@ -14,7 +14,7 @@ export const App = component$((props) => {
     useMemo$(() => {
         console.log(state.count);
     });
-    return $(() => _jsxSorted("div", null, null, state.count, 1, "0"));
+    return $(() => /*#__PURE__*/ _jsxSorted("div", null, null, state.count, 1, "0"));
 });
 
 == DIAGNOSTICS ==

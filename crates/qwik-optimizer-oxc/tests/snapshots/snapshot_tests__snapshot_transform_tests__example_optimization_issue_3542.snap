@@ -6,7 +6,7 @@ snapshot_kind: text
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
-export const AtomStatus = componentQrl((_rawProps) => {
+export const AtomStatus = /*#__PURE__*/ componentQrl((_rawProps) => {
     const ctx = _rawProps.ctx;
     const atom = _rawProps.atom;
     let status = atom.status;
@@ -15,7 +15,7 @@ export const AtomStatus = componentQrl((_rawProps) => {
     } else if (JSON.stringify(atom.atom) == JSON.stringify(atom.real)) {
         status = "WTFED";
     }
-    return _jsxSorted("span", {
+    return /*#__PURE__*/ _jsxSorted("span", {
         title: atom.ID,
         class: [
             "atom",

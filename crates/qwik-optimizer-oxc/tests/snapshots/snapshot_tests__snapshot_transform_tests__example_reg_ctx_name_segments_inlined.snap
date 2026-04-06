@@ -6,9 +6,9 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { serverQrl } from "@qwik.dev/core";
-export const Works = componentQrl((props) => {
+export const Works = /*#__PURE__*/ componentQrl((props) => {
     const text = "hola";
-    return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [text]) }, null, null, 1, null);
+    return /*#__PURE__*/ _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [text]) }, null, null, 1, null);
 }, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==

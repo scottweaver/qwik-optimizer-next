@@ -35,7 +35,7 @@ globalThis.bar();
     console.log(qrl);
 };
 function Lifecycle(props, key, flags) {
-    return componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg)(props, key, flags);
+    return /*#__PURE__*/ componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg)(props, key, flags);
 }
 export const rawFn = (event, element) => {
     handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
@@ -57,8 +57,8 @@ export function Field({ children, name, type, ...props }) {
 const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render }) => {
     it("should render object style", async () => {
-        const StyledComponent = componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
-        const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
+        const StyledComponent = /*#__PURE__*/ componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
+        const { vNode, getStyles, document } = await render(/*#__PURE__*/ _jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
     });
 });
 

@@ -13,7 +13,7 @@ export default (props: {
     data: any;
 }) => {
     const { data } = props;
-    return _jsxSorted("div", {
+    return /*#__PURE__*/ _jsxSorted("div", {
         "data-is-active": data.selectedOutputDetail === "options",
         "q-e:click": q_test_div_q_e_click_pFqTss400MA.w([data])
     }, null, null, 1, "0");

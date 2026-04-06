@@ -11,14 +11,14 @@ import { inlinedQrl } from "@qwik.dev/core";
 import { useStore } from '@qwik.dev/core';
 import { thing } from './sibling';
 import mongodb from "mongodb";
-export const Child = componentQrl(() => {
+export const Child = /*#__PURE__*/ componentQrl(() => {
     useStylesQrl("somestring", "Child_component_useStyles_qBZTuFM0160");
     const state = useStore({ count: 0 });
     // Double count watch
     useBrowserVisibleTaskQrl(() => {
         state.count = thing.doStuff() + import("./sibling");
     }, "Child_component_useBrowserVisibleTask_0IGFPOyJmQA", [state]);
-    return _jsxSorted("div", { "q-e:click": inlinedQrl(() => console.log(mongodb), "Child_component_div_q_e_click_cROa4sult1s") }, null, null, 1, null);
+    return /*#__PURE__*/ _jsxSorted("div", { "q-e:click": inlinedQrl(() => console.log(mongodb), "Child_component_div_q_e_click_cROa4sult1s") }, null, null, 1, null);
 }, "Child_component_9GyF01GDKqw");
 
 == DIAGNOSTICS ==

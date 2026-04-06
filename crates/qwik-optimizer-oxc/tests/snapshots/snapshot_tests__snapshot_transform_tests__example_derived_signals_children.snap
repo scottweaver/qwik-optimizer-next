@@ -45,8 +45,8 @@ q_App_component_ckEPmXZlub0.s(() => {
 			<div>{signal.value + dep}</div>
 		</>;
 });
-export const TextContent = componentQrl(q_TextContent_component_puSwpKXO7Kg);
-export const App = componentQrl(q_App_component_ckEPmXZlub0);
+export const TextContent = /*#__PURE__*/ componentQrl(q_TextContent_component_puSwpKXO7Kg);
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 
 == DIAGNOSTICS ==
 []

@@ -5,7 +5,7 @@ snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
-export const Issue3561 = componentQrl(() => {
+export const Issue3561 = /*#__PURE__*/ componentQrl(() => {
     const props = useStore({ product: { currentVariant: {
         variantImage: "image",
         variantNumber: "number",
@@ -13,7 +13,7 @@ export const Issue3561 = componentQrl(() => {
     } } });
     const { currentVariant: { variantImage, variantNumber, setContents } = {} } = props.product;
     console.log(variantImage, variantNumber, setContents);
-    return _jsxSorted("p", null, null, null, 1, null);
+    return /*#__PURE__*/ _jsxSorted("p", null, null, null, 1, null);
 }, "Issue3561_component_hHTw654BZB8");
 
 == DIAGNOSTICS ==

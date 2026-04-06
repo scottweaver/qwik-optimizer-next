@@ -20,7 +20,7 @@ q_Issue3742_component_svSy0PlWTAw.s(({ description = "", other }: any) => {
 		</button>
 		</div>;
 });
-export const Issue3742 = componentQrl(q_Issue3742_component_svSy0PlWTAw);
+export const Issue3742 = /*#__PURE__*/ componentQrl(q_Issue3742_component_svSy0PlWTAw);
 
 == DIAGNOSTICS ==
 []

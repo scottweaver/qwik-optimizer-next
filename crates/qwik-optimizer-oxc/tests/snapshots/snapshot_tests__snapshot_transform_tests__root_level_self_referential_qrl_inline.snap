@@ -8,8 +8,8 @@ import { componentQrl } from "@qwik.dev/core";
 // Root-level self-referential component
 // The QRL should NOT be hoisted before the component function is defined
 // or should use two-phase emission to avoid forward reference
-export const Tree = componentQrl((props) => {
-    return _jsxSorted("div", null, null, [props.label, props.children && props.children.map((child) => _jsxSplit(Tree, { ...child }, null, null, 1, "0"))], 1, null);
+export const Tree = /*#__PURE__*/ componentQrl((props) => {
+    return /*#__PURE__*/ _jsxSorted("div", null, null, [props.label, props.children && props.children.map((child) => /*#__PURE__*/ _jsxSplit(Tree, { ...child }, null, null, 1, "0"))], 1, null);
 }, "Tree_component_XMEiO6Rrd3Y");
 
 == DIAGNOSTICS ==

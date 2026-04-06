@@ -11,18 +11,18 @@ import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { useStore } from '@qwik.dev/core';
-export const Parent = componentQrl(() => {
+export const Parent = /*#__PURE__*/ componentQrl(() => {
     const state = useStore({ text: "" });
     // Double count watch
-    _noopQrl("Parent_component_useClientMount_Yn2kIDABoYw");
+    /*#__PURE__*/ _noopQrl("Parent_component_useClientMount_Yn2kIDABoYw");
     useTaskQrl(() => {
         // Code
     }, "Parent_component_useTask_ngmvcygWux8");
-    return _jsxSorted("div", {
+    return /*#__PURE__*/ _jsxSorted("div", {
         shouldRemove: inlinedQrl(() => state.text, "Parent_component_div_shouldRemove_EBj69wTX1do", [state]),
-        "q-e:click": _noopQrl("Parent_component_div_q_e_click_oqNnfO6ubjU")
-    }, null, [_jsxSorted(Div, {
-        onClick: _noopQrl("Parent_component_div_Div_q_e_click_X6MyAcIWaA4"),
+        "q-e:click": /*#__PURE__*/ _noopQrl("Parent_component_div_q_e_click_oqNnfO6ubjU")
+    }, null, [/*#__PURE__*/ _jsxSorted(Div, {
+        onClick: /*#__PURE__*/ _noopQrl("Parent_component_div_Div_q_e_click_X6MyAcIWaA4"),
         render: inlinedQrl(() => state.text, "Parent_component_div_Div_render_CkMybN6xzQk", [state])
     }, null, null, 1, "0"), state.text], 1, null);
 }, "Parent_component_t6Wy3C0Q0XM");

@@ -6,10 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { useSignal } from '@qwik.dev/core';
-export const Works = componentQrl((_rawProps) => {
+export const Works = /*#__PURE__*/ componentQrl((_rawProps) => {
     const fromProps = _rawProps.fromProps;
     let fromLocal = useSignal(0);
-    return _jsxSorted("div", null, null, [
+    return /*#__PURE__*/ _jsxSorted("div", null, null, [
         fromLocal,
         fromProps,
         fromLocal + fromProps,

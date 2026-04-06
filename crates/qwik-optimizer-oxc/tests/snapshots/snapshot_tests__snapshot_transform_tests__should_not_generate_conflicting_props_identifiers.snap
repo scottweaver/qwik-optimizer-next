@@ -20,7 +20,7 @@ q_test_component_LUXeXe0DQrg.s(({ color, ...props }) => {
     });
     return "hi";
 });
-export default componentQrl(q_test_component_LUXeXe0DQrg);
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
 == DIAGNOSTICS ==
 []

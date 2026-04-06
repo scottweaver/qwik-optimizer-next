@@ -5,13 +5,13 @@ snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
-export const Works = componentQrl((props) => {
+export const Works = /*#__PURE__*/ componentQrl((props) => {
     const { countNested } = useStore({ value: { count: 0 } }).value;
     const countNested2 = countNested;
     const { hello } = countNested2;
     const bye = hello.bye;
     const { ciao } = bye.italian;
-    return _jsxSorted("div", { ciao }, null, foo, 1, null);
+    return /*#__PURE__*/ _jsxSorted("div", { ciao }, null, foo, 1, null);
 }, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==

@@ -49,6 +49,7 @@ pub(crate) fn emit_module<'a>(
         let map = codegen_result.map.map(|sm| sm.to_json_string());
 
         let code = normalize_pure_annotations(&codegen_result.code);
+        let code = inject_pure_annotations(&code);
         let code = preserve_original_quotes(&code, source);
         let code = insert_separator_comments(&code);
         EmitResult { code, map }
@@ -64,6 +65,7 @@ pub(crate) fn emit_module<'a>(
             .build(program);
 
         let code = normalize_pure_annotations(&codegen_result.code);
+        let code = inject_pure_annotations(&code);
         let code = preserve_original_quotes(&code, source);
         let code = insert_separator_comments(&code);
         EmitResult { code, map: None }
@@ -79,6 +81,72 @@ fn normalize_pure_annotations(code: &str) -> String {
     // Normalize arrow function spacing in dynamic imports to match SWC format.
     // OXC codegen emits `() => import(...)` but SWC uses `()=>import(...)`.
     code.replace("() => import(", "()=>import(")
+}
+
+/// Inject `/*#__PURE__*/` annotations before known wrapper call patterns.
+///
+/// SWC adds PURE annotations to wrapper calls in the root module body
+/// (componentQrl, _jsxSorted, _jsxSplit, _noopQrl, etc.) to enable
+/// tree-shaking by bundlers. The OXC transform renames callees (e.g.,
+/// component$ -> componentQrl) but doesn't inject PURE comments at the
+/// AST level. This post-processing pass adds them.
+///
+/// Only injects when the annotation is not already present immediately
+/// before the call.
+fn inject_pure_annotations(code: &str) -> String {
+    // Wrapper call patterns that need PURE annotations.
+    // qrl/qrlDEV are handled by rhs_code string injection in transform.rs.
+    const WRAPPER_CALLS: &[&str] = &[
+        "componentQrl(",
+        "_jsxSorted(",
+        "_jsxSplit(",
+        "_noopQrl(",
+        "_noopQrlDEV(",
+    ];
+
+    let mut result = String::with_capacity(code.len() + 256);
+    for line in code.lines() {
+        let mut modified = line.to_string();
+        for &wrapper in WRAPPER_CALLS {
+            // Find all occurrences in this line
+            let mut search_from = 0;
+            loop {
+                if let Some(pos) = modified[search_from..].find(wrapper) {
+                    let abs_pos = search_from + pos;
+                    // Check if /*#__PURE__*/ already precedes this call
+                    let prefix = &modified[..abs_pos];
+                    let trimmed_prefix = prefix.trim_end();
+                    if trimmed_prefix.ends_with("/*#__PURE__*/") {
+                        // Already annotated, skip
+                        search_from = abs_pos + wrapper.len();
+                        continue;
+                    }
+                    // Don't inject inside import statements
+                    if line.trim().starts_with("import ") {
+                        break;
+                    }
+                    // Don't inject inside string literals (rough check: odd number of quotes before pos)
+                    let quote_count = modified[..abs_pos].chars().filter(|&c| c == '"').count();
+                    if quote_count % 2 != 0 {
+                        search_from = abs_pos + wrapper.len();
+                        continue;
+                    }
+                    // Insert /*#__PURE__*/ before the call
+                    modified.insert_str(abs_pos, "/*#__PURE__*/ ");
+                    search_from = abs_pos + "/*#__PURE__*/ ".len() + wrapper.len();
+                } else {
+                    break;
+                }
+            }
+        }
+        result.push_str(&modified);
+        result.push('\n');
+    }
+    // Remove trailing newline if original didn't have one
+    if !code.ends_with('\n') && result.ends_with('\n') {
+        result.pop();
+    }
+    result
 }
 
 /// Preserve original quote style for user-written import specifiers.

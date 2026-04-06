@@ -10,10 +10,10 @@ export const FOO_MAPPING = {
     B: 2,
     C: 3
 };
-export default componentQrl(() => {
+export default /*#__PURE__*/ componentQrl(() => {
     const key = "A";
     const value = FOO_MAPPING[key];
-    return _jsxSorted(_Fragment, null, null, value, 1, null);
+    return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, value, 1, null);
 }, "test_component_LUXeXe0DQrg");
 
 == DIAGNOSTICS ==

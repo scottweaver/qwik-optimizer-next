@@ -15,7 +15,7 @@ q_Works_component_t45qL4vNGv0.s((props) => {
     const text = "hola";
     return <div onClick$={server$(() => console.log("in server", text))}></div>;
 });
-export const Works = componentQrl(q_Works_component_t45qL4vNGv0);
+export const Works = /*#__PURE__*/ componentQrl(q_Works_component_t45qL4vNGv0);
 const STYLES = ".class {}";
 
 == DIAGNOSTICS ==

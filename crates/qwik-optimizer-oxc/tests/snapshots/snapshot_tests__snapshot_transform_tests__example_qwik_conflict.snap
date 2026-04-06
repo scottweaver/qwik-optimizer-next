@@ -14,7 +14,7 @@ const q_Root_component_1_cBpQNYDUHI4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_
 export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
-componentQrl();
+/*#__PURE__*/ componentQrl();
 export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 export const Root = /*#__PURE__*/ componentQrl(q_Root_component_1_cBpQNYDUHI4);
 

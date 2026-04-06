@@ -6,8 +6,8 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { inlinedQrlDEV } from "@qwik.dev/core";
-export const App = componentQrl(() => {
-    return _jsxSorted(Cmp, null, null, _jsxSorted("p", { "q-e:click": inlinedQrlDEV(() => console.log("warn"), "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4") }, { class: "stuff" }, "Hello Qwik", 1, null), 1, "0");
+export const App = /*#__PURE__*/ componentQrl(() => {
+    return /*#__PURE__*/ _jsxSorted(Cmp, null, null, /*#__PURE__*/ _jsxSorted("p", { "q-e:click": inlinedQrlDEV(() => console.log("warn"), "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4") }, { class: "stuff" }, "Hello Qwik", 1, null), 1, "0");
 }, "App_component_ckEPmXZlub0");
 
 == DIAGNOSTICS ==

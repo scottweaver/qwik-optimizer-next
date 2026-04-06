@@ -11,7 +11,7 @@ import { _jsxSorted } from "@qwik.dev/core";
 const q_App_div_q_e_click_Z1sbYFdSKC4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_div_q_e_click_Z1sbYFdSKC4.js"), "App_div_q_e_click_Z1sbYFdSKC4");
 const q_App2_qwikify_RKJW7oCMdS4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App2_qwikify_RKJW7oCMdS4.js"), "App2_qwikify_RKJW7oCMdS4");
 //
-export const App = () => _jsxSorted("div", { "q-e:click": q_App_div_q_e_click_Z1sbYFdSKC4 }, null, null, 1, "0");
+export const App = () => /*#__PURE__*/ _jsxSorted("div", { "q-e:click": q_App_div_q_e_click_Z1sbYFdSKC4 }, null, null, 1, "0");
 export const App2 = qwikifyQrl(q_App2_qwikify_RKJW7oCMdS4);
 
 ============================= test.tsx_App2_qwikify_RKJW7oCMdS4.js (ENTRY POINT) ==

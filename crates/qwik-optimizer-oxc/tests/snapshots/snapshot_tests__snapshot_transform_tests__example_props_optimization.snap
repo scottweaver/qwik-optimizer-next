@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { CONST } from 'const';
-export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
+export const Works = /*#__PURE__*/ componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
     console.log(hey, some);
     useTaskQrl(({ track }) => {
         track(() => count);
@@ -19,28 +19,28 @@ export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: 
         rest,
         some
     ]);
-    return _jsxSplit("div", {
+    return /*#__PURE__*/ _jsxSplit("div", {
         some,
         params: { some },
         class: count,
         ...rest
     }, { override: true }, count, 1, null);
 }, "Works_component_t45qL4vNGv0");
-export const NoWorks2 = componentQrl(({ count, stuff: { hey } }) => {
+export const NoWorks2 = /*#__PURE__*/ componentQrl(({ count, stuff: { hey } }) => {
     console.log(hey);
     useTaskQrl(({ track }) => {
         track(() => count);
         console.log(count);
     }, "NoWorks2_component_useTask_lXiqwbxxjq0", [count]);
-    return _jsxSorted("div", { class: count }, null, count, 1, null);
+    return /*#__PURE__*/ _jsxSorted("div", { class: count }, null, count, 1, null);
 }, "NoWorks2_component_JPD9t2HyEKg");
-export const NoWorks3 = componentQrl(({ count, stuff = hola() }) => {
+export const NoWorks3 = /*#__PURE__*/ componentQrl(({ count, stuff = hola() }) => {
     console.log(stuff);
     useTaskQrl(({ track }) => {
         track(() => count);
         console.log(count);
     }, "NoWorks3_component_useTask_3cQGU0s1VwU", [count]);
-    return _jsxSorted("div", { class: count }, null, count, 1, null);
+    return /*#__PURE__*/ _jsxSorted("div", { class: count }, null, count, 1, null);
 }, "NoWorks3_component_fc13h5yYn14");
 
 == DIAGNOSTICS ==
