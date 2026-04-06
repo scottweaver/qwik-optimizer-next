@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-02T17:42:09.274Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-04-06T14:36:34.130Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 6
@@ -62,6 +62,7 @@ Progress: [########░░] 77%
 | Phase 05 P07 | 25m | 3 tasks | 9 files |
 | Phase 06 P03 | 3m | 2 tasks | 7 files |
 | Phase 06 P02 | 6m | 2 tasks | 3 files |
+| Phase 11 P03 | 15m | 1 tasks | 187 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,7 @@ Recent decisions affecting current work:
 - [Phase 06 P03]: napi-build v2 compatible with napi v3 (v3 not published); async feature required for async fn
 - [Phase 06 P02]: HMR _useHmr injection via string-based prepend in code_move::inject_use_hmr
 - [Phase 06 P02]: Synthetic imports mechanism added to NewModuleCtx for segment-level import injection
+- [Phase 11]: D-10: Gate marker name push for bare $ and sync$; D-11: Move stack_ctxt pop after register_context_name; D-12: Non-marker ident calls push callee name matching SWC
 
 ### Pending Todos
 
@@ -102,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T17:20:25Z
-Stopped at: Completed 06-03-PLAN.md
-Resume file: .planning/phases/06-strategies-modes-binding-implementation/06-03-SUMMARY.md
+Last session: 2026-04-06T14:36:34.127Z
+Stopped at: Completed 11-03-PLAN.md
+Resume file: None
