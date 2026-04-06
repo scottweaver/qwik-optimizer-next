@@ -839,6 +839,12 @@ fn strip_unreferenced_wrapper_consts_text(code: &str) -> String {
                 if name.starts_with('{') || name.starts_with('[') {
                     continue;
                 }
+                // Never strip hoisted QRL const declarations (const q_*)
+                // These are QRL references used in the module body; stripping
+                // them creates dangling references (e.g., `component(q_foo)` with no matching const).
+                if name.starts_with("q_") {
+                    continue;
+                }
                 let rhs = &rest[eq_pos + 3..];
                 // Include: call expressions, PURE annotations, or simple q_ identifier assignments
                 let is_call = rhs.contains('(');
