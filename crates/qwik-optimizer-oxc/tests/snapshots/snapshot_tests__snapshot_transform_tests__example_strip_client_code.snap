@@ -10,7 +10,7 @@ import { componentQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-import { useStore } from "@qwik.dev/core";
+import { useStore } from '@qwik.dev/core';
 export const Parent = componentQrl(() => {
 	const state = useStore({ text: "" });
 	// Double count watch

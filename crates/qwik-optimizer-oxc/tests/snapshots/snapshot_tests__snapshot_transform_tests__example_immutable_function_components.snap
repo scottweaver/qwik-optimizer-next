@@ -6,7 +6,7 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-import { Slot } from "@qwik.dev/core";
+import { Slot } from '@qwik.dev/core';
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //

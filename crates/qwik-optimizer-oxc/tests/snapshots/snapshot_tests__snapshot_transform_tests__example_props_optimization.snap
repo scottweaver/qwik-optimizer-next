@@ -6,7 +6,7 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
-import { CONST } from "const";
+import { CONST } from 'const';
 export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
 	console.log(hey, some);
 	useTaskQrl(({ track }) => {

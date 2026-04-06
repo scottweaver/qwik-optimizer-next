@@ -1,11 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= ../node_modules/@qwik.dev/react/index.qwik.mjs ==
-import { componentQrl, inlinedQrl, useLexicalScope, useHostElement, useStore, useTaskQrl, noSerialize, SkipRerender, implicit$FirstArg } from "@qwik.dev/core";
-import { jsx, Fragment } from "@qwik.dev/core/jsx-runtime";
-import { isBrowser, isServer } from "@qwik.dev/core";
+import { componentQrl, inlinedQrl, useLexicalScope, useHostElement, useStore, useTaskQrl, noSerialize, SkipRerender, implicit$FirstArg } from '@qwik.dev/core';
+import { jsx, Fragment } from '@qwik.dev/core/jsx-runtime';
+import { isBrowser, isServer } from '@qwik.dev/core';
 function qwikifyQrl(reactCmpQrl) {
 	return /*#__PURE__*/ componentQrl(inlinedQrl((props) => {
 		const [reactCmpQrl] = useLexicalScope();

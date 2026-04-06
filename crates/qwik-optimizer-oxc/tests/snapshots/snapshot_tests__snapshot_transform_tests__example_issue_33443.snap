@@ -6,7 +6,7 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-import { useSignal } from "@qwik.dev/core";
+import { useSignal } from '@qwik.dev/core';
 //
 const q_Issue3742_component_svSy0PlWTAw = /*#__PURE__*/ _noopQrl("Issue3742_component_svSy0PlWTAw");
 //

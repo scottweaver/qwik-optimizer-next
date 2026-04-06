@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { inlinedQrl, jsx } from "@qwik.dev/core";
+import { inlinedQrl, jsx } from '@qwik.dev/core';
 //
 const q_Lifecycle_Lifecycle_component_PcjTk3N1YOg = /*#__PURE__*/ _noopQrl("Lifecycle_Lifecycle_component_PcjTk3N1YOg");
 const q_Field_jsx_children_eVTPl5mlRx4 = /*#__PURE__*/ _noopQrl("Field_jsx_children_eVTPl5mlRx4");

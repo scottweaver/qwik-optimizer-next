@@ -47,6 +47,7 @@ pub(crate) fn emit_module<'a>(
         let map = codegen_result.map.map(|sm| sm.to_json_string());
 
         let code = normalize_pure_annotations(&codegen_result.code);
+        let code = preserve_original_quotes(&code, source);
         let code = insert_separator_comments(&code);
         EmitResult { code, map }
     } else {
@@ -55,6 +56,7 @@ pub(crate) fn emit_module<'a>(
             .build(program);
 
         let code = normalize_pure_annotations(&codegen_result.code);
+        let code = preserve_original_quotes(&code, source);
         let code = insert_separator_comments(&code);
         EmitResult { code, map: None }
     }
@@ -69,6 +71,100 @@ fn normalize_pure_annotations(code: &str) -> String {
     // Normalize arrow function spacing in dynamic imports to match SWC format.
     // OXC codegen emits `() => import(...)` but SWC uses `()=>import(...)`.
     code.replace("() => import(", "()=>import(")
+}
+
+/// Preserve original quote style for user-written import specifiers.
+///
+/// SWC preserves the quote style from the original source for import declarations.
+/// OXC Codegen normalizes all string literals to double quotes. This function
+/// restores single quotes on import specifiers where the original source used them.
+///
+/// Only applies to `import ... from "..."` lines. Synthesized imports (not present
+/// in the original source) keep double quotes, matching SWC behavior.
+fn preserve_original_quotes(code: &str, source: &str) -> String {
+    let mut result = String::with_capacity(code.len());
+    for line in code.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("import ") {
+            if let Some(converted) = try_restore_single_quotes(line, source) {
+                result.push_str(&converted);
+            } else {
+                result.push_str(line);
+            }
+        } else {
+            result.push_str(line);
+        }
+        result.push('\n');
+    }
+    // Remove trailing newline if original didn't have one
+    if !code.ends_with('\n') && result.ends_with('\n') {
+        result.pop();
+    }
+    result
+}
+
+/// Try to restore single quotes on an import line's `from` specifier.
+///
+/// Returns `Some(modified_line)` if the original source used single quotes
+/// for the same module specifier AND the same import bindings, `None` otherwise.
+///
+/// We match by checking that at least one imported name from the output line
+/// also appears in a source import line that uses single quotes for the same
+/// module specifier. This distinguishes user-written imports (which share
+/// bindings with the source) from synthesized imports (which have new names
+/// like `componentQrl`, `qrl`, etc. not in the source).
+fn try_restore_single_quotes(line: &str, source: &str) -> Option<String> {
+    // Find the `from "specifier"` portion
+    let from_idx = line.rfind("from \"")?;
+    let spec_start = from_idx + 6; // after `from "`
+    let spec_end = line[spec_start..].find('"')? + spec_start;
+    let specifier = &line[spec_start..spec_end];
+
+    // Extract imported names from the output line (between { and })
+    let output_names = extract_import_names(line);
+
+    // Check if the original source has a matching import with single quotes
+    let single_quoted = format!("'{}'", specifier);
+    for src_line in source.lines() {
+        let t = src_line.trim();
+        if !t.starts_with("import ") || !t.contains(&single_quoted) {
+            continue;
+        }
+        // Found a source import with single quotes for this specifier.
+        // Check if ANY of the output import names appear in this source line.
+        let src_names = extract_import_names(t);
+        let has_overlap = output_names.iter().any(|n| src_names.contains(n));
+        if has_overlap {
+            // This output import line corresponds to a user-written import
+            let mut result = String::with_capacity(line.len());
+            result.push_str(&line[..from_idx]);
+            result.push_str("from '");
+            result.push_str(specifier);
+            result.push('\'');
+            let after = &line[spec_end + 1..];
+            result.push_str(after);
+            return Some(result);
+        }
+    }
+    None
+}
+
+/// Extract named import identifiers from an import line.
+/// E.g., `import { $, component$, useStore } from '...'` -> ["$", "component$", "useStore"]
+fn extract_import_names(line: &str) -> Vec<&str> {
+    let open = match line.find('{') {
+        Some(i) => i,
+        None => return Vec::new(),
+    };
+    let close = match line[open..].find('}') {
+        Some(i) => open + i,
+        None => return Vec::new(),
+    };
+    line[open + 1..close]
+        .split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .collect()
 }
 
 /// Insert `//` separator comments between code sections to match SWC output format.
@@ -190,6 +286,43 @@ mod tests {
         assert!(
             result.map.is_none(),
             "Expected source map to be None when source_maps is false"
+        );
+    }
+
+    #[test]
+    fn test_preserve_original_quotes() {
+        // User-written import with single quotes in source -> should restore single quotes
+        let code = r#"import { $, component$, useStore } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+"#;
+        let source = r#"import { $, component$, useStore } from '@qwik.dev/core';
+export const App = component$(() => {});
+"#;
+        let result = preserve_original_quotes(code, source);
+        assert!(
+            result.contains("from '@qwik.dev/core'"),
+            "User-written import should use single quotes: {}",
+            result
+        );
+        // Synthesized import (componentQrl not in source) should keep double quotes
+        assert!(
+            result.contains("import { componentQrl } from \"@qwik.dev/core\""),
+            "Synthesized import should keep double quotes: {}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_preserve_original_quotes_no_source_match() {
+        // No matching import in source -> keep double quotes
+        let code = r#"import { qrl } from "@qwik.dev/core";
+"#;
+        let source = "const x = 1;\n";
+        let result = preserve_original_quotes(code, source);
+        assert!(
+            result.contains("from \"@qwik.dev/core\""),
+            "Should keep double quotes when source has no matching import: {}",
+            result
         );
     }
 

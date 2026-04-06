@@ -1,9 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl, inlinedQrl, useStore, jsxs, jsx, useLexicalScope } from "@qwik.dev/core";
+import { componentQrl, inlinedQrl, useStore, jsxs, jsx, useLexicalScope } from '@qwik.dev/core';
 export const App = /*#__PURE__*/ componentQrl(inlinedQrl(() => {
 	useStyles$(inlinedQrl(STYLES, "STYLES_odz7dfdfdM"));
 	useStyles$(inlinedQrl(STYLES, "STYLES_odzdfdfdM"));

@@ -5,7 +5,7 @@ snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { _jsxSorted } from "@qwik.dev/core";
-import { useStore, useEffect } from "@qwik.dev/core";
+import { useStore, useEffect } from '@qwik.dev/core';
 export const useMemo$ = (qrt) => {
 	useEffect(qrt);
 };

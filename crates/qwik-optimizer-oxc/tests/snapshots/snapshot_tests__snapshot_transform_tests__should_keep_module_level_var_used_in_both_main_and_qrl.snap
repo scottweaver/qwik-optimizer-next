@@ -5,7 +5,7 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-import { isServer } from "@qwik.dev/core";
+import { isServer } from '@qwik.dev/core';
 //
 /*#__PURE__*/ qrl(()=>import("./test.tsx_useHook_fn_kScGJcREaTg"), "useHook_fn_kScGJcREaTg");
 //

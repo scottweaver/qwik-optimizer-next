@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrlDEV } from "@qwik.dev/core";
 import { _noopQrlDEV } from "@qwik.dev/core";
-import { sideEffect } from "./secret";
+import { sideEffect } from './secret';
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg", {
     file: "/user/qwik/src/test.tsx",

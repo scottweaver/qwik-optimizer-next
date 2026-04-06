@@ -7,8 +7,8 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { Fragment } from "@qwik.dev/core";
-import { Slot, Fragment } from "@qwik.dev/core";
+import { Fragment } from '@qwik.dev/core';
+import { Slot, Fragment } from '@qwik.dev/core';
 import Image from "./image.jpg?jsx";
 //
 const q_AppDynamic1_component_R00UJ05gbes = /*#__PURE__*/ _noopQrl("AppDynamic1_component_R00UJ05gbes");

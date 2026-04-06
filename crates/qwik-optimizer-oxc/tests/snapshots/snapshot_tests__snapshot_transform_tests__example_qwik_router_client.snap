@@ -10,7 +10,7 @@ import { useStylesQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { useVisibleTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { jsx, Fragment } from "@qwik.dev/core/jsx-runtime";
+import { jsx, Fragment } from '@qwik.dev/core/jsx-runtime';
 import { createContextId, useContext, implicit$FirstArg, noSerialize, useServerData, useSignal, untrack, isDev, withLocale, isServer, useStore, useContextProvider, jsx as jsx$1 } from "@qwik.dev/core";
 import { i as isPromise, a as isSamePath, c as createLoaderSignal, t as toUrl, D as DEFAULT_LOADERS_SERIALIZATION_STRATEGY, h as QACTION_KEY } from "./chunks/routing.qwik.mjs";
 import { _getContextContainer, SerializerSymbol, _UNINITIALIZED, _getContextHostElement, _deserialize, _resolveContextWithoutSequentialScope } from "@qwik.dev/core/internal";
@@ -38,7 +38,7 @@ const q_Form_jsx_1_TsExYUdj0nQ = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_
 //
 export { z } from "zod";
 import swRegister from "@qwik-router-sw-register";
-import { renderToStream } from "@qwik.dev/core/server";
+import { renderToStream } from '@qwik.dev/core/server';
 import "@qwik.dev/core/preloader";
 import "./chunks/types.qwik.mjs";
 //

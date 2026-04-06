@@ -1,9 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { _captures, inlinedQrl } from "@qwik.dev/core";
+import { _captures, inlinedQrl } from '@qwik.dev/core';
 const left = 1;
 const right = 2;
 export const task = inlinedQrl(() => {

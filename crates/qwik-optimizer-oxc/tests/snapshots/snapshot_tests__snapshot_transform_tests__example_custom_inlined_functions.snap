@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { useMemoQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { wrap, useEffect } from "@qwik.dev/core";
+import { wrap, useEffect } from '@qwik.dev/core';
 //
 const q_App_component_1_w0t0o3QMovU = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_1_w0t0o3QMovU"), "App_component_1_w0t0o3QMovU");
 const q_Lightweight_useMemo_UIcxVTQF1a8 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Lightweight_useMemo_UIcxVTQF1a8"), "Lightweight_useMemo_UIcxVTQF1a8");
