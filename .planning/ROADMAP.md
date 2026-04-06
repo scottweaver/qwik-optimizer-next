@@ -63,11 +63,13 @@ Plans:
   3. Default exports, re-exports, and named exports in root module match SWC format
   4. QRL references and hoisted constant declarations match SWC naming and placement
   5. Comment separators between logical sections of root module output match SWC whitespace structure
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
+- [ ] 11-01-PLAN.md — Import assembly rewrite: marker source tracking, synthetic import emission, SWC-ordered import assembly, expanded dead import elimination
+- [ ] 11-02-PLAN.md — Comprehensive dead code elimination: SWC-matching fixpoint loop removing unused vars AND imports after variable migration
+- [ ] 11-03-PLAN.md — Display name / hash fix: add marker function name to stack_ctxt for correct segment hashes
+- [ ] 11-04-PLAN.md — Body structure cleanup: diagnose and fix remaining mismatches (unreferenced var stripping, expression ordering, separators)
 
 ### Phase 12: Diagnostics Parity
 **Goal**: Error diagnostics match SWC for all 201 fixtures -- same errors reported for invalid references and missing custom inlined functions
@@ -111,6 +113,6 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 8. Implementation Gap Closure | v0.1.0 | 5/5 | Complete | 2026-04-03 |
 | 9. Metadata & Verification Cleanup | v0.1.0 | 3/3 | Complete | 2026-04-03 |
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
-| 11. Root Module Code Generation | v0.2.0 | 0/2 | Not started | - |
+| 11. Root Module Code Generation | v0.2.0 | 0/4 | In progress | - |
 | 12. Diagnostics Parity | v0.2.0 | 0/1 | Not started | - |
 | 13. Final Acceptance | v0.2.0 | 0/1 | Not started | - |
