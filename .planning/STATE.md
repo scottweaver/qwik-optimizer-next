@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.2.0
 milestone_name: Full SWC Parity
 status: executing
-stopped_at: Completed 13-05-PLAN.md
-last_updated: "2026-04-06T20:53:09.888Z"
+stopped_at: Completed 13-07-PLAN.md
+last_updated: "2026-04-06T21:28:10.193Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 77
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 
 Milestone: v0.2.0 Full SWC Parity
 Phase: 13 (final-acceptance) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -72,6 +72,7 @@ Progress: [########░░] 77%
 | Phase 13 P04 | 13m | 1 tasks | 18 files |
 | Phase 13 P06 | 21m | 2 tasks | 28 files |
 | Phase 13 P05 | 28m | 2 tasks | 2 files |
+| Phase 13 P07 | 32m | 2 tasks | 159 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ Recent decisions affecting current work:
 - [Phase 13]: Pre-register segment names at enter_call_expression time via SegmentScope.pre_registered_name to match SWC Fold ordering for collision counters
 - [Phase 13]: Inline strategy uses same _noopQrl/.s()/.w() code path as Hoist; Lib mode retains inlinedQrl
 - [Phase 13]: _wrapProp fast path checks obj.prop member expressions where obj is a scoped ident; remaining import diffs are structural
+- [Phase 13]: first_arg_span for SWC-compatible loc/dev metadata; inlinedQrl as separate code path with is_inlined_qrl flag
 
 ### Pending Todos
 
@@ -123,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T20:53:09.885Z
-Stopped at: Completed 13-05-PLAN.md
+Last session: 2026-04-06T21:28:10.189Z
+Stopped at: Completed 13-07-PLAN.md
 Resume file: None

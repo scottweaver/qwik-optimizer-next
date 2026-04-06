@@ -100,7 +100,7 @@ Plans:
 - [x] 13-04-PLAN.md — Hash/naming fix: fix segment hash computation and remove spurious counter suffixes to match SWC QRL names
 - [x] 13-05-PLAN.md — Import count + _wrapProp + Fragment: fix import differences, add _wrapProp generation, add Fragment import for JSX fragments
 - [x] 13-06-PLAN.md — Inline strategy + tagName: rework Inline entry strategy to _noopQrl/.s()/.w() format, preserve component tagName option
-- [ ] 13-07-PLAN.md — Remaining feature gaps: import conflict renaming, dev mode offsets, dead code stripping, TS enum, jsxImportSource, segment extraction bug (D-04)
+- [x] 13-07-PLAN.md — Remaining feature gaps: import conflict renaming, dev mode offsets, dead code stripping, TS enum, jsxImportSource, segment extraction bug (D-04)
 - [ ] 13-08-PLAN.md — Final straggler sweep: diagnose and fix any remaining mismatches to reach 201/201
 
 ## Progress
@@ -122,4 +122,4 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
 | 11. Root Module Code Generation | v0.2.0 | 4/4 | Complete   | 2026-04-06 |
 | 12. Diagnostics Parity | v0.2.0 | 1/1 | Complete    | 2026-04-06 |
-| 13. Final Acceptance | v0.2.0 | 6/8 | In Progress|  |
+| 13. Final Acceptance | v0.2.0 | 7/8 | In Progress|  |
