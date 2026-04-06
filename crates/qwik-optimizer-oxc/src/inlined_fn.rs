@@ -173,6 +173,7 @@ fn serialize_expression_inner<'a>(expr: &Expression<'a>, allocator: &'a Allocato
         ..Default::default()
     };
     let raw = Codegen::new().with_options(codegen_options).build(&prog).code;
+    let raw = crate::emit::normalize_arrow_spacing_pub(&raw);
     raw.trim_start_matches("const _x = ")
         .trim_end_matches(';')
         .trim()

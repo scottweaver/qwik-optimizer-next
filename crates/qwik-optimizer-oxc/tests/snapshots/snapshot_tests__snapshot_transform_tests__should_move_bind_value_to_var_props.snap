@@ -12,7 +12,7 @@ const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.
 export const FieldInput = /*#__PURE__*/ componentQrl(q_FieldInput_component_V4XAtJSTRKg);
 
 ============================= test.tsx_FieldInput_component_input_q_e_click_fZgZHYZXt60.js (ENTRY POINT) ==
-export const FieldInput_component_input_q_e_click_fZgZHYZXt60 = () => {
+export const FieldInput_component_input_q_e_click_fZgZHYZXt60 = ()=>{
     console.log("clicked");
 };
 

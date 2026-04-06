@@ -61,7 +61,7 @@ export const STYLES_odzdfdfdM = STYLES;
 */
 ============================= test.tsx_App_component_div_p_button_onClick_odz7eidI4GM_App_component_div_p_button_onClick_odz7eidI4GM.tsx ==
 import { _captures } from "@qwik.dev/core";
-export const App_component_div_p_button_onClick_odz7eidI4GM = () => {
+export const App_component_div_p_button_onClick_odz7eidI4GM = ()=>{
     const store = _captures[0];
     const [store] = useLexicalScope();
     return store.count++;
@@ -91,13 +91,13 @@ export const App_component_div_p_button_onClick_odz7eidI4GM = () => {
 }
 */
 ============================= test.tsx_App_component_Fh88JClhbC0_App_component_Fh88JClhbC0.tsx ==
-var App_component_div_p_button_onClick_odz7eidI4GM = inlinedQrl(() => {
+var App_component_div_p_button_onClick_odz7eidI4GM = inlinedQrl(()=>{
     const [store] = useLexicalScope();
     return store.count++;
 }, "App_component_div_p_button_onClick_odz7eidI4GM", [store]);
 var STYLES_odz7dfdfdM = inlinedQrl(STYLES, "STYLES_odz7dfdfdM");
 var STYLES_odzdfdfdM = inlinedQrl(STYLES, "STYLES_odzdfdfdM");
-export const App_component_Fh88JClhbC0 = () => {
+export const App_component_Fh88JClhbC0 = ()=>{
     useStyles$(STYLES_odz7dfdfdM);
     useStyles$(STYLES_odzdfdfdM);
     const store = useStore({ count: 0 });

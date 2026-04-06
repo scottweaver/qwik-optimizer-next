@@ -6,7 +6,7 @@ snapshot_kind: text
 ============================= test.tsx ==
 import { _jsxSorted } from "@qwik.dev/core";
 import { Counter } from "./counter.tsx";
-export const Root = () => {
+export const Root = ()=>{
     return /*#__PURE__*/ _jsxSorted("html", null, null, [/*#__PURE__*/ _jsxSorted("head", null, null, [/*#__PURE__*/ _jsxSorted("meta", null, { charset: "utf-8" }, null, 1, null), /*#__PURE__*/ _jsxSorted("title", null, null, "Qwik Blank App", 1, null)], 1, null), /*#__PURE__*/ _jsxSorted("body", null, null, /*#__PURE__*/ _jsxSorted(Counter, null, { initial: 3 }, null, 1, "1"), 1, null)], 1, "0");
 };
 

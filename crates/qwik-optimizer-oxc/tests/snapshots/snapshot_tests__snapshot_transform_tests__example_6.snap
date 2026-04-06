@@ -11,7 +11,7 @@ const q_sym1_aXUrPXX5Lak = /*#__PURE__*/ qrl(()=>import("./test.tsx_sym1_aXUrPXX
 export const sym1 = q_sym1_aXUrPXX5Lak;
 
 ============================= test.tsx_sym1_aXUrPXX5Lak.tsx (ENTRY POINT) ==
-export const sym1_aXUrPXX5Lak = (ctx) => console.log("1");
+export const sym1_aXUrPXX5Lak = (ctx)=>console.log("1");
 
 /*
 {

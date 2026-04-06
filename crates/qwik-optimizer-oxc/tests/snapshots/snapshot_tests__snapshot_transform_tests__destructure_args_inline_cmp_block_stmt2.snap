@@ -11,7 +11,7 @@ const q_test_div_q_e_click_pFqTss400MA = /*#__PURE__*/ qrl(()=>import("./test.ts
 //
 export default (props: {
     data: any;
-}) => {
+})=>{
     const { data } = props;
     return /*#__PURE__*/ _jsxSorted("div", {
         "data-is-active": data.selectedOutputDetail === "options",
@@ -21,7 +21,7 @@ export default (props: {
 
 ============================= test.tsx_test_div_q_e_click_pFqTss400MA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const test_div_q_e_click_pFqTss400MA = () => {
+export const test_div_q_e_click_pFqTss400MA = ()=>{
     const data = _captures[0];
     data.selectedOutputDetail = "options";
 };

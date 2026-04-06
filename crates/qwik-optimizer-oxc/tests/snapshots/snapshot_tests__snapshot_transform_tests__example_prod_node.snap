@@ -42,7 +42,7 @@ export const s_HTDRsvUbLiE = () => {
 }
 */
 ============================= test.tsx_Foo_component_div_div_q_e_click_2_n19LdlqL6To.tsx (ENTRY POINT) ==
-export const s_n19LdlqL6To = () => console.log("third");
+export const s_n19LdlqL6To = ()=>console.log("third");
 
 /*
 {
@@ -65,7 +65,7 @@ export const s_n19LdlqL6To = () => console.log("third");
 }
 */
 ============================= test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM.tsx (ENTRY POINT) ==
-export const s_vKrX4PmH2aM = () => console.log("first");
+export const s_vKrX4PmH2aM = ()=>console.log("first");
 
 /*
 {
@@ -88,7 +88,7 @@ export const s_vKrX4PmH2aM = () => console.log("first");
 }
 */
 ============================= test.tsx_Foo_component_div_div_q_e_click_1_VSoqbTjzr4w.tsx (ENTRY POINT) ==
-export const s_VSoqbTjzr4w = () => console.log("second");
+export const s_VSoqbTjzr4w = ()=>console.log("second");
 
 /*
 {

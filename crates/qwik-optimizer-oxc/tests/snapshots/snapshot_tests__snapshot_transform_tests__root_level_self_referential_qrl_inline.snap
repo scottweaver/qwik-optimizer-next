@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 948
 expression: output
+snapshot_kind: text
 ---
 ============================= ./node_modules/qwik-tree/index.qwik.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -9,10 +9,10 @@ import { _noopQrlDEV } from "@qwik.dev/core";
 //
 const q_Tree_component_XMEiO6Rrd3Y = /*#__PURE__*/ _noopQrlDEV("Tree_component_XMEiO6Rrd3Y");
 //
-q_Tree_component_XMEiO6Rrd3Y.s((props) => {
+q_Tree_component_XMEiO6Rrd3Y.s((props)=>{
     return <div>
 			{props.label}
-			{props.children && props.children.map((child) => <Tree {...child} />)}
+			{props.children && props.children.map((child)=><Tree {...child} />)}
 		</div>;
 });
 // Root-level self-referential component

@@ -13,7 +13,7 @@ export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
 ============================= test.tsx_test_component_div_div_q_e_hover_2iHUE4xtgo8.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const test_component_div_div_q_e_hover_2iHUE4xtgo8 = () => {
+export const test_component_div_div_q_e_hover_2iHUE4xtgo8 = ()=>{
     const bar = _captures[0];
     const index = _captures[1];
     return console.log(bar.value, index);
@@ -79,7 +79,7 @@ export const test_component_LUXeXe0DQrg = () => {
 */
 ============================= test.tsx_test_component_div_div_q_e_click_Mc600uqO6ps.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const test_component_div_div_q_e_click_Mc600uqO6ps = () => {
+export const test_component_div_div_q_e_click_Mc600uqO6ps = ()=>{
     const foo = _captures[0];
     const item = _captures[1];
     return console.log(item, foo.value);

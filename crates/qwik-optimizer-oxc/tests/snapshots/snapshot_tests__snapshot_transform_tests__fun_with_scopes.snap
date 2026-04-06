@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 932
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -9,26 +9,26 @@ import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { inlinedQrl, jsx } from '@qwik.dev/core';
 //
-const q_Lifecycle_Lifecycle_component_PcjTk3N1YOg = /*#__PURE__*/ _noopQrl("Lifecycle_Lifecycle_component_PcjTk3N1YOg");
-const q_Field_jsx_children_eVTPl5mlRx4 = /*#__PURE__*/ _noopQrl("Field_jsx_children_eVTPl5mlRx4");
 const q_Field_jsx_children_1_0J3pRyFvud4 = /*#__PURE__*/ _noopQrl("Field_jsx_children_1_0J3pRyFvud4");
+const q_Field_jsx_children_eVTPl5mlRx4 = /*#__PURE__*/ _noopQrl("Field_jsx_children_eVTPl5mlRx4");
+const q_Lifecycle_Lifecycle_component_PcjTk3N1YOg = /*#__PURE__*/ _noopQrl("Lifecycle_Lifecycle_component_PcjTk3N1YOg");
 const q_it_StyledComponent_component_F9AGTDZHx8I = /*#__PURE__*/ _noopQrl("it_StyledComponent_component_F9AGTDZHx8I");
 //
-q_Lifecycle_Lifecycle_component_PcjTk3N1YOg.s(() => {
+q_Lifecycle_Lifecycle_component_PcjTk3N1YOg.s(()=>{
     return /*#__PURE__*/ jsx(Slot, {});
 });
-q_Field_jsx_children_eVTPl5mlRx4.s((element) => {
+q_Field_jsx_children_eVTPl5mlRx4.s((element)=>{
     field.internal.elements.push(element);
 });
-q_it_StyledComponent_component_button_q_e_click_CEp5mVjiu08.s(() => store.count++);
-q_it_StyledComponent_component_F9AGTDZHx8I.s(() => {
+q_it_StyledComponent_component_button_q_e_click_CEp5mVjiu08.s(()=>store.count++);
+q_it_StyledComponent_component_F9AGTDZHx8I.s(()=>{
 useStylesScoped$(STYLE_RED);
     const store = useStore({ count: 10 });
-    return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
+    return <button class={["container", `count-${store.count}`]} onClick$={()=>store.count++}>
 								Hello world
 							</button>;
 });
-export default () => {
+export default ()=>{
 globalThis.foo();
 globalThis.bar();
     const qrl = inlinedQrl(null, serverFnHash, data.slice(1));
@@ -37,7 +37,7 @@ globalThis.bar();
 function Lifecycle(props, key, flags) {
     return (/*#__PURE__*/ componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg))(props, key, flags);
 }
-export const rawFn = (event, element) => {
+export const rawFn = (event, element)=>{
     handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
 };
 export function Field({ children, name, type, ...props }) {
@@ -55,8 +55,8 @@ export function Field({ children, name, type, ...props }) {
     }, name);
 }
 const STYLE_RED = `.container {background-color: red;}`;
-describe.each([])("$render.name: useStylesScoped", ({ render }) => {
-    it("should render object style", async () => {
+describe.each([])("$render.name: useStylesScoped", ({ render })=>{
+    it("should render object style", async ()=>{
         const StyledComponent = /*#__PURE__*/ componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
         const { vNode, getStyles, document } = await render(/*#__PURE__*/ _jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
     });

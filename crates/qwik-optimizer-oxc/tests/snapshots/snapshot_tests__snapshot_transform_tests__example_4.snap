@@ -43,7 +43,7 @@ export const App_Header_component_B9F3YeqcO1w = () => {
 }
 */
 ============================= test.tsx_App_Header_component_div_div_onClick_gb005Xy9YAw.tsx (ENTRY POINT) ==
-export const App_Header_component_div_div_onClick_gb005Xy9YAw = (ctx) => console.log(ctx);
+export const App_Header_component_div_div_onClick_gb005Xy9YAw = (ctx)=>console.log(ctx);
 
 /*
 {

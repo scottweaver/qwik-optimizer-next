@@ -64,7 +64,7 @@ export const Parent_component_0TaiDayHrlo = () => {
 */
 ============================= test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Parent_component_div_button_q_e_click_5khsVRINUws = () => {
+export const Parent_component_div_button_q_e_click_5khsVRINUws = ()=>{
     const cart = _captures[0];
     const item = _captures[1];
     cart.push(item);
@@ -96,7 +96,7 @@ export const Parent_component_div_button_q_e_click_5khsVRINUws = () => {
 */
 ============================= test.tsx_Parent_component_div_button_q_e_click_1_rAeuW6OvuXM.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Parent_component_div_button_q_e_click_1_rAeuW6OvuXM = () => {
+export const Parent_component_div_button_q_e_click_1_rAeuW6OvuXM = ()=>{
     const results = _captures[0];
     return results.value = ["item1", "item2"];
 };

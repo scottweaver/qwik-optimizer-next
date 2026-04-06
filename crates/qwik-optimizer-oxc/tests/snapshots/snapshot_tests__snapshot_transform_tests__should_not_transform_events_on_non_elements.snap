@@ -45,7 +45,7 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
 }
 */
 ============================= test.tsx_Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc.tsx (ENTRY POINT) ==
-export const Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc = () => {};
+export const Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc = ()=>{};
 
 /*
 {
@@ -68,7 +68,7 @@ export const Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc = () =
 }
 */
 ============================= test.tsx_Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo.tsx (ENTRY POINT) ==
-export const Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo = () => {};
+export const Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo = ()=>{};
 
 /*
 {

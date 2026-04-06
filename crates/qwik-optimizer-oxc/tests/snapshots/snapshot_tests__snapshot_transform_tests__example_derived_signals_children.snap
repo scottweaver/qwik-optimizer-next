@@ -9,16 +9,16 @@ import { _noopQrl } from "@qwik.dev/core";
 import { useStore, mutable } from '@qwik.dev/core';
 import { dep } from './file';
 //
-const q_TextContent_component_puSwpKXO7Kg = /*#__PURE__*/ _noopQrl("TextContent_component_puSwpKXO7Kg");
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
+const q_TextContent_component_puSwpKXO7Kg = /*#__PURE__*/ _noopQrl("TextContent_component_puSwpKXO7Kg");
 //
-q_TextContent_component_puSwpKXO7Kg.s((props) => {
+q_TextContent_component_puSwpKXO7Kg.s((props)=>{
     return <>
 			<div>data-nu: {props["data-nu"]}</div>
 			<div>class: {props.class}</div>
 		</>;
 });
-q_App_component_ckEPmXZlub0.s(() => {
+q_App_component_ckEPmXZlub0.s(()=>{
     const signal = useSignal(0);
     const store = useStore({});
     return <>

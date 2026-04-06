@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 874
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -9,7 +9,7 @@ import { _noopQrl } from "@qwik.dev/core";
 //
 const q_s_n7HuG2hhU0Q = /*#__PURE__*/ _noopQrl("s_n7HuG2hhU0Q");
 //
-q_s_n7HuG2hhU0Q.s(() => {
+q_s_n7HuG2hhU0Q.s(()=>{
     const value = useSignal(0);
     const checked = useSignal(false);
     const stuff = useSignal();

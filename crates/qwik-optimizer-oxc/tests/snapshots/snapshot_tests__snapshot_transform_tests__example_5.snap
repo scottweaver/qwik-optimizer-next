@@ -42,7 +42,7 @@ export const Header_component_J4uyIhaBNR4 = () => {
 }
 */
 ============================= test.tsx_Header_component_div_div_onClick_MQvnAt86M4Y.tsx (ENTRY POINT) ==
-export const Header_component_div_div_onClick_MQvnAt86M4Y = (ctx) => console.log("2");
+export const Header_component_div_div_onClick_MQvnAt86M4Y = (ctx)=>console.log("2");
 
 /*
 {

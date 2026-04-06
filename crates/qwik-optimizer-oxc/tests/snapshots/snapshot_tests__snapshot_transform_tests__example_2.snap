@@ -40,7 +40,7 @@ export const Header_component_J4uyIhaBNR4 = () => {
 }
 */
 ============================= test.tsx_Header_component_div_div_onClick_MQvnAt86M4Y.tsx (ENTRY POINT) ==
-export const Header_component_div_div_onClick_MQvnAt86M4Y = (ctx) => console.log(ctx);
+export const Header_component_div_div_onClick_MQvnAt86M4Y = (ctx)=>console.log(ctx);
 
 /*
 {

@@ -13,7 +13,7 @@ export const FieldInput = /*#__PURE__*/ componentQrl(q_FieldInput_component_V4XA
 
 ============================= test.tsx_FieldInput_component_input_input_onInput_OKo0yRTX1PU.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const FieldInput_component_input_input_onInput_OKo0yRTX1PU = (ev, el) => {
+export const FieldInput_component_input_input_onInput_OKo0yRTX1PU = (ev, el)=>{
     const input = _captures[0];
     input.value = el.value;
 };
@@ -47,7 +47,7 @@ export const FieldInput_component_input_input_onInput_OKo0yRTX1PU = (ev, el) => 
 */
 ============================= test.tsx_FieldInput_component_input_q_e_focus_Sgf3MDWzexI.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const FieldInput_component_input_q_e_focus_Sgf3MDWzexI = () => {
+export const FieldInput_component_input_q_e_focus_Sgf3MDWzexI = ()=>{
     const enabled = _captures[0];
     enabled.value = true;
 };

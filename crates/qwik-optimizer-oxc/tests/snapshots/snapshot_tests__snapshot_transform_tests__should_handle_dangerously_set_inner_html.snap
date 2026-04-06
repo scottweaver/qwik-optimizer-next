@@ -55,7 +55,7 @@ export const Cmp_component_4ryKJTOKjWE = () => {
 */
 ============================= test.tsx_Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8 = () => {
+export const Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8 = ()=>{
     const htmlSignal = _captures[0];
     return htmlSignal.value = "<h2><span>I'm a updated signal value!</span></h2>";
 };

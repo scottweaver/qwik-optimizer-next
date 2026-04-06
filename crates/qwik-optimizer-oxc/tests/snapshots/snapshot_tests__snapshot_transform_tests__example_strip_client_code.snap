@@ -16,18 +16,18 @@ import { c } from '../../remove';
 //
 const q_Parent_component_t6Wy3C0Q0XM = /*#__PURE__*/ _noopQrl("Parent_component_t6Wy3C0Q0XM");
 //
-q_Parent_component_useTask_ngmvcygWux8.s(() => {});
-q_Parent_component_div_shouldRemove_EBj69wTX1do.s(() => state.text);
-q_Parent_component_div_Div_render_CkMybN6xzQk.s(() => state.text);
-q_Parent_component_t6Wy3C0Q0XM.s(() => {
+q_Parent_component_useTask_ngmvcygWux8.s(()=>{});
+q_Parent_component_div_shouldRemove_EBj69wTX1do.s(()=>state.text);
+q_Parent_component_div_Div_render_CkMybN6xzQk.s(()=>state.text);
+q_Parent_component_t6Wy3C0Q0XM.s(()=>{
     const state = useStore({ text: "" });
-    useClientMount$(async () => {
+    useClientMount$(async ()=>{
         state.text = await mongo.users();
         redis.set(state.text, a, b, c);
     });
-    useTask$(() => {});
-    return <div shouldRemove$={() => state.text} onClick$={() => console.log("parent", state, threejs)}>
-			<Div onClick$={() => console.log("keep")} render$={() => state.text} />
+    useTask$(()=>{});
+    return <div shouldRemove$={()=>state.text} onClick$={()=>console.log("parent", state, threejs)}>
+			<Div onClick$={()=>console.log("keep")} render$={()=>state.text} />
 			{state.text}
 		</div>;
 });

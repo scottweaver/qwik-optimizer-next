@@ -13,7 +13,7 @@ const q_Other_component_C1my3EIdP1k = /*#__PURE__*/ qrl(()=>import("./test.tsx_O
 // This shared variable is used by multiple segments, so it should stay at root
 const SHARED_CONFIG = { value: 42 };
 // This is an export, so it must stay at root
-export const publicHelper = () => console.log("public");
+export const publicHelper = ()=>console.log("public");
 export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 export const Other = /*#__PURE__*/ componentQrl(q_Other_component_C1my3EIdP1k);
 
@@ -42,7 +42,7 @@ export const Other_component_C1my3EIdP1k = () => {
 }
 */
 ============================= test.tsx_App_component_ckEPmXZlub0.tsx (ENTRY POINT) ==
-const helperFn = (msg) => {
+const helperFn = (msg)=>{
     console.log("Helper: " + msg);
     return msg.toUpperCase();
 };

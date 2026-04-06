@@ -10,7 +10,7 @@ import L from "leaflet";
 //
 const q_s_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "s_ckEPmXZlub0");
 //
-export const functionThatNeedsWindow = () => {
+export const functionThatNeedsWindow = ()=>{
     if (false) {
         console.log("l", L);
         console.log("hey");

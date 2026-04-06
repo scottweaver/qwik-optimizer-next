@@ -41,7 +41,7 @@ export const slug_component_0AM8HPnkNs4 = () => {
 */
 ============================= src/routes/_repl/[id]/[[...slug]].tsx_slug_component_div_q_e_click_bCwVPYSTQ0w.js (ENTRY POINT) ==
 import { sibling } from "./sibling";
-export const slug_component_div_q_e_click_bCwVPYSTQ0w = () => console.log(mongodb, sibling);
+export const slug_component_div_q_e_click_bCwVPYSTQ0w = ()=>console.log(mongodb, sibling);
 
 /*
 {

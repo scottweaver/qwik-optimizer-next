@@ -37,7 +37,7 @@ export const Cmp_component_4ryKJTOKjWE = () =>
 }
 */
 ============================= test.tsx_Cmp_component_Cmp_foo_iPpdemxi0uE.ts (ENTRY POINT) ==
-export const Cmp_component_Cmp_foo_iPpdemxi0uE = () => console.log("hi there");
+export const Cmp_component_Cmp_foo_iPpdemxi0uE = ()=>console.log("hi there");
 
 /*
 {

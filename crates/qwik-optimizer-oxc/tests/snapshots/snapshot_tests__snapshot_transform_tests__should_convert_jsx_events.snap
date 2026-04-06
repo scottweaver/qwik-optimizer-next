@@ -12,7 +12,7 @@ const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(()=>import
 /*#__PURE__*/ componentQrl(q_ManyEventsComponent_component_ndbrzxiyG3g);
 
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA = () => {};
+export const ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA = ()=>{};
 
 /*
 {
@@ -35,7 +35,7 @@ export const ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA = 
 }
 */
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs = () => {};
+export const ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs = ()=>{};
 
 /*
 {
@@ -58,7 +58,7 @@ export const ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs = ()
 }
 */
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs = () => {};
+export const ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs = ()=>{};
 
 /*
 {
@@ -81,7 +81,7 @@ export const ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs = ()
 }
 */
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY = () => {};
+export const ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY = ()=>{};
 
 /*
 {
@@ -146,7 +146,7 @@ export const ManyEventsComponent_component_ndbrzxiyG3g = () => {
 }
 */
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_e_dblclick_VZGqMEVFles.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_e_dblclick_VZGqMEVFles = () => {};
+export const ManyEventsComponent_component_div_button_q_e_dblclick_VZGqMEVFles = ()=>{};
 
 /*
 {
@@ -169,7 +169,7 @@ export const ManyEventsComponent_component_div_button_q_e_dblclick_VZGqMEVFles =
 }
 */
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_e_click_z0X12CPQocg.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_e_click_z0X12CPQocg = () => {};
+export const ManyEventsComponent_component_div_button_q_e_click_z0X12CPQocg = ()=>{};
 
 /*
 {
@@ -192,7 +192,7 @@ export const ManyEventsComponent_component_div_button_q_e_click_z0X12CPQocg = ()
 }
 */
 ============================= test.tsx_ManyEventsComponent_component_div_button_q_e_another_custom_ZC5Gt2v0qH0.js (ENTRY POINT) ==
-export const ManyEventsComponent_component_div_button_q_e_another_custom_ZC5Gt2v0qH0 = () => {};
+export const ManyEventsComponent_component_div_button_q_e_another_custom_ZC5Gt2v0qH0 = ()=>{};
 
 /*
 {

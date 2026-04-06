@@ -9,11 +9,11 @@ import { _noopQrl } from "@qwik.dev/core";
 //
 const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
 //
-q_Works_component_div_div_onClick_server_lFRg0PjqeUM.s(() => console.log("in server", text));
-q_Works_component_t45qL4vNGv0.s((props) => {
+q_Works_component_div_div_onClick_server_lFRg0PjqeUM.s(()=>console.log("in server", text));
+q_Works_component_t45qL4vNGv0.s((props)=>{
     useStyle$(STYLES);
     const text = "hola";
-    return <div onClick$={server$(() => console.log("in server", text))}></div>;
+    return <div onClick$={server$(()=>console.log("in server", text))}></div>;
 });
 export const Works = /*#__PURE__*/ componentQrl(q_Works_component_t45qL4vNGv0);
 const STYLES = ".class {}";

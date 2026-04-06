@@ -7,15 +7,15 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
 const q_App_component_wGkRHWXaqjs = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
+const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
 //
 export const Header = /*#__PURE__*/ componentQrl(q_Header_component_UVBJuFYfvDo);
 export const App = /*#__PURE__*/ componentQrl(q_App_component_wGkRHWXaqjs);
 
 ============================= project/test.tsx_Header_component_Header_onClick_KjD9TCNkNxY.tsx ==
 import { default as dep3 } from "dep3/something";
-export const Header_component_Header_onClick_KjD9TCNkNxY = (ev) => dep3(ev);
+export const Header_component_Header_onClick_KjD9TCNkNxY = (ev)=>dep3(ev);
 
 /*
 {

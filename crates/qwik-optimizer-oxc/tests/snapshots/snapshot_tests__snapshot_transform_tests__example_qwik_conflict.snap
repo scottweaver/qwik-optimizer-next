@@ -13,7 +13,7 @@ const q_Root_component_royhjYaCbYE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Ro
 //
 export const hW = 12;
 export const handleWatch = 42;
-const componentQrl = () => console.log("not this", qrl());
+const componentQrl = ()=>console.log("not this", qrl());
 /*#__PURE__*/ componentQrl();
 export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE, { tagName: "my-foo" });
 export const Root = /*#__PURE__*/ componentQrl(q_Root_component_royhjYaCbYE, { tagName: "my-foo" });
@@ -133,7 +133,7 @@ export const Root_component_useStyles_u5DkUxGrGnU = "thing";
 */
 ============================= test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg.js (ENTRY POINT) ==
 import { qrl } from "@qwik.dev/core/what";
-export const Foo_component_div_q_e_click_YEa2A5ADUOg = () => console.log(qrl);
+export const Foo_component_div_q_e_click_YEa2A5ADUOg = ()=>console.log(qrl);
 
 /*
 {

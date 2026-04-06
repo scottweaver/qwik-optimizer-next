@@ -14,7 +14,7 @@ export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
 component(q_renderHeader2_component_Ay6ibkfFYsw);
 
 ============================= test.tsx_renderHeader1_div_div_onClick_4G8036HZRPA.tsx (ENTRY POINT) ==
-export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx) => console.log(ctx);
+export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx)=>console.log(ctx);
 
 /*
 {
@@ -40,7 +40,7 @@ export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx) => console.log(ct
 }
 */
 ============================= test.tsx_renderHeader2_component_Ay6ibkfFYsw.tsx (ENTRY POINT) ==
-export const renderHeader2_component_Ay6ibkfFYsw = () => {
+export const renderHeader2_component_Ay6ibkfFYsw = ()=>{
     console.log("mount");
     return render;
 };

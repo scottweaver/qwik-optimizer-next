@@ -319,6 +319,12 @@ pub(crate) struct HoistedConst {
     /// to a parent segment (false). Only root-level consts are emitted
     /// in exit_program; child consts are emitted by code_move.
     pub is_root_level: bool,
+    /// Source span start of the original `$()` call expression.
+    /// Used for sorting hoisted consts to match SWC Fold (post-order DFS) ordering.
+    pub span_start: u32,
+    /// Parent segment symbol name, if nested inside another segment.
+    /// Used for post-order sorting: children must appear before parents.
+    pub parent_symbol: Option<String>,
 }
 
 /// Internal record for a single extracted segment. Accumulated in
@@ -1385,6 +1391,8 @@ impl QwikTransform {
                     rhs_code: noop_rhs,
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
+                    span_start: 0,
+                    parent_symbol: None,
                 });
             }
 
@@ -1451,6 +1459,8 @@ impl QwikTransform {
                     rhs_code: noop_rhs,
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
+                    span_start: 0,
+                    parent_symbol: None,
                 });
             }
 
@@ -1571,6 +1581,8 @@ impl QwikTransform {
                     rhs_code: qrl_rhs,
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
+                    span_start: 0,
+                    parent_symbol: None,
                 });
                 // Store dev metadata for post-emit injection
                 if is_dev {
@@ -1737,6 +1749,8 @@ impl QwikTransform {
                 rhs_code: qrl_rhs,
                 symbol_name: names.symbol_name.clone(),
                 is_root_level,
+                span_start: 0,
+                parent_symbol: None,
             });
             if is_dev {
                 let dev_file = self.dev_file_path.clone()
@@ -2752,6 +2766,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     rhs_code: noop_rhs,
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
+                    span_start: 0,
+                    parent_symbol: None,
                 });
             }
 
@@ -2895,6 +2911,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     rhs_code: noop_rhs,
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
+                    span_start: 0,
+                    parent_symbol: None,
                 });
             }
 
@@ -3084,6 +3102,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     rhs_code: qrl_rhs,
                     symbol_name: names.symbol_name.clone(),
                     is_root_level,
+                    span_start: 0,
+                    parent_symbol: None,
                 });
                 // Store dev metadata for post-emit injection
                 if is_dev {
@@ -3300,12 +3320,21 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         // These are used in the root module body when $-suffixed calls are rewritten.
         // Use a BTreeSet for deterministic ordering across runs.
         let mut wrapper_imports: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        // Build set of locally-defined names (exports + top-level declarations)
+        // to skip importing wrappers that are defined in the same file.
+        let locally_defined: std::collections::HashSet<String> = {
+            let collect = unsafe { &*self.global_collect_ptr };
+            collect.exports.keys().cloned().collect()
+        };
         for seg in &self.segments {
             if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
                 let wrapper_name = words::dollar_to_qrl_name(&seg.ctx_name);
                 // Don't add if already in imports_to_add
                 if !imports_to_add.iter().any(|(s, _)| *s == wrapper_name) {
-                    wrapper_imports.insert(wrapper_name);
+                    // Don't add if the wrapper function is locally defined
+                    if !locally_defined.contains(&wrapper_name) {
+                        wrapper_imports.insert(wrapper_name);
+                    }
                 }
             }
         }

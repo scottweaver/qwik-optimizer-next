@@ -13,8 +13,8 @@ export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
 ============================= test.tsx_test_component_LUXeXe0DQrg.ts (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
-const useFoo = (count) => {
-    const tag = (s) => {
+const useFoo = (count)=>{
+    const tag = (s)=>{
         const value = typeof s === "string" ? s : s[0];
         return `${value}-${count.value}`;
     };
@@ -53,7 +53,7 @@ export const test_component_LUXeXe0DQrg = () => {
 */
 ============================= test.tsx_test_component_button_q_e_click_qwSL5gM03T4.ts (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const test_component_button_q_e_click_qwSL5gM03T4 = () => {
+export const test_component_button_q_e_click_qwSL5gM03T4 = ()=>{
     const count = _captures[0];
     return count.value++;
 };

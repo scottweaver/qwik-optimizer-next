@@ -108,7 +108,7 @@ export const App_component_serverStuff_1_PQCqO0ANabY = null;
 */
 ============================= test.tsx_App_component_Cmp_p_shouldRemove_uU0MG0jvQD4.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const App_component_Cmp_p_shouldRemove_uU0MG0jvQD4 = () => {
+export const App_component_Cmp_p_shouldRemove_uU0MG0jvQD4 = ()=>{
     const stuff = _captures[0];
     return stuff.count;
 };

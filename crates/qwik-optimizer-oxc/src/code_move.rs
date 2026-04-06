@@ -55,6 +55,7 @@ pub(crate) fn emit_segment(
         let map = result.map.map(|sm| sm.to_json_string());
         // Normalize PURE annotations: OXC emits `/* @__PURE__ */`, SWC uses `/*#__PURE__*/`
         let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
+        let code = crate::emit::normalize_arrow_spacing_pub(&code);
         (code, map)
     } else {
         let codegen_options = CodegenOptions {
@@ -67,6 +68,7 @@ pub(crate) fn emit_segment(
             .with_source_text(source)
             .build(&program);
         let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
+        let code = crate::emit::normalize_arrow_spacing_pub(&code);
         (code, None)
     }
 }
@@ -659,6 +661,8 @@ pub(crate) fn collect_needed_extra_top_items(
             rhs_code: item.rhs_code.clone(),
             symbol_name: item.symbol_name.clone(),
             is_root_level: item.is_root_level,
+            span_start: item.span_start,
+            parent_symbol: item.parent_symbol.clone(),
         })
         .collect()
 }

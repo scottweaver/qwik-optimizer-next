@@ -11,7 +11,7 @@ import { dep } from './file';
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //
-q_App_component_ckEPmXZlub0.s(() => {
+q_App_component_ckEPmXZlub0.s(()=>{
     const signal = useSignal(0);
     const store = useStore({});
     return <>

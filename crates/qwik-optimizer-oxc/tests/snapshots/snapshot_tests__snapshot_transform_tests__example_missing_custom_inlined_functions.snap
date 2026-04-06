@@ -6,15 +6,15 @@ snapshot_kind: text
 ============================= test.tsx ==
 import { _jsxSorted } from "@qwik.dev/core";
 import { useStore, useEffect } from '@qwik.dev/core';
-export const useMemo$ = (qrt) => {
+export const useMemo$ = (qrt)=>{
     useEffect(qrt);
 };
-export const App = component$((props) => {
+export const App = component$((props)=>{
     const state = useStore({ count: 0 });
-    useMemo$(() => {
+    useMemo$(()=>{
         console.log(state.count);
     });
-    return $(() => /*#__PURE__*/ _jsxSorted("div", null, null, state.count, 1, "0"));
+    return $(()=>/*#__PURE__*/ _jsxSorted("div", null, null, state.count, 1, "0"));
 });
 
 == DIAGNOSTICS ==

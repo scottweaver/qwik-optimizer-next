@@ -25,7 +25,7 @@ export function useHook() {
 }
 
 ============================= test.tsx_useHook_fn_kScGJcREaTg.js (ENTRY POINT) ==
-export const useHook_fn_kScGJcREaTg = () => {
+export const useHook_fn_kScGJcREaTg = ()=>{
     state.counter++;
     console.log(state.id);
 };

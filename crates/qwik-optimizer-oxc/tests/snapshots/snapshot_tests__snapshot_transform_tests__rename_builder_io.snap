@@ -8,9 +8,9 @@ import { componentQrl } from "@qwik.dev/core";
 import { qwikifyQrl } from "@qwik.dev/react";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Foo_qwikify_0Yoy9qA0SC0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_qwikify_0Yoy9qA0SC0"), "Foo_qwikify_0Yoy9qA0SC0");
-const q_Bar_GXXnVUtURSw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Bar_GXXnVUtURSw"), "Bar_GXXnVUtURSw");
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+const q_Bar_GXXnVUtURSw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Bar_GXXnVUtURSw"), "Bar_GXXnVUtURSw");
+const q_Foo_qwikify_0Yoy9qA0SC0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_qwikify_0Yoy9qA0SC0"), "Foo_qwikify_0Yoy9qA0SC0");
 //
 export const Foo = qwikifyQrl(q_Foo_qwikify_0Yoy9qA0SC0);
 export const Bar = q_Bar_GXXnVUtURSw;
@@ -44,7 +44,7 @@ import { isDev } from "@qwik.dev/core/build";
 import { moreStuff } from "@qwik.dev/router/more/here";
 import { default as sdk } from "@builder.io/sdk";
 import { stuff } from "@qwik.dev/router";
-export const App_component_ckEPmXZlub0 = () => {
+export const App_component_ckEPmXZlub0 = ()=>{
     sdk.hello();
     if (isDev) {
         stuff();

@@ -7,8 +7,8 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
 const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
+const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
 //
 export const Parent = /*#__PURE__*/ componentQrl(q_Parent_component_0TaiDayHrlo);
 export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
@@ -95,7 +95,7 @@ export const Child_component_9GyF01GDKqw = () => {
 }
 */
 ============================= test.tsx_Child_component_div_q_e_click_cROa4sult1s.js (ENTRY POINT) ==
-export const Child_component_div_q_e_click_cROa4sult1s = () => console.log("child");
+export const Child_component_div_q_e_click_cROa4sult1s = ()=>console.log("child");
 
 /*
 {
@@ -120,7 +120,7 @@ export const Child_component_div_q_e_click_cROa4sult1s = () => console.log("chil
 ============================= test.tsx_Parent_component_useTask_gDH1EtUWqBU.js ==
 import { _captures } from "@qwik.dev/core";
 import { default as mongo } from "mongodb";
-export const Parent_component_useTask_gDH1EtUWqBU = async () => {
+export const Parent_component_useTask_gDH1EtUWqBU = async ()=>{
     const state = _captures[0];
     state.text = await mongo.users();
     redis.set(state.text);
@@ -152,7 +152,7 @@ export const Parent_component_useTask_gDH1EtUWqBU = async () => {
 ============================= test.tsx_Child_component_useTask_Oh4n7ZeqJkU.js ==
 import { _captures } from "@qwik.dev/core";
 import { default as mongo } from "mongodb";
-export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
+export const Child_component_useTask_Oh4n7ZeqJkU = async ()=>{
     const state = _captures[0];
     state.text = await mongo.users();
 };
@@ -181,7 +181,7 @@ export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
 }
 */
 ============================= test.tsx_Parent_component_div_q_e_click_zM9okM0TYrA.js (ENTRY POINT) ==
-export const Parent_component_div_q_e_click_zM9okM0TYrA = () => console.log("parent");
+export const Parent_component_div_q_e_click_zM9okM0TYrA = ()=>console.log("parent");
 
 /*
 {

@@ -51,6 +51,7 @@ pub(crate) fn emit_module<'a>(
         let code = normalize_pure_annotations(&codegen_result.code);
         let code = inject_pure_annotations(&code);
         let code = preserve_original_quotes(&code, source);
+        let code = sort_hoisted_consts(&code);
         let code = insert_separator_comments(&code);
         EmitResult { code, map }
     } else {
@@ -78,9 +79,103 @@ pub(crate) fn emit_module<'a>(
 /// Both are valid tree-shaking hints but differ cosmetically.
 fn normalize_pure_annotations(code: &str) -> String {
     let code = code.replace("/* @__PURE__ */", "/*#__PURE__*/");
-    // Normalize arrow function spacing in dynamic imports to match SWC format.
-    // OXC codegen emits `() => import(...)` but SWC uses `()=>import(...)`.
-    code.replace("() => import(", "()=>import(")
+    // Normalize arrow function spacing to match SWC format.
+    // OXC codegen emits `) => ` but SWC uses `)=>`. Apply globally.
+    normalize_arrow_spacing(&code)
+}
+
+/// Public wrapper for normalize_arrow_spacing for use in code_move.rs.
+pub(crate) fn normalize_arrow_spacing_pub(code: &str) -> String {
+    normalize_arrow_spacing(code)
+}
+
+/// Remove spaces around `=>` in arrow functions to match SWC output.
+///
+/// OXC codegen always emits `(params) => body` with spaces around `=>`.
+/// SWC emits `(params)=>body` (no spaces). We normalize to SWC format.
+///
+/// This handles all arrow patterns:
+/// - `() => {` -> `()=>{`
+/// - `(props) => {` -> `(props)=>{`
+/// - `() => import(` -> `()=>import(`
+fn normalize_arrow_spacing(code: &str) -> String {
+    // Replace ") => " with ")=>" and ") =>\n" with ")=>\n".
+    // OXC codegen always parenthesizes arrow params, so ") =>" is the only
+    // pattern we need to handle.
+    //
+    // We process line-by-line to avoid cross-line issues and use a simple
+    // quote-parity check to avoid replacing inside string literals.
+    let mut result = String::with_capacity(code.len());
+
+    for line in code.split('\n') {
+        if result.len() > 0 {
+            result.push('\n');
+        }
+        // Quick check: does this line contain ") =>" at all?
+        if !line.contains(") =>") {
+            result.push_str(line);
+            continue;
+        }
+
+        // Process the line character by character
+        let bytes = line.as_bytes();
+        let len = bytes.len();
+        let mut i = 0;
+        let mut in_string = false;
+        let mut string_char: u8 = 0;
+
+        while i < len {
+            // Track string state
+            if !in_string {
+                if bytes[i] == b'"' || bytes[i] == b'\'' || bytes[i] == b'`' {
+                    in_string = true;
+                    string_char = bytes[i];
+                    result.push(bytes[i] as char);
+                    i += 1;
+                    continue;
+                }
+            } else {
+                if bytes[i] == string_char && (i == 0 || bytes[i - 1] != b'\\') {
+                    in_string = false;
+                }
+                result.push(bytes[i] as char);
+                i += 1;
+                continue;
+            }
+
+            // Check for ") => " pattern (with space after =>)
+            if !in_string
+                && i + 4 < len
+                && bytes[i] == b')'
+                && bytes[i + 1] == b' '
+                && bytes[i + 2] == b'='
+                && bytes[i + 3] == b'>'
+                && bytes[i + 4] == b' '
+            {
+                result.push_str(")=>");
+                i += 5; // skip ") => "
+                continue;
+            }
+
+            // Check for ") =>" at end of meaningful content (no space after)
+            if !in_string
+                && i + 3 < len
+                && bytes[i] == b')'
+                && bytes[i + 1] == b' '
+                && bytes[i + 2] == b'='
+                && bytes[i + 3] == b'>'
+            {
+                result.push_str(")=>");
+                i += 4; // skip ") =>"
+                continue;
+            }
+
+            result.push(bytes[i] as char);
+            i += 1;
+        }
+    }
+
+    result
 }
 
 /// Inject `/*#__PURE__*/` annotations before known wrapper call patterns.
@@ -241,6 +336,72 @@ fn extract_import_names(line: &str) -> Vec<&str> {
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .collect()
+}
+
+/// Sort hoisted QRL const declarations alphabetically by name to match SWC output.
+///
+/// SWC stores hoisted consts in a `BTreeMap<Id, _>` which produces alphabetical
+/// ordering by identifier name. OXC accumulates them in DFS pre-order which may
+/// differ. This post-processing step sorts the `const q_*` block alphabetically.
+fn sort_hoisted_consts(code: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    if lines.is_empty() {
+        return code.to_string();
+    }
+
+    // Find the contiguous block of hoisted const lines
+    let mut hoisted_start = None;
+    let mut hoisted_end = None;
+
+    for (i, line) in lines.iter().enumerate() {
+        let t = line.trim();
+        let is_hoisted = t.starts_with("const q_") && t.contains("/*#__PURE__*/");
+        if is_hoisted {
+            if hoisted_start.is_none() {
+                hoisted_start = Some(i);
+            }
+            hoisted_end = Some(i);
+        }
+    }
+
+    let (start, end) = match (hoisted_start, hoisted_end) {
+        (Some(s), Some(e)) if e > s => (s, e),
+        _ => return code.to_string(), // 0 or 1 hoisted consts, nothing to sort
+    };
+
+    // Extract hoisted const lines (filtering out any non-const lines in the range)
+    let mut hoisted_lines: Vec<&str> = Vec::new();
+    let mut other_lines_in_range: Vec<(usize, &str)> = Vec::new();
+
+    for i in start..=end {
+        let t = lines[i].trim();
+        if t.starts_with("const q_") && t.contains("/*#__PURE__*/") {
+            hoisted_lines.push(lines[i]);
+        } else {
+            other_lines_in_range.push((i, lines[i]));
+        }
+    }
+
+    // Sort alphabetically
+    hoisted_lines.sort();
+
+    // Rebuild the output
+    let mut result: Vec<&str> = Vec::with_capacity(lines.len());
+    result.extend_from_slice(&lines[..start]);
+    result.extend_from_slice(&hoisted_lines);
+    // Re-insert any non-hoisted lines that were in the range
+    for (_, line) in &other_lines_in_range {
+        result.push(line);
+    }
+    if end + 1 < lines.len() {
+        result.extend_from_slice(&lines[end + 1..]);
+    }
+
+    let mut output = result.join("\n");
+    if code.ends_with('\n') && !output.ends_with('\n') {
+        output.push('\n');
+    }
+    output
 }
 
 /// Insert `//` separator comments between code sections to match SWC output format.

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 902
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -12,7 +12,7 @@ const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t4
 //
 q_Works_component_t45qL4vNGv0.s((props: {
     fromProps: number;
-}) => {
+})=>{
     let fromLocal = useSignal(0);
     return <div computed={fromLocal + props.fromProps} local={fromLocal} props-wrap={props.fromProps} props-only={{ props: props.fromProps }} props={{
         props: props.fromProps,

@@ -13,7 +13,7 @@ export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_n7HuG2hhU0
 
 ============================= test.tsx_Greeter_component_n7HuG2hhU0Q.js (ENTRY POINT) ==
 import { default as json } from "./foo.json";
-export const Greeter_component_n7HuG2hhU0Q = () => {
+export const Greeter_component_n7HuG2hhU0Q = ()=>{
     return json;
 };
 

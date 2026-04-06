@@ -9,7 +9,7 @@ import { _noopQrl } from "@qwik.dev/core";
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //
-q_App_component_ckEPmXZlub0.s(() => {
+q_App_component_ckEPmXZlub0.s(()=>{
     return <div>Hello</div>;
 });
 export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 895
 expression: output
+snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
@@ -9,7 +9,7 @@ import { _noopQrl } from "@qwik.dev/core";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ _noopQrl("test_component_LUXeXe0DQrg");
 //
-q_test_component_LUXeXe0DQrg.s(() => {
+q_test_component_LUXeXe0DQrg.s(()=>{
     const key = "A";
     const value = FOO_MAPPING[key];
     return <>{value}</>;

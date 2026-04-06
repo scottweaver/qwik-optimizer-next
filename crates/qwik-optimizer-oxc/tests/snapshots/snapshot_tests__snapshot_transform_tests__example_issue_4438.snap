@@ -10,7 +10,7 @@ import { useSignal } from '@qwik.dev/core';
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //
-q_App_component_ckEPmXZlub0.s(() => {
+q_App_component_ckEPmXZlub0.s(()=>{
     const toggle = useSignal(false);
     return <>
 			<div data-nu={toggle.value ? $localize`singular` : "plural"}></div>

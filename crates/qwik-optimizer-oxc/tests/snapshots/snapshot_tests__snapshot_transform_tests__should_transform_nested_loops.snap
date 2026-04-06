@@ -49,7 +49,7 @@ export const Foo_component_HTDRsvUbLiE = function() {
 */
 ============================= test.tsx_Foo_component_div_div_p_q_e_click_PjMbeUzoAMk.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = () => {
+export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = ()=>{
     const item = _captures[0];
     const row = _captures[1];
     return console.log(row.value.id, item.value.id);
@@ -81,7 +81,7 @@ export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = () => {
 */
 ============================= test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Foo_component_div_div_q_e_click_vKrX4PmH2aM = () => {
+export const Foo_component_div_div_q_e_click_vKrX4PmH2aM = ()=>{
     const row = _captures[0];
     return console.log(row.value.id);
 };

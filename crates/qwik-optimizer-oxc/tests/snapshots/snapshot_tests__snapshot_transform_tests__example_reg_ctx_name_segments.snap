@@ -10,12 +10,12 @@ import { foo } from './foo';
 //
 const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
 //
-q_Works_component_div_div_onClick_server_lFRg0PjqeUM.s(() => console.log("in server", text));
-q_Works_component_t45qL4vNGv0.s((props) => {
+q_Works_component_div_div_onClick_server_lFRg0PjqeUM.s(()=>console.log("in server", text));
+q_Works_component_t45qL4vNGv0.s((props)=>{
     const text = "hola";
     return <>
-		<div onClick$={server$(() => console.log("in server", text))}></div>
-		<div onClick$={() => foo()}></div>
+		<div onClick$={server$(()=>console.log("in server", text))}></div>
+		<div onClick$={()=>foo()}></div>
 		</>;
 });
 export const Works = /*#__PURE__*/ componentQrl(q_Works_component_t45qL4vNGv0);

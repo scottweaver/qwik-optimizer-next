@@ -13,7 +13,7 @@ const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo
 
 ============================= test.tsx_Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY = () => {
+export const Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY = ()=>{
     const item = _captures[0];
     return console.log(item.value.id);
 };

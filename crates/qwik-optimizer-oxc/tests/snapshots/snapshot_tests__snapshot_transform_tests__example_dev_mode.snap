@@ -45,7 +45,7 @@ export const App_component_ckEPmXZlub0 = () => {
 }
 */
 ============================= test.tsx_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4.js (ENTRY POINT) ==
-export const App_component_Cmp_p_q_e_click_Yl4ybrJWrt4 = () => console.log("warn");
+export const App_component_Cmp_p_q_e_click_Yl4ybrJWrt4 = ()=>console.log("warn");
 
 /*
 {

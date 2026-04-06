@@ -87,7 +87,7 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
 }
 */
 ============================= test.tsx_d_wKNFJEIQVUA.js (ENTRY POINT) ==
-export const d_wKNFJEIQVUA = () => console.log("thing");
+export const d_wKNFJEIQVUA = ()=>console.log("thing");
 
 /*
 {

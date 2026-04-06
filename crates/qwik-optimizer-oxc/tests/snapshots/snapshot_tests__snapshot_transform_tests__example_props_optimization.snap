@@ -1,49 +1,49 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 900
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { CONST } from 'const';
 //
-const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
 const q_NoWorks2_component_JPD9t2HyEKg = /*#__PURE__*/ _noopQrl("NoWorks2_component_JPD9t2HyEKg");
 const q_NoWorks3_component_fc13h5yYn14 = /*#__PURE__*/ _noopQrl("NoWorks3_component_fc13h5yYn14");
+const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
 //
-q_Works_component_useTask_pjo5U5Ikll0.s(({ track }) => {
-    track(() => count);
+q_Works_component_useTask_pjo5U5Ikll0.s(({ track })=>{
+    track(()=>count);
     console.log(count, rest, hey, some, hey2);
 });
-q_Works_component_t45qL4vNGv0.s(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
+q_Works_component_t45qL4vNGv0.s(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest })=>{
     console.log(hey, some);
-    useTask$(({ track }) => {
-        track(() => count);
+    useTask$(({ track })=>{
+        track(()=>count);
         console.log(count, rest, hey, some, hey2);
     });
     return <div some={some} params={{ some }} class={count} {...rest} override>{count}</div>;
 });
-q_NoWorks2_component_useTask_lXiqwbxxjq0.s(({ track }) => {
-    track(() => count);
+q_NoWorks2_component_useTask_lXiqwbxxjq0.s(({ track })=>{
+    track(()=>count);
     console.log(count);
 });
-q_NoWorks2_component_JPD9t2HyEKg.s(({ count, stuff: { hey } }) => {
+q_NoWorks2_component_JPD9t2HyEKg.s(({ count, stuff: { hey } })=>{
     console.log(hey);
-    useTask$(({ track }) => {
-        track(() => count);
+    useTask$(({ track })=>{
+        track(()=>count);
         console.log(count);
     });
     return <div class={count}>{count}</div>;
 });
-q_NoWorks3_component_useTask_3cQGU0s1VwU.s(({ track }) => {
-    track(() => count);
+q_NoWorks3_component_useTask_3cQGU0s1VwU.s(({ track })=>{
+    track(()=>count);
     console.log(count);
 });
-q_NoWorks3_component_fc13h5yYn14.s(({ count, stuff = hola() }) => {
+q_NoWorks3_component_fc13h5yYn14.s(({ count, stuff = hola() })=>{
     console.log(stuff);
-    useTask$(({ track }) => {
-        track(() => count);
+    useTask$(({ track })=>{
+        track(()=>count);
         console.log(count);
     });
     return <div class={count}>{count}</div>;

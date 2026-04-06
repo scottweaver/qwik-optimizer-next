@@ -13,9 +13,9 @@ const q_qwikifyQrl_component_zH94hIe0Ick = /*#__PURE__*/ qrl(()=>import("./index
 function qwikifyQrl(reactCmpQrl) {
     return /*#__PURE__*/ componentQrl(q_qwikifyQrl_component_zH94hIe0Ick.w([reactCmpQrl]), { tagName: "qwik-wrap" });
 }
-(props) => {
+(props)=>{
     const obj = {};
-    Object.keys(props).forEach((key) => {
+    Object.keys(props).forEach((key)=>{
         if (!key.startsWith("client:")) obj[key] = props[key];
     });
     return obj;
@@ -35,7 +35,7 @@ export { qwikify$, qwikifyQrl, renderToString };
 
 ============================= ../node_modules/@qwik.dev/react/index.qwik.mjs_qwikifyQrl_component_useWatch_x04JC5xeP1U_qwikifyQrl_component_useWatch_x04JC5xeP1U.mjs (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const qwikifyQrl_component_useWatch_x04JC5xeP1U = async (track) => {
+export const qwikifyQrl_component_useWatch_x04JC5xeP1U = async (track)=>{
     const hostElement = _captures[0];
     const props = _captures[1];
     const reactCmpQrl = _captures[2];
@@ -89,7 +89,7 @@ export const qwikifyQrl_component_useWatch_x04JC5xeP1U = async (track) => {
 */
 ============================= ../node_modules/@qwik.dev/react/index.qwik.mjs_qwikifyQrl_component_zH94hIe0Ick_qwikifyQrl_component_zH94hIe0Ick.mjs (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-var qwikifyQrl_component_useWatch_x04JC5xeP1U = inlinedQrl(async (track) => {
+var qwikifyQrl_component_useWatch_x04JC5xeP1U = inlinedQrl(async (track)=>{
     const [hostElement, props, reactCmpQrl, store] = useLexicalScope();
     track(props);
     if (isBrowser) {
@@ -115,7 +115,7 @@ var qwikifyQrl_component_useWatch_x04JC5xeP1U = inlinedQrl(async (track) => {
     reactCmpQrl,
     store
 ]);
-export const qwikifyQrl_component_zH94hIe0Ick = (props) => {
+export const qwikifyQrl_component_zH94hIe0Ick = (props)=>{
     const reactCmpQrl = _captures[0];
     const [reactCmpQrl] = useLexicalScope();
     const hostElement = useHostElement();
@@ -125,7 +125,7 @@ export const qwikifyQrl_component_zH94hIe0Ick = (props) => {
     else if (props["client:load"] || props["client:only"]) run = "load";
     useTaskQrl(qwikifyQrl_component_useWatch_x04JC5xeP1U, { run });
     if (isServer && !props["client:only"]) {
-        const jsx$1 = Promise.all([reactCmpQrl.resolve(), import("./server-9ac6caad.js")]).then(([Cmp, server]) => {
+        const jsx$1 = Promise.all([reactCmpQrl.resolve(), import("./server-9ac6caad.js")]).then(([Cmp, server])=>{
             const html = server.render(Cmp, filterProps(props));
             return /*#__PURE__*/ jsx(Host, {
                 dangerouslySetInnerHTML: html,

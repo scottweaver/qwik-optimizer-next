@@ -76,7 +76,7 @@ export const s_0TaiDayHrlo = () => {
 }
 */
 ============================= test.tsx_Parent_component_serverStuff_a_2ca3HLDC7yc.js (ENTRY POINT) ==
-export const s_2ca3HLDC7yc = () => {
+export const s_2ca3HLDC7yc = ()=>{
     // from $(), should not be removed
 };
 
@@ -103,7 +103,7 @@ export const s_2ca3HLDC7yc = () => {
 ============================= test.tsx_Parent_component_useTask_gDH1EtUWqBU.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 import { default as mongo } from "mongodb";
-export const s_gDH1EtUWqBU = async () => {
+export const s_gDH1EtUWqBU = async ()=>{
     const state = _captures[0];
     if (!isServer) return;
     state.text = await mongo.users();
@@ -157,7 +157,7 @@ export const s_k1L0DiPQV1I = null;
 }
 */
 ============================= test.tsx_Parent_component_useTask_1_P8oRQhHsurk.js (ENTRY POINT) ==
-export const s_P8oRQhHsurk = () => {
+export const s_P8oRQhHsurk = ()=>{
     // Code
 };
 
@@ -205,7 +205,7 @@ export const s_r1qAHX7Opp0 = null;
 }
 */
 ============================= test.tsx_Parent_component_serverStuff_b_client_v9qawr2Inkk.js (ENTRY POINT) ==
-export const s_v9qawr2Inkk = () => {
+export const s_v9qawr2Inkk = ()=>{
     // from clien$(), should not be removed
 };
 
@@ -230,7 +230,7 @@ export const s_v9qawr2Inkk = () => {
 }
 */
 ============================= test.tsx_Parent_component_div_q_e_click_zM9okM0TYrA.js (ENTRY POINT) ==
-export const s_zM9okM0TYrA = () => console.log("parent");
+export const s_zM9okM0TYrA = ()=>console.log("parent");
 
 /*
 {

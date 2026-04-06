@@ -19,7 +19,7 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx
 (function() {
     console.log("run");
 })();
-(() => {
+(()=>{
     console.log("run");
 })();
 sideEffect();
@@ -78,7 +78,7 @@ export const test_component_LUXeXe0DQrg = () => {
 */
 ============================= test.tsx_test_component_button_q_e_click_qwSL5gM03T4.js (ENTRY POINT) ==
 import { api } from "./test";
-export const test_component_button_q_e_click_qwSL5gM03T4 = () => await api();
+export const test_component_button_q_e_click_qwSL5gM03T4 = ()=>await api();
 
 /*
 {

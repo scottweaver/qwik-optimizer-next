@@ -4,7 +4,7 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.tsx ==
-export const $promoteToRoot$ = (ref: SeenRef) => {
+export const $promoteToRoot$ = (ref: SeenRef)=>{
     const path = $getObjectPath$(ref) as string;
     // should stay before the push
     const idx = roots.length;

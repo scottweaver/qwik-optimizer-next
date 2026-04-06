@@ -13,7 +13,7 @@ export const Cmp = /*#__PURE__*/ componentQrl(q_Cmp_component_4ryKJTOKjWE);
 
 ============================= test.tsx_Cmp_component_button_q_e_click_0O0tA6ahzDQ.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Cmp_component_button_q_e_click_0O0tA6ahzDQ = () => {
+export const Cmp_component_button_q_e_click_0O0tA6ahzDQ = ()=>{
     const currentType = _captures[0];
     return currentType.value = "NEXT";
 };

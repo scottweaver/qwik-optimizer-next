@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 894
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -9,7 +9,7 @@ import { _noopQrl } from "@qwik.dev/core";
 //
 const q_Issue3795_component_wsE8beycatI = /*#__PURE__*/ _noopQrl("Issue3795_component_wsE8beycatI");
 //
-q_Issue3795_component_wsE8beycatI.s(() => {
+q_Issue3795_component_wsE8beycatI.s(()=>{
     let base = "foo";
     const firstAssignment = base;
     base += "bar";

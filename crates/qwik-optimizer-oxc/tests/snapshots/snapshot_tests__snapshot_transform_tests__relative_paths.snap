@@ -13,7 +13,7 @@ export const Local = /*#__PURE__*/ componentQrl(q_Local_component_jJ0v28bs0p8);
 
 ============================= ../../node_modules/dep/dist/lib.mjs_App_component_div_p_button_onClick_8dWUa0cJAr4_App_component_div_p_button_onClick_8dWUa0cJAr4.mjs (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const App_component_div_p_button_onClick_8dWUa0cJAr4 = () => {
+export const App_component_div_p_button_onClick_8dWUa0cJAr4 = ()=>{
     const store = _captures[0];
     const [store] = useLexicalScope();
     return store.count++;
@@ -43,14 +43,14 @@ export const App_component_div_p_button_onClick_8dWUa0cJAr4 = () => {
 }
 */
 ============================= ../../node_modules/dep/dist/lib.mjs_App_component_AkbU84a8zes_App_component_AkbU84a8zes.mjs (ENTRY POINT) ==
-var App_component_div_p_button_onClick_8dWUa0cJAr4 = inlinedQrl(() => {
+var App_component_div_p_button_onClick_8dWUa0cJAr4 = inlinedQrl(()=>{
     const [store] = useLexicalScope();
     return store.count++;
 }, "App_component_div_p_button_onClick_8dWUa0cJAr4", [store]);
-const useData = () => {
+const useData = ()=>{
     return useStore({ count: 0 });
 };
-export const App_component_AkbU84a8zes = () => {
+export const App_component_AkbU84a8zes = ()=>{
     const store = useData();
     return /*#__PURE__*/ jsxs("div", { children: [/*#__PURE__*/ jsxs("p", { children: ["Count: ", store.count] }), /*#__PURE__*/ jsx("p", { children: /*#__PURE__*/ jsx("button", {
         onClick$: App_component_div_p_button_onClick_8dWUa0cJAr4,

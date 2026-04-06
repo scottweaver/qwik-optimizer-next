@@ -23,7 +23,7 @@ export const task = q_task.w([
 
 ============================= test.tsx_task_task.tsx (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const task = () => {
+export const task = ()=>{
     const left = _captures[0];
     const right = _captures[1];
     const left = _captures[0];
