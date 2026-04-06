@@ -31,7 +31,7 @@ Full details: [v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md)
 **Baseline:** 28/201 (14%) full match | 57/201 root match | 125/201 segment count match | 197/201 diagnostics match
 
 - [x] **Phase 10: Segment Extraction** - Fix dollar-sign expression detection in loops, JSX handlers, ternaries, spread props, and inline strategies (completed 2026-04-04)
-- [ ] **Phase 11: Root Module Code Generation** - Fix import ordering, declarations, exports, QRL references, and comment structure
+- [x] **Phase 11: Root Module Code Generation** - Fix import ordering, declarations, exports, QRL references, and comment structure (completed 2026-04-06)
 - [ ] **Phase 12: Diagnostics Parity** - Fix error reporting to match SWC for all 201 fixtures
 - [ ] **Phase 13: Final Acceptance** - Verify 201/201 full match and fix any remaining stragglers
 
@@ -68,8 +68,8 @@ Plans:
 Plans:
 - [x] 11-01-PLAN.md — Import assembly rewrite: marker source tracking, synthetic import emission, SWC-ordered import assembly, expanded dead import elimination
 - [x] 11-02-PLAN.md — Comprehensive dead code elimination: SWC-matching fixpoint loop removing unused vars AND imports after variable migration
-- [ ] 11-03-PLAN.md — Display name / hash fix: add marker function name to stack_ctxt for correct segment hashes
-- [ ] 11-04-PLAN.md — Body structure cleanup: diagnose and fix remaining mismatches (unreferenced var stripping, expression ordering, separators)
+- [x] 11-03-PLAN.md — Display name / hash fix: add marker function name to stack_ctxt for correct segment hashes
+- [x] 11-04-PLAN.md — Body structure cleanup: diagnose and fix remaining mismatches (unreferenced var stripping, expression ordering, separators)
 
 ### Phase 12: Diagnostics Parity
 **Goal**: Error diagnostics match SWC for all 201 fixtures -- same errors reported for invalid references and missing custom inlined functions
@@ -113,6 +113,6 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 8. Implementation Gap Closure | v0.1.0 | 5/5 | Complete | 2026-04-03 |
 | 9. Metadata & Verification Cleanup | v0.1.0 | 3/3 | Complete | 2026-04-03 |
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
-| 11. Root Module Code Generation | v0.2.0 | 2/4 | In Progress|  |
+| 11. Root Module Code Generation | v0.2.0 | 4/4 | Complete   | 2026-04-06 |
 | 12. Diagnostics Parity | v0.2.0 | 0/1 | Not started | - |
 | 13. Final Acceptance | v0.2.0 | 0/1 | Not started | - |

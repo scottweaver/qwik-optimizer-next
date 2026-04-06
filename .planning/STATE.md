@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: completed
-stopped_at: Completed 11-03-PLAN.md
-last_updated: "2026-04-06T14:36:34.130Z"
-last_activity: 2026-04-02
+milestone: v0.2.0
+milestone_name: Full SWC Parity
+status: executing
+stopped_at: Completed 11-04-PLAN.md
+last_updated: "2026-04-06T15:20:40.786Z"
+last_activity: 2026-04-06
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 4
-  percent: 0
+  completed_plans: 6
+  percent: 77
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 
 Milestone: v0.2.0 Full SWC Parity
 Phase: 11 (Root Module Code Generation) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -64,6 +64,7 @@ Progress: [########░░] 77%
 | Phase 06 P03 | 3m | 2 tasks | 7 files |
 | Phase 06 P02 | 6m | 2 tasks | 3 files |
 | Phase 11 P03 | 15m | 1 tasks | 187 files |
+| Phase 11 P04 | 36m | 1 tasks | 80 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 06 P02]: HMR _useHmr injection via string-based prepend in code_move::inject_use_hmr
 - [Phase 06 P02]: Synthetic imports mechanism added to NewModuleCtx for segment-level import injection
 - [Phase 11]: D-10: Gate marker name push for bare $ and sync$; D-11: Move stack_ctxt pop after register_context_name; D-12: Non-marker ident calls push callee name matching SWC
+- [Phase 11]: D-50: Dev metadata injected as text post-processing to avoid OXC codegen span violations
+- [Phase 11]: D-51: Const stripping uses text-level fixpoint loop (OXC arena prevents in-place Statement type changes)
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T14:36:34.127Z
-Stopped at: Completed 11-03-PLAN.md
+Last session: 2026-04-06T15:20:40.782Z
+Stopped at: Completed 11-04-PLAN.md
 Resume file: None
