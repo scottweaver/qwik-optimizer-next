@@ -2,21 +2,21 @@
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
 ---
-============================= components\apps\apps.ts ==
+============================= components/apps/apps.ts ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-export const Greeter = qrl(() => import("./components\\apps\\apps.tsx__9HxOyz22pCE"), "_9HxOyz22pCE");
-============================= components\apps\apps.tsx__9HxOyz22pCE.ts (ENTRY POINT) ==
-export const _9HxOyz22pCE = () => <div/>;
+export const Greeter = qrl(() => import("./apps.tsx__KDANhFrk0Mw"), "_KDANhFrk0Mw");
+============================= components/apps/apps.tsx__KDANhFrk0Mw.ts (ENTRY POINT) ==
+export const _KDANhFrk0Mw = () => <div/>;
 /*
 {
-  "origin": "components\\apps\\apps.tsx",
-  "name": "_9HxOyz22pCE",
+  "origin": "components/apps/apps.tsx",
+  "name": "_KDANhFrk0Mw",
   "entry": null,
-  "displayName": "components\\apps\\apps.tsx_",
-  "hash": "9HxOyz22pCE",
-  "canonicalFilename": "components\\apps\\apps.tsx__9HxOyz22pCE",
-  "path": "",
+  "displayName": "apps.tsx_",
+  "hash": "KDANhFrk0Mw",
+  "canonicalFilename": "apps.tsx__KDANhFrk0Mw",
+  "path": "components/apps",
   "extension": "ts",
   "parent": null,
   "ctxKind": "function",

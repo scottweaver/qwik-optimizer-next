@@ -110,7 +110,11 @@ impl<'a> SourcePath<'a> {
     /// - `rel_dir`:   parent directory (empty PathBuf when no parent)
     /// - `abs_dir`:   `src_dir.join(rel_dir)`
     pub fn path_data(&self, src_dir: &Path) -> Result<PathData, anyhow::Error> {
-        let rel_path = Path::new(self.0);
+        // Normalize Windows backslashes to forward slashes before path decomposition.
+        // On non-Windows platforms, backslashes in paths are treated as literal
+        // characters, so we must normalize them to get correct path decomposition.
+        let normalized = self.0.replace('\\', "/");
+        let rel_path = Path::new(&normalized);
 
         let file_name = rel_path
             .file_name()

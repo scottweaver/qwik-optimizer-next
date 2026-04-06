@@ -48,7 +48,9 @@ fn transform_code(
     dev_path: Option<&str>,
 ) -> TransformOutput {
     // Stage 0: Decompose path.
-    let path_data = match source_path::SourcePath(input_path).path_data(Path::new(&config.src_dir)) {
+    // Normalize Windows backslashes in src_dir for cross-platform path handling.
+    let normalized_src_dir = config.src_dir.replace('\\', "/");
+    let path_data = match source_path::SourcePath(input_path).path_data(Path::new(&normalized_src_dir)) {
         Ok(pd) => pd,
         Err(_) => {
             return TransformOutput::default();
