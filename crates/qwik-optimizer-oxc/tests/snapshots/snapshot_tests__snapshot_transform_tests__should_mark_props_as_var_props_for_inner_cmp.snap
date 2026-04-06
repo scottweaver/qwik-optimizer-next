@@ -99,9 +99,9 @@ export const ModelImg_component_iJe6ICWVnyA = (props) => {
 import { _captures } from "@qwik.dev/core";
 import { serverImg } from "~/routes/(authenticated)/layout";
 export const ModelImg_component_imgLoc_useResource_Ogi9hEJvtmI = async ({ track }) => {
-	const props = _captures[0];
-	track(() => props.store.model);
-	return await serverImg("some.png");
+    const props = _captures[0];
+    track(() => props.store.model);
+    return await serverImg("some.png");
 };
 
 /*

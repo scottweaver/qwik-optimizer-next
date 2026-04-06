@@ -44,6 +44,8 @@ pub(crate) fn emit_segment(
     if source_maps {
         let codegen_options = CodegenOptions {
             source_map_path: Some(PathBuf::from(filename)),
+            indent_char: oxc::codegen::IndentChar::Space,
+            indent_width: 4,
             ..Default::default()
         };
         let result = oxc::codegen::Codegen::new()
@@ -55,7 +57,13 @@ pub(crate) fn emit_segment(
         let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
         (code, map)
     } else {
+        let codegen_options = CodegenOptions {
+            indent_char: oxc::codegen::IndentChar::Space,
+            indent_width: 4,
+            ..Default::default()
+        };
         let result = oxc::codegen::Codegen::new()
+            .with_options(codegen_options)
             .with_source_text(source)
             .build(&program);
         let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");

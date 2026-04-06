@@ -10,13 +10,13 @@ const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(()=>import("./test.tsx_handler_T
 //
 const shared = { id: "abc" };
 export function readShared() {
-	return shared.id;
+    return shared.id;
 }
 export const handler = q_handler_T7IDIUVU4lI;
 
 ============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
 export const handler_T7IDIUVU4lI = () => {
-	console.log(shared.id);
+    console.log(shared.id);
 };
 
 /*

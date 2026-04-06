@@ -7,11 +7,11 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-/*#__PURE__*/ qrl(()=>import("./test.tsx_App_Header_component_B9F3YeqcO1w"), "App_Header_component_B9F3YeqcO1w");
+const q_App_Header_component_B9F3YeqcO1w = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_Header_component_B9F3YeqcO1w"), "App_Header_component_B9F3YeqcO1w");
 //
 export function App() {
-	const Header = /*#__PURE__*/ componentQrl(q_App_Header_component_B9F3YeqcO1w);
-	return Header;
+    const Header = /*#__PURE__*/ componentQrl(q_App_Header_component_B9F3YeqcO1w);
+    return Header;
 }
 
 ============================= test.tsx_App_Header_component_B9F3YeqcO1w.tsx (ENTRY POINT) ==

@@ -60,9 +60,9 @@ export const test_component_LUXeXe0DQrg = () => {
 ============================= test.tsx_test_component_div_div_span_button_q_e_click_oBFNw2cK30o.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_span_button_q_e_click_oBFNw2cK30o = () => {
-	const cellIndex = _captures[0];
-	const rowIndex = _captures[1];
-	return console.log(rowIndex, cellIndex);
+    const cellIndex = _captures[0];
+    const rowIndex = _captures[1];
+    return console.log(rowIndex, cellIndex);
 };
 
 /*
@@ -92,10 +92,10 @@ export const test_component_div_div_span_button_q_e_click_oBFNw2cK30o = () => {
 ============================= test.tsx_test_component_div_div_span_span_q_e_keydown_SBPovprktLQ.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_span_span_q_e_keydown_SBPovprktLQ = () => {
-	const cellKey = _captures[0];
-	const i = _captures[1];
-	const j = _captures[2];
-	return console.log(cellKey, i, j);
+    const cellKey = _captures[0];
+    const i = _captures[1];
+    const j = _captures[2];
+    return console.log(cellKey, i, j);
 };
 
 /*

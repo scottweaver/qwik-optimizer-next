@@ -7,23 +7,23 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 export const AtomStatus = componentQrl((_rawProps) => {
-	const ctx = _rawProps.ctx;
-	const atom = _rawProps.atom;
-	let status = atom.status;
-	if (!atom.real) {
-		status = "WILL-VANISH";
-	} else if (JSON.stringify(atom.atom) == JSON.stringify(atom.real)) {
-		status = "WTFED";
-	}
-	return _jsxSorted("span", {
-		title: atom.ID,
-		class: [
-			"atom",
-			status,
-			ctx.store[atom.ID] ? "selected" : null
-		],
-		"q-e:click": inlinedQrl((ev) => atomStatusClick(ctx, ev, [atom]), "AtomStatus_component_span_q_e_click_0yqKAycyBF0", [atom, ctx])
-	}, null, null, 1, null);
+    const ctx = _rawProps.ctx;
+    const atom = _rawProps.atom;
+    let status = atom.status;
+    if (!atom.real) {
+        status = "WILL-VANISH";
+    } else if (JSON.stringify(atom.atom) == JSON.stringify(atom.real)) {
+        status = "WTFED";
+    }
+    return _jsxSorted("span", {
+        title: atom.ID,
+        class: [
+            "atom",
+            status,
+            ctx.store[atom.ID] ? "selected" : null
+        ],
+        "q-e:click": inlinedQrl((ev) => atomStatusClick(ctx, ev, [atom]), "AtomStatus_component_span_q_e_click_0yqKAycyBF0", [atom, ctx])
+    }, null, null, 1, null);
 }, "AtomStatus_component_hdwpoUtydSA");
 
 == DIAGNOSTICS ==

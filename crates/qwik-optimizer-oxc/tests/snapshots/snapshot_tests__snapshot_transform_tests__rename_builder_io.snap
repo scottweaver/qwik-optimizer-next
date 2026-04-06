@@ -45,13 +45,13 @@ import { moreStuff } from "@qwik.dev/router/more/here";
 import { default as sdk } from "@builder.io/sdk";
 import { stuff } from "@qwik.dev/router";
 export const App_component_ckEPmXZlub0 = () => {
-	sdk.hello();
-	if (isDev) {
-		stuff();
-	} else {
-		moreStuff();
-	}
-	return "hi";
+    sdk.hello();
+    if (isDev) {
+        stuff();
+    } else {
+        moreStuff();
+    }
+    return "hi";
 };
 
 /*

@@ -11,14 +11,14 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ _noopQrl("test_component_LUXe
 //
 q_test_component_useComputed_PYU291PvidQ.s(() => color);
 q_test_component_useTask_jewzFYh3XmQ.s(() => {
-	props.checked;
+    props.checked;
 });
 q_test_component_LUXeXe0DQrg.s(({ color, ...props }) => {
-	useComputed$(() => color);
-	useTask$(() => {
-		props.checked;
-	});
-	return "hi";
+    useComputed$(() => color);
+    useTask$(() => {
+        props.checked;
+    });
+    return "hi";
 });
 export default componentQrl(q_test_component_LUXeXe0DQrg);
 

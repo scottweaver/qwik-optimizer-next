@@ -46,8 +46,8 @@ export const test_component_LUXeXe0DQrg = () => {
 ============================= test.tsx_test_component_div_q_e_click_omwK2O280Tk.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_q_e_click_omwK2O280Tk = () => {
-	const val = _captures[0];
-	return console.log(val);
+    const val = _captures[0];
+    return console.log(val);
 };
 
 /*

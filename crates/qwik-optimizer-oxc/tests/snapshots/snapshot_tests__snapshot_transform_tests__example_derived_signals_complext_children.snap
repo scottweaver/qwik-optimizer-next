@@ -13,8 +13,8 @@ const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmX
 //
 q_App_component_ckEPmXZlub0.s(() => {
 useSignal(0);
-	const store = useStore({});
-	return <>
+    const store = useStore({});
+    return <>
 			<ul id="issue-2800-result">
 				{Object.entries(store).map(([key, value]) => <li>
 					{key} - {value}

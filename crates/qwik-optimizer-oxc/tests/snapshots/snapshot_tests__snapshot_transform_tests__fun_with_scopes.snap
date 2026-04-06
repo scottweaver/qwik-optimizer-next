@@ -15,51 +15,51 @@ const q_Field_jsx_children_1_0J3pRyFvud4 = /*#__PURE__*/ _noopQrl("Field_jsx_chi
 const q_it_StyledComponent_component_F9AGTDZHx8I = /*#__PURE__*/ _noopQrl("it_StyledComponent_component_F9AGTDZHx8I");
 //
 q_Lifecycle_Lifecycle_component_PcjTk3N1YOg.s(() => {
-	return /*#__PURE__*/ jsx(Slot, {});
+    return /*#__PURE__*/ jsx(Slot, {});
 });
 q_Field_jsx_children_eVTPl5mlRx4.s((element) => {
-	field.internal.elements.push(element);
+    field.internal.elements.push(element);
 });
 q_it_StyledComponent_component_button_q_e_click_CEp5mVjiu08.s(() => store.count++);
 q_it_StyledComponent_component_F9AGTDZHx8I.s(() => {
 useStylesScoped$(STYLE_RED);
-	const store = useStore({ count: 10 });
-	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
+    const store = useStore({ count: 10 });
+    return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
 								Hello world
 							</button>;
 });
 export default () => {
 globalThis.foo();
 globalThis.bar();
-	const qrl = inlinedQrl(null, serverFnHash, data.slice(1));
-	console.log(qrl);
+    const qrl = inlinedQrl(null, serverFnHash, data.slice(1));
+    console.log(qrl);
 };
 function Lifecycle(props, key, flags) {
-	return componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg)(props, key, flags);
+    return componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg)(props, key, flags);
 }
 export const rawFn = (event, element) => {
-	handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
+    handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
 };
 export function Field({ children, name, type, ...props }) {
-	const { of: form } = props;
-	const field = getFieldStore(form, name);
-	return /*#__PURE__*/ jsx(Lifecycle, {
-		store: field,
-		...props,
-		children: children(field, {
-			name,
-			autoFocus: isServer && !!field.error,
-			ref: Qrl(q_Field_jsx_children_eVTPl5mlRx4.w([field])),
-			onInput$: Qrl(q_Field_jsx_children_1_0J3pRyFvud4)
-		})
-	}, name);
+    const { of: form } = props;
+    const field = getFieldStore(form, name);
+    return /*#__PURE__*/ jsx(Lifecycle, {
+        store: field,
+        ...props,
+        children: children(field, {
+            name,
+            autoFocus: isServer && !!field.error,
+            ref: Qrl(q_Field_jsx_children_eVTPl5mlRx4.w([field])),
+            onInput$: Qrl(q_Field_jsx_children_1_0J3pRyFvud4)
+        })
+    }, name);
 }
 const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render }) => {
-	it("should render object style", async () => {
-		const StyledComponent = componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
-		const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
-	});
+    it("should render object style", async () => {
+        const StyledComponent = componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
+        const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
+    });
 });
 
 == DIAGNOSTICS ==

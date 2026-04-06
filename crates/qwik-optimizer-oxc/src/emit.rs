@@ -37,6 +37,8 @@ pub(crate) fn emit_module<'a>(
     if options.source_maps {
         let codegen_options = oxc::codegen::CodegenOptions {
             source_map_path: Some(PathBuf::from(source_filename)),
+            indent_char: oxc::codegen::IndentChar::Space,
+            indent_width: 4,
             ..Default::default()
         };
         let codegen_result = oxc::codegen::Codegen::new()
@@ -51,7 +53,13 @@ pub(crate) fn emit_module<'a>(
         let code = insert_separator_comments(&code);
         EmitResult { code, map }
     } else {
+        let codegen_options = oxc::codegen::CodegenOptions {
+            indent_char: oxc::codegen::IndentChar::Space,
+            indent_width: 4,
+            ..Default::default()
+        };
         let codegen_result = oxc::codegen::Codegen::new()
+            .with_options(codegen_options)
             .with_source_text(source)
             .build(program);
 

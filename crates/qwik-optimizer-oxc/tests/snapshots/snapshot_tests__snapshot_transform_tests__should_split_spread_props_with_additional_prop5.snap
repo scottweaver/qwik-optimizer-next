@@ -11,7 +11,7 @@ import { _jsxSplit } from "@qwik.dev/core";
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 //
 function Hola(props: any) {
-	return _jsxSplit("div", { ...props }, null, null, 1, "0");
+    return _jsxSplit("div", { ...props }, null, null, 1, "0");
 }
 export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 

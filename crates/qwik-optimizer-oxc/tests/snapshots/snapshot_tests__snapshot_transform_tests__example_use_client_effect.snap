@@ -14,13 +14,13 @@ export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
 ============================= test.tsx_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Child_component_useBrowserVisibleTask_0IGFPOyJmQA = () => {
-	const state = _captures[0];
-	const timer = setInterval(() => {
-		state.count++;
-	}, 1e3);
-	return () => {
-		clearInterval(timer);
-	};
+    const state = _captures[0];
+    const timer = setInterval(() => {
+        state.count++;
+    }, 1e3);
+    return () => {
+        clearInterval(timer);
+    };
 };
 
 /*

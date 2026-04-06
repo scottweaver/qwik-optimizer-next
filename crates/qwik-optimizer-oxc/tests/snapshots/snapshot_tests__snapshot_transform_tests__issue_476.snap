@@ -7,7 +7,7 @@ snapshot_kind: text
 import { _jsxSorted } from "@qwik.dev/core";
 import { Counter } from "./counter.tsx";
 export const Root = () => {
-	return _jsxSorted("html", null, null, [_jsxSorted("head", null, null, [_jsxSorted("meta", null, { charset: "utf-8" }, null, 1, null), _jsxSorted("title", null, null, "Qwik Blank App", 1, null)], 1, null), _jsxSorted("body", null, null, _jsxSorted(Counter, null, { initial: 3 }, null, 1, "1"), 1, null)], 1, "0");
+    return _jsxSorted("html", null, null, [_jsxSorted("head", null, null, [_jsxSorted("meta", null, { charset: "utf-8" }, null, 1, null), _jsxSorted("title", null, null, "Qwik Blank App", 1, null)], 1, null), _jsxSorted("body", null, null, _jsxSorted(Counter, null, { initial: 3 }, null, 1, "1"), 1, null)], 1, "0");
 };
 
 == DIAGNOSTICS ==

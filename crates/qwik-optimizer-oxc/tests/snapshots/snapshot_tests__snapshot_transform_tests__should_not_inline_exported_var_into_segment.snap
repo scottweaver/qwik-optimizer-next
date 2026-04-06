@@ -40,7 +40,7 @@ export const featureAction_formAction_valiForm_3yxd03SSzJ8 = FeatureSchema;
 */
 ============================= test.tsx_featureAction_formAction_cZgh2PzV1cc.js (ENTRY POINT) ==
 export const featureAction_formAction_cZgh2PzV1cc = async (requestEvent) => {
-	return { status: "success" };
+    return { status: "success" };
 };
 
 /*

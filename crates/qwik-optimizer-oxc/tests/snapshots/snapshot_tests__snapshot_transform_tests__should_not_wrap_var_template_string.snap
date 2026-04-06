@@ -49,7 +49,7 @@ export const test_component_LUXeXe0DQrg = () => {
 */
 ============================= test.tsx_test_component_productTitle_useComputed_ZVQVUkxqtiQ.js (ENTRY POINT) ==
 export const test_component_productTitle_useComputed_ZVQVUkxqtiQ = () => {
-	return "Test title";
+    return "Test title";
 };
 
 /*

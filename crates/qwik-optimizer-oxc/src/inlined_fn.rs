@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::*;
 use oxc::ast_visit::Visit;
-use oxc::codegen::Codegen;
+use oxc::codegen::{Codegen, CodegenOptions, IndentChar};
 use oxc::span::{SourceType, SPAN};
 
 // ---------------------------------------------------------------------------
@@ -167,7 +167,12 @@ fn serialize_expression_inner<'a>(expr: &Expression<'a>, allocator: &'a Allocato
     let directives: ArenaVec<Directive<'_>> = ArenaVec::new_in(allocator);
     let comments: ArenaVec<Comment> = ArenaVec::new_in(allocator);
     let prog = ast.program(SPAN, SourceType::tsx(), "", comments, None, directives, body);
-    let raw = Codegen::new().build(&prog).code;
+    let codegen_options = CodegenOptions {
+        indent_char: IndentChar::Space,
+        indent_width: 4,
+        ..Default::default()
+    };
+    let raw = Codegen::new().with_options(codegen_options).build(&prog).code;
     raw.trim_start_matches("const _x = ")
         .trim_end_matches(';')
         .trim()

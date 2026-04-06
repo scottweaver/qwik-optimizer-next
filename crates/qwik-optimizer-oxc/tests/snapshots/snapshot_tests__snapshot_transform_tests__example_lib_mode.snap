@@ -11,13 +11,13 @@ import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { useSignal } from '@qwik.dev/core';
 export const Works = componentQrl((props) => {
-	useStyleQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg");
-	const text = "hola";
-	const sig = useSignal("hola");
-	useTaskQrl(() => {
-		console.log(sig.value, text);
-	}, "Works_component_useTask_pjo5U5Ikll0", [sig, text]);
-	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [sig, text]) }, null, null, 1, null);
+    useStyleQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg");
+    const text = "hola";
+    const sig = useSignal("hola");
+    useTaskQrl(() => {
+        console.log(sig.value, text);
+    }, "Works_component_useTask_pjo5U5Ikll0", [sig, text]);
+    return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [sig, text]) }, null, null, 1, null);
 }, "Works_component_t45qL4vNGv0");
 const STYLES = ".class {}";
 

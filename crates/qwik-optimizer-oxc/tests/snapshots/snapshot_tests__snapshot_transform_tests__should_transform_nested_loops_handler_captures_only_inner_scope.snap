@@ -55,8 +55,8 @@ export const test_component_LUXeXe0DQrg = () => {
 ============================= test.tsx_test_component_div_div_span_button_q_e_click_oBFNw2cK30o.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_span_button_q_e_click_oBFNw2cK30o = () => {
-	const cellKey = _captures[0];
-	return console.log(cellKey);
+    const cellKey = _captures[0];
+    return console.log(cellKey);
 };
 
 /*

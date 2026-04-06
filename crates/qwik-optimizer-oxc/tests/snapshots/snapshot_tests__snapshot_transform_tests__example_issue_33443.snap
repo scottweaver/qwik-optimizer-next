@@ -12,8 +12,8 @@ const q_Issue3742_component_svSy0PlWTAw = /*#__PURE__*/ _noopQrl("Issue3742_comp
 //
 q_Issue3742_component_div_button_q_e_click_95Hlm8WgsYY.s(() => counter.value++);
 q_Issue3742_component_svSy0PlWTAw.s(({ description = "", other }: any) => {
-	const counter = useSignal(0);
-	return <div title={description && "description" in other ? `Hello ${counter.value}` : `Bye ${counter.value}`}>
+    const counter = useSignal(0);
+    return <div title={description && "description" in other ? `Hello ${counter.value}` : `Bye ${counter.value}`}>
 		Issue3742
 		<button onClick$={() => counter.value++}>
 			Increment

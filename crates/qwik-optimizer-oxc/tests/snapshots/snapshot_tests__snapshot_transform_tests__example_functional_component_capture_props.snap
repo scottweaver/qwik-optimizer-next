@@ -63,9 +63,9 @@ export const App_component_ckEPmXZlub0 = () => {
 ============================= test.tsx_App_component_div_q_e_click_mi4E1piTWe8.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_div_q_e_click_mi4E1piTWe8 = () => {
-	const count = _captures[0];
-	const state = _captures[1];
-	return state.count += count + total;
+    const count = _captures[0];
+    const state = _captures[1];
+    return state.count += count + total;
 };
 
 /*

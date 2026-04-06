@@ -11,10 +11,10 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_te
 //
 export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 export const PANELS: ActivePanel[] = [
-	"Examples",
-	"Input",
-	"Output",
-	"Console"
+    "Examples",
+    "Input",
+    "Output",
+    "Console"
 ];
 
 ============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==

@@ -17,10 +17,10 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx
 });
 //
 (function() {
-	console.log("run");
+    console.log("run");
 })();
 (() => {
-	console.log("run");
+    console.log("run");
 })();
 sideEffect();
 export const api = _noopQrlDEV("api_server_JonPp043gH0");

@@ -3159,7 +3159,7 @@ pub(crate) fn transform_code(
     config: &TransformCodeOptions,
 ) -> crate::types::TransformOutput {
     use oxc::allocator::Allocator;
-    use oxc::codegen::Codegen;
+    use oxc::codegen::{Codegen, CodegenOptions, IndentChar};
 
     let allocator = Allocator::default();
     let source_in_arena: &str = allocator.alloc_str(source);
@@ -3243,7 +3243,12 @@ pub(crate) fn transform_code(
     );
 
     // Stage 7: Generate output (segment emission comes in Plan 07)
-    let code = Codegen::new().build(&program).code;
+    let codegen_options = CodegenOptions {
+        indent_char: IndentChar::Space,
+        indent_width: 4,
+        ..Default::default()
+    };
+    let code = Codegen::new().with_options(codegen_options).build(&program).code;
 
     let mut diagnostics = parse_diagnostics;
     diagnostics.extend(transformer.diagnostics);

@@ -7,19 +7,19 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { useSignal } from '@qwik.dev/core';
 export const Works = componentQrl((_rawProps) => {
-	const fromProps = _rawProps.fromProps;
-	let fromLocal = useSignal(0);
-	return _jsxSorted("div", null, null, [
-		fromLocal,
-		fromProps,
-		fromLocal + fromProps,
-		{ props: fromProps },
-		{ local: fromLocal },
-		{
-			props: fromProps,
-			local: fromLocal
-		}
-	], 1, null);
+    const fromProps = _rawProps.fromProps;
+    let fromLocal = useSignal(0);
+    return _jsxSorted("div", null, null, [
+        fromLocal,
+        fromProps,
+        fromLocal + fromProps,
+        { props: fromProps },
+        { local: fromLocal },
+        {
+            props: fromProps,
+            local: fromLocal
+        }
+    ], 1, null);
 }, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==

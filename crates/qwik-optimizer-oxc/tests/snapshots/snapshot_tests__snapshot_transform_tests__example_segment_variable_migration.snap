@@ -43,8 +43,8 @@ export const Other_component_C1my3EIdP1k = () => {
 */
 ============================= test.tsx_App_component_ckEPmXZlub0.tsx (ENTRY POINT) ==
 const helperFn = (msg) => {
-	console.log("Helper: " + msg);
-	return msg.toUpperCase();
+    console.log("Helper: " + msg);
+    return msg.toUpperCase();
 };
 export const App_component_ckEPmXZlub0 = () => {
 	const result = helperFn('hello');

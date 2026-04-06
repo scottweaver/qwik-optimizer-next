@@ -14,8 +14,8 @@ export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 ============================= test.tsx_test_component_div_div_q_e_hover_2iHUE4xtgo8.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_q_e_hover_2iHUE4xtgo8 = () => {
-	const index = _captures[0];
-	return console.log(index);
+    const index = _captures[0];
+    return console.log(index);
 };
 
 /*
@@ -75,8 +75,8 @@ export const test_component_LUXeXe0DQrg = () => {
 ============================= test.tsx_test_component_div_div_q_e_click_Mc600uqO6ps.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_q_e_click_Mc600uqO6ps = () => {
-	const item = _captures[0];
-	return console.log(item);
+    const item = _captures[0];
+    return console.log(item);
 };
 
 /*

@@ -11,11 +11,11 @@ import L from "leaflet";
 const q_s_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "s_ckEPmXZlub0");
 //
 export const functionThatNeedsWindow = () => {
-	if (false) {
-		console.log("l", L);
-		console.log("hey");
-		window.alert("hey");
-	}
+    if (false) {
+        console.log("l", L);
+        console.log("hey");
+        window.alert("hey");
+    }
 };
 export const App = /*#__PURE__*/ componentQrl(q_s_ckEPmXZlub0);
 

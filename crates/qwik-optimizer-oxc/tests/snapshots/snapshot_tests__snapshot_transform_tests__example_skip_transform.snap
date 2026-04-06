@@ -1,14 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 916
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { _jsxSorted } from "@qwik.dev/core";
 export const handler = $(() => console.log("hola"));
 export const App = component$((props) => {
-	useStyles$("hola");
-	return $(() => _jsxSorted("div", null, null, state.thing, 1, "0"));
+    useStyles$("hola");
+    return $(() => _jsxSorted("div", null, null, state.thing, 1, "0"));
 });
 
 == DIAGNOSTICS ==

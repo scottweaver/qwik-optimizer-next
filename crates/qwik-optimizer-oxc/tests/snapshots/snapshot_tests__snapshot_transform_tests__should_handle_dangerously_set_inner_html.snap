@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-/*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
+const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
 //
 /*#__PURE__*/ componentQrl(q_Cmp_component_4ryKJTOKjWE);
 
@@ -56,8 +56,8 @@ export const Cmp_component_4ryKJTOKjWE = () => {
 ============================= test.tsx_Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Cmp_component_div_div_button_q_e_click_kOQ2BgBVVS8 = () => {
-	const htmlSignal = _captures[0];
-	return htmlSignal.value = "<h2><span>I'm a updated signal value!</span></h2>";
+    const htmlSignal = _captures[0];
+    return htmlSignal.value = "<h2><span>I'm a updated signal value!</span></h2>";
 };
 
 /*

@@ -13,15 +13,15 @@ const q_TextContent_component_puSwpKXO7Kg = /*#__PURE__*/ _noopQrl("TextContent_
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //
 q_TextContent_component_puSwpKXO7Kg.s((props) => {
-	return <>
+    return <>
 			<div>data-nu: {props["data-nu"]}</div>
 			<div>class: {props.class}</div>
 		</>;
 });
 q_App_component_ckEPmXZlub0.s(() => {
-	const signal = useSignal(0);
-	const store = useStore({});
-	return <>
+    const signal = useSignal(0);
+    const store = useStore({});
+    return <>
 			<div>text</div>
 			<div>{`text`}</div>
 			<div>{1}</div>

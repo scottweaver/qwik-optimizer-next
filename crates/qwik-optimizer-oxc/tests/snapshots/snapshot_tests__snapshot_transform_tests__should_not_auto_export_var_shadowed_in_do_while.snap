@@ -14,12 +14,12 @@ export const action = formActionQrl(q_action_formAction_dIQV5vh1He4);
 ============================= test.tsx_action_formAction_dIQV5vh1He4.js (ENTRY POINT) ==
 const x = "module-level";
 export const action_formAction_dIQV5vh1He4 = (data) => {
-	let i = 0;
-	do {
-		const x = "shadowed";
-		i++;
-	} while (i < 3);
-	return {};
+    let i = 0;
+    do {
+        const x = "shadowed";
+        i++;
+    } while (i < 3);
+    return {};
 };
 
 /*

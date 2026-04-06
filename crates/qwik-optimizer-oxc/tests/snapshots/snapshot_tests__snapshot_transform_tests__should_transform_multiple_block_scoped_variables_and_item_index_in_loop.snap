@@ -48,11 +48,11 @@ export const test_component_LUXeXe0DQrg = () => {
 ============================= test.tsx_test_component_div_div_q_e_click_Mc600uqO6ps.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_q_e_click_Mc600uqO6ps = () => {
-	const i = _captures[0];
-	const index = _captures[1];
-	const val = _captures[2];
-	const value = _captures[3];
-	return console.log(value, index, val, i);
+    const i = _captures[0];
+    const index = _captures[1];
+    const val = _captures[2];
+    const value = _captures[3];
+    return console.log(value, index, val, i);
 };
 
 /*

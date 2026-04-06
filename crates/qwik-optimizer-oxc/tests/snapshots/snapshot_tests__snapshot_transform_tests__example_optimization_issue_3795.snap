@@ -6,11 +6,11 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 export const Issue3795 = componentQrl(() => {
-	let base = "foo";
-	const firstAssignment = base;
-	base += "bar";
-	const secondAssignment = base;
-	return _jsxSorted("div", null, { id: "issue-3795-result" }, [firstAssignment, secondAssignment], 1, null);
+    let base = "foo";
+    const firstAssignment = base;
+    base += "bar";
+    const secondAssignment = base;
+    return _jsxSorted("div", null, { id: "issue-3795-result" }, [firstAssignment, secondAssignment], 1, null);
 }, "Issue3795_component_wsE8beycatI");
 
 == DIAGNOSTICS ==

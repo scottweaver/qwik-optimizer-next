@@ -9,16 +9,16 @@ import { qrl } from "@qwik.dev/core";
 const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(()=>import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
 //
 const { a, ...rest } = {
-	a: 1,
-	b: 2,
-	c: 3
+    a: 1,
+    b: 2,
+    c: 3
 };
 console.log("root", rest.b, rest.c);
 export const handler = q_handler_T7IDIUVU4lI;
 
 ============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
 export const handler_T7IDIUVU4lI = () => {
-	console.log("qrl", a);
+    console.log("qrl", a);
 };
 
 /*

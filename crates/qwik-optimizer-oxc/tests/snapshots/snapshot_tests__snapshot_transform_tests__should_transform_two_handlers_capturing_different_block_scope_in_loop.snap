@@ -14,8 +14,8 @@ export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 ============================= test.tsx_test_component_div_div_button_q_e_click_hCFE1Zqizzw.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_button_q_e_click_hCFE1Zqizzw = () => {
-	const index = _captures[0];
-	return console.log(index);
+    const index = _captures[0];
+    return console.log(index);
 };
 
 /*
@@ -44,8 +44,8 @@ export const test_component_div_div_button_q_e_click_hCFE1Zqizzw = () => {
 ============================= test.tsx_test_component_div_div_span_q_e_keydown_JMCQrlWndWA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_div_div_span_q_e_keydown_JMCQrlWndWA = () => {
-	const label = _captures[0];
-	return console.log(label);
+    const label = _captures[0];
+    return console.log(label);
 };
 
 /*

@@ -10,8 +10,8 @@ import { qrl } from "@qwik.dev/core";
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
 //
 export enum Thing {
-	A,
-	B
+    A,
+    B
 }
 export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 

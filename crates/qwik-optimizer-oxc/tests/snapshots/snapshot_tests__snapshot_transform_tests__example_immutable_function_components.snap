@@ -11,7 +11,7 @@ import { Slot } from '@qwik.dev/core';
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //
 q_App_component_ckEPmXZlub0.s((props: Stuff) => {
-	return <div>
+    return <div>
 			<Slot />
 		</div>;
 });

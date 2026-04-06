@@ -8,7 +8,7 @@ import { qrl } from "@qwik.dev/core";
 import { component } from '@qwik.dev/core';
 //
 const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
-/*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw");
+const q_renderHeader2_component_Ay6ibkfFYsw = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw");
 //
 export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
 component(q_renderHeader2_component_Ay6ibkfFYsw);
@@ -41,8 +41,8 @@ export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx) => console.log(ct
 */
 ============================= test.tsx_renderHeader2_component_Ay6ibkfFYsw.tsx (ENTRY POINT) ==
 export const renderHeader2_component_Ay6ibkfFYsw = () => {
-	console.log("mount");
-	return render;
+    console.log("mount");
+    return render;
 };
 
 /*

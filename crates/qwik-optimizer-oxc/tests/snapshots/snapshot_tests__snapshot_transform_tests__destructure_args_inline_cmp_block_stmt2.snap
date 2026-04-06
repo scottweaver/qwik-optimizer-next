@@ -10,20 +10,20 @@ import { _jsxSorted } from "@qwik.dev/core";
 const q_test_div_q_e_click_pFqTss400MA = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_div_q_e_click_pFqTss400MA"), "test_div_q_e_click_pFqTss400MA");
 //
 export default (props: {
-	data: any;
+    data: any;
 }) => {
-	const { data } = props;
-	return _jsxSorted("div", {
-		"data-is-active": data.selectedOutputDetail === "options",
-		"q-e:click": q_test_div_q_e_click_pFqTss400MA.w([data])
-	}, null, null, 1, "0");
+    const { data } = props;
+    return _jsxSorted("div", {
+        "data-is-active": data.selectedOutputDetail === "options",
+        "q-e:click": q_test_div_q_e_click_pFqTss400MA.w([data])
+    }, null, null, 1, "0");
 };
 
 ============================= test.tsx_test_div_q_e_click_pFqTss400MA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_div_q_e_click_pFqTss400MA = () => {
-	const data = _captures[0];
-	data.selectedOutputDetail = "options";
+    const data = _captures[0];
+    data.selectedOutputDetail = "options";
 };
 
 /*

@@ -7,14 +7,14 @@ snapshot_kind: text
 import { _jsxSorted } from "@qwik.dev/core";
 import { useStore, useEffect } from '@qwik.dev/core';
 export const useMemo$ = (qrt) => {
-	useEffect(qrt);
+    useEffect(qrt);
 };
 export const App = component$((props) => {
-	const state = useStore({ count: 0 });
-	useMemo$(() => {
-		console.log(state.count);
-	});
-	return $(() => _jsxSorted("div", null, null, state.count, 1, "0"));
+    const state = useStore({ count: 0 });
+    useMemo$(() => {
+        console.log(state.count);
+    });
+    return $(() => _jsxSorted("div", null, null, state.count, 1, "0"));
 });
 
 == DIAGNOSTICS ==

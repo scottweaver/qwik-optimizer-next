@@ -14,9 +14,9 @@ export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 ============================= test.tsx_App_component_loopArrowFn_loopArrowFn_span_q_e_click_1loNBc35XbQ.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_loopArrowFn_loopArrowFn_span_q_e_click_1loNBc35XbQ = () => {
-	const cart = _captures[0];
-	const item = _captures[1];
-	cart.push(item);
+    const cart = _captures[0];
+    const item = _captures[1];
+    cart.push(item);
 };
 
 /*
@@ -46,10 +46,10 @@ export const App_component_loopArrowFn_loopArrowFn_span_q_e_click_1loNBc35XbQ = 
 ============================= test.tsx_App_component_loopForI_loopForI_span_q_e_click_CF9gXIY3ETA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_loopForI_loopForI_span_q_e_click_CF9gXIY3ETA = () => {
-	const cart = _captures[0];
-	const i = _captures[1];
-	const results = _captures[2];
-	cart.push(results[i]);
+    const cart = _captures[0];
+    const i = _captures[1];
+    const results = _captures[2];
+    cart.push(results[i]);
 };
 
 /*
@@ -199,9 +199,9 @@ export const App_component_ckEPmXZlub0 = () => {
 ============================= test.tsx_App_component_loopForOf_loopForOf_span_q_e_click_Nzqq3VkSXZk.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_loopForOf_loopForOf_span_q_e_click_Nzqq3VkSXZk = () => {
-	const cart = _captures[0];
-	const item = _captures[1];
-	cart.push(item);
+    const cart = _captures[0];
+    const item = _captures[1];
+    cart.push(item);
 };
 
 /*
@@ -231,10 +231,10 @@ export const App_component_loopForOf_loopForOf_span_q_e_click_Nzqq3VkSXZk = () =
 ============================= test.tsx_App_component_loopForIn_loopForIn_span_q_e_click_oFEF83VC6vE.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_loopForIn_loopForIn_span_q_e_click_oFEF83VC6vE = () => {
-	const cart = _captures[0];
-	const key = _captures[1];
-	const results = _captures[2];
-	cart.push(results[key]);
+    const cart = _captures[0];
+    const key = _captures[1];
+    const results = _captures[2];
+    cart.push(results[key]);
 };
 
 /*
@@ -265,10 +265,10 @@ export const App_component_loopForIn_loopForIn_span_q_e_click_oFEF83VC6vE = () =
 ============================= test.tsx_App_component_loopWhile_loopWhile_span_q_e_click_ONK5a1y5dqg.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_loopWhile_loopWhile_span_q_e_click_ONK5a1y5dqg = () => {
-	const cart = _captures[0];
-	const i = _captures[1];
-	const results = _captures[2];
-	cart.push(results[i]);
+    const cart = _captures[0];
+    const i = _captures[1];
+    const results = _captures[2];
+    cart.push(results[i]);
 };
 
 /*
@@ -299,9 +299,9 @@ export const App_component_loopWhile_loopWhile_span_q_e_click_ONK5a1y5dqg = () =
 ============================= test.tsx_App_component_div_button_q_e_click_UB6Fs5a3bd8.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const App_component_div_button_q_e_click_UB6Fs5a3bd8 = () => {
-	const cart = _captures[0];
-	const item = _captures[1];
-	cart.push(item);
+    const cart = _captures[0];
+    const item = _captures[1];
+    cart.push(item);
 };
 
 /*

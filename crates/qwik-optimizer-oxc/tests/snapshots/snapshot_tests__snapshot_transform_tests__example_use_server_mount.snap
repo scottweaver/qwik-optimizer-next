@@ -121,9 +121,9 @@ export const Child_component_div_q_e_click_cROa4sult1s = () => console.log("chil
 import { _captures } from "@qwik.dev/core";
 import { default as mongo } from "mongodb";
 export const Parent_component_useTask_gDH1EtUWqBU = async () => {
-	const state = _captures[0];
-	state.text = await mongo.users();
-	redis.set(state.text);
+    const state = _captures[0];
+    state.text = await mongo.users();
+    redis.set(state.text);
 };
 
 /*
@@ -153,8 +153,8 @@ export const Parent_component_useTask_gDH1EtUWqBU = async () => {
 import { _captures } from "@qwik.dev/core";
 import { default as mongo } from "mongodb";
 export const Child_component_useTask_Oh4n7ZeqJkU = async () => {
-	const state = _captures[0];
-	state.text = await mongo.users();
+    const state = _captures[0];
+    state.text = await mongo.users();
 };
 
 /*

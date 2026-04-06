@@ -17,18 +17,18 @@ export const { onRequest, logout, getSession, signup } = authQrl(q_auth_GU0aY5QC
 ============================= test.tsx_auth_GU0aY5QCETY.js (ENTRY POINT) ==
 import { default as Facebook } from "next-auth/providers/facebook";
 export const auth_GU0aY5QCETY = { providers: [
-	GitHub({
-		clientId: process.env.GITHUB_ID,
-		clientSecret: process.env.GITHUB_SECRET
-	}),
-	Facebook({
-		clientId: process.env.FACEBOOK_ID,
-		clientSecret: process.env.FACEBOOK_SECRET
-	}),
-	Google({
-		clientId: process.env.GOOGLE_ID,
-		clientSecret: process.env.GOOGLE_SECRET
-	})
+    GitHub({
+        clientId: process.env.GITHUB_ID,
+        clientSecret: process.env.GITHUB_SECRET
+    }),
+    Facebook({
+        clientId: process.env.FACEBOOK_ID,
+        clientSecret: process.env.FACEBOOK_SECRET
+    }),
+    Google({
+        clientId: process.env.GOOGLE_ID,
+        clientSecret: process.env.GOOGLE_SECRET
+    })
 ] };
 
 /*
@@ -54,18 +54,18 @@ export const auth_GU0aY5QCETY = { providers: [
 ============================= test.tsx_serverAuth_qVqpX2a0p9Y.js (ENTRY POINT) ==
 import { default as Facebook } from "next-auth/providers/facebook";
 export const serverAuth_qVqpX2a0p9Y = { providers: [
-	GitHub({
-		clientId: process.env.GITHUB_ID,
-		clientSecret: process.env.GITHUB_SECRET
-	}),
-	Facebook({
-		clientId: import.meta.env.FACEBOOK_ID,
-		clientSecret: import.meta.env.FACEBOOK_SECRET
-	}),
-	Google({
-		clientId: process.env.GOOGLE_ID,
-		clientSecret: process.env.GOOGLE_SECRET
-	})
+    GitHub({
+        clientId: process.env.GITHUB_ID,
+        clientSecret: process.env.GITHUB_SECRET
+    }),
+    Facebook({
+        clientId: import.meta.env.FACEBOOK_ID,
+        clientSecret: import.meta.env.FACEBOOK_SECRET
+    }),
+    Google({
+        clientId: process.env.GOOGLE_ID,
+        clientSecret: process.env.GOOGLE_SECRET
+    })
 ] };
 
 /*

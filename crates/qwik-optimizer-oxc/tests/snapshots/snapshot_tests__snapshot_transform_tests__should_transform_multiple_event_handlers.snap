@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-/*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 //
 /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 
@@ -47,8 +47,8 @@ export const Foo_component_HTDRsvUbLiE = function() {
 ============================= test.tsx_Foo_component_div_div_q_e_mouseover_P9F6Osn3X6Y.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Foo_component_div_div_q_e_mouseover_P9F6Osn3X6Y = () => {
-	const row = _captures[0];
-	return console.log("over" + row.value.id);
+    const row = _captures[0];
+    return console.log("over" + row.value.id);
 };
 
 /*
@@ -77,8 +77,8 @@ export const Foo_component_div_div_q_e_mouseover_P9F6Osn3X6Y = () => {
 ============================= test.tsx_Foo_component_div_div_p_q_e_click_PjMbeUzoAMk.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = () => {
-	const row = _captures[0];
-	return console.log("inner" + row.value.id);
+    const row = _captures[0];
+    return console.log("inner" + row.value.id);
 };
 
 /*
@@ -107,8 +107,8 @@ export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = () => {
 ============================= test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Foo_component_div_div_q_e_click_vKrX4PmH2aM = () => {
-	const row = _captures[0];
-	return console.log(row.value.id);
+    const row = _captures[0];
+    return console.log(row.value.id);
 };
 
 /*

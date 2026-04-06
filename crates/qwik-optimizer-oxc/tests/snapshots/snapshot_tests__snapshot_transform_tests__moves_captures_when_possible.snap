@@ -14,9 +14,9 @@ export const Test = /*#__PURE__*/ componentQrl(q_Test_component_qJXYteHpGTQ);
 ============================= test.tsx_Test_component_button_q_e_dblclick_dxOdkqiOleU.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Test_component_button_q_e_dblclick_dxOdkqiOleU = () => {
-	const foo = _captures[0];
-	const sig = _captures[1];
-	return foo.value += sig.value;
+    const foo = _captures[0];
+    const sig = _captures[1];
+    return foo.value += sig.value;
 };
 
 /*
@@ -46,9 +46,9 @@ export const Test_component_button_q_e_dblclick_dxOdkqiOleU = () => {
 ============================= test.tsx_Test_component_button_q_e_hover_IVVGOMV4FJ4.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Test_component_button_q_e_hover_IVVGOMV4FJ4 = () => {
-	const bar = _captures[0];
-	const sig = _captures[1];
-	return sig.value += bar.value;
+    const bar = _captures[0];
+    const sig = _captures[1];
+    return sig.value += bar.value;
 };
 
 /*
@@ -110,8 +110,8 @@ export const Test_component_qJXYteHpGTQ = () => {
 ============================= test.tsx_Test_component_button_q_e_click_SvzH9HBZLMQ.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Test_component_button_q_e_click_SvzH9HBZLMQ = () => {
-	const sig = _captures[0];
-	return sig.value++;
+    const sig = _captures[0];
+    return sig.value++;
 };
 
 /*

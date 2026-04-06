@@ -12,9 +12,9 @@ import { dep } from './file';
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //
 q_App_component_ckEPmXZlub0.s(() => {
-	const signal = useSignal(0);
-	const store = useStore({});
-	return <>
+    const signal = useSignal(0);
+    const store = useStore({});
+    return <>
 			<div>First text</div>
 			<div>First {`text`}</div>
 			<div>First {1}</div>
