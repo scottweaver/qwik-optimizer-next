@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 import { useStore } from '@qwik.dev/core';
 import { thing } from './sibling';
 import mongodb from "mongodb";

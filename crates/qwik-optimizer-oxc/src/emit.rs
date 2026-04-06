@@ -51,6 +51,7 @@ pub(crate) fn emit_module<'a>(
         let code = normalize_pure_annotations(&codegen_result.code);
         let code = inject_pure_annotations(&code);
         let code = preserve_original_quotes(&code, source);
+        let code = sort_imports(&code, source);
         let code = sort_hoisted_consts(&code);
         let code = insert_separator_comments(&code);
         EmitResult { code, map }
@@ -68,6 +69,8 @@ pub(crate) fn emit_module<'a>(
         let code = normalize_pure_annotations(&codegen_result.code);
         let code = inject_pure_annotations(&code);
         let code = preserve_original_quotes(&code, source);
+        let code = sort_imports(&code, source);
+        let code = sort_hoisted_consts(&code);
         let code = insert_separator_comments(&code);
         EmitResult { code, map: None }
     }
@@ -336,6 +339,130 @@ fn extract_import_names(line: &str) -> Vec<&str> {
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .collect()
+}
+
+/// Sort import declarations to match SWC output ordering.
+///
+/// SWC places synthesized imports (those NOT present in the original source)
+/// before user-written imports. Within synthesized imports, they are ordered
+/// alphabetically by the first binding name (BTreeMap order).
+///
+/// User-written imports retain their original source order.
+fn sort_imports(code: &str, source: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    if lines.is_empty() {
+        return code.to_string();
+    }
+
+    // Find the contiguous block of import lines at the top
+    let mut import_end = 0;
+    for (i, line) in lines.iter().enumerate() {
+        if line.trim().starts_with("import ") {
+            import_end = i + 1;
+        } else if !line.trim().is_empty() && import_end > 0 {
+            break;
+        }
+    }
+
+    if import_end < 2 {
+        return code.to_string(); // 0 or 1 imports, nothing to sort
+    }
+
+    // Separate synthesized vs user imports
+    let mut synthesized: Vec<&str> = Vec::new();
+    let mut user: Vec<&str> = Vec::new();
+
+    for i in 0..import_end {
+        let line = lines[i];
+        if !line.trim().starts_with("import ") {
+            continue;
+        }
+        // Check if this import line (or its module specifier) exists in the source
+        if is_user_import(line, source) {
+            user.push(line);
+        } else {
+            synthesized.push(line);
+        }
+    }
+
+    // Sort synthesized imports alphabetically by first binding name
+    synthesized.sort_by(|a, b| {
+        let key_a = import_sort_key(a);
+        let key_b = import_sort_key(b);
+        key_a.cmp(&key_b)
+    });
+
+    // Rebuild: synthesized first, then user
+    let mut result: Vec<&str> = Vec::with_capacity(lines.len());
+    result.extend_from_slice(&synthesized);
+    result.extend_from_slice(&user);
+    if import_end < lines.len() {
+        result.extend_from_slice(&lines[import_end..]);
+    }
+
+    let mut output = result.join("\n");
+    if code.ends_with('\n') && !output.ends_with('\n') {
+        output.push('\n');
+    }
+    output
+}
+
+/// Check if an import line is user-written (exists in original source).
+fn is_user_import(line: &str, source: &str) -> bool {
+    // Extract binding names from the import line
+    let names = extract_import_names(line);
+    if names.is_empty() {
+        // Default or namespace import -- check if module specifier appears in source
+        if let Some(spec) = extract_module_specifier(line) {
+            return source.contains(&spec);
+        }
+        return false;
+    }
+
+    // Check if ANY imported name appears in a source import line
+    for src_line in source.lines() {
+        let t = src_line.trim();
+        if !t.starts_with("import ") {
+            continue;
+        }
+        let src_names = extract_import_names(t);
+        if names.iter().any(|n| src_names.contains(n)) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Extract the module specifier from an import line.
+fn extract_module_specifier(line: &str) -> Option<String> {
+    // Match from "..." or from '...'
+    if let Some(idx) = line.rfind("from ") {
+        let after = &line[idx + 5..];
+        let quote = after.chars().next()?;
+        if quote == '"' || quote == '\'' {
+            let end = after[1..].find(quote)?;
+            return Some(after[1..1 + end].to_string());
+        }
+    }
+    None
+}
+
+/// Extract the sort key from an import line (first binding name).
+fn import_sort_key(line: &str) -> String {
+    let names = extract_import_names(line);
+    if let Some(first) = names.first() {
+        return first.to_string();
+    }
+    // For default/namespace imports, use the local name
+    let trimmed = line.trim();
+    if let Some(rest) = trimmed.strip_prefix("import ") {
+        if let Some(name) = rest.split_whitespace().next() {
+            if name != "{" && name != "*" {
+                return name.to_string();
+            }
+        }
+    }
+    line.to_string()
 }
 
 /// Sort hoisted QRL const declarations alphabetically by name to match SWC output.

@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl } from '@qwik.dev/core';
 import { qrl } from "@qwik.dev/core";
+import { componentQrl } from '@qwik.dev/core';
 import { componentQrl, jsx } from '@qwik.dev/core';
 //
 const q_App_component_Fh88JClhbC0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_Fh88JClhbC0_App_component_Fh88JClhbC0"), "App_component_Fh88JClhbC0");

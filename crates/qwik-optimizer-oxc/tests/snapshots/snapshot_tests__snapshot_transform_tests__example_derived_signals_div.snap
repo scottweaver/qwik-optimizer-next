@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 import { useStore, mutable } from '@qwik.dev/core';
 import { dep } from './file';
 import styles from "./styles.module.css";

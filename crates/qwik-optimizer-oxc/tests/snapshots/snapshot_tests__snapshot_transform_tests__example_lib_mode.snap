@@ -5,10 +5,10 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { inlinedQrl } from "@qwik.dev/core";
 import { serverQrl } from "@qwik.dev/core";
 import { useStyleQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
 import { useSignal } from '@qwik.dev/core';
 export const Works = /*#__PURE__*/ componentQrl((props)=>{
     useStyleQrl(STYLES, "Works_component_useStyle_i40UL9JyQpg");

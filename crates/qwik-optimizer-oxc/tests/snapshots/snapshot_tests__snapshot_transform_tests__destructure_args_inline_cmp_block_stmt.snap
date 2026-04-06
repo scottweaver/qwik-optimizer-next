@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
 //
 const q_test_div_q_e_click_pFqTss400MA = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_div_q_e_click_pFqTss400MA"), "test_div_q_e_click_pFqTss400MA");
 //

@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 import { CONST } from 'const';
 //
 const q_NoWorks2_component_JPD9t2HyEKg = /*#__PURE__*/ _noopQrl("NoWorks2_component_JPD9t2HyEKg");

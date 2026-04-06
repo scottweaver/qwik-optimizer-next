@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= src/components/mongo/index.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 //
 const q_mongo_component_ouWLj4jA2oI = /*#__PURE__*/ _noopQrl("mongo_component_ouWLj4jA2oI");
 //

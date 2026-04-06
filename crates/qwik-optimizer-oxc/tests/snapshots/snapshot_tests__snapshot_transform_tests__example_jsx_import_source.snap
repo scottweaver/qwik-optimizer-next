@@ -4,9 +4,9 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { qwikifyQrl } from "./qwikfy";
-import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { qwikifyQrl } from "./qwikfy";
 //
 const q_App2_qwikify_RKJW7oCMdS4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App2_qwikify_RKJW7oCMdS4.js"), "App2_qwikify_RKJW7oCMdS4");
 const q_App_div_q_e_click_Z1sbYFdSKC4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_div_q_e_click_Z1sbYFdSKC4.js"), "App_div_q_e_click_Z1sbYFdSKC4");

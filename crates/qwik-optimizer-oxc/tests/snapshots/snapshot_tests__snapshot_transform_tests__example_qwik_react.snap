@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= ../node_modules/@qwik.dev/react/index.qwik.mjs ==
-import { componentQrl } from '@qwik.dev/core';
 import { qrl } from "@qwik.dev/core";
+import { componentQrl } from '@qwik.dev/core';
 import { componentQrl, useTaskQrl, implicit$FirstArg } from '@qwik.dev/core';
 //
 const q_qwikifyQrl_component_zH94hIe0Ick = /*#__PURE__*/ qrl(()=>import("./index.qwik.mjs_qwikifyQrl_component_zH94hIe0Ick_qwikifyQrl_component_zH94hIe0Ick.mjs"), "qwikifyQrl_component_zH94hIe0Ick");

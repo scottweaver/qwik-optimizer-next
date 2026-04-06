@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= components/component.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 import { useStore } from '@qwik.dev/core';
 import mongo from "mongodb";
 import redis from "redis";

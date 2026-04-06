@@ -4,7 +4,6 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.tsx ==
-// don't transpile jsx with non-plain-object props
 import { jsx } from '@qwik.dev/core';
 export const App = ()=>{
     const props = {};

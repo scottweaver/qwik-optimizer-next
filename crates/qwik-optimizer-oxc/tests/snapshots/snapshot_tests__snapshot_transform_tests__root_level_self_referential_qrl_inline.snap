@@ -4,8 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= ./node_modules/qwik-tree/index.qwik.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { _noopQrlDEV } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
 //
 const q_Tree_component_XMEiO6Rrd3Y = /*#__PURE__*/ _noopQrlDEV("Tree_component_XMEiO6Rrd3Y");
 //
