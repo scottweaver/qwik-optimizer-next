@@ -1,13 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 937
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { _jsxSorted } from "@qwik.dev/core";
 import { Counter } from "./counter.tsx";
-export const Root = ()=>{
-    return /*#__PURE__*/ _jsxSorted("html", null, null, [/*#__PURE__*/ _jsxSorted("head", null, null, [/*#__PURE__*/ _jsxSorted("meta", null, { charset: "utf-8" }, null, 1, null), /*#__PURE__*/ _jsxSorted("title", null, null, "Qwik Blank App", 1, null)], 1, null), /*#__PURE__*/ _jsxSorted("body", null, null, /*#__PURE__*/ _jsxSorted(Counter, null, { initial: 3 }, null, 1, "u6_1"), 1, null)], 1, "u6_0");
+export const Root = () => {
+	return _jsxSorted("html", null, null, [<head>
+				<meta charset="utf-8" />
+				<title>Qwik Blank App</title>
+			</head>, <body>
+				<Counter initial={3} />
+			</body>], 1, "0");
 };
 
 == DIAGNOSTICS ==

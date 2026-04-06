@@ -1,19 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 972
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
-//
-export const FieldInput = /*#__PURE__*/ componentQrl(q_FieldInput_component_V4XAtJSTRKg);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal } from "@qwik.dev/core";
+export const FieldInput = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_FieldInput_component_V4XAtJSTRKg.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
-export const FieldInput_component_V4XAtJSTRKg = () => {
+export const _u6BtPnK76q4 = () => {
   const localValue = useSignal("");
 
   return (
@@ -28,11 +26,11 @@ export const FieldInput_component_V4XAtJSTRKg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "FieldInput_component_V4XAtJSTRKg",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_FieldInput_component",
-  "hash": "V4XAtJSTRKg",
-  "canonicalFilename": "test.tsx_FieldInput_component_V4XAtJSTRKg",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -40,33 +38,8 @@ export const FieldInput_component_V4XAtJSTRKg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    95,
-    267
-  ]
-}
-*/
-============================= test.tsx_FieldInput_component_input_q_e_input_wqR1xEjZjf4.js (ENTRY POINT) ==
-export const FieldInput_component_input_q_e_input_wqR1xEjZjf4 = ()=>{
-    console.log("test");
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "FieldInput_component_input_q_e_input_wqR1xEjZjf4",
-  "entry": null,
-  "displayName": "test.tsx_FieldInput_component_input_q_e_input",
-  "hash": "wqR1xEjZjf4",
-  "canonicalFilename": "test.tsx_FieldInput_component_input_q_e_input_wqR1xEjZjf4",
-  "path": "",
-  "extension": "js",
-  "parent": "FieldInput_component_V4XAtJSTRKg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onInput$",
-  "captures": false,
-  "loc": [
-    208,
-    252
+    84,
+    268
   ]
 }
 */

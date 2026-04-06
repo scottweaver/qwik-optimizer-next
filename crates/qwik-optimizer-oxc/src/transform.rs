@@ -286,16 +286,6 @@ pub(crate) struct SegmentScope {
     pub is_sync: bool,
     /// Identifier references collected from the callback body.
     pub descendent_idents: HashSet<String>,
-    /// Whether we pushed the ctx_name onto stack_ctxt (true for named marker calls,
-    /// false for bare `$` and `sync$` which don't contribute to display_name).
-    pub pushed_ctx_name: bool,
-    /// Pre-registered naming result, computed at enter time to ensure outer segments
-    /// register their names before inner nested segments. This matches SWC's Fold
-    /// ordering where outer nodes process before children.
-    pub pre_registered_name: Option<crate::hash::ContextNameResult>,
-    /// Whether this is an inlinedQrl() call (pre-compiled QRL from user code).
-    /// When true, captures are taken from the third argument instead of auto-computed.
-    pub is_inlined_qrl: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -315,16 +305,6 @@ pub(crate) struct HoistedConst {
     pub rhs_code: String,
     /// Deduplication key -- same as `name`.
     pub symbol_name: String,
-    /// Whether this hoisted const belongs to the root module (true) or
-    /// to a parent segment (false). Only root-level consts are emitted
-    /// in exit_program; child consts are emitted by code_move.
-    pub is_root_level: bool,
-    /// Source span start of the original `$()` call expression.
-    /// Used for sorting hoisted consts to match SWC Fold (post-order DFS) ordering.
-    pub span_start: u32,
-    /// Parent segment symbol name, if nested inside another segment.
-    /// Used for post-order sorting: children must appear before parents.
-    pub parent_symbol: Option<String>,
 }
 
 /// Internal record for a single extracted segment. Accumulated in
@@ -355,10 +335,6 @@ pub(crate) struct SegmentRecord {
     pub origin: String,
     /// Byte span `(start, end)` of the original call expression.
     pub span: (u32, u32),
-    /// Byte span `(start, end)` of the first argument to the `$()` call.
-    /// SWC uses the first argument's span for `loc` and dev metadata (`lo`/`hi`),
-    /// not the full call expression span. Falls back to `span` if not set.
-    pub first_arg_span: Option<(u32, u32)>,
     /// 11-character SipHash-based segment hash.
     pub hash: String,
     /// Whether this segment was created via create_inline_qrl (not its own module).
@@ -396,31 +372,15 @@ pub(crate) struct QwikTransform {
     /// imports AND locally-exported $-suffixed identifiers.
     pub(crate) marker_functions: HashMap<String, String>,
 
-    /// Maps marker function ctx_name (e.g., "globalAction$") to its original import source module.
-    /// Used in exit_program to emit QRL wrapper imports from the correct source (not always core_module).
-    pub(crate) marker_fn_sources: HashMap<String, String>,
-
-    /// Import specifiers consumed during transformation (e.g., "$", "component$").
-    /// These are stripped from the root module output in exit_program.
-    pub(crate) consumed_imports: HashSet<String>,
-
     /// Local name for the bare `$` import from the core module.
     pub(crate) qsegment_fn: Option<String>,
     /// Local name for `sync$`.
     pub(crate) sync_qrl_fn: Option<String>,
-    /// Local name for `inlinedQrl` import from the core module.
-    /// When present, `inlinedQrl(fn, "name", [captures])` calls are processed
-    /// as pre-compiled QRL segments (SWC's handle_inlined_qsegment).
-    pub(crate) inlined_qrl_fn: Option<String>,
 
     // ---- Traversal state --------------------------------------------------
     /// Context name stack; each entry is pushed when entering a named call or
     /// variable declarator and popped on exit. Used to build `display_name`.
     pub(crate) stack_ctxt: Vec<String>,
-
-    /// Tracks whether each enter_call_expression pushed a callee ident name
-    /// onto stack_ctxt (so exit_call_expression knows whether to pop).
-    pub(crate) call_name_pushed: Vec<bool>,
 
     /// Stack of segment scopes -- one per detected $ call.
     pub(crate) segment_stack: Vec<SegmentScope>,
@@ -466,12 +426,13 @@ pub(crate) struct QwikTransform {
     pub(crate) needs_fn_signal_import: bool,
     pub(crate) needs_wrap_prop_import: bool,
 
+    // ---- Auto-export tracking (for variable migration _auto_ exports) --------
+    /// Names that need `export { name as _auto_name }` in the root module.
+    pub(crate) auto_exports: Vec<String>,
+
     // ---- JSX state -----------------------------------------------------------
     /// Counter for deterministic JSX key generation.
     pub(crate) jsx_key_counter: u32,
-    /// 2-character file hash prefix for JSX keys (e.g., "u6").
-    /// SWC uses `base64(file_hash)[0..2]` to prefix keys like `"u6_0"`.
-    pub(crate) jsx_key_prefix: String,
 
     // ---- Entry policy (for segment grouping) --------------------------------
     pub(crate) entry_policy: Box<dyn EntryPolicy>,
@@ -481,8 +442,6 @@ pub(crate) struct QwikTransform {
     pub(crate) entry_strategy: EntryStrategy,
     pub(crate) is_server: bool,
     pub(crate) file_name: String,
-    pub(crate) file_stem: String,
-    pub(crate) rel_dir: String,
     pub(crate) rel_path: String,
     pub(crate) extension: String,
     pub(crate) core_module: String,
@@ -490,13 +449,6 @@ pub(crate) struct QwikTransform {
     pub(crate) strip_event_handlers: bool,
     pub(crate) scope: Option<String>,
     pub(crate) explicit_extensions: bool,
-    /// Source directory (e.g., "/user/qwik/src/") for building absolute paths in dev metadata.
-    pub(crate) src_dir: String,
-    /// Override dev file path for qrlDEV metadata. When set, used instead of src_dir + file_name.
-    pub(crate) dev_file_path: Option<String>,
-    /// Dev metadata for qrlDEV post-processing: map from symbol_name to (file, lo, hi, displayName).
-    /// Only populated in Dev/Hmr modes. Applied as text post-processing after codegen.
-    pub(crate) dev_metadata: HashMap<String, (String, u32, u32, String)>,
     /// Pointer to the original source text (valid for traversal lifetime).
     pub(crate) source_text: *const str,
 }
@@ -517,20 +469,16 @@ impl QwikTransform {
         config: &TransformCodeOptions,
         collect: &GlobalCollect,
         file_name: &str,
-        file_stem: &str,
-        rel_dir: &str,
         rel_path: &str,
         extension: &str,
         source_text: &str,
     ) -> Self {
         let mut marker_functions: HashMap<String, String> = HashMap::new();
-        let mut marker_fn_sources: HashMap<String, String> = HashMap::new();
 
         // --- Named imports whose specifier ends with `$` ---
         for (local, import) in &collect.imports {
             if import.kind == ImportKind::Named && import.specifier.ends_with('$') {
                 marker_functions.insert(local.clone(), import.specifier.clone());
-                marker_fn_sources.insert(import.specifier.clone(), import.source.clone());
             }
         }
 
@@ -548,9 +496,6 @@ impl QwikTransform {
         let sync_qrl_fn = collect
             .get_imported_local("sync$", &config.core_module)
             .map(|s| s.to_string());
-        let inlined_qrl_fn = collect
-            .get_imported_local("inlinedQrl", &config.core_module)
-            .map(|s| s.to_string());
 
         // Build initial decl_stack from module-level declarations
         // Root scope frame includes all top-level var/fn/class declarations
@@ -567,13 +512,9 @@ impl QwikTransform {
 
         QwikTransform {
             marker_functions,
-            marker_fn_sources,
-            consumed_imports: HashSet::new(),
             qsegment_fn,
             sync_qrl_fn,
-            inlined_qrl_fn,
             stack_ctxt: Vec::new(),
-            call_name_pushed: Vec::new(),
             segment_stack: Vec::new(),
             segments: Vec::new(),
             segment_names: HashMap::new(),
@@ -592,17 +533,12 @@ impl QwikTransform {
             needs_fragment_import: false,
             needs_fn_signal_import: false,
             needs_wrap_prop_import: false,
+            auto_exports: Vec::new(),
             jsx_key_counter: 0,
-            jsx_key_prefix: crate::hash::compute_file_hash_prefix(
-                config.scope.as_deref(),
-                rel_path,
-            ),
             mode: config.mode.clone(),
             entry_strategy: config.entry_strategy.clone(),
             is_server: config.is_server,
             file_name: file_name.to_string(),
-            file_stem: file_stem.to_string(),
-            rel_dir: rel_dir.to_string(),
             rel_path: rel_path.to_string(),
             extension: extension.to_string(),
             core_module: config.core_module.clone(),
@@ -610,31 +546,8 @@ impl QwikTransform {
             strip_event_handlers: config.strip_event_handlers,
             scope: config.scope.clone(),
             explicit_extensions: config.explicit_extensions,
-            src_dir: config.src_dir.clone(),
-            dev_file_path: None, // Set by caller after construction
-            dev_metadata: HashMap::new(),
             source_text: source_text as *const str,
         }
-    }
-
-    // -----------------------------------------------------------------------
-    // find_wrapper_source -- look up the correct import source for a QRL wrapper
-    // -----------------------------------------------------------------------
-
-    /// Find the correct import source module for a QRL wrapper function name.
-    /// E.g., "globalActionQrl" -> look up "globalAction$" in marker_fn_sources -> "@qwik.dev/router"
-    /// Falls back to self.core_module if not found.
-    fn find_wrapper_source(&self, wrapper_name: &str) -> String {
-        // Convert QRL wrapper name back to marker name: "componentQrl" -> "component$"
-        let marker_name = if wrapper_name.ends_with("Qrl") {
-            format!("{}$", &wrapper_name[..wrapper_name.len() - 3])
-        } else {
-            return self.core_module.clone();
-        };
-        self.marker_fn_sources
-            .get(&marker_name)
-            .cloned()
-            .unwrap_or_else(|| self.core_module.clone())
     }
 
     // -----------------------------------------------------------------------
@@ -686,12 +599,19 @@ impl QwikTransform {
     // -----------------------------------------------------------------------
 
     /// Ensure a root-level name is exported (for variable migration).
-    /// Adds an `_auto_{name}` export entry to the collect if not already exported.
-    pub(crate) fn ensure_export(&mut self, _name: &str) {
-        // In the full pipeline, this would inject `export { name as _auto_name }`
-        // into the program body. For now, this is a no-op placeholder that the
-        // variable migration pipeline can call without error.
-        // Full implementation deferred to gap closure.
+    /// Records the name for later injection of `export { name as _auto_name }`
+    /// into the program body during apply_variable_migration Step 8c.
+    pub(crate) fn ensure_export(&mut self, name: &str) {
+        // Skip if already tracked
+        if self.auto_exports.contains(&name.to_string()) {
+            return;
+        }
+        let gc = self.global_collect();
+        // Skip if the local name is already exported (under any exported name)
+        if gc.export_locals.contains(name) || gc.exports.contains_key(name) {
+            return;
+        }
+        self.auto_exports.push(name.to_string());
     }
 
     // -----------------------------------------------------------------------
@@ -765,9 +685,8 @@ impl QwikTransform {
     /// Determine if a $ call should be emitted as a segment
     /// (not stripped by strip_ctx_name or strip_event_handlers).
     fn should_emit_segment(&self, ctx_name: &str, ctx_kind: &CtxKind) -> bool {
-        // Check strip_ctx_name -- SWC uses starts_with prefix matching,
-        // e.g. strip_ctx_name: ["server"] matches "serverStuff$", "serverAuth$", etc.
-        if self.strip_ctx_name.iter().any(|s| ctx_name.starts_with(s.as_str())) {
+        // Check strip_ctx_name
+        if self.strip_ctx_name.iter().any(|s| s == ctx_name) {
             return false;
         }
 
@@ -784,43 +703,18 @@ impl QwikTransform {
     // -----------------------------------------------------------------------
 
     /// Collect all identifier references from the first argument of a $ call.
-    /// Works for both function/arrow expressions and non-function args
-    /// (identifiers, template literals, objects, etc.).
     fn collect_descendent_idents(first_arg: &Argument<'_>) -> HashSet<String> {
-        // Convert Argument to a temporary Expression reference for IdentCollector.
-        // SAFETY: We only read; the borrows are temporary and don't outlive the call.
         match first_arg {
             Argument::ArrowFunctionExpression(arrow) => {
                 IdentCollector::collect(&Expression::ArrowFunctionExpression(
+                    // SAFETY: We only read; the borrow is temporary.
                     unsafe { std::ptr::read(arrow as *const _) },
                 ))
             }
             Argument::FunctionExpression(func) => {
                 IdentCollector::collect(&Expression::FunctionExpression(
+                    // SAFETY: We only read; the borrow is temporary.
                     unsafe { std::ptr::read(func as *const _) },
-                ))
-            }
-            Argument::Identifier(ident) => {
-                let mut set = HashSet::new();
-                let name = ident.name.as_str();
-                if !GLOBAL_BUILTINS.contains(&name) {
-                    set.insert(name.to_string());
-                }
-                set
-            }
-            Argument::TemplateLiteral(tpl) => {
-                IdentCollector::collect(&Expression::TemplateLiteral(
-                    unsafe { std::ptr::read(tpl as *const _) },
-                ))
-            }
-            Argument::ObjectExpression(obj) => {
-                IdentCollector::collect(&Expression::ObjectExpression(
-                    unsafe { std::ptr::read(obj as *const _) },
-                ))
-            }
-            Argument::CallExpression(call) => {
-                IdentCollector::collect(&Expression::CallExpression(
-                    unsafe { std::ptr::read(call as *const _) },
                 ))
             }
             _ => HashSet::new(),
@@ -939,12 +833,7 @@ impl QwikTransform {
 
         for name in all_idents {
             for (decl_name, decl_type) in &all_decl {
-                if name == decl_name
-                    && matches!(decl_type, IdentType::Fn | IdentType::Class)
-                    && !collect.has_export_symbol(name)
-                    && !collect.root.contains_key(name)
-                    && !self_imports.contains(&name.to_string())
-                {
+                if name == decl_name && matches!(decl_type, IdentType::Fn | IdentType::Class) {
                     // C02 error: function/class declaration referenced across $ boundary
                     self.diagnostics.push(crate::types::Diagnostic {
                         scope: "optimizer".to_string(),
@@ -967,873 +856,6 @@ impl QwikTransform {
     fn is_inline_mode(&self) -> bool {
         matches!(self.entry_strategy, EntryStrategy::Inline | EntryStrategy::Hoist)
             || matches!(self.mode, EmitMode::Lib)
-    }
-
-    /// Extract source text for extra arguments (beyond the first) from a call expression.
-    /// Used to preserve options like `{ tagName: "my-foo" }` in componentQrl() calls.
-    fn extract_extra_args_code(&self, call: &CallExpression<'_>, skip: usize) -> Option<String> {
-        if call.arguments.len() <= skip {
-            return None;
-        }
-        let src = unsafe { &*self.source_text };
-        let mut parts = Vec::new();
-        for arg in call.arguments.iter().skip(skip) {
-            let span = match arg {
-                Argument::SpreadElement(s) => s.span,
-                _ => arg.as_expression().map_or(oxc::span::Span::new(0, 0), |e| {
-                    oxc::span::GetSpan::span(e)
-                }),
-            };
-            let start = span.start as usize;
-            let end = span.end as usize;
-            if start <= end && end <= src.len() {
-                parts.push(src[start..end].to_string());
-            }
-        }
-        if parts.is_empty() {
-            None
-        } else {
-            Some(parts.join(", "))
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // JSX recursive transformation with dollar-attr segment extraction
-    // -----------------------------------------------------------------------
-
-    /// Recursively transform a JSXElement: extract dollar-attr segments at every
-    /// level and convert child JSXElements (which are `JSXChild::Element` nodes
-    /// that OXC Traverse does NOT call `exit_expression` on).
-    fn transform_jsx_with_segments<'a>(
-        &mut self,
-        el: oxc::ast::ast::JSXElement<'a>,
-        is_root: bool,
-        allocator: &'a oxc::allocator::Allocator,
-        ctx: &mut TraverseCtx<'a, ()>,
-    ) -> (Expression<'a>, crate::jsx_transform::JsxImportNeeds) {
-        // Build signal optimization context
-        let decl_stack_flat: Vec<TypedId> = self
-            .decl_stack
-            .iter()
-            .flat_map(|frame| frame.iter().cloned())
-            .collect();
-        let signal_ctx = crate::jsx_transform::SignalOptContext {
-            decl_stack_flat: &decl_stack_flat,
-            is_server: self.is_server,
-            allocator,
-        };
-
-        let mut parts = crate::jsx_transform::classify_jsx_element(
-            el,
-            &mut self.jsx_key_counter,
-            &self.jsx_key_prefix,
-            is_root,
-            allocator,
-            Some(&signal_ctx),
-        );
-
-        // Process dollar-attrs and children with tag name on stack_ctxt.
-        let dollar_attrs = std::mem::take(&mut parts.dollar_attrs);
-        let tag_name = parts.tag_name.clone();
-
-
-        let mut extra_var_props: Vec<(String, Expression<'a>)> = Vec::new();
-
-        // Push tag name for the entire scope of dollar-attr processing + children
-        self.stack_ctxt.push(tag_name.clone());
-
-        // Process dollar-attrs
-        for dollar_attr in dollar_attrs {
-            let replacement_prop = self.process_jsx_dollar_attr(
-                dollar_attr,
-                &decl_stack_flat,
-                allocator,
-                ctx,
-            );
-            if let Some((key, value)) = replacement_prop {
-                extra_var_props.push((key, value));
-            }
-        }
-
-
-        // Recursively transform any child JSXElement/Fragment nodes
-        if let Some(ref mut children_expr) = parts.children_opt {
-            self.transform_children_recursive(children_expr, allocator, ctx);
-        }
-
-        // Pop tag name
-        self.stack_ctxt.pop();
-
-        crate::jsx_transform::build_jsx_call_from_parts(
-            crate::jsx_transform::JsxElementParts {
-                has_spread: parts.has_spread,
-                tag_expr: parts.tag_expr,
-                var_props: parts.var_props,
-                const_props: parts.const_props,
-                children_opt: parts.children_opt,
-                final_key: parts.final_key,
-                flags: parts.flags,
-                needs: parts.needs,
-                dollar_attrs: Vec::new(),
-                tag_name: parts.tag_name,
-                is_fn: parts.is_fn,
-            },
-            extra_var_props,
-            allocator,
-        )
-    }
-
-    /// Recursively process child expressions, transforming any embedded
-    /// JSXElement or JSXFragment nodes.
-    fn transform_children_recursive<'a>(
-        &mut self,
-        expr: &mut Expression<'a>,
-        allocator: &'a oxc::allocator::Allocator,
-        ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        match expr {
-            Expression::JSXElement(el_box) => {
-                // Take the JSXElement, transform it recursively, replace in-place
-                let taken = std::mem::replace(
-                    expr,
-                    ctx.ast.expression_null_literal(SPAN),
-                );
-                if let Expression::JSXElement(el) = taken {
-                    let (new_expr, needs) = self.transform_jsx_with_segments(
-                        el.unbox(), false, allocator, ctx,
-                    );
-                    // Track import needs at root level
-                    if self.segment_stack.is_empty() {
-                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
-                        if needs.needs_jsx_split { self.needs_jsx_split_import = true; }
-                        if needs.needs_fn_signal { self.needs_fn_signal_import = true; }
-                        if needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
-                    }
-                    *expr = new_expr;
-                }
-            }
-            Expression::JSXFragment(frag_box) => {
-                let taken = std::mem::replace(
-                    expr,
-                    ctx.ast.expression_null_literal(SPAN),
-                );
-                if let Expression::JSXFragment(frag) = taken {
-                    let (new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
-                        frag.unbox(),
-                        &mut self.jsx_key_counter,
-                        &self.jsx_key_prefix,
-                        false,
-                        allocator,
-                    );
-                    if self.segment_stack.is_empty() {
-                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
-                        if needs.needs_fragment { self.needs_fragment_import = true; }
-                    }
-                    *expr = new_expr;
-                }
-            }
-            Expression::ArrayExpression(arr) => {
-                // Children array: process each element
-                for element in arr.elements.iter_mut() {
-                    // ArrayExpressionElement variants mirror Expression variants.
-                    // We only need to handle JSXElement and JSXFragment children.
-                    match element {
-                        ArrayExpressionElement::JSXElement(_) | ArrayExpressionElement::JSXFragment(_) => {
-                            // Convert to Expression, transform, convert back is complex.
-                            // Instead, handle the specific JSX cases directly.
-                            // For JSXElement children in an array, they need recursive processing.
-                            // We'll use a take-transform-replace pattern.
-                            let dummy = ArrayExpressionElement::NullLiteral(ctx.ast.alloc_null_literal(SPAN));
-                            let taken = std::mem::replace(element, dummy);
-                            match taken {
-                                ArrayExpressionElement::JSXElement(el) => {
-                                    let (new_expr, needs) = self.transform_jsx_with_segments(
-                                        el.unbox(), false, allocator, ctx,
-                                    );
-                                    if self.segment_stack.is_empty() {
-                                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
-                                        if needs.needs_jsx_split { self.needs_jsx_split_import = true; }
-                                        if needs.needs_fn_signal { self.needs_fn_signal_import = true; }
-                                        if needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
-                                    }
-                                    *element = ArrayExpressionElement::from(new_expr);
-                                }
-                                ArrayExpressionElement::JSXFragment(frag) => {
-                                    let (new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
-                                        frag.unbox(), &mut self.jsx_key_counter, &self.jsx_key_prefix, false, allocator,
-                                    );
-                                    if self.segment_stack.is_empty() {
-                                        if needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
-                                        if needs.needs_fragment { self.needs_fragment_import = true; }
-                                    }
-                                    *element = ArrayExpressionElement::from(new_expr);
-                                }
-                                other => {
-                                    *element = other;
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            Expression::ConditionalExpression(cond) => {
-                // Ternary: process both branches
-                self.transform_children_recursive(&mut cond.consequent, allocator, ctx);
-                self.transform_children_recursive(&mut cond.alternate, allocator, ctx);
-            }
-            Expression::LogicalExpression(logical) => {
-                self.transform_children_recursive(&mut logical.right, allocator, ctx);
-            }
-            _ => {
-                // Other expressions: no JSX to process
-            }
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // JSX dollar-attr segment extraction
-    // -----------------------------------------------------------------------
-
-    /// Process a single `$`-suffixed JSX attribute. Creates a SegmentRecord and
-    /// returns a `(key, qrl_expression)` pair to inject into the JSX call props.
-    ///
-    /// For HTML elements: `onClick$` -> key="q-e:click", value=QRL
-    /// For components: `onClick$` -> key="onClick", value=QRL
-    fn process_jsx_dollar_attr<'a>(
-        &mut self,
-        dollar_attr: crate::jsx_transform::DollarAttr<'a>,
-        _decl_stack_flat: &[TypedId],
-        allocator: &'a oxc::allocator::Allocator,
-        ctx: &mut TraverseCtx<'a, ()>,
-    ) -> Option<(String, Expression<'a>)> {
-        // 1. Determine ctx_kind
-        let ctx_kind = if dollar_attr.html_attr.is_some() {
-            CtxKind::EventHandler
-        } else {
-            CtxKind::JSXProp
-        };
-
-        // 2. Collect descendent idents from the function expression
-        let descendent_idents = IdentCollector::collect(&dollar_attr.value_expr);
-
-        // 3. Flatten decl_stack for capture analysis
-        let all_decl: Vec<TypedId> = self
-            .decl_stack
-            .iter()
-            .flat_map(|frame| frame.iter().cloned())
-            .collect();
-
-        // 4. Compute scoped_idents (captures)
-        let mut scoped_idents = compute_scoped_idents(&descendent_idents, &all_decl);
-        let fn_params = get_function_params(&dollar_attr.value_expr);
-        scoped_idents.retain(|id| !fn_params.contains(id));
-
-        // 5. Determine the stack_ctxt name to push for this attribute.
-        // For HTML elements with event handlers: push the html_attr (e.g., "q-e:click")
-        // For components or non-event props: push the key WITHOUT $ (e.g., "onClick")
-        let attr_ctxt_name = if let Some(ref html_attr) = dollar_attr.html_attr {
-            html_attr.clone()
-        } else {
-            escape_dollar(&dollar_attr.key)
-        };
-
-        self.stack_ctxt.push(attr_ctxt_name);
-
-        // 6. Call register_context_name
-        let names = crate::hash::register_context_name(
-            &self.stack_ctxt,
-            &mut self.segment_names,
-            self.scope.as_deref(),
-            &self.rel_path,
-            &self.file_name,
-            &self.mode,
-            None,
-            None,
-            None,
-        );
-
-        // 7. Pop the attr name from stack_ctxt
-        self.stack_ctxt.pop();
-
-        // 8. Classify captures against GlobalCollect
-        let mut needed_imports = Vec::new();
-        let mut self_imports = Vec::new();
-        self.classify_captures(
-            &descendent_idents,
-            &mut scoped_idents,
-            &mut needed_imports,
-            &mut self_imports,
-        );
-
-        let has_captures = !scoped_idents.is_empty();
-
-        // 9. Check should_emit_segment (handles strip_ctx_name and strip_event_handlers)
-        let should_emit = self.should_emit_segment(&dollar_attr.key, &ctx_kind);
-
-        // 10. Compute entry key
-        let entry = self.compute_entry(
-            &ctx_kind,
-            &dollar_attr.key,
-            &scoped_idents,
-            &names.hash,
-            &names.symbol_name,
-        );
-
-        // 11. Extract expression code from source text
-        let expr_code: Option<String> = {
-            let src = unsafe { &*self.source_text };
-            let start = dollar_attr.value_span.start as usize;
-            let end = dollar_attr.value_span.end as usize;
-            if start <= end && end <= src.len() {
-                Some(src[start..end].to_string())
-            } else {
-                None
-            }
-        };
-
-        // 12. Compute local_idents
-        let mut local_idents: Vec<String> = self_imports.clone();
-        for ni in &needed_imports {
-            if !local_idents.contains(&ni.local_name) {
-                local_idents.push(ni.local_name.clone());
-            }
-        }
-
-        // 13. Determine parent segment
-        let parent_span = self.segment_stack.last().map(|s| s.span_start);
-
-        // 14. Get param_names from function expression parameters
-        let param_names = {
-            let mut name_set = HashSet::new();
-            get_function_params_to_set(&dollar_attr.value_expr, &mut name_set);
-            if name_set.is_empty() {
-                None
-            } else {
-                let mut names_vec: Vec<String> = name_set.into_iter().collect();
-                names_vec.sort();
-                Some(names_vec)
-            }
-        };
-
-        // 15. Determine replacement key name for the prop
-        let replacement_key = if let Some(ref html_attr) = dollar_attr.html_attr {
-            if !dollar_attr.is_component {
-                // HTML element: onClick$ -> q-e:click
-                html_attr.clone()
-            } else {
-                // Component with event handler: strip $
-                escape_dollar(&dollar_attr.key)
-            }
-        } else {
-            // Non-event prop on component: strip $
-            escape_dollar(&dollar_attr.key)
-        };
-
-        let call_span_end = dollar_attr.value_span.end;
-        let call_span_start = dollar_attr.value_span.start;
-
-        // 16. Build QRL expression based on entry strategy
-        let is_inline = self.is_inline_mode();
-        let is_hoist = matches!(self.entry_strategy, EntryStrategy::Hoist)
-            && !matches!(self.mode, EmitMode::Lib);
-
-        let qrl_wrapper_name = words::dollar_to_qrl_name(&dollar_attr.key);
-
-        if !should_emit {
-            // CONV-14: Noop QRL for stripped callbacks
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
-            let noop_code = format!(r#"{}("{}")"#, noop_fn, names.symbol_name);
-
-            self.needs_noop_qrl_import = true;
-
-            // Noop segments always get their own module file (is_inline: false)
-            // even in Inline/Hoist strategies. SWC produces `export const NAME = null;`
-            // files for all stripped handlers regardless of entry strategy.
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: None,
-                scoped_idents: vec![],
-                local_idents: local_idents.clone(),
-                ctx_name: dollar_attr.key.clone(),
-                ctx_kind: ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (call_span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: false,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-                first_arg_span: None,
-            });
-
-            let qrl_expr = crate::add_side_effect::parse_single_statement(
-                &format!("{};", noop_code), allocator
-            ).and_then(|stmt| {
-                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                    Some(es.unbox().expression)
-                } else {
-                    None
-                }
-            })?;
-
-            return Some((replacement_key, qrl_expr));
-        }
-
-        if is_hoist {
-            // Hoist strategy: _noopQrl const + .s() registration
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
-            let ident_name = format!("q_{}", names.symbol_name);
-
-            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
-
-            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-                let is_root_level = self.segment_stack.is_empty();
-                self.extra_top_items.push(HoistedConst {
-                    name: ident_name.clone(),
-                    rhs_code: noop_rhs,
-                    symbol_name: names.symbol_name.clone(),
-                    is_root_level,
-                    span_start: 0,
-                    parent_symbol: None,
-                });
-            }
-
-            // .s() ref_assignment
-            if let Some(ref body_code) = expr_code {
-                let s_call = format!("{}.s({});", ident_name, body_code);
-                self.ref_assignments.push(s_call);
-            }
-
-            // Build replacement: q_sym or q_sym.w([caps])
-            let replacement = if has_captures {
-                let caps_str = scoped_idents.join(", ");
-                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
-                let expr_stmt = format!("{};", w_expr_code);
-                crate::add_side_effect::parse_single_statement(&expr_stmt, allocator)
-                    .and_then(|stmt| {
-                        if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                            Some(es.unbox().expression)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or_else(|| ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name)))
-            } else {
-                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-            };
-
-            self.needs_noop_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: dollar_attr.key.clone(),
-                ctx_kind: ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (call_span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: true,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-                first_arg_span: None,
-            });
-
-            return Some((replacement_key, replacement));
-        } else if matches!(self.entry_strategy, EntryStrategy::Inline) && !matches!(self.mode, EmitMode::Lib) {
-            // Inline strategy (non-Lib): same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
-            let ident_name = format!("q_{}", names.symbol_name);
-
-            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
-
-            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-                let is_root_level = self.segment_stack.is_empty();
-                self.extra_top_items.push(HoistedConst {
-                    name: ident_name.clone(),
-                    rhs_code: noop_rhs,
-                    symbol_name: names.symbol_name.clone(),
-                    is_root_level,
-                    span_start: 0,
-                    parent_symbol: None,
-                });
-            }
-
-            if let Some(ref body_code) = expr_code {
-                let s_call = format!("{}.s({});", ident_name, body_code);
-                self.ref_assignments.push(s_call);
-            }
-
-            let replacement = if has_captures {
-                let caps_str = scoped_idents.join(", ");
-                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
-                let expr_stmt = format!("{};", w_expr_code);
-                crate::add_side_effect::parse_single_statement(&expr_stmt, allocator)
-                    .and_then(|stmt| {
-                        if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                            Some(es.unbox().expression)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or_else(|| ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name)))
-            } else {
-                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-            };
-
-            self.needs_noop_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: dollar_attr.key.clone(),
-                ctx_kind: ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (call_span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: true,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-                first_arg_span: None,
-            });
-
-            return Some((replacement_key, replacement));
-        } else if is_inline {
-            // Lib mode inline: inlinedQrl(fn_expr, "symbol_name"[, captures])
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
-
-            let fn_body_code = expr_code.as_deref().unwrap_or("()=>{}");
-            let inlined_code = if has_captures {
-                let caps_str = scoped_idents.join(", ");
-                format!(r#"{}({}, "{}", [{}])"#, inlined_name, fn_body_code, names.symbol_name, caps_str)
-            } else {
-                format!(r#"{}({}, "{}")"#, inlined_name, fn_body_code, names.symbol_name)
-            };
-
-            self.needs_inlined_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: dollar_attr.key.clone(),
-                ctx_kind: ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (call_span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: true,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-                first_arg_span: None,
-            });
-
-            let qrl_expr = crate::add_side_effect::parse_single_statement(
-                &format!("{};", inlined_code), allocator
-            ).and_then(|stmt| {
-                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                    Some(es.unbox().expression)
-                } else {
-                    None
-                }
-            })?;
-
-            return Some((replacement_key, qrl_expr));
-        } else {
-            // Segment strategy: hoist QRL to module scope
-            let import_path = if self.explicit_extensions {
-                format!("./{}.{}", names.canonical_filename, self.extension)
-            } else {
-                format!("./{}", names.canonical_filename)
-            };
-
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
-            let ident_name = format!("q_{}", names.symbol_name);
-
-            let qrl_rhs = format!(
-                r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
-                qrl_callee_name, import_path, names.symbol_name
-            );
-
-            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-                let is_root_level = self.segment_stack.is_empty();
-                self.extra_top_items.push(HoistedConst {
-                    name: ident_name.clone(),
-                    rhs_code: qrl_rhs,
-                    symbol_name: names.symbol_name.clone(),
-                    is_root_level,
-                    span_start: 0,
-                    parent_symbol: None,
-                });
-                // Store dev metadata for post-emit injection
-                if is_dev {
-                    let dev_file = self.dev_file_path.clone()
-                        .unwrap_or_else(|| format!("{}{}", self.src_dir, self.file_name));
-                    self.dev_metadata.insert(
-                        names.symbol_name.clone(),
-                        (dev_file, call_span_start, call_span_end, names.display_name.clone()),
-                    );
-                }
-            }
-
-            // Build replacement: q_sym or q_sym.w([caps])
-            let replacement = if has_captures {
-                let caps_str = scoped_idents.join(", ");
-                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
-                let expr_stmt = format!("{};", w_expr_code);
-                crate::add_side_effect::parse_single_statement(&expr_stmt, allocator)
-                    .and_then(|stmt| {
-                        if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                            Some(es.unbox().expression)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or_else(|| ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name)))
-            } else {
-                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-            };
-
-            self.needs_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: dollar_attr.key.clone(),
-                ctx_kind: ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (call_span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: false,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-                first_arg_span: None,
-            });
-
-            return Some((replacement_key, replacement));
-        }
-    }
-}
-
-/// Helper to collect function parameter names into a set.
-fn get_function_params_to_set(expr: &Expression<'_>, out: &mut HashSet<String>) {
-    match expr {
-        Expression::ArrowFunctionExpression(arrow) => {
-            collect_formal_params(&arrow.params, out);
-        }
-        Expression::FunctionExpression(func) => {
-            collect_formal_params(&func.params, out);
-        }
-        _ => {}
-    }
-}
-
-// ---------------------------------------------------------------------------
-// inlinedQrl handling
-// ---------------------------------------------------------------------------
-
-impl QwikTransform {
-    /// Handle inlinedQrl() call at exit time.
-    ///
-    /// Extracts the pre-compiled QRL into a segment file and replaces the call
-    /// with a `qrl()/qrlDEV()` import reference, matching SWC's handle_inlined_qsegment.
-    fn handle_inlined_qrl_exit<'a>(
-        &mut self,
-        expr: &mut Expression<'a>,
-        ctx: &mut TraverseCtx<'a, ()>,
-        pending: SegmentScope,
-    ) {
-        let call = match expr {
-            Expression::CallExpression(call) => call,
-            _ => return,
-        };
-
-        let names = match pending.pre_registered_name {
-            Some(n) => n,
-            None => return,
-        };
-
-        // Extract first arg's source code (the callback body)
-        let expr_code: Option<String> = if !call.arguments.is_empty() {
-            use oxc::span::GetSpan;
-            let span = call.arguments[0].span();
-            let src = unsafe { &*self.source_text };
-            let start = span.start as usize;
-            let end = span.end as usize;
-            if start <= end && end <= src.len() {
-                Some(src[start..end].to_string())
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-
-        // Extract captures from third arg (if present)
-        let mut scoped_idents: Vec<String> = Vec::new();
-        if call.arguments.len() >= 3 {
-            if let Argument::ArrayExpression(arr) = &call.arguments[2] {
-                for elem in &arr.elements {
-                    if let ArrayExpressionElement::Identifier(ident) = elem {
-                        scoped_idents.push(ident.name.as_str().to_string());
-                    }
-                }
-            }
-        }
-
-        let has_captures = !scoped_idents.is_empty();
-        let local_idents: Vec<String> = Vec::new();
-        let parent_span = self.segment_stack.last().map(|s| s.span_start);
-        let call_span_end = call.span.end;
-        let first_arg_span = if !call.arguments.is_empty() {
-            use oxc::span::GetSpan;
-            let s = call.arguments[0].span();
-            (s.start, s.end)
-        } else {
-            (pending.span_start, call_span_end)
-        };
-
-        let entry = self.compute_entry(
-            &pending.ctx_kind,
-            &pending.ctx_name,
-            &scoped_idents,
-            &names.hash,
-            &names.symbol_name,
-        );
-
-        let import_path = if self.explicit_extensions {
-            format!("./{}.{}", names.canonical_filename, self.extension)
-        } else {
-            format!("./{}", names.canonical_filename)
-        };
-
-        let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-        let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
-        let ident_name = format!("q_{}", names.symbol_name);
-
-        let qrl_rhs = format!(
-            r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
-            qrl_callee_name, import_path, names.symbol_name
-        );
-
-        if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-            let is_root_level = self.segment_stack.is_empty();
-            self.extra_top_items.push(HoistedConst {
-                name: ident_name.clone(),
-                rhs_code: qrl_rhs,
-                symbol_name: names.symbol_name.clone(),
-                is_root_level,
-                span_start: 0,
-                parent_symbol: None,
-            });
-            if is_dev {
-                let dev_file = self.dev_file_path.clone()
-                    .unwrap_or_else(|| format!("{}{}", self.src_dir, self.file_name));
-                self.dev_metadata.insert(
-                    names.symbol_name.clone(),
-                    (dev_file, first_arg_span.0, first_arg_span.1, names.display_name.clone()),
-                );
-            }
-        }
-        self.needs_qrl_import = true;
-
-        let allocator = ctx.ast.allocator;
-        let replacement = if has_captures {
-            let src = unsafe { &*self.source_text };
-            let caps_code = if call.arguments.len() >= 3 {
-                use oxc::span::GetSpan;
-                let span = call.arguments[2].span();
-                let start = span.start as usize;
-                let end = span.end as usize;
-                if start <= end && end <= src.len() {
-                    src[start..end].to_string()
-                } else {
-                    format!("[{}]", scoped_idents.join(", "))
-                }
-            } else {
-                format!("[{}]", scoped_idents.join(", "))
-            };
-            let w_expr_code = format!("{}.w({})", ident_name, caps_code);
-            crate::add_side_effect::parse_single_statement(
-                &format!("{};", w_expr_code), allocator
-            ).and_then(|stmt| {
-                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                    Some(es.unbox().expression)
-                } else {
-                    None
-                }
-            })
-        } else {
-            crate::add_side_effect::parse_single_statement(
-                &format!("{};", ident_name), allocator
-            ).and_then(|stmt| {
-                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                    Some(es.unbox().expression)
-                } else {
-                    None
-                }
-            })
-        };
-
-        self.segments.push(SegmentRecord {
-            name: names.symbol_name.clone(),
-            display_name: names.display_name.clone(),
-            canonical_filename: names.canonical_filename.clone(),
-            entry,
-            expr: expr_code,
-            scoped_idents: scoped_idents.clone(),
-            local_idents,
-            ctx_name: pending.ctx_name.clone(),
-            ctx_kind: pending.ctx_kind.clone(),
-            origin: self.rel_path.clone(),
-            span: (pending.span_start, call_span_end),
-            hash: names.hash.clone(),
-            is_inline: false,
-            migrated_root_vars: Vec::new(),
-            parent: None,
-            pending_parent_span: parent_span,
-            param_names: None,
-            first_arg_span: Some(first_arg_span),
-        });
-
-        if let Some(replacement) = replacement {
-            *expr = replacement;
-        }
     }
 }
 
@@ -1952,7 +974,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
     // -----------------------------------------------------------------------
     // Function/class declaration tracking for Category 8
-    // + stack_ctxt push for display_name building
     // -----------------------------------------------------------------------
 
     fn enter_statement(
@@ -1963,166 +984,20 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         match stmt {
             Statement::FunctionDeclaration(func) => {
                 if let Some(id) = &func.id {
-                    let name = id.name.as_str().to_string();
                     if let Some(frame) = self.decl_stack.last_mut() {
-                        frame.push((name.clone(), IdentType::Fn));
+                        frame.push((id.name.as_str().to_string(), IdentType::Fn));
                     }
-                    // Push function name onto stack_ctxt for display_name
-                    self.stack_ctxt.push(name);
                 }
             }
             Statement::ClassDeclaration(class) => {
                 if let Some(id) = &class.id {
-                    let name = id.name.as_str().to_string();
                     if let Some(frame) = self.decl_stack.last_mut() {
-                        frame.push((name.clone(), IdentType::Class));
+                        frame.push((id.name.as_str().to_string(), IdentType::Class));
                     }
-                    // Push class name onto stack_ctxt for display_name
-                    self.stack_ctxt.push(name);
                 }
             }
             _ => {}
         }
-    }
-
-    fn exit_statement(
-        &mut self,
-        stmt: &mut Statement<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        match stmt {
-            Statement::FunctionDeclaration(func) => {
-                if func.id.is_some() {
-                    self.stack_ctxt.pop();
-                }
-            }
-            Statement::ClassDeclaration(class) => {
-                if class.id.is_some() {
-                    self.stack_ctxt.pop();
-                }
-            }
-            _ => {}
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Variable declarator: push variable name onto stack_ctxt
-    // -----------------------------------------------------------------------
-
-    fn enter_variable_declarator(
-        &mut self,
-        node: &mut VariableDeclarator<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        // SWC fold_var_declarator: push ident name for display_name building
-        if let BindingPattern::BindingIdentifier(ident) = &node.id {
-            self.stack_ctxt.push(ident.name.as_str().to_string());
-        }
-    }
-
-    fn exit_variable_declarator(
-        &mut self,
-        node: &mut VariableDeclarator<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if let BindingPattern::BindingIdentifier(_) = &node.id {
-            self.stack_ctxt.pop();
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Export default declaration: push file stem for display_name
-    // -----------------------------------------------------------------------
-
-    fn enter_export_default_declaration(
-        &mut self,
-        _node: &mut ExportDefaultDeclaration<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        // SWC fold_export_default_expr: push file_stem (or folder name if index)
-        let mut name = self.file_stem.clone();
-        if name == "index" {
-            // Use parent directory name if file is index.*
-            if !self.rel_dir.is_empty() {
-                if let Some(folder) = std::path::Path::new(&self.rel_dir)
-                    .file_name()
-                    .and_then(|s| s.to_str())
-                {
-                    name = folder.to_string();
-                }
-            }
-        }
-        self.stack_ctxt.push(name);
-    }
-
-    fn exit_export_default_declaration(
-        &mut self,
-        _node: &mut ExportDefaultDeclaration<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        self.stack_ctxt.pop();
-    }
-
-    // -----------------------------------------------------------------------
-    // JSX element: push tag name onto stack_ctxt
-    // -----------------------------------------------------------------------
-
-    fn enter_jsx_element(
-        &mut self,
-        node: &mut JSXElement<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        // SWC fold_jsx_element: push element tag name for display_name
-        match &node.opening_element.name {
-            JSXElementName::Identifier(ident) => {
-                self.stack_ctxt.push(ident.name.as_str().to_string());
-            }
-            JSXElementName::IdentifierReference(ident) => {
-                self.stack_ctxt.push(ident.name.as_str().to_string());
-            }
-            _ => {
-                // MemberExpression, NamespacedName -- push empty to keep balanced
-                self.stack_ctxt.push(String::new());
-            }
-        }
-    }
-
-    fn exit_jsx_element(
-        &mut self,
-        _node: &mut JSXElement<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        self.stack_ctxt.pop();
-    }
-
-    // -----------------------------------------------------------------------
-    // JSX attribute: push attribute name onto stack_ctxt
-    // -----------------------------------------------------------------------
-
-    fn enter_jsx_attribute(
-        &mut self,
-        node: &mut JSXAttribute<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        // SWC fold_jsx_attr: push attribute name for display_name
-        match &node.name {
-            JSXAttributeName::Identifier(ident) => {
-                self.stack_ctxt.push(ident.name.as_str().to_string());
-            }
-            JSXAttributeName::NamespacedName(ns) => {
-                // SWC: push "ns-name" concatenated
-                let ident_name = format!("{}-{}", ns.namespace.name, ns.name.name);
-                self.stack_ctxt.push(ident_name);
-            }
-        }
-    }
-
-    fn exit_jsx_attribute(
-        &mut self,
-        _node: &mut JSXAttribute<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        self.stack_ctxt.pop();
     }
 
     // -----------------------------------------------------------------------
@@ -2134,83 +1009,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         node: &mut CallExpression<'a>,
         _ctx: &mut TraverseCtx<'a, ()>,
     ) {
-        // Handle inlinedQrl() calls from user code (pre-compiled QRLs from libraries).
-        // SWC's handle_inlined_qsegment extracts the callback as a segment.
-        // Skip in Lib mode (pass through unchanged).
-        if !matches!(self.mode, EmitMode::Lib) {
-            if let Expression::Identifier(ident) = &node.callee {
-                if self.inlined_qrl_fn.as_deref() == Some(ident.name.as_str()) {
-                    // Validate: must have at least 2 args, second must be string literal
-                    if node.arguments.len() >= 2 {
-                        let first_is_null = matches!(
-                            &node.arguments[0],
-                            Argument::NullLiteral(_)
-                        );
-                        let second_is_string = matches!(
-                            &node.arguments[1],
-                            Argument::StringLiteral(_)
-                        );
-                        if !first_is_null && second_is_string {
-                            // Mark as consumed import
-                            self.consumed_imports.insert(ident.name.as_str().to_string());
-
-                            // Extract symbol name from second arg
-                            let symbol_name = if let Argument::StringLiteral(s) = &node.arguments[1] {
-                                s.value.as_str().to_string()
-                            } else {
-                                unreachable!()
-                            };
-
-                            // Determine ctx_name from stack context
-                            let ctx_name = self.stack_ctxt.last()
-                                .map(|s| {
-                                    if s.ends_with("Qrl") {
-                                        format!("{}$", &s[..s.len() - 3])
-                                    } else {
-                                        s.clone()
-                                    }
-                                })
-                                .unwrap_or_else(|| "$".to_string());
-
-                            let ctx_kind = words::classify_ctx_kind(&ctx_name);
-                            let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
-
-                            self.segment_stack.push(SegmentScope {
-                                ctx_name,
-                                ctx_kind,
-                                span_start: node.span.start,
-                                is_sync: false,
-                                descendent_idents,
-                                pushed_ctx_name: false,
-                                pre_registered_name: Some(crate::hash::ContextNameResult {
-                                    symbol_name: symbol_name.clone(),
-                                    display_name: format!("{}_{}", self.file_name, symbol_name),
-                                    hash: symbol_name.clone(),
-                                    // canonical_filename = display_name + "_" + hash
-                                    // For inlinedQrl, hash is the same as symbol_name
-                                    canonical_filename: format!("{}_{}_{}", self.file_name, symbol_name, symbol_name),
-                                }),
-                                is_inlined_qrl: true,
-                            });
-                            self.call_name_pushed.push(false);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
         // CONV-01: Dollar detection
         // 1. Check if callee is a known $ marker function
         if let Some((ctx_name, is_sync)) = self.detect_dollar_call(&node.callee) {
-            // Track the callee name as a consumed import for root module stripping.
-            // The callee is the local binding (e.g., "component$", "$").
-            if let Expression::Identifier(ident) = &node.callee {
-                self.consumed_imports.insert(ident.name.as_str().to_string());
-            }
-
-            // 2. Require at least one argument for segment extraction
-            if !node.arguments.is_empty() {
+            // 2. Verify first argument is a function/arrow expression
+            if Self::first_arg_is_function(&node.arguments) {
                 let ctx_kind = words::classify_ctx_kind(&ctx_name);
 
                 // 3. Check if this segment should be emitted (not stripped)
@@ -2218,91 +1021,19 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     // Collect descendent identifiers from the callback body
                     let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
 
-                    // Push context name for display_name building.
-                    // SWC only pushes for named marker function calls (component$, useTask$, etc.),
-                    // NOT for bare `$()` or `sync$()` which don't contribute to display_name.
-                    let pushed_ctx_name = ctx_name != "$" && ctx_name != "sync$";
-                    if pushed_ctx_name {
-                        self.stack_ctxt.push(escape_dollar(&ctx_name));
-                    }
+                    // Push context name for display_name building
+                    self.stack_ctxt.push(escape_dollar(&ctx_name));
 
-                    // 4. Pre-register the name NOW (at enter time) to ensure outer
-                    // segments reserve their collision counter slot before inner nested
-                    // segments. This matches SWC's Fold ordering where outer nodes call
-                    // register_context_name before folding children.
-                    let pre_registered_name = Some(crate::hash::register_context_name(
-                        &self.stack_ctxt,
-                        &mut self.segment_names,
-                        self.scope.as_deref(),
-                        &self.rel_path,
-                        &self.file_name,
-                        &self.mode,
-                        None,
-                        None,
-                        None,
-                    ));
-
-                    // 5. Push a SegmentScope onto segment_stack
+                    // 4. Push a SegmentScope onto segment_stack
                     self.segment_stack.push(SegmentScope {
                         ctx_name,
                         ctx_kind,
                         span_start: node.span.start,
                         is_sync,
                         descendent_idents,
-                        pushed_ctx_name,
-                        pre_registered_name,
-                        is_inlined_qrl: false,
                     });
-                    // Don't push callee ident separately -- the marker name push handles it
-                    self.call_name_pushed.push(false);
-                    return;
                 }
-
-                // Collect descendent identifiers from the first argument
-                // (works for both function and non-function args)
-                let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
-
-                // Push context name for display_name building
-                self.stack_ctxt.push(escape_dollar(&ctx_name));
-
-                // 3. Push a SegmentScope onto segment_stack.
-                // We push regardless of should_emit -- noop segments for
-                // stripped functions are created in exit_expression.
-                self.segment_stack.push(SegmentScope {
-                    ctx_name,
-                    ctx_kind,
-                    span_start: node.span.start,
-                    is_sync,
-                    descendent_idents,
-                    pushed_ctx_name: true,
-                    pre_registered_name: None,
-                    is_inlined_qrl: false,
-                });
             }
-            // Dollar call detected but not emitted (stripped or not a function arg)
-            // Still don't push callee name for $ calls
-            self.call_name_pushed.push(false);
-            return;
-        }
-
-        // Non-dollar call: push callee ident name for display_name building
-        // (SWC fold_call_expr line 4096-4098: push ident.sym for any non-special call)
-        if let Expression::Identifier(ident) = &node.callee {
-            self.stack_ctxt.push(ident.name.as_str().to_string());
-            self.call_name_pushed.push(true);
-        } else {
-            self.call_name_pushed.push(false);
-        }
-    }
-
-    fn exit_call_expression(
-        &mut self,
-        _node: &mut CallExpression<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        // Pop callee ident name if we pushed one
-        if let Some(true) = self.call_name_pushed.pop() {
-            self.stack_ctxt.pop();
         }
     }
 
@@ -2323,126 +1054,42 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             let taken = std::mem::replace(expr, ctx.ast.expression_null_literal(SPAN));
             let is_root = self.segment_stack.is_empty();
 
-            if is_jsx_element {
+            let (new_expr, needs) = if is_jsx_element {
                 if let Expression::JSXElement(el) = taken {
-                    let (new_expr, needs) = self.transform_jsx_with_segments(
+                    crate::jsx_transform::transform_jsx_element(
                         el.unbox(),
+                        &mut self.jsx_key_counter,
                         is_root,
                         allocator,
-                        ctx,
-                    );
-
-                    // Only set root module import flags when NOT inside a segment scope.
-                    if is_root {
-                        if needs.needs_jsx_sorted {
-                            self.needs_jsx_sorted_import = true;
-                        }
-                        if needs.needs_jsx_split {
-                            self.needs_jsx_split_import = true;
-                        }
-                        if needs.needs_fn_signal {
-                            self.needs_fn_signal_import = true;
-                        }
-                        if needs.needs_wrap_prop {
-                            self.needs_wrap_prop_import = true;
-                        }
-                    }
-
-                    *expr = new_expr;
-                    return;
+                    )
                 } else {
                     unreachable!()
                 }
             } else {
                 if let Expression::JSXFragment(frag) = taken {
-                    let (mut new_expr, needs) = crate::jsx_transform::transform_jsx_fragment(
+                    crate::jsx_transform::transform_jsx_fragment(
                         frag.unbox(),
                         &mut self.jsx_key_counter,
-                        &self.jsx_key_prefix,
                         is_root,
                         allocator,
-                    );
-
-                    // Recursively process child elements for dollar-attr extraction.
-                    // Fragment children may include JSXElements with $-suffixed attrs.
-                    if let Expression::CallExpression(ref mut call) = new_expr {
-                        // Children are arg[3] in _jsxSorted(tag, var, const, children, flags, key)
-                        if call.arguments.len() > 3 {
-                            // Get mutable ref to children arg
-                            let children_arg = &mut call.arguments[3];
-                            // Convert Argument to Expression for recursive processing
-                            // We need to handle the Argument enum
-                            match children_arg {
-                                Argument::ArrayExpression(arr) => {
-                                    for element in arr.elements.iter_mut() {
-                                        match element {
-                                            ArrayExpressionElement::JSXElement(el) => {
-                                                let dummy = ArrayExpressionElement::NullLiteral(ctx.ast.alloc_null_literal(SPAN));
-                                                let taken = std::mem::replace(element, dummy);
-                                                if let ArrayExpressionElement::JSXElement(el) = taken {
-                                                    let (transformed, child_needs) = self.transform_jsx_with_segments(
-                                                        el.unbox(), false, allocator, ctx,
-                                                    );
-                                                    if is_root {
-                                                        if child_needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
-                                                        if child_needs.needs_jsx_split { self.needs_jsx_split_import = true; }
-                                                        if child_needs.needs_fn_signal { self.needs_fn_signal_import = true; }
-                                                        if child_needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
-                                                    }
-                                                    *element = ArrayExpressionElement::from(transformed);
-                                                }
-                                            }
-                                            _ => {}
-                                        }
-                                    }
-                                }
-                                // Single child (not in array) - could be a JSXElement
-                                Argument::JSXElement(el_box) => {
-                                    let dummy = Argument::NullLiteral(ctx.ast.alloc_null_literal(SPAN));
-                                    let taken = std::mem::replace(children_arg, dummy);
-                                    if let Argument::JSXElement(el) = taken {
-                                        let (transformed, child_needs) = self.transform_jsx_with_segments(
-                                            el.unbox(), false, allocator, ctx,
-                                        );
-                                        if is_root {
-                                            if child_needs.needs_jsx_sorted { self.needs_jsx_sorted_import = true; }
-                                            if child_needs.needs_jsx_split { self.needs_jsx_split_import = true; }
-                                            if child_needs.needs_fn_signal { self.needs_fn_signal_import = true; }
-                                            if child_needs.needs_wrap_prop { self.needs_wrap_prop_import = true; }
-                                        }
-                                        *children_arg = expr_to_argument(transformed);
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-
-                    // Only set root module import flags when NOT inside a segment scope.
-                    if is_root {
-                        if needs.needs_jsx_sorted {
-                            self.needs_jsx_sorted_import = true;
-                        }
-                        if needs.needs_jsx_split {
-                            self.needs_jsx_split_import = true;
-                        }
-                        if needs.needs_fragment {
-                            self.needs_fragment_import = true;
-                        }
-                        if needs.needs_fn_signal {
-                            self.needs_fn_signal_import = true;
-                        }
-                        if needs.needs_wrap_prop {
-                            self.needs_wrap_prop_import = true;
-                        }
-                    }
-
-                    *expr = new_expr;
-                    return;
+                    )
                 } else {
                     unreachable!()
                 }
+            };
+
+            if needs.needs_jsx_sorted {
+                self.needs_jsx_sorted_import = true;
             }
+            if needs.needs_jsx_split {
+                self.needs_jsx_split_import = true;
+            }
+            if needs.needs_fragment {
+                self.needs_fragment_import = true;
+            }
+
+            *expr = new_expr;
+            return;
         }
 
         // --- CONV-02: QRL Wrapping ---
@@ -2464,49 +1111,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         let pending = self.segment_stack.pop().unwrap();
 
-        // Handle inlinedQrl() calls specially: extract captures from third arg,
-        // create segment with explicit symbol name.
-        if pending.is_inlined_qrl {
-            self.handle_inlined_qrl_exit(expr, ctx, pending);
-            return;
-        }
-
-        // C05: Check for missing Qrl implementation for locally-defined $-suffixed functions.
-        // SWC transform.rs:4066-4094 -- only for non-imported marker functions.
-        // If a locally-defined $-function (e.g., useMemo$) is called but the corresponding
-        // Qrl export (e.g., useMemoQrl) doesn't exist, emit C05 and skip segment creation.
-        // Use marker_fn_sources to distinguish imported from locally-defined: imported marker
-        // functions have their specifier in marker_fn_sources, locally-defined ones do not.
-        {
-            let collect = unsafe { &*self.global_collect_ptr };
-            if !self.marker_fn_sources.contains_key(&pending.ctx_name) {
-                // Locally-defined $-function -- check if Qrl counterpart is exported
-                let qrl_name = crate::words::dollar_to_qrl_name(&pending.ctx_name);
-                if !collect.exports.contains_key(&qrl_name) {
-                    self.diagnostics.push(crate::types::Diagnostic {
-                        scope: "optimizer".to_string(),
-                        category: crate::types::DiagnosticCategory::Error,
-                        code: Some("C05".to_string()),
-                        file: self.file_name.clone(),
-                        message: format!(
-                            "Found '{}' but did not find the corresponding '{}' exported in the same file. Please check that it is exported and spelled correctly",
-                            pending.ctx_name, qrl_name
-                        ),
-                        highlights: None,
-                        suggestions: None,
-                    });
-                    // Pop the marker name from stack_ctxt if it was pushed
-                    if pending.pushed_ctx_name {
-                        self.stack_ctxt.pop();
-                    }
-                    // Skip segment creation for invalid call (matching SWC behavior)
-                    return;
-                }
-            }
-        }
-
-        // NOTE: Do NOT pop stack_ctxt here yet -- register_context_name needs
-        // the full stack including the marker function name. Pop after name computation.
+        // Pop the context name we pushed
+        self.stack_ctxt.pop();
 
         // --- Flatten decl_stack for Var entries ---
         let all_decl: Vec<TypedId> = self
@@ -2527,25 +1133,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         let param_idents = Self::get_first_arg_params(&call.arguments[0]);
         scoped_idents.retain(|id| !param_idents.contains(id));
 
-        // --- Classify captures against GlobalCollect ---
-        // Must happen BEFORE C03 check so module-level declarations (self-imports)
-        // are removed from scoped_idents first. Otherwise C03 falsely fires on
-        // identifiers that are module-level consts/vars (not actual captures).
-        let mut needed_imports = Vec::new();
-        let mut self_imports = Vec::new();
-        self.classify_captures(
-            &pending.descendent_idents,
-            &mut scoped_idents,
-            &mut needed_imports,
-            &mut self_imports,
-        );
-
         // C03: if not a function/arrow and has captures, clear and emit diagnostic.
-        // SWC inlines const initializers before this check, which either:
-        // - Converts identifier references to function expressions (can_capture=true)
-        // - Converts to literals/expressions with no local captures
-        // Since OXC doesn't do const inlining, we suppress C03 when the first arg
-        // is a simple identifier (it's the value being passed, not a captured variable).
         let first_arg_can_capture = if !call.arguments.is_empty() {
             match &call.arguments[0] {
                 Argument::ArrowFunctionExpression(_) | Argument::FunctionExpression(_) => true,
@@ -2554,13 +1142,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         } else {
             false
         };
-        let first_arg_is_ident = if !call.arguments.is_empty() {
-            matches!(&call.arguments[0], Argument::Identifier(_))
-        } else {
-            false
-        };
 
-        if !first_arg_can_capture && !first_arg_is_ident && !scoped_idents.is_empty() {
+        if !first_arg_can_capture && !scoped_idents.is_empty() {
             self.diagnostics.push(crate::types::Diagnostic {
                 scope: "optimizer".to_string(),
                 category: crate::types::DiagnosticCategory::Error,
@@ -2576,30 +1159,35 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             scoped_idents.clear();
         }
 
-        // --- Compute names via register_context_name ---
-        // Use the pre-registered name if available (computed at enter time to match
-        // SWC's Fold ordering). For bare `$` calls which don't pre-register,
-        // compute the name now.
-        let names = if let Some(pre_names) = pending.pre_registered_name {
-            pre_names
-        } else {
-            crate::hash::register_context_name(
-                &self.stack_ctxt,
-                &mut self.segment_names,
-                self.scope.as_deref(),
-                &self.rel_path,
-                &self.file_name,
-                &self.mode,
-                None,
-                None,
-                None,
-            )
-        };
+        // --- Classify captures against GlobalCollect ---
+        let mut needed_imports = Vec::new();
+        let mut self_imports = Vec::new();
+        self.classify_captures(
+            &pending.descendent_idents,
+            &mut scoped_idents,
+            &mut needed_imports,
+            &mut self_imports,
+        );
 
-        // Now pop the marker function name from stack_ctxt (after name computation)
-        if pending.pushed_ctx_name {
-            self.stack_ctxt.pop();
+        // --- Ensure auto-export for root-level bindings used by segments ---
+        // SWC calls ensure_export for every local_ident that has a root-level
+        // declaration, so segments can import them via `_auto_name`.
+        for name in &self_imports {
+            self.ensure_export(name);
         }
+
+        // --- Compute names via register_context_name ---
+        let names = crate::hash::register_context_name(
+            &self.stack_ctxt,
+            &mut self.segment_names,
+            self.scope.as_deref(),
+            &self.rel_path,
+            &self.file_name,
+            &self.mode,
+            None,
+            None,
+            None,
+        );
 
         let has_captures = !scoped_idents.is_empty();
         let should_emit = self.should_emit_segment(&pending.ctx_name, &pending.ctx_kind);
@@ -2619,20 +1207,23 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             _ => return,
         };
 
-        // Extract the first argument's source text using its span.
-        // Works for both function expressions and non-function args
-        // (strings, identifiers, template literals, objects, etc.).
+        // Extract the function expression body from source text using span
         let expr_code: Option<String> = if !call.arguments.is_empty() {
-            use oxc::span::GetSpan;
-            let span = call.arguments[0].span();
-            let src = unsafe { &*self.source_text };
-            let start = span.start as usize;
-            let end = span.end as usize;
-            if start <= end && end <= src.len() {
-                Some(src[start..end].to_string())
-            } else {
-                None
-            }
+            let first_arg_span = match &call.arguments[0] {
+                Argument::ArrowFunctionExpression(a) => Some(a.span),
+                Argument::FunctionExpression(f) => Some(f.span),
+                _ => None,
+            };
+            first_arg_span.and_then(|span| {
+                let src = unsafe { &*self.source_text };
+                let start = span.start as usize;
+                let end = span.end as usize;
+                if start <= end && end <= src.len() {
+                    Some(src[start..end].to_string())
+                } else {
+                    None
+                }
+            })
         } else {
             None
         };
@@ -2657,15 +1248,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         // Save span end before branches that may reassign *expr (breaks borrow)
         let call_span_end = call.span.end;
-        // For dev metadata (lo/hi), SWC uses the first argument's span (the arrow/function body),
-        // not the full call expression span. Compute it here before any borrowing issues.
-        let first_arg_span = if !call.arguments.is_empty() {
-            use oxc::span::GetSpan;
-            let s = call.arguments[0].span();
-            (s.start, s.end)
-        } else {
-            (pending.span_start, call_span_end)
-        };
         let _allocator: &'a oxc::allocator::Allocator = ctx.ast.allocator;
 
         // --- QRL wrapping (CONV-02) ---
@@ -2692,7 +1274,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
-                first_arg_span: Some(first_arg_span),
             });
             return;
         }
@@ -2713,9 +1294,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             self.needs_noop_qrl_import = true;
 
-            // Noop segments always get their own module file (is_inline: false)
-            // even in Inline/Hoist strategies. SWC produces `export const NAME = null;`
-            // files for all stripped handlers regardless of entry strategy.
             self.segments.push(SegmentRecord {
                 name: names.symbol_name.clone(),
                 display_name: names.display_name.clone(),
@@ -2729,12 +1307,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 origin: self.rel_path.clone(),
                 span: (pending.span_start, call_span_end),
                 hash: names.hash.clone(),
-                is_inline: false,
+                is_inline: true,
                 migrated_root_vars: Vec::new(),
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
-                first_arg_span: Some(first_arg_span),
             });
             return;
         }
@@ -2766,18 +1343,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             let ident_name = format!("q_{}", names.symbol_name);
 
             // 1. Build _noopQrl("sym") as a HoistedConst
+            //    For dev mode: _noopQrlDEV("sym", { file: ..., lo: ..., hi: ..., displayName: ... })
             let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
 
             // Deduplicate by symbol_name
             if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-                let is_root_level = self.segment_stack.is_empty();
                 self.extra_top_items.push(HoistedConst {
                     name: ident_name.clone(),
                     rhs_code: noop_rhs,
                     symbol_name: names.symbol_name.clone(),
-                    is_root_level,
-                    span_start: 0,
-                    parent_symbol: None,
                 });
             }
 
@@ -2855,30 +1429,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             };
 
             // 5. Wrap in wrapperQrl(replacement) -- e.g., componentQrl(q_sym)
-            // Preserve extra arguments (e.g., tagName options for component$)
-            let extra_args_code = self.extract_extra_args_code(call, 1);
-            let needs_pure = qrl_wrapper_name == "componentQrl";
-            let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
-            let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
-            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_call_code, allocator) {
+            let wrapper_call_code = format!("{}(0)", qrl_wrapper_name);
+            let wrapper_stmt = format!("{};", wrapper_call_code);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_stmt, allocator) {
                 if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
                     let mut wrapper_expr = es.unbox().expression;
                     if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
+                        // Replace the dummy 0 arg with our replacement
                         wrapper_call.arguments.clear();
                         wrapper_call.arguments.push(expr_to_argument(replacement));
-                        if let Some(ref extra_code) = extra_args_code {
-                            if let Some(extra_expr) = crate::add_side_effect::parse_single_statement(
-                                &format!("f({});", extra_code), allocator
-                            ) {
-                                if let oxc::ast::ast::Statement::ExpressionStatement(es2) = extra_expr {
-                                    if let Expression::CallExpression(mut fc) = es2.unbox().expression {
-                                        for arg in fc.arguments.drain(..) {
-                                            wrapper_call.arguments.push(arg);
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                     *expr = wrapper_expr;
                 }
@@ -2904,148 +1463,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
-                first_arg_span: Some(first_arg_span),
-            });
-        } else if matches!(self.entry_strategy, EntryStrategy::Inline) && !matches!(self.mode, EmitMode::Lib) {
-            // Inline strategy (non-Lib): same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
-            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
-            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
-            let ident_name = format!("q_{}", names.symbol_name);
-
-            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
-
-            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-                let is_root_level = self.segment_stack.is_empty();
-                self.extra_top_items.push(HoistedConst {
-                    name: ident_name.clone(),
-                    rhs_code: noop_rhs,
-                    symbol_name: names.symbol_name.clone(),
-                    is_root_level,
-                    span_start: 0,
-                    parent_symbol: None,
-                });
-            }
-
-            // Extract fn_body code from source text for .s()
-            let fn_body_code: Option<String> = if !call.arguments.is_empty() {
-                let first_arg_span = match &call.arguments[0] {
-                    Argument::ArrowFunctionExpression(a) => Some(a.span),
-                    Argument::FunctionExpression(f) => Some(f.span),
-                    _ => None,
-                };
-                first_arg_span.and_then(|span| {
-                    let src = unsafe { &*self.source_text };
-                    let start = span.start as usize;
-                    let end = span.end as usize;
-                    if start <= end && end <= src.len() {
-                        Some(src[start..end].to_string())
-                    } else {
-                        None
-                    }
-                })
-            } else {
-                let first_arg_span = match &call.arguments[0] {
-                    Argument::StringLiteral(s) => Some(s.span),
-                    _ => None,
-                };
-                first_arg_span.and_then(|span| {
-                    let src = unsafe { &*self.source_text };
-                    let start = span.start as usize;
-                    let end = span.end as usize;
-                    if start <= end && end <= src.len() {
-                        Some(src[start..end].to_string())
-                    } else {
-                        None
-                    }
-                })
-            };
-
-            if let Some(ref body_code) = fn_body_code {
-                let s_call = format!("{}.s({});", ident_name, body_code);
-                self.ref_assignments.push(s_call);
-            }
-
-            let allocator = ctx.ast.allocator;
-
-            let replacement = if has_captures {
-                let caps_str = scoped_idents.join(", ");
-                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
-                let expr_stmt = format!("{};", w_expr_code);
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
-                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                        es.unbox().expression
-                    } else {
-                        ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-                    }
-                } else {
-                    ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-                }
-            } else {
-                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-            };
-
-            // Wrap in wrapperQrl(replacement) for named markers, or use bare ident for $()
-            let is_bare_dollar = pending.ctx_name == "$";
-
-            if is_bare_dollar {
-                *expr = replacement;
-            } else {
-                let extra_args_code = self.extract_extra_args_code(call, 1);
-                let needs_pure = qrl_wrapper_name == "componentQrl";
-                let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
-                let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_call_code, allocator) {
-                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                        let mut wrapper_expr = es.unbox().expression;
-                        if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
-                            wrapper_call.arguments.clear();
-                            wrapper_call.arguments.push(expr_to_argument(replacement));
-                            if let Some(ref extra_code) = extra_args_code {
-                                if let Some(extra_expr) = crate::add_side_effect::parse_single_statement(
-                                    &format!("f({});", extra_code), allocator
-                                ) {
-                                    if let oxc::ast::ast::Statement::ExpressionStatement(es2) = extra_expr {
-                                        if let Expression::CallExpression(mut fc) = es2.unbox().expression {
-                                            for arg in fc.arguments.drain(..) {
-                                                wrapper_call.arguments.push(arg);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        *expr = wrapper_expr;
-                    }
-                }
-            }
-
-            self.needs_noop_qrl_import = true;
-
-            self.segments.push(SegmentRecord {
-                name: names.symbol_name.clone(),
-                display_name: names.display_name.clone(),
-                canonical_filename: names.canonical_filename.clone(),
-                entry: entry.clone(),
-                expr: expr_code.clone(),
-                scoped_idents: scoped_idents.clone(),
-                local_idents: local_idents.clone(),
-                ctx_name: pending.ctx_name.clone(),
-                ctx_kind: pending.ctx_kind.clone(),
-                origin: self.rel_path.clone(),
-                span: (pending.span_start, call_span_end),
-                hash: names.hash.clone(),
-                is_inline: true,
-                migrated_root_vars: Vec::new(),
-                parent: None,
-                pending_parent_span: parent_span,
-                param_names: param_names.clone(),
-                first_arg_span: Some(first_arg_span),
             });
         } else if is_inline {
-            // Lib mode inline: inlinedQrl(fn_expr, "symbol_name"[, captures])
+            // Inline strategy: inlinedQrl(fn_expr, "symbol_name"[, captures])
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
             let _inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
 
+            // Replace callee with inlinedQrl wrapper
+            // The first arg stays as the function expression
+            // Insert symbol name as second arg
             call.arguments.push(Argument::StringLiteral(
                 ctx.ast.alloc_string_literal(
                     SPAN,
@@ -3055,6 +1481,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             ));
 
             if has_captures {
+                // Build captures array: [capture1, capture2, ...]
                 let captures_array = build_capture_array_expr(&scoped_idents, ctx);
                 call.arguments.push(expr_to_argument(captures_array));
             }
@@ -3079,13 +1506,13 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
-                first_arg_span: Some(first_arg_span),
             });
         } else {
-            // Segment strategy: hoist QRL creation to module scope as
-            //   const q_sym = /*#__PURE__*/ qrl(() => import("./path"), "sym")
-            // Replace the call site with just the hoisted identifier (or
-            // wrapperQrl(q_sym) for component$/etc., with .w([caps]) if captures).
+            // Segment strategy: qrl(() => import("./path"), "symbol_name")
+            // The callback body is extracted to a separate segment module.
+            // Replace the call args with:
+            //   1. () => import("./canonical_filename")
+            //   2. "symbol_name"
 
             let import_path = if self.explicit_extensions {
                 format!("./{}.{}", names.canonical_filename, self.extension)
@@ -3095,97 +1522,61 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
             let qrl_callee_name = if is_dev { "qrlDEV" } else { "qrl" };
-            let ident_name = format!("q_{}", names.symbol_name);
 
-            // 1. Build hoisted const RHS with PURE annotation
-            let qrl_rhs = format!(
-                r#"/*#__PURE__*/ {}(()=>import("{}"), "{}")"#,
-                qrl_callee_name, import_path, names.symbol_name
+            // Build the import arrow: () => import("./path")
+            let import_path_str = arena_str(ctx, &import_path);
+            let import_expr = ctx.ast.expression_import(
+                SPAN,
+                ctx.ast.expression_string_literal(SPAN, import_path_str, None),
+                None,
+                None,
+            );
+            let arrow_params = ctx.ast.formal_parameters(
+                SPAN,
+                FormalParameterKind::ArrowFormalParameters,
+                ctx.ast.vec(),
+                None::<FormalParameterRest<'a>>,
+            );
+            let import_stmt = ctx.ast.statement_expression(SPAN, import_expr);
+            let arrow_body = ctx.ast.function_body(
+                SPAN,
+                ctx.ast.vec(),
+                ctx.ast.vec1(import_stmt),
+            );
+            let arrow = ctx.ast.expression_arrow_function(
+                SPAN,
+                true,
+                false,
+                None::<TSTypeParameterDeclaration<'a>>,
+                arrow_params,
+                None::<TSTypeAnnotation<'a>>,
+                arrow_body,
             );
 
-            // Deduplicate by symbol_name
-            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
-                // After popping the current segment, an empty stack means root-level.
-                let is_root_level = self.segment_stack.is_empty();
-                self.extra_top_items.push(HoistedConst {
-                    name: ident_name.clone(),
-                    rhs_code: qrl_rhs,
-                    symbol_name: names.symbol_name.clone(),
-                    is_root_level,
-                    span_start: 0,
-                    parent_symbol: None,
-                });
-                // Store dev metadata for post-emit injection
-                if is_dev {
-                    let dev_file = self.dev_file_path.clone()
-                        .unwrap_or_else(|| format!("{}{}", self.src_dir, self.file_name));
-                    self.dev_metadata.insert(
-                        names.symbol_name.clone(),
-                        (dev_file, first_arg_span.0, first_arg_span.1, names.display_name.clone()),
-                    );
-                }
+            // Replace call arguments
+            call.arguments.clear();
+
+            // Arg 1: arrow function with dynamic import
+            call.arguments.push(expr_to_argument(arrow));
+
+            // Arg 2: symbol name string
+            call.arguments.push(Argument::StringLiteral(
+                ctx.ast.alloc_string_literal(
+                    SPAN,
+                    arena_str(ctx, &names.symbol_name),
+                    None,
+                ),
+            ));
+
+            if has_captures {
+                // Arg 3: captures array
+                let captures_array = build_capture_array_expr(&scoped_idents, ctx);
+                call.arguments.push(expr_to_argument(captures_array));
             }
 
-            // 2. Build the replacement expression for the call site
-            let allocator = ctx.ast.allocator;
-
-            // Base replacement: q_sym or q_sym.w([cap1, cap2, ...])
-            let replacement = if has_captures {
-                let caps_str = scoped_idents.join(", ");
-                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
-                let expr_stmt = format!("{};", w_expr_code);
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
-                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                        es.unbox().expression
-                    } else {
-                        ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-                    }
-                } else {
-                    ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-                }
-            } else {
-                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
-            };
-
-            // 3. Determine if we need a wrapper call (componentQrl, useTaskQrl, etc.)
-            //    For bare $() calls, ctx_name is "$" and we don't need a wrapper.
-            //    For named calls (component$, useTask$, etc.), we wrap with componentQrl etc.
-            let is_bare_dollar = pending.ctx_name == "$";
-
-            if is_bare_dollar {
-                // Bare $() call: replace entire expression with just the identifier
-                *expr = replacement;
-            } else {
-                // Wrapper call: e.g., componentQrl(q_sym)
-                // CONV-08: PURE annotation on componentQrl wrapper calls
-                // Preserve extra arguments (e.g., tagName options for component$)
-                let extra_args_code = self.extract_extra_args_code(call, 1);
-                let needs_pure = qrl_wrapper_name == "componentQrl";
-                let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
-                let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_call_code, allocator) {
-                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
-                        let mut wrapper_expr = es.unbox().expression;
-                        if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
-                            wrapper_call.arguments.clear();
-                            wrapper_call.arguments.push(expr_to_argument(replacement));
-                            if let Some(ref extra_code) = extra_args_code {
-                                if let Some(extra_expr) = crate::add_side_effect::parse_single_statement(
-                                    &format!("f({});", extra_code), allocator
-                                ) {
-                                    if let oxc::ast::ast::Statement::ExpressionStatement(es2) = extra_expr {
-                                        if let Expression::CallExpression(mut fc) = es2.unbox().expression {
-                                            for arg in fc.arguments.drain(..) {
-                                                wrapper_call.arguments.push(arg);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        *expr = wrapper_expr;
-                    }
-                }
+            // Replace callee with qrl/qrlDEV
+            if let Expression::Identifier(id) = &mut call.callee {
+                id.name = arena_ident(ctx, qrl_callee_name);
             }
 
             self.needs_qrl_import = true;
@@ -3208,72 +1599,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 parent: None,
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
-                first_arg_span: Some(first_arg_span),
             });
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Stack context push/pop for descriptive symbol naming (SWC parity)
-    // -----------------------------------------------------------------------
-
-    fn enter_declaration(
-        &mut self,
-        node: &mut Declaration<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        match node {
-            Declaration::FunctionDeclaration(func) => {
-                if let Some(id) = &func.id {
-                    self.stack_ctxt.push(id.name.to_string());
-                }
-            }
-            Declaration::ClassDeclaration(class) => {
-                if let Some(id) = &class.id {
-                    self.stack_ctxt.push(id.name.to_string());
-                }
-            }
-            _ => {}
-        }
-    }
-
-    fn exit_declaration(
-        &mut self,
-        node: &mut Declaration<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        match node {
-            Declaration::FunctionDeclaration(func) => {
-                if func.id.is_some() {
-                    self.stack_ctxt.pop();
-                }
-            }
-            Declaration::ClassDeclaration(class) => {
-                if class.id.is_some() {
-                    self.stack_ctxt.pop();
-                }
-            }
-            _ => {}
-        }
-    }
-
-    fn enter_jsx_opening_element(
-        &mut self,
-        node: &mut JSXOpeningElement<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if let JSXElementName::Identifier(ident) = &node.name {
-            self.stack_ctxt.push(ident.name.to_string());
-        }
-    }
-
-    fn exit_jsx_opening_element(
-        &mut self,
-        node: &mut JSXOpeningElement<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if matches!(&node.name, JSXElementName::Identifier(_)) {
-            self.stack_ctxt.pop();
         }
     }
 
@@ -3318,7 +1644,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         if self.needs_jsx_split_import {
             imports_to_add.push(("_jsxSplit", "_jsxSplit"));
         }
-        // Fragment import is handled separately below (from jsx-runtime, not core)
+        if self.needs_fragment_import {
+            imports_to_add.push(("Fragment", "Fragment"));
+        }
         if self.needs_fn_signal_import {
             imports_to_add.push(("_fnSignal", "_fnSignal"));
         }
@@ -3326,35 +1654,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             imports_to_add.push(("_wrapProp", "_wrapProp"));
         }
 
-        // Collect wrapper function imports (componentQrl, useTaskQrl, etc.)
-        // These are used in the root module body when $-suffixed calls are rewritten.
-        // Use a BTreeSet for deterministic ordering across runs.
-        let mut wrapper_imports: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
-        // Build set of locally-defined names (exports + top-level declarations)
-        // to skip importing wrappers that are defined in the same file.
-        let locally_defined: std::collections::HashSet<String> = {
-            let collect = unsafe { &*self.global_collect_ptr };
-            collect.exports.keys().cloned().collect()
-        };
-        for seg in &self.segments {
-            if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
-                let wrapper_name = words::dollar_to_qrl_name(&seg.ctx_name);
-                // Don't add if already in imports_to_add
-                if !imports_to_add.iter().any(|(s, _)| *s == wrapper_name) {
-                    // Don't add if the wrapper function is locally defined
-                    if !locally_defined.contains(&wrapper_name) {
-                        wrapper_imports.insert(wrapper_name);
-                    }
-                }
-            }
-        }
-
-        // Insert synthetic import declarations at position 0.
-        // Order: regular imports first (they get pushed down), then wrappers on top.
-        // This produces SWC-compatible order: wrappers first, then regular.
+        // Insert synthetic import declarations at position 0 using string-based parsing.
+        // This avoids complex AST builder API differences across OXC versions.
         let allocator = ctx.ast.allocator;
-
-        // 1. Regular imports (qrl, inlinedQrl, etc.) -- inserted at pos 0 in reverse
         for (specifier, _local) in imports_to_add.into_iter().rev() {
             let import_str = format!(r#"import {{ {} }} from "{}";"#, specifier, self.core_module);
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
@@ -3362,107 +1664,16 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             }
         }
 
-        // 2. Wrapper imports (componentQrl, etc.) -- inserted at pos 0 in reverse sorted order
-        //    Since these are inserted AFTER regular imports, they end up BEFORE them (at top).
-        //    Use tracked source module per marker function (not always core_module).
-        for wrapper in wrapper_imports.into_iter().rev() {
-            let source = self.find_wrapper_source(&wrapper);
-            let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, source);
-            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
-                program.body.insert(0, stmt);
-            }
-        }
-
-        // 2b. Fragment import from jsx-runtime (not core module).
-        //     SWC emits: import { Fragment as _Fragment } from "@qwik.dev/core/jsx-runtime";
-        if self.needs_fragment_import {
-            let jsx_runtime_source = format!("{}/jsx-runtime", self.core_module);
-            let import_str = format!(
-                r#"import {{ Fragment as _Fragment }} from "{}";"#,
-                jsx_runtime_source
-            );
-            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
-                program.body.insert(0, stmt);
-            }
-        }
-
-        // 3. Synthetic imports from global_collect (e.g., _restProps from props destructuring)
-        //    Inserted last at pos 0 so they end up at the very top of the module.
-        {
-            let collect = unsafe { &*self.global_collect_ptr };
-            for (local_name, import) in &collect.synthetic {
-                let import_str = if local_name == &import.specifier {
-                    format!(r#"import {{ {} }} from "{}";"#, local_name, import.source)
-                } else {
-                    format!(r#"import {{ {} as {} }} from "{}";"#, import.specifier, local_name, import.source)
-                };
-                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
-                    program.body.insert(0, stmt);
-                }
-            }
-        }
-
-        // Strip all $-suffixed marker function imports from the root module.
-        // SWC removes ALL marker function imports (e.g., $, component$, useTask$)
-        // because they are consumed by the transformation and replaced with QRL
-        // counterparts (componentQrl, etc.) or removed entirely.
-        // This includes both called AND uncalled marker functions.
-        {
-            // Build the complete set of names to strip: marker_functions keys + bare $
-            let mut strip_names: HashSet<&str> = HashSet::new();
-            for key in self.marker_functions.keys() {
-                strip_names.insert(key.as_str());
-            }
-            if let Some(ref qseg) = self.qsegment_fn {
-                strip_names.insert(qseg.as_str());
-            }
-            // Also strip any explicitly consumed imports (tracked during traversal)
-            let consumed_owned: Vec<String> = self.consumed_imports.iter().cloned().collect();
-
-            program.body.retain_mut(|stmt| {
-                if let Statement::ImportDeclaration(import_decl) = stmt {
-                    // Strip marker function imports from ALL sources (not just core module).
-                    // SWC removes marker functions regardless of their source module.
-                    if let Some(specifiers) = &mut import_decl.specifiers {
-                        specifiers.retain(|spec| {
-                            if let ImportDeclarationSpecifier::ImportSpecifier(named) = spec {
-                                let local_name = named.local.name.as_str();
-                                let imported_name = match &named.imported {
-                                    ModuleExportName::IdentifierName(id) => id.name.as_str(),
-                                    ModuleExportName::IdentifierReference(id) => id.name.as_str(),
-                                    ModuleExportName::StringLiteral(s) => s.value.as_str(),
-                                };
-                                // Strip if it's a marker function or consumed import
-                                let should_strip = strip_names.contains(local_name)
-                                    || strip_names.contains(imported_name)
-                                    || consumed_owned.iter().any(|c| c == local_name || c == imported_name);
-                                !should_strip
-                            } else {
-                                true // Keep default/namespace imports
-                            }
-                        });
-                        // Remove the entire import if no specifiers remain
-                        if specifiers.is_empty() {
-                            return false;
-                        }
-                    }
-                }
-                true
-            });
-        }
-
-        // Emit extra_top_items const declarations and ref_assignments (.s() calls)
-        // into the root module. Works for both Hoist and Segment strategies.
+        // Hoist strategy: emit extra_top_items const declarations and
+        // ref_assignments (.s() calls) into the root module.
         //
         // Ordering (critical per Pitfall 1):
         //   1. Import declarations (already inserted above)
-        //   2. // (separator comment)
-        //   3. const q_sym = ... declarations (extra_top_items)
-        //   4. q_sym.s(fn_body) expression statements (ref_assignments, Hoist only)
-        //   5. // (separator comment)
-        //   6. Original module body (exports, etc.)
-        let has_root_items = self.extra_top_items.iter().any(|h| h.is_root_level);
-        if (has_root_items || !self.ref_assignments.is_empty()) && !matches!(self.mode, EmitMode::Lib)
+        //   2. const q_sym = _noopQrl("sym") declarations (extra_top_items)
+        //   3. q_sym.s(fn_body) expression statements (ref_assignments)
+        //   4. Original module body (exports, etc.)
+        if matches!(self.entry_strategy, EntryStrategy::Hoist)
+            && !matches!(self.mode, EmitMode::Lib)
         {
             // Find the insertion point: after imports, before everything else.
             let first_non_import = program.body.iter().position(|stmt| {
@@ -3481,12 +1692,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             }
 
-            // Insert const declarations for root-level extra_top_items only (in reverse).
-            // Child segment QRLs are emitted by code_move into their parent segment files.
-            let extra_items: Vec<HoistedConst> = self.extra_top_items.iter()
-                .filter(|h| h.is_root_level)
-                .cloned()
-                .collect();
+            // Insert const declarations for extra_top_items (in reverse)
+            let extra_items: Vec<HoistedConst> = self.extra_top_items.clone();
             for item in extra_items.into_iter().rev() {
                 let const_decl = format!("const {} = {};", item.name, item.rhs_code);
                 if let Some(stmt) = crate::add_side_effect::parse_single_statement(&const_decl, allocator) {
@@ -3494,84 +1701,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             }
         }
-
-        // Dead import elimination: remove any import specifier whose local
-        // binding is NOT referenced in the remaining program body.
-        // Covers ALL imports (not just core module) to match SWC behavior.
-        // Skip in Lib mode where code generation patterns differ.
-        if !matches!(self.mode, EmitMode::Lib) {
-            // Build set of synthetically-added import names (should not be eliminated)
-            let mut synthetic_names: HashSet<String> = HashSet::new();
-            // Marker function Qrl-suffixed wrappers
-            for seg in &self.segments {
-                if seg.ctx_name != "$" && seg.ctx_name != "sync$" {
-                    synthetic_names.insert(words::dollar_to_qrl_name(&seg.ctx_name));
-                }
-            }
-            // Standard synthetic imports
-            for name in ["qrl", "qrlDEV", "inlinedQrl", "inlinedQrlDEV",
-                         "_noopQrl", "_noopQrlDEV", "_jsxSorted", "_jsxSplit",
-                         "Fragment", "_Fragment", "_fnSignal", "_wrapProp"] {
-                synthetic_names.insert(name.to_string());
-            }
-            // Add collect.synthetic names to the protection set
-            {
-                let collect = unsafe { &*self.global_collect_ptr };
-                for (local_name, _) in &collect.synthetic {
-                    synthetic_names.insert(local_name.clone());
-                }
-            }
-
-            // Collect all identifier references in non-import statements
-            let mut referenced: HashSet<String> = HashSet::new();
-            for stmt in program.body.iter() {
-                if !matches!(stmt, Statement::ImportDeclaration(_)) {
-                    let mut collector = IdentRefCollector { refs: &mut referenced };
-                    collector.visit_statement(stmt);
-                }
-            }
-
-            program.body.retain_mut(|stmt| {
-                if let Statement::ImportDeclaration(import_decl) = stmt {
-                    // Apply dead import elimination to ALL imports, not just core module.
-                    // Keep side-effect-only imports (bare `import "module"` with no specifiers).
-                    if let Some(specifiers) = &mut import_decl.specifiers {
-                        specifiers.retain(|spec| {
-                            match spec {
-                                ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                                    let local = named.local.name.as_str();
-                                    // Keep synthetic imports unconditionally
-                                    synthetic_names.contains(local)
-                                        || referenced.contains(local)
-                                }
-                                ImportDeclarationSpecifier::ImportDefaultSpecifier(def) => {
-                                    referenced.contains(def.local.name.as_str())
-                                }
-                                ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
-                                    referenced.contains(ns.local.name.as_str())
-                                }
-                            }
-                        });
-                        if specifiers.is_empty() {
-                            return false;
-                        }
-                    }
-                    // Bare imports (no specifiers) are side-effect-only; keep them.
-                }
-                true
-            });
-        }
-    }
-}
-
-/// Visitor that collects all identifier references (not declarations).
-struct IdentRefCollector<'a> {
-    refs: &'a mut HashSet<String>,
-}
-
-impl<'b> Visit<'b> for IdentRefCollector<'_> {
-    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'b>) {
-        self.refs.insert(ident.name.as_str().to_string());
     }
 }
 
@@ -3695,77 +1824,6 @@ fn escape_dollar(name: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// JSX event attribute helpers (ported from SWC transform.rs L4658-4713)
-// ---------------------------------------------------------------------------
-
-/// Convert a `$`-suffixed JSX event attribute name to an HTML attribute name.
-///
-/// Returns `Some(html_attr)` for event handler attributes, `None` for non-event props.
-///
-/// Examples:
-/// - `onClick$` -> `Some("q-e:click")`
-/// - `onDblClick$` -> `Some("q-e:dbl-click")`
-/// - `document:onFocus$` -> `Some("q-d:focus")`
-/// - `window:onClick$` -> `Some("q-w:click")`
-/// - `onDOMContentLoaded$` -> `Some("q-e:d-o-m-content-loaded")`
-/// - `render$` -> `None` (not an event handler)
-pub(crate) fn jsx_event_to_html_attribute(jsx_event: &str) -> Option<String> {
-    if !jsx_event.ends_with('$') {
-        return None;
-    }
-
-    let (prefix, idx) = get_event_scope_data_from_jsx_event(jsx_event);
-
-    if idx == usize::MAX {
-        return None;
-    }
-
-    let name = &jsx_event[idx..jsx_event.len() - 1];
-
-    if name == "DOMContentLoaded" {
-        return Some(format!("{}-d-o-m-content-loaded", prefix));
-    }
-
-    let processed_name = if let Some(stripped) = name.strip_prefix('-') {
-        // marker for case sensitive event name
-        stripped.to_string()
-    } else {
-        name.to_lowercase()
-    };
-
-    Some(create_event_name(&processed_name, prefix))
-}
-
-/// Get the event scope prefix and starting index from a JSX event name.
-fn get_event_scope_data_from_jsx_event(jsx_event: &str) -> (&str, usize) {
-    if jsx_event.starts_with("window:on") {
-        ("q-w:", 9)
-    } else if jsx_event.starts_with("document:on") {
-        ("q-d:", 11)
-    } else if jsx_event.starts_with("on") {
-        ("q-e:", 2)
-    } else {
-        ("", usize::MAX)
-    }
-}
-
-/// Create an event name by converting from camelCase to kebab-case.
-fn create_event_name(name: &str, prefix: &str) -> String {
-    let mut result = String::from(prefix);
-
-    for c in name.chars() {
-        if c.is_ascii_uppercase() || c == '-' {
-            result.push('-');
-            result.push(c.to_ascii_lowercase());
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
-}
-
-// ---------------------------------------------------------------------------
 // transform_code -- pipeline orchestration
 // ---------------------------------------------------------------------------
 
@@ -3783,7 +1841,7 @@ pub(crate) fn transform_code(
     config: &TransformCodeOptions,
 ) -> crate::types::TransformOutput {
     use oxc::allocator::Allocator;
-    use oxc::codegen::{Codegen, CodegenOptions, IndentChar};
+    use oxc::codegen::Codegen;
 
     let allocator = Allocator::default();
     let source_in_arena: &str = allocator.alloc_str(source);
@@ -3851,8 +1909,6 @@ pub(crate) fn transform_code(
         config,
         &collect,
         &path_data.file_name,
-        &path_data.file_stem,
-        &path_data.rel_dir.to_string_lossy(),
         filename,
         extension,
         source_in_arena,
@@ -3867,12 +1923,7 @@ pub(crate) fn transform_code(
     );
 
     // Stage 7: Generate output (segment emission comes in Plan 07)
-    let codegen_options = CodegenOptions {
-        indent_char: IndentChar::Space,
-        indent_width: 4,
-        ..Default::default()
-    };
-    let code = Codegen::new().with_options(codegen_options).build(&program).code;
+    let code = Codegen::new().build(&program).code;
 
     let mut diagnostics = parse_diagnostics;
     diagnostics.extend(transformer.diagnostics);
@@ -4096,7 +2147,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test", "", "test.tsx", "tsx", "");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
 
         assert!(
             t.marker_functions.contains_key("component$"),
@@ -4121,7 +2172,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test", "", "test.tsx", "tsx", "");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
 
         assert!(
             t.marker_functions.contains_key("myHelper$"),
@@ -4138,7 +2189,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test", "", "test.tsx", "tsx", "");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
 
         assert!(
             t.sync_qrl_fn.is_some(),
@@ -4613,7 +2664,7 @@ mod tests {
 
     #[test]
     fn props_destructuring_in_component_pipeline() {
-        // In Lib mode (which uses inlinedQrl), the function body stays in the root module,
+        // In Inline mode, the function body stays in the root module,
         // so we can see the _rawProps transformation.
         let src = r#"
             import { component$ } from "@qwik.dev/core";
@@ -4622,8 +2673,7 @@ mod tests {
             });
         "#;
         let mut config = make_config();
-        // Use Lib mode (not Inline) because Inline now uses _noopQrl/.s() with source text
-        config.mode = EmitMode::Lib;
+        config.entry_strategy = EntryStrategy::Inline;
         let output = transform_code(src, "test.tsx", &config);
         let code = &output.modules[0].code;
         // Props destructuring should have run (pre-pass)
@@ -4631,79 +2681,6 @@ mod tests {
             code.contains("_rawProps"),
             "Props destructuring should produce _rawProps, got: {}",
             code
-        );
-    }
-
-    // -----------------------------------------------------------------------
-    // jsx_event_to_html_attribute tests
-    // -----------------------------------------------------------------------
-
-    #[test]
-    fn jsx_event_click() {
-        assert_eq!(
-            jsx_event_to_html_attribute("onClick$"),
-            Some("q-e:click".to_string())
-        );
-    }
-
-    #[test]
-    fn jsx_event_dbl_click() {
-        // SWC lowercases the name first, so DblClick -> dblclick (no kebab)
-        assert_eq!(
-            jsx_event_to_html_attribute("onDblClick$"),
-            Some("q-e:dblclick".to_string())
-        );
-    }
-
-    #[test]
-    fn jsx_event_document_focus() {
-        assert_eq!(
-            jsx_event_to_html_attribute("document:onFocus$"),
-            Some("q-d:focus".to_string())
-        );
-    }
-
-    #[test]
-    fn jsx_event_window_click() {
-        assert_eq!(
-            jsx_event_to_html_attribute("window:onClick$"),
-            Some("q-w:click".to_string())
-        );
-    }
-
-    #[test]
-    fn jsx_event_dom_content_loaded() {
-        // SWC special case: DOMContentLoaded -> "{prefix}-d-o-m-content-loaded"
-        assert_eq!(
-            jsx_event_to_html_attribute("onDOMContentLoaded$"),
-            Some("q-e:-d-o-m-content-loaded".to_string())
-        );
-    }
-
-    #[test]
-    fn jsx_event_non_event_returns_none() {
-        assert_eq!(jsx_event_to_html_attribute("render$"), None);
-    }
-
-    #[test]
-    fn jsx_event_no_dollar_returns_none() {
-        assert_eq!(jsx_event_to_html_attribute("onClick"), None);
-    }
-
-    #[test]
-    fn jsx_event_input() {
-        assert_eq!(
-            jsx_event_to_html_attribute("onInput$"),
-            Some("q-e:input".to_string())
-        );
-    }
-
-    #[test]
-    fn jsx_event_case_sensitive_with_hyphen() {
-        // on-customEvent$ -> q-e:customEvent (hyphen prefix = case sensitive)
-        assert_eq!(
-            jsx_event_to_html_attribute("on-customEvent$"),
-            Some("q-e:custom-event".to_string())
         );
     }
 }

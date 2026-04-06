@@ -1,31 +1,28 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 878
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { _jsxSorted } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { qwikifyQrl } from "./qwikfy";
-//
-const q_App2_qwikify_RKJW7oCMdS4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App2_qwikify_RKJW7oCMdS4.js"), "App2_qwikify_RKJW7oCMdS4");
-const q_App_div_q_e_click_Z1sbYFdSKC4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_div_q_e_click_Z1sbYFdSKC4.js"), "App_div_q_e_click_Z1sbYFdSKC4");
-//
-export const App = ()=>/*#__PURE__*/ _jsxSorted("div", { "q-e:click": q_App_div_q_e_click_Z1sbYFdSKC4 }, null, null, 1, "u6_0");
-export const App2 = qwikifyQrl(q_App2_qwikify_RKJW7oCMdS4);
+import { _jsxSorted } from "@qwik.dev/core";
+/* @jsxImportSource react */
+import { qwikify$ } from "./qwikfy";
+export const App = () => _jsxSorted("div", { onClick$: () => console.log("App") }, null, null, 1, "0");
+export const App2 = qrl(() => import("./test.tsx__u6BtPnK76q4.tsx"), "_u6BtPnK76q4");
 
-============================= test.tsx_App2_qwikify_RKJW7oCMdS4.js (ENTRY POINT) ==
-export const App2_qwikify_RKJW7oCMdS4 = () => (
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+export const _u6BtPnK76q4 = () => (
 	<div onClick$={()=>console.log('App2')}></div>
 );
 /*
 {
   "origin": "test.tsx",
-  "name": "App2_qwikify_RKJW7oCMdS4",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_App2_qwikify",
-  "hash": "RKJW7oCMdS4",
-  "canonicalFilename": "test.tsx_App2_qwikify_RKJW7oCMdS4",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -33,54 +30,8 @@ export const App2_qwikify_RKJW7oCMdS4 = () => (
   "ctxName": "qwikify$",
   "captures": false,
   "loc": [
-    176,
-    233
-  ]
-}
-*/
-============================= test.tsx_App2_qwikify_div_q_e_click_wTQJtXPdZP0.js (ENTRY POINT) ==
-export const App2_qwikify_div_q_e_click_wTQJtXPdZP0 = ()=>console.log("App2");
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App2_qwikify_div_q_e_click_wTQJtXPdZP0",
-  "entry": null,
-  "displayName": "test.tsx_App2_qwikify_div_q_e_click",
-  "hash": "wTQJtXPdZP0",
-  "canonicalFilename": "test.tsx_App2_qwikify_div_q_e_click_wTQJtXPdZP0",
-  "path": "",
-  "extension": "js",
-  "parent": "App2_qwikify_RKJW7oCMdS4",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    200,
-    223
-  ]
-}
-*/
-============================= test.tsx_App_div_q_e_click_Z1sbYFdSKC4.js (ENTRY POINT) ==
-export const App_div_q_e_click_Z1sbYFdSKC4 = ()=>console.log("App");
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_div_q_e_click_Z1sbYFdSKC4",
-  "entry": null,
-  "displayName": "test.tsx_App_div_q_e_click",
-  "hash": "Z1sbYFdSKC4",
-  "canonicalFilename": "test.tsx_App_div_q_e_click_Z1sbYFdSKC4",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    112,
-    134
+    167,
+    234
   ]
 }
 */

@@ -1,91 +1,27 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 1017
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Input_component_9metqqaxlN8 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Input_component_9metqqaxlN8"), "Input_component_9metqqaxlN8");
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
-//
-export const Input = /*#__PURE__*/ componentQrl(q_Input_component_9metqqaxlN8);
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+import { _jsxSorted } from "@qwik.dev/core";
+import { Fragment } from "@qwik.dev/core";
+import { component$, useStore, useTask$ } from "@qwik.dev/core";
+import { useForm, useForm2 } from "./some-file.ts";
+export const Input = qrl<{
+	error: string;
+	error2: string;
+	error3: string;
+}>(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export default qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
 
-============================= test.tsx_test_component_div_button_q_e_click_2TvarUvNGmU.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const test_component_div_button_q_e_click_2TvarUvNGmU = ()=>{
-    const store = _captures[0];
-    store.errors.test = store.errors.test ? undefined : "ERROR TEST";
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "test_component_div_button_q_e_click_2TvarUvNGmU",
-  "entry": null,
-  "displayName": "test.tsx_test_component_div_button_q_e_click",
-  "hash": "2TvarUvNGmU",
-  "canonicalFilename": "test.tsx_test_component_div_button_q_e_click_2TvarUvNGmU",
-  "path": "",
-  "extension": "js",
-  "parent": "test_component_LUXeXe0DQrg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "store"
-  ],
-  "loc": [
-    834,
-    920
-  ]
-}
-*/
-============================= test.tsx_Input_component_9metqqaxlN8.js (ENTRY POINT) ==
-import { useTask$ } from "@qwik.dev/core";
-export const Input_component_9metqqaxlN8 = (props) => {
-				useTask$(({ track }) => {
-					track(() => props.error);
-					track(() => props.error2);
-					track(() => props.error3);
-				});
-
-				return (
-					<>
-					</>
-				);
-			};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Input_component_9metqqaxlN8",
-  "entry": null,
-  "displayName": "test.tsx_Input_component",
-  "hash": "9metqqaxlN8",
-  "canonicalFilename": "test.tsx_Input_component_9metqqaxlN8",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    210,
-    398
-  ],
-  "paramNames": [
-    "props"
-  ]
-}
-*/
-============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { Input } from "./test";
 import { useForm } from "./some-file.ts";
 import { useForm2 } from "./some-file.ts";
 import { useStore } from "@qwik.dev/core";
-export const test_component_LUXeXe0DQrg = () => {
+export const _1_iZVV0eoW44k = () => {
 			const [store, math] = [useStore({errors: {}}), Math.random()];
 			const [[store2]] = [[useStore({errors: {}})]];
 			const { store3, math4 } = { store3: useStore({errors: {}}), math4: Math.random() };
@@ -116,11 +52,11 @@ export const test_component_LUXeXe0DQrg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
+  "name": "_1_iZVV0eoW44k",
   "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "displayName": "test.tsx__1",
+  "hash": "iZVV0eoW44k",
+  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -128,31 +64,68 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    433,
-    1224
+    422,
+    1225
   ]
 }
 */
-============================= test.tsx_Input_component_useTask_Sbgs9Wtfkt0.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { useTask$ } from "@qwik.dev/core";
+export const _u6BtPnK76q4 = (props) => {
+				useTask$(({ track }) => {
+					track(() => props.error);
+					track(() => props.error2);
+					track(() => props.error3);
+				});
+
+				return (
+					<>
+					</>
+				);
+			};
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    146,
+    402
+  ],
+  "paramNames": [
+    "props"
+  ]
+}
+*/
+============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Input_component_useTask_Sbgs9Wtfkt0 = ({ track })=>{
-    const props = _captures[0];
-    track(()=>props.error);
-    track(()=>props.error2);
-    track(()=>props.error3);
+export const component_ZUK1E201Ins = ({ track }) => {
+	const props = _captures[0];
+	track(() => props.error);
+	track(() => props.error2);
+	track(() => props.error3);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Input_component_useTask_Sbgs9Wtfkt0",
+  "name": "component_ZUK1E201Ins",
   "entry": null,
-  "displayName": "test.tsx_Input_component_useTask",
-  "hash": "Sbgs9Wtfkt0",
-  "canonicalFilename": "test.tsx_Input_component_useTask_Sbgs9Wtfkt0",
+  "displayName": "test.tsx_component",
+  "hash": "ZUK1E201Ins",
+  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
   "path": "",
   "extension": "js",
-  "parent": "Input_component_9metqqaxlN8",
+  "parent": "_u6BtPnK76q4",
   "ctxKind": "function",
   "ctxName": "useTask$",
   "captures": true,
@@ -160,8 +133,8 @@ export const Input_component_useTask_Sbgs9Wtfkt0 = ({ track })=>{
     "props"
   ],
   "loc": [
-    236,
-    353
+    227,
+    354
   ],
   "paramNames": [
     "track"

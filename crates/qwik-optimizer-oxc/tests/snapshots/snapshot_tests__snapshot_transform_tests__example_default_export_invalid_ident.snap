@@ -1,41 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 850
 expression: output
-snapshot_kind: text
 ---
 ============================= src/components/mongo/404.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q__404_component_zRvoWc98eqo = /*#__PURE__*/ qrl(()=>import("./404.tsx__404_component_zRvoWc98eqo"), "_404_component_zRvoWc98eqo");
-//
-export default /*#__PURE__*/ componentQrl(q__404_component_zRvoWc98eqo);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+export default qrl(() => import("./404.tsx__0BX5jYI256c"), "_0BX5jYI256c");
 
-============================= src/components/mongo/404.tsx__404_component_div_q_e_click_aMLnLWtkRhc.tsx (ENTRY POINT) ==
-export const _404_component_div_q_e_click_aMLnLWtkRhc = ()=>console.log(mongodb);
-
-/*
-{
-  "origin": "src/components/mongo/404.tsx",
-  "name": "_404_component_div_q_e_click_aMLnLWtkRhc",
-  "entry": null,
-  "displayName": "404.tsx__404_component_div_q_e_click",
-  "hash": "aMLnLWtkRhc",
-  "canonicalFilename": "404.tsx__404_component_div_q_e_click_aMLnLWtkRhc",
-  "path": "src/components/mongo",
-  "extension": "tsx",
-  "parent": "_404_component_zRvoWc98eqo",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    108,
-    134
-  ]
-}
-*/
-============================= src/components/mongo/404.tsx__404_component_zRvoWc98eqo.tsx (ENTRY POINT) ==
-export const _404_component_zRvoWc98eqo = () => {
+============================= src/components/mongo/404.tsx__0BX5jYI256c.tsx (ENTRY POINT) ==
+export const _0BX5jYI256c = () => {
 	return (
 		<div onClick$={() => console.log(mongodb)}>
 		</div>
@@ -44,11 +19,11 @@ export const _404_component_zRvoWc98eqo = () => {
 /*
 {
   "origin": "src/components/mongo/404.tsx",
-  "name": "_404_component_zRvoWc98eqo",
+  "name": "_0BX5jYI256c",
   "entry": null,
-  "displayName": "404.tsx__404_component",
-  "hash": "zRvoWc98eqo",
-  "canonicalFilename": "404.tsx__404_component_zRvoWc98eqo",
+  "displayName": "404.tsx_",
+  "hash": "0BX5jYI256c",
+  "canonicalFilename": "404.tsx__0BX5jYI256c",
   "path": "src/components/mongo",
   "extension": "tsx",
   "parent": null,
@@ -56,8 +31,8 @@ export const _404_component_zRvoWc98eqo = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    73,
-    151
+    62,
+    152
   ]
 }
 */

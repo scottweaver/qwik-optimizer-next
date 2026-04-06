@@ -1,46 +1,35 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
-snapshot_kind: text
 ---
 ============================= test.ts ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_ComponentA_component_100sEyGkGuA = /*#__PURE__*/ qrl(()=>import("./test.tsx_ComponentA_component_100sEyGkGuA"), "ComponentA_component_100sEyGkGuA");
-const q_ComponentB_component_WfCOFVxlmq4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_ComponentB_component_WfCOFVxlmq4"), "ComponentB_component_WfCOFVxlmq4");
-const q_MutualExample_component_LXt10RL0k44 = /*#__PURE__*/ qrl(()=>import("./test.tsx_MutualExample_component_LXt10RL0k44"), "MutualExample_component_LXt10RL0k44");
-const q_Nested_component_8cqIQQSPqhE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Nested_component_8cqIQQSPqhE"), "Nested_component_8cqIQQSPqhE");
-const q_RecursiveList_component_ignTe6QguYQ = /*#__PURE__*/ qrl(()=>import("./test.tsx_RecursiveList_component_ignTe6QguYQ"), "RecursiveList_component_ignTe6QguYQ");
-//
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
 // Self-referential component: the Nested component references itself in its JSX
 // This should be migrated to its segment using two-phase emission (let + assign)
 // to avoid Temporal Dead Zone errors
-export const Nested = /*#__PURE__*/ componentQrl(q_Nested_component_8cqIQQSPqhE);
+export const Nested = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 // Another self-referential component with conditional rendering
-export const RecursiveList = /*#__PURE__*/ componentQrl(q_RecursiveList_component_ignTe6QguYQ);
+export const RecursiveList = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
 // Mutually recursive components: A references B, B references A
-/*#__PURE__*/ componentQrl(q_ComponentA_component_100sEyGkGuA);
-/*#__PURE__*/ componentQrl(q_ComponentB_component_WfCOFVxlmq4);
-export const MutualExample = /*#__PURE__*/ componentQrl(q_MutualExample_component_LXt10RL0k44);
+const ComponentA = qrl(() => import("./test.tsx__2_sSArpd0iSRk"), "_2_sSArpd0iSRk");
+export const MutualExample = qrl(() => import("./test.tsx__4_Gairpaqi1qc"), "_4_Gairpaqi1qc");
+export { ComponentB as _auto_ComponentB };
+export { ComponentA as _auto_ComponentA };
 
-============================= test.tsx_ComponentA_component_100sEyGkGuA.ts (ENTRY POINT) ==
-export const ComponentA_component_100sEyGkGuA = () => {
-	return (
-		<div>
-			A
-			<ComponentB />
-		</div>
-	);
+============================= test.tsx__4_Gairpaqi1qc.ts (ENTRY POINT) ==
+export const _4_Gairpaqi1qc = () => {
+	return <ComponentA />;
 };
 /*
 {
   "origin": "test.tsx",
-  "name": "ComponentA_component_100sEyGkGuA",
+  "name": "_4_Gairpaqi1qc",
   "entry": null,
-  "displayName": "test.tsx_ComponentA_component",
-  "hash": "100sEyGkGuA",
-  "canonicalFilename": "test.tsx_ComponentA_component_100sEyGkGuA",
+  "displayName": "test.tsx__4",
+  "hash": "Gairpaqi1qc",
+  "canonicalFilename": "test.tsx__4_Gairpaqi1qc",
   "path": "",
   "extension": "ts",
   "parent": null,
@@ -48,43 +37,14 @@ export const ComponentA_component_100sEyGkGuA = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    703,
-    766
+    896,
+    941
   ]
 }
 */
-============================= test.tsx_Nested_component_8cqIQQSPqhE.ts (ENTRY POINT) ==
-import { Nested } from "./test";
-export const Nested_component_8cqIQQSPqhE = () => {
-	return (
-		<div>
-			<Nested />
-		</div>
-	);
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Nested_component_8cqIQQSPqhE",
-  "entry": null,
-  "displayName": "test.tsx_Nested_component",
-  "hash": "8cqIQQSPqhE",
-  "canonicalFilename": "test.tsx_Nested_component_8cqIQQSPqhE",
-  "path": "",
-  "extension": "ts",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    281,
-    335
-  ]
-}
-*/
-============================= test.tsx_RecursiveList_component_ignTe6QguYQ.ts (ENTRY POINT) ==
+============================= test.tsx__1_iZVV0eoW44k.ts (ENTRY POINT) ==
 import { RecursiveList } from "./test";
-export const RecursiveList_component_ignTe6QguYQ = (props) => {
+export const _1_iZVV0eoW44k = (props) => {
 	if (props.depth === 0) return <div>End</div>;
 	return (
 		<div>
@@ -96,11 +56,11 @@ export const RecursiveList_component_ignTe6QguYQ = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "RecursiveList_component_ignTe6QguYQ",
+  "name": "_1_iZVV0eoW44k",
   "entry": null,
-  "displayName": "test.tsx_RecursiveList_component",
-  "hash": "ignTe6QguYQ",
-  "canonicalFilename": "test.tsx_RecursiveList_component_ignTe6QguYQ",
+  "displayName": "test.tsx__1",
+  "hash": "iZVV0eoW44k",
+  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
   "path": "",
   "extension": "ts",
   "parent": null,
@@ -108,40 +68,16 @@ export const RecursiveList_component_ignTe6QguYQ = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    444,
-    604
+    433,
+    605
   ],
   "paramNames": [
     "props"
   ]
 }
 */
-============================= test.tsx_MutualExample_component_LXt10RL0k44.ts (ENTRY POINT) ==
-export const MutualExample_component_LXt10RL0k44 = () => {
-	return <ComponentA />;
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "MutualExample_component_LXt10RL0k44",
-  "entry": null,
-  "displayName": "test.tsx_MutualExample_component",
-  "hash": "LXt10RL0k44",
-  "canonicalFilename": "test.tsx_MutualExample_component_LXt10RL0k44",
-  "path": "",
-  "extension": "ts",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    907,
-    940
-  ]
-}
-*/
-============================= test.tsx_ComponentB_component_WfCOFVxlmq4.ts (ENTRY POINT) ==
-export const ComponentB_component_WfCOFVxlmq4 = () => {
+============================= test.tsx__3_OyZ0gk5pkcU.ts (ENTRY POINT) ==
+export const _3_OyZ0gk5pkcU = () => {
 	return (
 		<div>
 			B
@@ -152,11 +88,11 @@ export const ComponentB_component_WfCOFVxlmq4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "ComponentB_component_WfCOFVxlmq4",
+  "name": "_3_OyZ0gk5pkcU",
   "entry": null,
-  "displayName": "test.tsx_ComponentB_component",
-  "hash": "WfCOFVxlmq4",
-  "canonicalFilename": "test.tsx_ComponentB_component_WfCOFVxlmq4",
+  "displayName": "test.tsx__3",
+  "hash": "OyZ0gk5pkcU",
+  "canonicalFilename": "test.tsx__3_OyZ0gk5pkcU",
   "path": "",
   "extension": "ts",
   "parent": null,
@@ -164,8 +100,67 @@ export const ComponentB_component_WfCOFVxlmq4 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    800,
-    863
+    789,
+    864
+  ]
+}
+*/
+============================= test.tsx__2_sSArpd0iSRk.ts (ENTRY POINT) ==
+const ComponentB = qrl(() => import("./test.tsx__3_OyZ0gk5pkcU"), "_3_OyZ0gk5pkcU");
+export const _2_sSArpd0iSRk = () => {
+	return (
+		<div>
+			A
+			<ComponentB />
+		</div>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "_2_sSArpd0iSRk",
+  "entry": null,
+  "displayName": "test.tsx__2",
+  "hash": "sSArpd0iSRk",
+  "canonicalFilename": "test.tsx__2_sSArpd0iSRk",
+  "path": "",
+  "extension": "ts",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    692,
+    767
+  ]
+}
+*/
+============================= test.tsx__u6BtPnK76q4.ts (ENTRY POINT) ==
+import { Nested } from "./test";
+export const _u6BtPnK76q4 = () => {
+	return (
+		<div>
+			<Nested />
+		</div>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "ts",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    270,
+    336
   ]
 }
 */

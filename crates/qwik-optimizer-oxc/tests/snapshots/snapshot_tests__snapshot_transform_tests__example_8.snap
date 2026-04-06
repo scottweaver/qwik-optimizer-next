@@ -1,53 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 839
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Header_component_J4uyIhaBNR4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_J4uyIhaBNR4"), "Header_component_J4uyIhaBNR4");
-//
-export const Header = /*#__PURE__*/ componentQrl(q_Header_component_J4uyIhaBNR4);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+export const Header = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Header_component_1_2B8d0oH9ZWc.tsx (ENTRY POINT) ==
-import { Header } from "./test";
-export const Header_component_1_2B8d0oH9ZWc = (hola) => {
-		const hola = this;
-		const {something, styff} = hola;
-		const hello = hola.nothere.stuff[global];
-		return (
-			<Header/>
-		);
-	};
-/*
-{
-  "origin": "test.tsx",
-  "name": "Header_component_1_2B8d0oH9ZWc",
-  "entry": null,
-  "displayName": "test.tsx_Header_component_1",
-  "hash": "2B8d0oH9ZWc",
-  "canonicalFilename": "test.tsx_Header_component_1_2B8d0oH9ZWc",
-  "path": "",
-  "extension": "tsx",
-  "parent": "Header_component_J4uyIhaBNR4",
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    101,
-    244
-  ],
-  "paramNames": [
-    "hola"
-  ]
-}
-*/
-============================= test.tsx_Header_component_J4uyIhaBNR4.tsx (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { Header } from "./test";
-export const Header_component_J4uyIhaBNR4 = () => {
+export const _u6BtPnK76q4 = () => {
 	return $((hola) => {
 		const hola = this;
 		const {something, styff} = hola;
@@ -60,11 +25,11 @@ export const Header_component_J4uyIhaBNR4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Header_component_J4uyIhaBNR4",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Header_component",
-  "hash": "J4uyIhaBNR4",
-  "canonicalFilename": "test.tsx_Header_component_J4uyIhaBNR4",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -72,8 +37,41 @@ export const Header_component_J4uyIhaBNR4 = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    83,
-    248
+    72,
+    249
+  ]
+}
+*/
+============================= test.tsx_component_ZUK1E201Ins.tsx (ENTRY POINT) ==
+import { Header } from "./test";
+export const component_ZUK1E201Ins = (hola) => {
+		const hola = this;
+		const {something, styff} = hola;
+		const hello = hola.nothere.stuff[global];
+		return (
+			<Header/>
+		);
+	};
+/*
+{
+  "origin": "test.tsx",
+  "name": "component_ZUK1E201Ins",
+  "entry": null,
+  "displayName": "test.tsx_component",
+  "hash": "ZUK1E201Ins",
+  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "path": "",
+  "extension": "tsx",
+  "parent": "_u6BtPnK76q4",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    99,
+    245
+  ],
+  "paramNames": [
+    "hola"
   ]
 }
 */

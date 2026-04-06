@@ -1,34 +1,31 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 978
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { formActionQrl } from "forms";
 import { qrl } from "@qwik.dev/core";
-//
-const q_action_formAction_dIQV5vh1He4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_action_formAction_dIQV5vh1He4"), "action_formAction_dIQV5vh1He4");
-//
-export const action = formActionQrl(q_action_formAction_dIQV5vh1He4);
+import { formAction$ } from "forms";
+export const action = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_action_formAction_dIQV5vh1He4.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 const x = "module-level";
-export const action_formAction_dIQV5vh1He4 = (data)=>{
-    label: {
-        const x = "shadowed";
-        break label;
-    }
-    return {};
+export const _u6BtPnK76q4 = (data) => {
+	label: {
+		const x = "shadowed";
+		break label;
+	}
+	return {};
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "action_formAction_dIQV5vh1He4",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_action_formAction",
-  "hash": "dIQV5vh1He4",
-  "canonicalFilename": "test.tsx_action_formAction_dIQV5vh1He4",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -36,8 +33,8 @@ export const action_formAction_dIQV5vh1He4 = (data)=>{
   "ctxName": "formAction$",
   "captures": false,
   "loc": [
-    98,
-    182
+    86,
+    183
   ],
   "paramNames": [
     "data"

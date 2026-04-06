@@ -1,56 +1,29 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 981
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { formActionQrl } from "forms";
 import { qrl } from "@qwik.dev/core";
-import { wrapperFn, getEnv } from 'utils';
-//
-const q_featureAction_formAction_cZgh2PzV1cc = /*#__PURE__*/ qrl(()=>import("./test.tsx_featureAction_formAction_cZgh2PzV1cc"), "featureAction_formAction_cZgh2PzV1cc");
-//
+import { wrapperFn, getEnv } from "utils";
+import { formAction$, valiForm$ } from "forms";
 const flagEnabled = getEnv().PUBLIC_FEATURE;
 export const FeatureSchema = wrapperFn(flagEnabled);
-export const featureAction = formActionQrl(q_featureAction_formAction_cZgh2PzV1cc);
+export const featureAction = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_featureAction_formAction_valiForm_3yxd03SSzJ8.js (ENTRY POINT) ==
-import { FeatureSchema } from "./test";
-export const featureAction_formAction_valiForm_3yxd03SSzJ8 = FeatureSchema;
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "featureAction_formAction_valiForm_3yxd03SSzJ8",
-  "entry": null,
-  "displayName": "test.tsx_featureAction_formAction_valiForm",
-  "hash": "3yxd03SSzJ8",
-  "canonicalFilename": "test.tsx_featureAction_formAction_valiForm_3yxd03SSzJ8",
-  "path": "",
-  "extension": "js",
-  "parent": "featureAction_formAction_cZgh2PzV1cc",
-  "ctxKind": "function",
-  "ctxName": "valiForm$",
-  "captures": false,
-  "loc": [
-    325,
-    338
-  ]
-}
-*/
-============================= test.tsx_featureAction_formAction_cZgh2PzV1cc.js (ENTRY POINT) ==
-export const featureAction_formAction_cZgh2PzV1cc = async (requestEvent)=>{
-    return { status: "success" };
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+export const _u6BtPnK76q4 = async (requestEvent) => {
+	return { status: "success" };
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "featureAction_formAction_cZgh2PzV1cc",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_featureAction_formAction",
-  "hash": "cZgh2PzV1cc",
-  "canonicalFilename": "test.tsx_featureAction_formAction_cZgh2PzV1cc",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -58,8 +31,8 @@ export const featureAction_formAction_cZgh2PzV1cc = async (requestEvent)=>{
   "ctxName": "formAction$",
   "captures": false,
   "loc": [
-    243,
-    313
+    231,
+    340
   ],
   "paramNames": [
     "requestEvent"

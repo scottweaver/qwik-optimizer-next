@@ -1,26 +1,23 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 875
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
-import { useSignal } from '@qwik.dev/core';
-//
-const q_Issue3742_component_svSy0PlWTAw = /*#__PURE__*/ _noopQrl("Issue3742_component_svSy0PlWTAw");
-//
-q_Issue3742_component_div_button_q_e_click_95Hlm8WgsYY.s(()=>counter.value++);
-q_Issue3742_component_svSy0PlWTAw.s(({ description = "", other }: any)=>{
-    const counter = useSignal(0);
-    return <div title={description && "description" in other ? `Hello ${counter.value}` : `Bye ${counter.value}`}>
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal } from "@qwik.dev/core";
+const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
+q__u6BtPnK76q4.s(({ description = "", other }: any) => {
+	const counter = useSignal(0);
+	return <div title={description && "description" in other ? `Hello ${counter.value}` : `Bye ${counter.value}`}>
 		Issue3742
-		<button onClick$={()=>counter.value++}>
+		<button onClick$={() => counter.value++}>
 			Increment
 		</button>
 		</div>;
 });
-export const Issue3742 = /*#__PURE__*/ componentQrl(q_Issue3742_component_svSy0PlWTAw);
+export const Issue3742 = componentQrl(q__u6BtPnK76q4);
 
 == DIAGNOSTICS ==
 []

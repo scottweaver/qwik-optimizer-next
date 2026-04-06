@@ -1,22 +1,21 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 863
 expression: output
-snapshot_kind: text
 ---
 ============================= project/folder/test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Header_component_RGgm7Ks9QWI = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_RGgm7Ks9QWI"), "Header_component_RGgm7Ks9QWI");
-//
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+import thing from "../state";
 export function foo() {
-    return import("../foo/state2");
+	return import("../foo/state2");
 }
-export const Header = /*#__PURE__*/ componentQrl(q_Header_component_RGgm7Ks9QWI);
+export const Header = qrl(() => import("./test.tsx__R9GtuAm43Z0"), "_R9GtuAm43Z0");
 
-============================= project/folder/test.tsx_Header_component_RGgm7Ks9QWI.tsx ==
+============================= project/folder/test.tsx__R9GtuAm43Z0.tsx ==
 import { default as thing } from "../state";
-export const Header_component_RGgm7Ks9QWI = () => {
+export const _R9GtuAm43Z0 = () => {
 	return (
 		<div>
 			{import("../folder/state3")}
@@ -27,11 +26,11 @@ export const Header_component_RGgm7Ks9QWI = () => {
 /*
 {
   "origin": "project/folder/test.tsx",
-  "name": "Header_component_RGgm7Ks9QWI",
+  "name": "_R9GtuAm43Z0",
   "entry": "entry_segments",
-  "displayName": "test.tsx_Header_component",
-  "hash": "RGgm7Ks9QWI",
-  "canonicalFilename": "test.tsx_Header_component_RGgm7Ks9QWI",
+  "displayName": "test.tsx_",
+  "hash": "R9GtuAm43Z0",
+  "canonicalFilename": "test.tsx__R9GtuAm43Z0",
   "path": "project/folder",
   "extension": "tsx",
   "parent": null,
@@ -39,8 +38,8 @@ export const Header_component_RGgm7Ks9QWI = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    172,
-    255
+    161,
+    256
   ]
 }
 */

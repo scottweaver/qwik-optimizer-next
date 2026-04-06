@@ -1,51 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 951
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
-//
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal } from "@qwik.dev/core";
+export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_test_component_div_div_q_e_hover_2iHUE4xtgo8.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const test_component_div_div_q_e_hover_2iHUE4xtgo8 = ()=>{
-    const bar = _captures[0];
-    const index = _captures[1];
-    return console.log(bar.value, index);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "test_component_div_div_q_e_hover_2iHUE4xtgo8",
-  "entry": null,
-  "displayName": "test.tsx_test_component_div_div_q_e_hover",
-  "hash": "2iHUE4xtgo8",
-  "canonicalFilename": "test.tsx_test_component_div_div_q_e_hover_2iHUE4xtgo8",
-  "path": "",
-  "extension": "js",
-  "parent": "test_component_LUXeXe0DQrg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onHover$",
-  "captures": true,
-  "captureNames": [
-    "bar",
-    "index"
-  ],
-  "loc": [
-    328,
-    363
-  ]
-}
-*/
-============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
-export const test_component_LUXeXe0DQrg = () => {
+export const _u6BtPnK76q4 = () => {
   const foo = useSignal('hi');
   const bar = useSignal('ho');
   const loop: string[] = ['abcd', 'xyz'];
@@ -60,11 +26,11 @@ export const test_component_LUXeXe0DQrg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -72,40 +38,8 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    84,
-    405
-  ]
-}
-*/
-============================= test.tsx_test_component_div_div_q_e_click_Mc600uqO6ps.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const test_component_div_div_q_e_click_Mc600uqO6ps = ()=>{
-    const foo = _captures[0];
-    const item = _captures[1];
-    return console.log(item, foo.value);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "test_component_div_div_q_e_click_Mc600uqO6ps",
-  "entry": null,
-  "displayName": "test.tsx_test_component_div_div_q_e_click",
-  "hash": "Mc600uqO6ps",
-  "canonicalFilename": "test.tsx_test_component_div_div_q_e_click_Mc600uqO6ps",
-  "path": "",
-  "extension": "js",
-  "parent": "test_component_LUXeXe0DQrg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "foo",
-    "item"
-  ],
-  "loc": [
-    282,
-    316
+    73,
+    406
   ]
 }
 */

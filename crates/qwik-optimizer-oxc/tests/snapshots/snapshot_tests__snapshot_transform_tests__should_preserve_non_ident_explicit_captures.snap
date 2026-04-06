@@ -1,60 +1,22 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 989
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { qrlDEV } from "@qwik.dev/core";
-//
-const q_task = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_task_task"), "task", {
-    file: "/user/qwik/src/test.tsx",
-    lo: 124,
-    hi: 251,
-    displayName: "test.tsx_task"
-});
-//
+import { _captures, inlinedQrl } from "@qwik.dev/core";
 const left = 1;
 const right = 2;
-export const task = q_task.w([
-    left,
-    true,
-    right
+export const task = inlinedQrl(() => {
+	const left = _captures[0];
+	const middle = _captures[1];
+	const right = _captures[2];
+	return middle ? left : right;
+}, "task", [
+	left,
+	true,
+	right
 ]);
 
-============================= test.tsx_task_task.tsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const task = ()=>{
-    const left = _captures[0];
-    const right = _captures[1];
-    const left = _captures[0];
-    const middle = _captures[1];
-    const right = _captures[2];
-    return middle ? left : right;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "task",
-  "entry": null,
-  "displayName": "test.tsx_task",
-  "hash": "task",
-  "canonicalFilename": "test.tsx_task_task",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "task",
-  "captures": true,
-  "captureNames": [
-    "left",
-    "right"
-  ],
-  "loc": [
-    123,
-    250
-  ]
-}
-*/
 == DIAGNOSTICS ==
 []

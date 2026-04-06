@@ -1,94 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 823
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useAsync$ } from "@qwik.dev/core";
 // Component-level self-referential component
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Foo_component_sig_useAsync_f0BGwWm4eeY.tsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Foo_component_sig_useAsync_f0BGwWm4eeY = async ({ cleanup })=>{
-    const sig = _captures[0];
-    const timer = setInterval(()=>{
-        sig.value++;
-    }, 1e3);
-    cleanup(()=>clearInterval(timer));
-    return 0;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_sig_useAsync_f0BGwWm4eeY",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component_sig_useAsync",
-  "hash": "f0BGwWm4eeY",
-  "canonicalFilename": "test.tsx_Foo_component_sig_useAsync_f0BGwWm4eeY",
-  "path": "",
-  "extension": "tsx",
-  "parent": "Foo_component_HTDRsvUbLiE",
-  "ctxKind": "function",
-  "ctxName": "useAsync$",
-  "captures": true,
-  "captureNames": [
-    "sig"
-  ],
-  "loc": [
-    172,
-    312
-  ],
-  "paramNames": [
-    "_rawProps"
-  ]
-}
-*/
-============================= test.tsx_Foo_component_other_useAsync_fsHooibmyyE.tsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Foo_component_other_useAsync_fsHooibmyyE = async ({ cleanup })=>{
-    const other = _captures[0];
-    const timer = setInterval(()=>{
-        other.value++;
-    }, 900);
-    cleanup(()=>clearInterval(timer));
-    return 0;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_other_useAsync_fsHooibmyyE",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component_other_useAsync",
-  "hash": "fsHooibmyyE",
-  "canonicalFilename": "test.tsx_Foo_component_other_useAsync_fsHooibmyyE",
-  "path": "",
-  "extension": "tsx",
-  "parent": "Foo_component_HTDRsvUbLiE",
-  "ctxKind": "function",
-  "ctxName": "useAsync$",
-  "captures": true,
-  "captureNames": [
-    "other"
-  ],
-  "loc": [
-    340,
-    481
-  ],
-  "paramNames": [
-    "_rawProps"
-  ]
-}
-*/
-============================= test.tsx_Foo_component_HTDRsvUbLiE.tsx (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { useAsync$ } from "@qwik.dev/core";
-export const Foo_component_HTDRsvUbLiE = (props) => {
+export const _u6BtPnK76q4 = (props) => {
 	const sig = useAsync$(async ({cleanup}) => {
 		const timer = setInterval(() => {
 			sig.value++;
@@ -112,11 +36,11 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_component_HTDRsvUbLiE",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Foo_component",
-  "hash": "HTDRsvUbLiE",
-  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -124,11 +48,85 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    136,
-    533
+    125,
+    534
   ],
   "paramNames": [
     "props"
+  ]
+}
+*/
+============================= test.tsx_component_1_vX1B9oMEgiI.tsx (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const component_1_vX1B9oMEgiI = async ({ cleanup }) => {
+	const other = _captures[0];
+	const timer = setInterval(() => {
+		other.value++;
+	}, 900);
+	cleanup(() => clearInterval(timer));
+	return 0;
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "component_1_vX1B9oMEgiI",
+  "entry": null,
+  "displayName": "test.tsx_component_1",
+  "hash": "vX1B9oMEgiI",
+  "canonicalFilename": "test.tsx_component_1_vX1B9oMEgiI",
+  "path": "",
+  "extension": "tsx",
+  "parent": "_u6BtPnK76q4",
+  "ctxKind": "function",
+  "ctxName": "useAsync$",
+  "captures": true,
+  "captureNames": [
+    "other"
+  ],
+  "loc": [
+    330,
+    482
+  ],
+  "paramNames": [
+    "_rawProps"
+  ]
+}
+*/
+============================= test.tsx_component_ZUK1E201Ins.tsx (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const component_ZUK1E201Ins = async ({ cleanup }) => {
+	const sig = _captures[0];
+	const timer = setInterval(() => {
+		sig.value++;
+	}, 1e3);
+	cleanup(() => clearInterval(timer));
+	return 0;
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "component_ZUK1E201Ins",
+  "entry": null,
+  "displayName": "test.tsx_component",
+  "hash": "ZUK1E201Ins",
+  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "path": "",
+  "extension": "tsx",
+  "parent": "_u6BtPnK76q4",
+  "ctxKind": "function",
+  "ctxName": "useAsync$",
+  "captures": true,
+  "captureNames": [
+    "sig"
+  ],
+  "loc": [
+    162,
+    313
+  ],
+  "paramNames": [
+    "_rawProps"
   ]
 }
 */

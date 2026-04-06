@@ -1,26 +1,24 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 837
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
-//
-const q_sym1_aXUrPXX5Lak = /*#__PURE__*/ qrl(()=>import("./test.tsx_sym1_aXUrPXX5Lak"), "sym1_aXUrPXX5Lak");
-//
-export const sym1 = q_sym1_aXUrPXX5Lak;
+import { $, component$ } from "@qwik.dev/core";
+export const sym1 = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_sym1_aXUrPXX5Lak.tsx (ENTRY POINT) ==
-export const sym1_aXUrPXX5Lak = (ctx)=>console.log("1");
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+export const _u6BtPnK76q4 = (ctx) => console.log("1");
 
 /*
 {
   "origin": "test.tsx",
-  "name": "sym1_aXUrPXX5Lak",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_sym1",
-  "hash": "aXUrPXX5Lak",
-  "canonicalFilename": "test.tsx_sym1_aXUrPXX5Lak",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -28,8 +26,8 @@ export const sym1_aXUrPXX5Lak = (ctx)=>console.log("1");
   "ctxName": "$",
   "captures": false,
   "loc": [
-    71,
-    96
+    69,
+    97
   ],
   "paramNames": [
     "ctx"

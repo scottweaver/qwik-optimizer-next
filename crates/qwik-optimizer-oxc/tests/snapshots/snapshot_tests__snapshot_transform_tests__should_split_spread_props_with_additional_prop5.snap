@@ -1,22 +1,20 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { _jsxSplit } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
-//
+import { _jsxSorted } from "@qwik.dev/core";
+import { _jsxSplit } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
 function Hola(props: any) {
-    return /*#__PURE__*/ _jsxSplit("div", { ...props }, null, null, 1, "u6_0");
+	return _jsxSplit("div", { ...props }, null, null, 1, "0");
 }
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export { Hola as _auto_Hola };
 
-============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
-export const test_component_LUXeXe0DQrg = () => {
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+export const _u6BtPnK76q4 = () => {
 		return <Hola>
 			<div>1</div>
 			<div>2</div>
@@ -25,11 +23,11 @@ export const test_component_LUXeXe0DQrg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -37,10 +35,18 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    146,
-    216
+    135,
+    217
   ]
 }
 */
 == DIAGNOSTICS ==
-[]
+[
+  {
+    "scope": "optimizer",
+    "category": "error",
+    "code": "C02",
+    "file": "test.tsx",
+    "message": "Reference to identifier 'Hola' can not be used inside a Qrl($) scope because it's a function"
+  }
+]

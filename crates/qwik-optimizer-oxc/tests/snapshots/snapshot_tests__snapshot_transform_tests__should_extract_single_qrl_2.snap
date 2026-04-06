@@ -1,20 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 953
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
-//
-/*#__PURE__*/ componentQrl(q_Parent_component_0TaiDayHrlo);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useStore, useSignal } from "@qwik.dev/core";
+const Parent = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Parent_component_0TaiDayHrlo.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
-export const Parent_component_0TaiDayHrlo = () => {
+export const _u6BtPnK76q4 = () => {
       const cart = useStore<Cart>([]);
       const results = useSignal(['foo', 'bar']);
 
@@ -45,11 +43,11 @@ export const Parent_component_0TaiDayHrlo = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Parent_component_0TaiDayHrlo",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Parent_component",
-  "hash": "0TaiDayHrlo",
-  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -57,70 +55,8 @@ export const Parent_component_0TaiDayHrlo = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    102,
-    761
-  ]
-}
-*/
-============================= test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Parent_component_div_button_q_e_click_5khsVRINUws = ()=>{
-    const cart = _captures[0];
-    const item = _captures[1];
-    cart.push(item);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Parent_component_div_button_q_e_click_5khsVRINUws",
-  "entry": null,
-  "displayName": "test.tsx_Parent_component_div_button_q_e_click",
-  "hash": "5khsVRINUws",
-  "canonicalFilename": "test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws",
-  "path": "",
-  "extension": "js",
-  "parent": "Parent_component_0TaiDayHrlo",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "cart",
-    "item"
-  ],
-  "loc": [
-    447,
-    503
-  ]
-}
-*/
-============================= test.tsx_Parent_component_div_button_q_e_click_1_rAeuW6OvuXM.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Parent_component_div_button_q_e_click_1_rAeuW6OvuXM = ()=>{
-    const results = _captures[0];
-    return results.value = ["item1", "item2"];
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Parent_component_div_button_q_e_click_1_rAeuW6OvuXM",
-  "entry": null,
-  "displayName": "test.tsx_Parent_component_div_button_q_e_click_1",
-  "hash": "rAeuW6OvuXM",
-  "canonicalFilename": "test.tsx_Parent_component_div_button_q_e_click_1_rAeuW6OvuXM",
-  "path": "",
-  "extension": "js",
-  "parent": "Parent_component_0TaiDayHrlo",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "results"
-  ],
-  "loc": [
-    267,
-    309
+    91,
+    762
   ]
 }
 */

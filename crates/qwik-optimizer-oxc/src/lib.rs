@@ -105,11 +105,11 @@ fn transform_code(
         format!("{}/{}", path_data.rel_dir.to_slash_lossy(), path_data.file_name)
     };
 
-    // Use output extension (not raw input extension) for QRL import paths.
-    // SWC maps .tsx -> .js when both transpile_ts and transpile_jsx are true,
-    // so the dynamic import("./foo.js") reflects the transpiled output, not the source.
-    let file_extension = source_path::SourcePath(input_path)
-        .output_extension(config.transpile_ts, config.transpile_jsx)
+    let file_extension = path_data
+        .file_name
+        .rsplit('.')
+        .next()
+        .unwrap_or("js")
         .to_string();
 
     // Stage 11 (pre-pass): mark pre-transform call/new expression spans for
@@ -135,14 +135,10 @@ fn transform_code(
         config,
         &collect,
         &path_data.file_name,
-        &path_data.file_stem,
-        &path_data.rel_dir.to_string_lossy(),
         &rel_path,
         &file_extension,
         source_in_arena,
     );
-    // Set dev_file_path for qrlDEV metadata: use dev_path override or src_dir + file_name
-    xfrm.dev_file_path = dev_path.map(|s| s.to_string());
     let _scoping = traverse_mut(&mut xfrm, &allocator, &mut program, scoping, ());
 
     // Stage 11: Post-transform DCE (mutually exclusive branches).
@@ -163,11 +159,15 @@ fn transform_code(
         apply_variable_migration(&mut program, &mut xfrm, &collect, &allocator);
     }
 
-    // Post-migration cleanup: remove unused QRL declarations and dead imports.
-    // Matches SWC's separate remove_unused_qrl_declarations call, which runs
-    // after variable migration (i.e., not in Lib mode where migration is skipped).
-    if !matches!(config.mode, EmitMode::Lib) && !xfrm.segments.is_empty() {
-        remove_unused_qrl_declarations(&mut program);
+    // Stage 12b: Inject _auto_ export specifiers for root-level bindings used by segments.
+    // Only for non-Lib modes (Lib mode doesn't use variable migration or auto-exports).
+    if !matches!(config.mode, EmitMode::Lib) && !xfrm.auto_exports.is_empty() {
+        for name in &xfrm.auto_exports {
+            let export_stmt = format!("export {{ {} as _auto_{} }};", name, name);
+            if let Some(stmt) = add_side_effect::parse_single_statement(&export_stmt, &allocator) {
+                program.body.push(stmt);
+            }
+        }
     }
 
     // Resolve deferred parent symbol names.
@@ -176,7 +176,7 @@ fn transform_code(
     let did_transform = !xfrm.segments.is_empty();
 
     // Emit: codegen the transformed AST back to JavaScript.
-    let mut emit_result = emit::emit_module(
+    let emit_result = emit::emit_module(
         &program,
         source_in_arena,
         &EmitOptions {
@@ -184,21 +184,6 @@ fn transform_code(
         },
         input_path,
     );
-
-    // Post-emit: strip unreferenced const declarations to bare expression statements.
-    // SWC's DCE simplifier converts `const X = wrapper(q_...)` to just
-    // `wrapper(q_...)` when X is not exported or referenced elsewhere in root.
-    if !matches!(config.mode, EmitMode::Lib) && did_transform {
-        emit_result.code = strip_unreferenced_wrapper_consts_text(&emit_result.code);
-    }
-
-    // Post-emit: inject dev mode metadata into qrlDEV/qrlDEV calls.
-    // OXC codegen's sourcemap builder panics on span violations if we embed
-    // large format strings into parsed AST nodes, so we inject the metadata
-    // as a text post-processing step after codegen.
-    if !xfrm.dev_metadata.is_empty() {
-        emit_result.code = inject_dev_metadata(&emit_result.code, &xfrm.dev_metadata);
-    }
 
     // Compute output path.
     let output_path = if did_transform && !config.preserve_filenames {
@@ -261,71 +246,10 @@ fn transform_code(
         if record.is_inline {
             continue;
         }
-
-        // Handle noop segments (stripped handlers): emit `export const NAME = null;`
+        // Skip noop segments (no expression to emit)
         let expr_code = match &record.expr {
             Some(e) => e.as_str(),
-            None => {
-                // Noop segment: emit a null export module
-                let noop_code = format!("export const {} = null;", record.name);
-                let (final_code, map) = code_move::emit_segment(
-                    &noop_code,
-                    &record.canonical_filename,
-                    config.source_maps,
-                );
-
-                let segment_path = if path_data.rel_dir == std::path::PathBuf::new() {
-                    format!("{}.{}", record.canonical_filename, record_extension)
-                } else {
-                    format!(
-                        "{}/{}.{}",
-                        path_data.rel_dir.to_slash_lossy(),
-                        record.canonical_filename,
-                        record_extension
-                    )
-                };
-
-                let is_entry = record.entry.is_none();
-                let order = u64::from_str_radix(
-                    &record.hash[..std::cmp::min(8, record.hash.len())],
-                    36,
-                ).unwrap_or(0);
-
-                let seg_path = path_data.rel_dir.to_slash_lossy().to_string();
-
-                let segment_analysis = SegmentAnalysis {
-                    origin: record.origin.clone(),
-                    name: record.name.clone(),
-                    entry: record.entry.clone(),
-                    display_name: record.display_name.clone(),
-                    hash: record.hash.clone(),
-                    canonical_filename: record.canonical_filename.clone(),
-                    path: seg_path,
-                    extension: record_extension.to_string(),
-                    parent: record.parent.clone(),
-                    ctx_kind: record.ctx_kind.clone(),
-                    ctx_name: record.ctx_name.clone(),
-                    captures: false,
-                    loc: {
-                        let s = record.first_arg_span.unwrap_or(record.span);
-                        // +2: one for OXC 0→1 based, one for leading \n in SWC test source
-                        (s.0 + 2, s.1 + 2)
-                    },
-                    param_names: record.param_names.clone(),
-                    capture_names: None,
-                };
-
-                segment_modules.push(TransformModule {
-                    path: segment_path,
-                    is_entry,
-                    code: final_code,
-                    map,
-                    segment: Some(segment_analysis),
-                    orig_path: None,
-                    order,
-                });
-                continue;
-            }
+            None => continue,
         };
 
         // HMR _useHmr() injection (D-41): inject into component$ segment bodies only.
@@ -417,12 +341,7 @@ fn transform_code(
             captures: !record.scoped_idents.is_empty(),
             // SWC uses 1-based byte offsets; OXC uses 0-based.
             // Add 1 to both to match SWC's golden span format.
-            // Use first_arg_span (first argument's span) when available, as SWC records
-            // the span of the arrow/function body, not the full call expression.
-            loc: {
-                let s = record.first_arg_span.unwrap_or(record.span);
-                (s.0 + 1, s.1 + 1)
-            },
+            loc: (record.span.0 + 1, record.span.1 + 1),
             param_names: record.param_names.clone(),
             capture_names: if record.scoped_idents.is_empty() {
                 None
@@ -581,363 +500,46 @@ fn apply_variable_migration<'a>(
         }
     }
 
-}
-
-// ---------------------------------------------------------------------------
-// remove_unused_qrl_declarations -- SWC-matching fixpoint cleanup
-// ---------------------------------------------------------------------------
-
-/// Remove unused `_qrl_`/`i_` variable declarations and dead imports from the
-/// root module in a fixpoint loop. Matches SWC's `remove_unused_qrl_declarations`
-/// (parse.rs lines 1482-1640).
-///
-/// This runs AFTER variable migration and import assembly. It iterates until
-/// stable, removing both unused `_qrl_`/`i_` var declarations AND unused imports
-/// (from ANY source, not just the core module). Transitive closure propagation
-/// ensures that if a `_qrl_` var references an import, and the `_qrl_` var is
-/// used, the import is kept.
-fn remove_unused_qrl_declarations(program: &mut oxc::ast::ast::Program<'_>) {
-    use oxc::ast::ast::*;
-    use oxc::ast_visit::Visit;
-    use std::collections::HashSet;
-
+    // Step 9: remove_unused_qrl_declarations -- iterative fixpoint.
     loop {
-        // 1. Collect all names DEFINED by _qrl_/i_ var declarations and ALL imports
-        let mut qrl_defined: HashSet<String> = HashSet::new();
-        let mut import_defined: HashSet<String> = HashSet::new();
-        for stmt in program.body.iter() {
-            match stmt {
-                Statement::VariableDeclaration(decl) => {
-                    for d in &decl.declarations {
-                        if let BindingPattern::BindingIdentifier(id) = &d.id {
-                            let name = id.name.as_str();
-                            if name.starts_with("_qrl_") || name.starts_with("i_") {
-                                qrl_defined.insert(name.to_string());
+        let referenced = {
+            use oxc::ast_visit::Visit;
+            let mut collector = dependency_analysis::IdentRefCollector::default();
+            for stmt in program.body.iter() {
+                collector.visit_statement(stmt);
+            }
+            collector.names
+        };
+
+        let before_len = program.body.len();
+        let mut to_remove: Vec<usize> = Vec::new();
+
+        for (i, stmt) in program.body.iter().enumerate() {
+            if let oxc::ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                if let Some(declarator) = decl.declarations.first() {
+                    if let oxc::ast::ast::BindingPattern::BindingIdentifier(id) = &declarator.id {
+                        let name = id.name.as_str();
+                        if name.starts_with("_qrl_") || name.starts_with("i_") {
+                            let ref_count = referenced.iter().filter(|r| r.as_str() == name).count();
+                            if ref_count == 0 {
+                                to_remove.push(i);
                             }
                         }
                     }
                 }
-                Statement::ImportDeclaration(import_decl) => {
-                    if let Some(specifiers) = &import_decl.specifiers {
-                        for spec in specifiers {
-                            let sym = match spec {
-                                ImportDeclarationSpecifier::ImportSpecifier(n) => n.local.name.as_str(),
-                                ImportDeclarationSpecifier::ImportDefaultSpecifier(d) => d.local.name.as_str(),
-                                ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => ns.local.name.as_str(),
-                            };
-                            import_defined.insert(sym.to_string());
-                        }
-                    }
-                }
-                _ => {}
             }
         }
-        if qrl_defined.is_empty() && import_defined.is_empty() {
+
+        if to_remove.is_empty() {
             break;
         }
-
-        // 2. Collect all identifiers referenced by NON-removable items
-        //    (items that are not _qrl_/i_ vars and not imports)
-        let mut used: HashSet<String> = HashSet::new();
-        for stmt in program.body.iter() {
-            let is_removable = match stmt {
-                Statement::VariableDeclaration(decl) => {
-                    decl.declarations.iter().all(|d| {
-                        if let BindingPattern::BindingIdentifier(id) = &d.id {
-                            let name = id.name.as_str();
-                            name.starts_with("_qrl_") || name.starts_with("i_")
-                        } else {
-                            false
-                        }
-                    })
-                }
-                Statement::ImportDeclaration(_) => true,
-                _ => false,
-            };
-            if !is_removable {
-                let mut collector = dependency_analysis::IdentRefCollector::default();
-                collector.visit_statement(stmt);
-                for name in collector.names {
-                    used.insert(name);
-                }
-            }
+        for idx in to_remove.into_iter().rev() {
+            program.body.remove(idx);
         }
-
-        // 3. Propagate: if a removable item is used, its references become used too
-        //    (transitive closure -- a used _qrl_ var may reference an import)
-        let mut changed = true;
-        while changed {
-            changed = false;
-            for stmt in program.body.iter() {
-                let defined_sym = match stmt {
-                    Statement::VariableDeclaration(decl) => {
-                        decl.declarations.first().and_then(|d| {
-                            if let BindingPattern::BindingIdentifier(id) = &d.id {
-                                let name = id.name.as_str();
-                                if name.starts_with("_qrl_") || name.starts_with("i_") {
-                                    Some(name.to_string())
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        })
-                    }
-                    Statement::ImportDeclaration(import_decl) => {
-                        import_decl.specifiers.as_ref().and_then(|specs| {
-                            specs.first().map(|spec| match spec {
-                                ImportDeclarationSpecifier::ImportSpecifier(n) => n.local.name.to_string(),
-                                ImportDeclarationSpecifier::ImportDefaultSpecifier(d) => d.local.name.to_string(),
-                                ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => ns.local.name.to_string(),
-                            })
-                        })
-                    }
-                    _ => None,
-                };
-                if let Some(sym) = defined_sym {
-                    if used.contains(&sym) {
-                        let mut collector = dependency_analysis::IdentRefCollector::default();
-                        collector.visit_statement(stmt);
-                        for r in collector.names {
-                            if used.insert(r) {
-                                changed = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 4. Remove unused _qrl_/i_ declarations and unused imports
-        let before_len = program.body.len();
-        program.body.retain(|stmt| {
-            match stmt {
-                Statement::VariableDeclaration(decl) => {
-                    let all_unused = decl.declarations.iter().all(|d| {
-                        if let BindingPattern::BindingIdentifier(id) = &d.id {
-                            let name = id.name.as_str();
-                            (name.starts_with("_qrl_") || name.starts_with("i_"))
-                                && !used.contains(name)
-                        } else {
-                            false
-                        }
-                    });
-                    !all_unused
-                }
-                Statement::ImportDeclaration(import_decl) => {
-                    // Keep side-effect imports (specifiers: None)
-                    let Some(specifiers) = &import_decl.specifiers else {
-                        return true;
-                    };
-                    if specifiers.is_empty() {
-                        // Empty specifier list = leftover shell after prior removal
-                        return false;
-                    }
-                    // Remove imports where ALL specifiers are unused
-                    let all_unused = specifiers.iter().all(|spec| {
-                        let sym = match spec {
-                            ImportDeclarationSpecifier::ImportSpecifier(n) => n.local.name.as_str(),
-                            ImportDeclarationSpecifier::ImportDefaultSpecifier(d) => d.local.name.as_str(),
-                            ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => ns.local.name.as_str(),
-                        };
-                        !used.contains(sym)
-                    });
-                    !all_unused
-                }
-                _ => true,
-            }
-        });
-
         if program.body.len() == before_len {
-            break; // No more items removed, stable
+            break;
         }
     }
-}
-
-// ---------------------------------------------------------------------------
-// inject_dev_metadata -- qrlDEV post-emit metadata injection
-// ---------------------------------------------------------------------------
-
-/// Inject dev mode metadata objects into qrlDEV calls after codegen.
-///
-/// Transforms: `qrlDEV(()=>import("./path"), "sym")` into
-/// `qrlDEV(()=>import("./path"), "sym", {\n    file: "...",\n    lo: N,\n    hi: N,\n    displayName: "..."\n})`
-///
-/// This is done as text post-processing because OXC's codegen sourcemap builder
-/// panics on span violations when large format strings are parsed into AST nodes.
-fn inject_dev_metadata(
-    code: &str,
-    metadata: &std::collections::HashMap<String, (String, u32, u32, String)>,
-) -> String {
-    let mut result = code.to_string();
-    for (sym, (file, lo, hi, display_name)) in metadata {
-        // Match: qrlDEV(()=>import("..."), "SYM")
-        let search = format!(r#"qrlDEV(()=>import("{}"), "{}")"#,
-            // We don't know the exact import path, so search by symbol name
-            "", sym);
-        // Actually, we can't match the import path. Let's use a more targeted approach:
-        // Search for `"SYM")` and replace the closing `)` with `, { ... })`
-        let search_pattern = format!(r#", "{}")"#, sym);
-        // OXC uses 0-based byte offsets; SWC uses 1-based. Add 1 for parity.
-        let replacement = format!(
-            r#", "{}", {{
-    file: "{}",
-    lo: {},
-    hi: {},
-    displayName: "{}"
-}})"#,
-            // +2: one for 0→1 based conversion, one for leading \n in SWC test source
-            sym, file, lo + 2, hi + 2, display_name
-        );
-        // Only replace in qrlDEV lines (not in other contexts)
-        let mut new_result = String::with_capacity(result.len() + 200);
-        for line in result.lines() {
-            if line.contains("qrlDEV") && line.contains(&search_pattern) {
-                new_result.push_str(&line.replace(&search_pattern, &replacement));
-            } else {
-                new_result.push_str(line);
-            }
-            new_result.push('\n');
-        }
-        // Trim trailing newline if original didn't have one
-        if !result.ends_with('\n') && new_result.ends_with('\n') {
-            new_result.pop();
-        }
-        result = new_result;
-    }
-    result
-}
-
-// ---------------------------------------------------------------------------
-// strip_unreferenced_wrapper_consts_text -- SWC DCE parity (text-level)
-// ---------------------------------------------------------------------------
-
-/// Text-level pass: convert unreferenced `const X = EXPR;` to bare `EXPR;`.
-///
-/// SWC's simplifier strips const declarations when the declared name is neither
-/// exported nor referenced elsewhere in the root module. This text-based approach
-/// operates on the codegen output because OXC's arena allocation makes in-place
-/// AST node type changes impractical.
-///
-/// Algorithm:
-/// 1. Parse lines to find `const NAME = EXPR;` patterns (not `const q_*`, not `export const`)
-/// 2. Collect all identifier references from other lines
-/// 3. For declarations where NAME appears nowhere else, strip to `EXPR;`
-fn strip_unreferenced_wrapper_consts_text(code: &str) -> String {
-    use std::collections::{HashMap, HashSet};
-
-    let mut current = code.to_string();
-
-    // Fixpoint loop: stripping one const may make others unreferenced.
-    // Limited to 5 iterations to prevent infinite loops.
-    for _ in 0..5 {
-        let lines: Vec<&str> = current.lines().collect();
-        if lines.is_empty() {
-            return current;
-        }
-
-        // 1. Find candidate const declarations.
-        // Only non-exported consts with call expression or PURE annotation RHS,
-        // OR simple identifier assignment (e.g., `const X = q_Y;`).
-        let mut candidates: HashMap<usize, String> = HashMap::new();
-        for (i, line) in lines.iter().enumerate() {
-            let trimmed = line.trim();
-            if trimmed.starts_with("export ") || !trimmed.starts_with("const ") {
-                continue;
-            }
-            let rest = &trimmed[6..]; // skip "const "
-            if let Some(eq_pos) = rest.find(" = ") {
-                let name = rest[..eq_pos].trim();
-                if name.starts_with('{') || name.starts_with('[') {
-                    continue;
-                }
-                // Never strip hoisted QRL const declarations (const q_*)
-                // These are QRL references used in the module body; stripping
-                // them creates dangling references (e.g., `component(q_foo)` with no matching const).
-                if name.starts_with("q_") {
-                    continue;
-                }
-                let rhs = &rest[eq_pos + 3..];
-                // Include: call expressions, PURE annotations, or simple q_ identifier assignments
-                let is_call = rhs.contains('(');
-                let is_pure = rhs.contains("__PURE__");
-                let rhs_ident = rhs.trim_end_matches(';').trim();
-                let is_simple_q_ref = rhs_ident.starts_with("q_")
-                    && rhs_ident.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
-                if is_call || is_pure || is_simple_q_ref {
-                    candidates.insert(i, name.to_string());
-                }
-            }
-        }
-
-        if candidates.is_empty() {
-            return current;
-        }
-
-        // 2. Collect all identifier occurrences from non-candidate lines.
-        let mut referenced: HashSet<String> = HashSet::new();
-        for (i, line) in lines.iter().enumerate() {
-            if candidates.contains_key(&i) {
-                continue;
-            }
-            let mut chars = line.chars().peekable();
-            while let Some(&ch) = chars.peek() {
-                if ch.is_ascii_alphabetic() || ch == '_' || ch == '$' {
-                    let mut word = String::new();
-                    while let Some(&c) = chars.peek() {
-                        if c.is_ascii_alphanumeric() || c == '_' || c == '$' {
-                            word.push(c);
-                            chars.next();
-                        } else {
-                            break;
-                        }
-                    }
-                    referenced.insert(word);
-                } else {
-                    chars.next();
-                }
-            }
-        }
-
-        // 3. Strip unreferenced candidates.
-        let mut any_stripped = false;
-        let mut result_lines: Vec<String> = Vec::with_capacity(lines.len());
-        for (i, line) in lines.iter().enumerate() {
-            if let Some(name) = candidates.get(&i) {
-                if !referenced.contains(name) {
-                    let trimmed = line.trim();
-                    let prefix = format!("const {} = ", name);
-                    if trimmed.starts_with(&prefix) {
-                        let expr = &trimmed[prefix.len()..];
-                        // If expr is just a simple identifier (e.g., `q_foo;`),
-                        // remove the entire line (dead assignment to dead value).
-                        let expr_trimmed = expr.trim_end_matches(';').trim();
-                        if expr_trimmed.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
-                            any_stripped = true;
-                            continue; // Remove line entirely
-                        }
-                        // Otherwise, keep just the expression (strip the const decl prefix)
-                        result_lines.push(expr.to_string());
-                        any_stripped = true;
-                        continue;
-                    }
-                }
-            }
-            result_lines.push(line.to_string());
-        }
-
-        if !any_stripped {
-            return current;
-        }
-
-        current = result_lines.join("\n");
-        if code.ends_with('\n') && !current.ends_with('\n') {
-            current.push('\n');
-        }
-    }
-
-    current
 }
 
 // ---------------------------------------------------------------------------
@@ -1265,9 +867,7 @@ export const App = component$(() => {
     }
 
     #[test]
-    fn test_entry_policy_smart_strategy_groups_component_with_context() {
-        // Smart strategy: component$ segments with a parent context (e.g., declared in a
-        // named variable) are grouped per-component, NOT given their own chunk.
+    fn test_entry_policy_smart_strategy_separates_pure_event_handlers() {
         let code = r#"import { component$, $ } from "@qwik.dev/core";
 export const App = component$(() => {
     return <div onClick$={() => console.log("click")}></div>;
@@ -1281,22 +881,17 @@ export const App = component$(() => {
             ..TransformModulesOptions::default()
         };
         let result = transform_modules(opts);
+        // Smart strategy: pure event handlers (no captures) get their own chunk
         let segment_modules: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
         assert!(
             !segment_modules.is_empty(),
             "Smart strategy should produce segments"
         );
-        // component$ in a named variable context should be grouped (is_entry=false)
-        let component_seg = segment_modules.iter().find(|m| {
-            m.segment.as_ref().map_or(false, |s| s.ctx_name == "component$")
-        });
+        // At least one segment should have is_entry=true (own chunk -- the click handler)
+        let has_own_chunk = segment_modules.iter().any(|m| m.is_entry);
         assert!(
-            component_seg.is_some(),
-            "Should produce a component$ segment"
-        );
-        assert!(
-            !component_seg.unwrap().is_entry,
-            "Smart strategy should group component$ with its parent context (is_entry=false)"
+            has_own_chunk,
+            "Smart strategy should give pure event handler its own chunk (is_entry=true)"
         );
     }
 

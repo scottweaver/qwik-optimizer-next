@@ -1,69 +1,32 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 883
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { _jsxSorted } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_ButtonArrow_button_q_e_click_rEE0GCaea7M = /*#__PURE__*/ qrl(()=>import("./test.tsx_ButtonArrow_button_q_e_click_rEE0GCaea7M"), "ButtonArrow_button_q_e_click_rEE0GCaea7M");
-const q_Button_button_q_e_click_6YaNiKLqRnQ = /*#__PURE__*/ qrl(()=>import("./test.tsx_Button_button_q_e_click_6YaNiKLqRnQ"), "Button_button_q_e_click_6YaNiKLqRnQ");
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE, { tagName: "my-foo" });
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 export function Button({ text, color }) {
-    return /*#__PURE__*/ _jsxSorted("button", {
-        onColor$: color,
-        "q-e:click": q_Button_button_q_e_click_6YaNiKLqRnQ.w([color, text])
-    }, null, text, 1, "u6_2");
+	return _jsxSorted("button", {
+		onColor$: color,
+		onClick$: () => console.log(text, color)
+	}, null, text, 1, "0");
 }
-export const ButtonArrow = (_rawProps)=>{
-    const text = _rawProps.text;
-    const color = _rawProps.color;
-    return /*#__PURE__*/ _jsxSorted("button", {
-        onColor$: color,
-        "q-e:click": q_ButtonArrow_button_q_e_click_rEE0GCaea7M.w([color, text])
-    }, null, text, 1, "u6_3");
+export const ButtonArrow = (_rawProps) => {
+	const text = _rawProps.text;
+	const color = _rawProps.color;
+	return _jsxSorted("button", {
+		onColor$: color,
+		onClick$: () => console.log(text, color)
+	}, null, text, 1, "1");
 };
 
-============================= test.tsx_Button_button_q_e_click_6YaNiKLqRnQ.tsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Button_button_q_e_click_6YaNiKLqRnQ = ()=>{
-    const color = _captures[0];
-    const text = _captures[1];
-    return console.log(text, color);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Button_button_q_e_click_6YaNiKLqRnQ",
-  "entry": null,
-  "displayName": "test.tsx_Button_button_q_e_click",
-  "hash": "6YaNiKLqRnQ",
-  "canonicalFilename": "test.tsx_Button_button_q_e_click_6YaNiKLqRnQ",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "color",
-    "text"
-  ],
-  "loc": [
-    296,
-    324
-  ]
-}
-*/
-============================= test.tsx_Foo_component_HTDRsvUbLiE.tsx (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { Button } from "./test";
 import { ButtonArrow } from "./test";
-export const Foo_component_HTDRsvUbLiE = (props) => {
+export const _u6BtPnK76q4 = (props) => {
 	return (
 		<div>
 			<Button {...props} />
@@ -74,11 +37,11 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_component_HTDRsvUbLiE",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Foo_component",
-  "hash": "HTDRsvUbLiE",
-  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -86,43 +49,11 @@ export const Foo_component_HTDRsvUbLiE = (props) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    80,
-    180
+    69,
+    206
   ],
   "paramNames": [
     "props"
-  ]
-}
-*/
-============================= test.tsx_ButtonArrow_button_q_e_click_rEE0GCaea7M.tsx (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const ButtonArrow_button_q_e_click_rEE0GCaea7M = ()=>{
-    const color = _captures[0];
-    const text = _captures[1];
-    return console.log(text, color);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "ButtonArrow_button_q_e_click_rEE0GCaea7M",
-  "entry": null,
-  "displayName": "test.tsx_ButtonArrow_button_q_e_click",
-  "hash": "rEE0GCaea7M",
-  "canonicalFilename": "test.tsx_ButtonArrow_button_q_e_click_rEE0GCaea7M",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "color",
-    "text"
-  ],
-  "loc": [
-    444,
-    472
   ]
 }
 */

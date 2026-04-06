@@ -1,73 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 830
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
-import { component } from '@qwik.dev/core';
-//
-const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
-const q_renderHeader2_component_Ay6ibkfFYsw = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw");
-//
-export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
-component(q_renderHeader2_component_Ay6ibkfFYsw);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component, onRender } from "@qwik.dev/core";
+export const renderHeader1 = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+const renderHeader2 = component(qrl(() => import("./test.tsx__2_sSArpd0iSRk"), "_2_sSArpd0iSRk"));
 
-============================= test.tsx_renderHeader1_div_div_onClick_4G8036HZRPA.tsx (ENTRY POINT) ==
-export const renderHeader1_div_div_onClick_4G8036HZRPA = (ctx)=>console.log(ctx);
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "renderHeader1_div_div_onClick_4G8036HZRPA",
-  "entry": null,
-  "displayName": "test.tsx_renderHeader1_div_div_onClick",
-  "hash": "4G8036HZRPA",
-  "canonicalFilename": "test.tsx_renderHeader1_div_div_onClick_4G8036HZRPA",
-  "path": "",
-  "extension": "tsx",
-  "parent": "renderHeader1_jMxQsjbyDss",
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    126,
-    151
-  ],
-  "paramNames": [
-    "ctx"
-  ]
-}
-*/
-============================= test.tsx_renderHeader2_component_Ay6ibkfFYsw.tsx (ENTRY POINT) ==
-export const renderHeader2_component_Ay6ibkfFYsw = ()=>{
-    console.log("mount");
-    return render;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "renderHeader2_component_Ay6ibkfFYsw",
-  "entry": null,
-  "displayName": "test.tsx_renderHeader2_component",
-  "hash": "Ay6ibkfFYsw",
-  "canonicalFilename": "test.tsx_renderHeader2_component_Ay6ibkfFYsw",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    198,
-    246
-  ]
-}
-*/
-============================= test.tsx_renderHeader1_jMxQsjbyDss.tsx (ENTRY POINT) ==
+============================= test.tsx__1_iZVV0eoW44k.tsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
-export const renderHeader1_jMxQsjbyDss = () => {
+export const _1_iZVV0eoW44k = () => {
 	return (
 		<div onClick={$((ctx) => console.log(ctx))}/>
 	);
@@ -75,11 +20,11 @@ export const renderHeader1_jMxQsjbyDss = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "renderHeader1_jMxQsjbyDss",
+  "name": "_1_iZVV0eoW44k",
   "entry": null,
-  "displayName": "test.tsx_renderHeader1",
-  "hash": "jMxQsjbyDss",
-  "canonicalFilename": "test.tsx_renderHeader1_jMxQsjbyDss",
+  "displayName": "test.tsx__1",
+  "hash": "iZVV0eoW44k",
+  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -87,8 +32,60 @@ export const renderHeader1_jMxQsjbyDss = () => {
   "ctxName": "$",
   "captures": false,
   "loc": [
-    90,
-    161
+    88,
+    162
+  ]
+}
+*/
+============================= test.tsx__2_sSArpd0iSRk.tsx (ENTRY POINT) ==
+export const _2_sSArpd0iSRk = () => {
+	console.log("mount");
+	return render;
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "_2_sSArpd0iSRk",
+  "entry": null,
+  "displayName": "test.tsx__2",
+  "hash": "sSArpd0iSRk",
+  "canonicalFilename": "test.tsx__2_sSArpd0iSRk",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    196,
+    247
+  ]
+}
+*/
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+export const _u6BtPnK76q4 = (ctx) => console.log(ctx);
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "_u6BtPnK76q4",
+  "entry": null,
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "path": "",
+  "extension": "tsx",
+  "parent": "_1_iZVV0eoW44k",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    124,
+    152
+  ],
+  "paramNames": [
+    "ctx"
   ]
 }
 */

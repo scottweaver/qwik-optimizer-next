@@ -1,19 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 1008
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
-//
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal } from "@qwik.dev/core";
+export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
-export const test_component_LUXeXe0DQrg = () => {
+export const _u6BtPnK76q4 = () => {
   const matrix = useSignal([['a', 'b'], ['c', 'd']]);
   return (
     <div>
@@ -35,11 +33,11 @@ export const test_component_LUXeXe0DQrg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -47,38 +45,8 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    84,
-    526
-  ]
-}
-*/
-============================= test.tsx_test_component_div_div_span_button_q_e_click_oBFNw2cK30o.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const test_component_div_div_span_button_q_e_click_oBFNw2cK30o = ()=>{
-    const cellKey = _captures[0];
-    return console.log(cellKey);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "test_component_div_div_span_button_q_e_click_oBFNw2cK30o",
-  "entry": null,
-  "displayName": "test.tsx_test_component_div_div_span_button_q_e_click",
-  "hash": "oBFNw2cK30o",
-  "canonicalFilename": "test.tsx_test_component_div_div_span_button_q_e_click_oBFNw2cK30o",
-  "path": "",
-  "extension": "js",
-  "parent": "test_component_LUXeXe0DQrg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "cellKey"
-  ],
-  "loc": [
-    389,
-    415
+    73,
+    527
   ]
 }
 */

@@ -1,84 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 1009
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
-//
-export const FieldInput = /*#__PURE__*/ componentQrl(q_FieldInput_component_V4XAtJSTRKg);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, useSignal } from "@qwik.dev/core";
+export const FieldInput = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_FieldInput_component_input_input_onInput_OKo0yRTX1PU.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const FieldInput_component_input_input_onInput_OKo0yRTX1PU = (ev, el)=>{
-    const input = _captures[0];
-    input.value = el.value;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "FieldInput_component_input_input_onInput_OKo0yRTX1PU",
-  "entry": null,
-  "displayName": "test.tsx_FieldInput_component_input_input_onInput",
-  "hash": "OKo0yRTX1PU",
-  "canonicalFilename": "test.tsx_FieldInput_component_input_input_onInput_OKo0yRTX1PU",
-  "path": "",
-  "extension": "js",
-  "parent": "FieldInput_component_V4XAtJSTRKg",
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": true,
-  "captureNames": [
-    "input"
-  ],
-  "loc": [
-    244,
-    290
-  ],
-  "paramNames": [
-    "el",
-    "ev"
-  ]
-}
-*/
-============================= test.tsx_FieldInput_component_input_q_e_focus_Sgf3MDWzexI.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const FieldInput_component_input_q_e_focus_Sgf3MDWzexI = ()=>{
-    const enabled = _captures[0];
-    enabled.value = true;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "FieldInput_component_input_q_e_focus_Sgf3MDWzexI",
-  "entry": null,
-  "displayName": "test.tsx_FieldInput_component_input_q_e_focus",
-  "hash": "Sgf3MDWzexI",
-  "canonicalFilename": "test.tsx_FieldInput_component_input_q_e_focus_Sgf3MDWzexI",
-  "path": "",
-  "extension": "js",
-  "parent": "FieldInput_component_V4XAtJSTRKg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onFocus$",
-  "captures": true,
-  "captureNames": [
-    "enabled"
-  ],
-  "loc": [
-    323,
-    359
-  ]
-}
-*/
-============================= test.tsx_FieldInput_component_V4XAtJSTRKg.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
-export const FieldInput_component_V4XAtJSTRKg = () => {
+export const _u6BtPnK76q4 = () => {
 	const enabled = useSignal(false);
 	const input = useSignal("");
 
@@ -101,11 +35,11 @@ export const FieldInput_component_V4XAtJSTRKg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "FieldInput_component_V4XAtJSTRKg",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_FieldInput_component",
-  "hash": "V4XAtJSTRKg",
-  "canonicalFilename": "test.tsx_FieldInput_component_V4XAtJSTRKg",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -113,8 +47,42 @@ export const FieldInput_component_V4XAtJSTRKg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    98,
-    371
+    87,
+    372
+  ]
+}
+*/
+============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const component_ZUK1E201Ins = (ev, el) => {
+	const input = _captures[0];
+	input.value = el.value;
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "component_ZUK1E201Ins",
+  "entry": null,
+  "displayName": "test.tsx_component",
+  "hash": "ZUK1E201Ins",
+  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "path": "",
+  "extension": "js",
+  "parent": "_u6BtPnK76q4",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": true,
+  "captureNames": [
+    "input"
+  ],
+  "loc": [
+    242,
+    291
+  ],
+  "paramNames": [
+    "el",
+    "ev"
   ]
 }
 */

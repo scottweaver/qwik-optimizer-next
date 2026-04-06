@@ -1,23 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 880
 expression: output
-snapshot_kind: text
 ---
 ============================= project/index.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrlDEV } from "@qwik.dev/core";
-//
-const q_App_component_KGLYFBhvJc0 = /*#__PURE__*/ qrlDEV(()=>import("./index.tsx_App_component_KGLYFBhvJc0.js"), "App_component_KGLYFBhvJc0", {
-    file: "/src/projectindex.tsx",
-    lo: 88,
-    hi: 283,
-    displayName: "index.tsx_App_component"
-});
-//
-export const App = /*#__PURE__*/ componentQrl(q_App_component_KGLYFBhvJc0);
+import { _jsxSorted } from "@qwik.dev/core";
+import { Fragment } from "@qwik.dev/core";
+import { component$, useStore } from "@qwik.dev/core";
+export const App = qrlDEV(() => import("./index.tsx__Q6Dyy5BeIxw.tsx"), "_Q6Dyy5BeIxw");
 
-============================= project/index.tsx_App_component_KGLYFBhvJc0.js (ENTRY POINT) ==
-export const App_component_KGLYFBhvJc0 = (props: Stuff) => {
+============================= project/index.tsx__Q6Dyy5BeIxw.js (ENTRY POINT) ==
+export const _Q6Dyy5BeIxw = (props: Stuff) => {
 	return (
 		<>
 			<Cmp key="stuff"></Cmp>
@@ -31,11 +25,11 @@ export const App_component_KGLYFBhvJc0 = (props: Stuff) => {
 /*
 {
   "origin": "project/index.tsx",
-  "name": "App_component_KGLYFBhvJc0",
+  "name": "_Q6Dyy5BeIxw",
   "entry": null,
-  "displayName": "index.tsx_App_component",
-  "hash": "KGLYFBhvJc0",
-  "canonicalFilename": "index.tsx_App_component_KGLYFBhvJc0",
+  "displayName": "index.tsx_",
+  "hash": "Q6Dyy5BeIxw",
+  "canonicalFilename": "index.tsx__Q6Dyy5BeIxw",
   "path": "project",
   "extension": "js",
   "parent": null,
@@ -43,8 +37,8 @@ export const App_component_KGLYFBhvJc0 = (props: Stuff) => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    87,
-    282
+    76,
+    283
   ],
   "paramNames": [
     "props"

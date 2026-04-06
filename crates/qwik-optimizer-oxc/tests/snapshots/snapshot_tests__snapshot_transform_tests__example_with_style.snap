@@ -1,19 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 928
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE, { tagName: "my-foo" });
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, useStyles$ } from "@qwik.dev/core";
+export const Foo = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Foo_component_HTDRsvUbLiE.tsx (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { useStyles$ } from "@qwik.dev/core";
-export const Foo_component_HTDRsvUbLiE = () => {
+export const _u6BtPnK76q4 = () => {
 	useStyles$('.class {}');
 	return (
 		<div class="class"/>
@@ -22,11 +20,11 @@ export const Foo_component_HTDRsvUbLiE = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_component_HTDRsvUbLiE",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Foo_component",
-  "hash": "HTDRsvUbLiE",
-  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -34,31 +32,8 @@ export const Foo_component_HTDRsvUbLiE = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    92,
-    164
-  ]
-}
-*/
-============================= test.tsx_Foo_component_useStyles_pV9TSCBIhw8.tsx (ENTRY POINT) ==
-export const Foo_component_useStyles_pV9TSCBIhw8 = ".class {}";
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_useStyles_pV9TSCBIhw8",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component_useStyles",
-  "hash": "pV9TSCBIhw8",
-  "canonicalFilename": "test.tsx_Foo_component_useStyles_pV9TSCBIhw8",
-  "path": "",
-  "extension": "tsx",
-  "parent": "Foo_component_HTDRsvUbLiE",
-  "ctxKind": "function",
-  "ctxName": "useStyles$",
-  "captures": false,
-  "loc": [
-    112,
-    123
+    81,
+    190
   ]
 }
 */

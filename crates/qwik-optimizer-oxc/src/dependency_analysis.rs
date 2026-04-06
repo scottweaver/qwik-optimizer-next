@@ -494,19 +494,6 @@ impl<'a> Visit<'a> for IdentRefCollector {
     fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
         self.names.push(ident.name.to_string());
     }
-
-    fn visit_export_named_declaration(&mut self, decl: &ExportNamedDeclaration<'a>) {
-        for spec in &decl.specifiers {
-            let name = match &spec.local {
-                ModuleExportName::IdentifierName(id) => id.name.as_str(),
-                ModuleExportName::IdentifierReference(id) => id.name.as_str(),
-                ModuleExportName::StringLiteral(s) => s.value.as_str(),
-            };
-            self.names.push(name.to_string());
-        }
-        // Continue visiting children (e.g., the declaration itself)
-        oxc::ast_visit::walk::walk_export_named_declaration(self, decl);
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -542,7 +529,6 @@ mod tests {
             parent: None,
             pending_parent_span: None,
             param_names: None,
-            first_arg_span: None,
         }
     }
 

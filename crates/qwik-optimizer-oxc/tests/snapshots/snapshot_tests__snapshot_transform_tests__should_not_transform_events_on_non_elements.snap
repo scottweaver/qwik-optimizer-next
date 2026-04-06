@@ -1,20 +1,20 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 985
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Greeter_component_n7HuG2hhU0Q = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_component_n7HuG2hhU0Q"), "Greeter_component_n7HuG2hhU0Q");
-//
-export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_n7HuG2hhU0Q);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, $ } from "@qwik.dev/core";
+import { CustomComponent } from "./custom-component";
+import { AnotherComponent } from "./another-component";
+export const Greeter = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Greeter_component_n7HuG2hhU0Q.tsx (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
 import { AnotherComponent } from "./another-component";
 import { CustomComponent } from "./custom-component";
-export const Greeter_component_n7HuG2hhU0Q = () => {
+export const _u6BtPnK76q4 = () => {
 	return (
 		<div>
 			<CustomComponent onClick$={() => {}}/>
@@ -27,11 +27,11 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Greeter_component_n7HuG2hhU0Q",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Greeter_component",
-  "hash": "n7HuG2hhU0Q",
-  "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -39,54 +39,8 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    194,
-    350
-  ]
-}
-*/
-============================= test.tsx_Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc.tsx (ENTRY POINT) ==
-export const Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc = ()=>{};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc",
-  "entry": null,
-  "displayName": "test.tsx_Greeter_component_div_AnotherComponent_q_e_click",
-  "hash": "SJ1piDbapDc",
-  "canonicalFilename": "test.tsx_Greeter_component_div_AnotherComponent_q_e_click_SJ1piDbapDc",
-  "path": "",
-  "extension": "tsx",
-  "parent": "Greeter_component_n7HuG2hhU0Q",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    318,
-    326
-  ]
-}
-*/
-============================= test.tsx_Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo.tsx (ENTRY POINT) ==
-export const Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo = ()=>{};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo",
-  "entry": null,
-  "displayName": "test.tsx_Greeter_component_div_CustomComponent_q_e_click",
-  "hash": "UHwM2jWlYYo",
-  "canonicalFilename": "test.tsx_Greeter_component_div_CustomComponent_q_e_click_UHwM2jWlYYo",
-  "path": "",
-  "extension": "tsx",
-  "parent": "Greeter_component_n7HuG2hhU0Q",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    250,
-    258
+    183,
+    351
   ]
 }
 */

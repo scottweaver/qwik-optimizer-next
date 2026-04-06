@@ -1,33 +1,30 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 1013
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
-import { globalActionQrl } from "@qwik.dev/router";
 import { qrl } from "@qwik.dev/core";
-//
-const q_SecretForm_component_1noi8FsTz7c = /*#__PURE__*/ qrl(()=>import("./test.tsx_SecretForm_component_1noi8FsTz7c"), "SecretForm_component_1noi8FsTz7c");
-const q_useSecretAction_globalAction_Cbn41AEUQ0Q = /*#__PURE__*/ qrl(()=>import("./test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q"), "useSecretAction_globalAction_Cbn41AEUQ0Q");
-//
-export const useSecretAction = globalActionQrl(q_useSecretAction_globalAction_Cbn41AEUQ0Q);
-export const SecretForm = /*#__PURE__*/ componentQrl(q_SecretForm_component_1noi8FsTz7c);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+import { globalAction$ } from "@qwik.dev/router";
+export const useSecretAction = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const SecretForm = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
 
-============================= test.tsx_SecretForm_component_1noi8FsTz7c.js (ENTRY POINT) ==
+============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { useSecretAction } from "./test";
-export const SecretForm_component_1noi8FsTz7c = () => {
+export const _1_iZVV0eoW44k = () => {
 			const action = useSecretAction();
 			return <div>{action.value}</div>
 		};
 /*
 {
   "origin": "test.tsx",
-  "name": "SecretForm_component_1noi8FsTz7c",
+  "name": "_1_iZVV0eoW44k",
   "entry": null,
-  "displayName": "test.tsx_SecretForm_component",
-  "hash": "1noi8FsTz7c",
-  "canonicalFilename": "test.tsx_SecretForm_component_1noi8FsTz7c",
+  "displayName": "test.tsx__1",
+  "hash": "iZVV0eoW44k",
+  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -35,22 +32,22 @@ export const SecretForm_component_1noi8FsTz7c = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    245,
-    329
+    234,
+    330
   ]
 }
 */
-============================= test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q.js (ENTRY POINT) ==
-export const useSecretAction_globalAction_Cbn41AEUQ0Q = async (payload)=>console.log(payload) || "hi";
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+export const _u6BtPnK76q4 = async (payload) => console.log(payload) || "hi";
 
 /*
 {
   "origin": "test.tsx",
-  "name": "useSecretAction_globalAction_Cbn41AEUQ0Q",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_useSecretAction_globalAction",
-  "hash": "Cbn41AEUQ0Q",
-  "canonicalFilename": "test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -58,8 +55,8 @@ export const useSecretAction_globalAction_Cbn41AEUQ0Q = async (payload)=>console
   "ctxName": "globalAction$",
   "captures": false,
   "loc": [
-    152,
-    199
+    134,
+    203
   ],
   "paramNames": [
     "payload"

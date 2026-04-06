@@ -1,57 +1,31 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { _noopQrlDEV } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
 import { qrlDEV } from "@qwik.dev/core";
-import { sideEffect } from './secret';
-//
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg", {
-    file: "/user/qwik/src/test.tsx",
-    lo: 503,
-    hi: 575,
-    displayName: "test.tsx_test_component"
-});
-//
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+import { server$ } from "@qwik.dev/router";
+import { clientSupabase } from "supabase";
+import { Client } from "openai";
+import { secret } from "./secret";
+import { sideEffect } from "./secret";
 (function() {
-    console.log("run");
+	console.log("run");
 })();
-(()=>{
-    console.log("run");
+(() => {
+	console.log("run");
 })();
 sideEffect();
-export const api = /*#__PURE__*/ _noopQrlDEV("api_server_JonPp043gH0");
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+export const api = qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export default qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export { dfd as _auto_dfd };
+export { supabase as _auto_supabase };
 
-============================= test.tsx_api_server_JonPp043gH0.js (ENTRY POINT) ==
-export const api_server_JonPp043gH0 = null;
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "api_server_JonPp043gH0",
-  "entry": null,
-  "displayName": "test.tsx_api_server",
-  "hash": "JonPp043gH0",
-  "canonicalFilename": "test.tsx_api_server_JonPp043gH0",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "server$",
-  "captures": false,
-  "loc": [
-    433,
-    473
-  ]
-}
-*/
-============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
 import { api } from "./test";
-export const test_component_LUXeXe0DQrg = () => {
+export const _1_iZVV0eoW44k = () => {
 	return (
 		<button onClick$={() => await api()}></button>
 	)
@@ -59,11 +33,11 @@ export const test_component_LUXeXe0DQrg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
+  "name": "_1_iZVV0eoW44k",
   "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "displayName": "test.tsx__1",
+  "hash": "iZVV0eoW44k",
+  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -71,32 +45,35 @@ export const test_component_LUXeXe0DQrg = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    502,
-    574
+    491,
+    575
   ]
 }
 */
-============================= test.tsx_test_component_button_q_e_click_qwSL5gM03T4.js (ENTRY POINT) ==
-import { api } from "./test";
-export const test_component_button_q_e_click_qwSL5gM03T4 = ()=>await api();
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+const dfd = new Client(secret);
+const supabase = clientSupabase();
+export const _u6BtPnK76q4 = () => {
+	supabase.from("ffg").do(dfd);
+};
 
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_button_q_e_click_qwSL5gM03T4",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_test_component_button_q_e_click",
-  "hash": "qwSL5gM03T4",
-  "canonicalFilename": "test.tsx_test_component_button_q_e_click_qwSL5gM03T4",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
-  "parent": "test_component_LUXeXe0DQrg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "server$",
   "captures": false,
   "loc": [
-    540,
-    557
+    424,
+    473
   ]
 }
 */

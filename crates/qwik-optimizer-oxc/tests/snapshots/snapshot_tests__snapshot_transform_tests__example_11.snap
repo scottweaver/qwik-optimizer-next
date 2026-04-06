@@ -1,52 +1,25 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 832
 expression: output
-snapshot_kind: text
 ---
 ============================= project/test.tsx ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_App_component_wGkRHWXaqjs = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
-const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
-//
-export const Header = /*#__PURE__*/ componentQrl(q_Header_component_UVBJuFYfvDo);
-export const App = /*#__PURE__*/ componentQrl(q_App_component_wGkRHWXaqjs);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+import { foo, bar as bbar } from "../state";
+import * as dep2 from "dep2";
+import dep3 from "dep3/something";
+export const Header = qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
+export const App = qrl(() => import("./test.tsx__1_Vv7m2UfJ8NQ"), "_1_Vv7m2UfJ8NQ");
 
-============================= project/test.tsx_Header_component_Header_onClick_KjD9TCNkNxY.tsx ==
-import { default as dep3 } from "dep3/something";
-export const Header_component_Header_onClick_KjD9TCNkNxY = (ev)=>dep3(ev);
-
-/*
-{
-  "origin": "project/test.tsx",
-  "name": "Header_component_Header_onClick_KjD9TCNkNxY",
-  "entry": "entry_segments",
-  "displayName": "test.tsx_Header_component_Header_onClick",
-  "hash": "KjD9TCNkNxY",
-  "canonicalFilename": "test.tsx_Header_component_Header_onClick_KjD9TCNkNxY",
-  "path": "project",
-  "extension": "tsx",
-  "parent": "Header_component_UVBJuFYfvDo",
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    230,
-    246
-  ],
-  "paramNames": [
-    "ev"
-  ]
-}
-*/
-============================= project/test.tsx_Header_component_UVBJuFYfvDo.tsx ==
+============================= project/test.tsx__cA4RUxLrFo0.tsx ==
 import { $ } from "@qwik.dev/core";
 import { Header } from "./test";
 import { bar as bbar } from "../state";
 import { * as dep2 } from "dep2";
 import { default as dep3 } from "dep3/something";
-export const Header_component_UVBJuFYfvDo = () => {
+export const _cA4RUxLrFo0 = () => {
 	return (
 		<Header onClick={$((ev) => dep3(ev))}>
 			{dep2.stuff()}{bbar()}
@@ -56,11 +29,11 @@ export const Header_component_UVBJuFYfvDo = () => {
 /*
 {
   "origin": "project/test.tsx",
-  "name": "Header_component_UVBJuFYfvDo",
+  "name": "_cA4RUxLrFo0",
   "entry": "entry_segments",
-  "displayName": "test.tsx_Header_component",
-  "hash": "UVBJuFYfvDo",
-  "canonicalFilename": "test.tsx_Header_component_UVBJuFYfvDo",
+  "displayName": "test.tsx_",
+  "hash": "cA4RUxLrFo0",
+  "canonicalFilename": "test.tsx__cA4RUxLrFo0",
   "path": "project",
   "extension": "tsx",
   "parent": null,
@@ -68,15 +41,42 @@ export const Header_component_UVBJuFYfvDo = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    191,
-    293
+    180,
+    294
   ]
 }
 */
-============================= project/test.tsx_App_component_wGkRHWXaqjs.tsx ==
+============================= project/test.tsx_component_fA7aHBrXs7g.tsx ==
+import { default as dep3 } from "dep3/something";
+export const component_fA7aHBrXs7g = (ev) => dep3(ev);
+
+/*
+{
+  "origin": "project/test.tsx",
+  "name": "component_fA7aHBrXs7g",
+  "entry": "entry_segments",
+  "displayName": "test.tsx_component",
+  "hash": "fA7aHBrXs7g",
+  "canonicalFilename": "test.tsx_component_fA7aHBrXs7g",
+  "path": "project",
+  "extension": "tsx",
+  "parent": "_cA4RUxLrFo0",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    228,
+    247
+  ],
+  "paramNames": [
+    "ev"
+  ]
+}
+*/
+============================= project/test.tsx__1_Vv7m2UfJ8NQ.tsx ==
 import { Header } from "./test";
 import { foo } from "../state";
-export const App_component_wGkRHWXaqjs = () => {
+export const _1_Vv7m2UfJ8NQ = () => {
 	return (
 		<Header>{foo()}</Header>
 	);
@@ -84,11 +84,11 @@ export const App_component_wGkRHWXaqjs = () => {
 /*
 {
   "origin": "project/test.tsx",
-  "name": "App_component_wGkRHWXaqjs",
+  "name": "_1_Vv7m2UfJ8NQ",
   "entry": "entry_segments",
-  "displayName": "test.tsx_App_component",
-  "hash": "wGkRHWXaqjs",
-  "canonicalFilename": "test.tsx_App_component_wGkRHWXaqjs",
+  "displayName": "test.tsx__1",
+  "hash": "Vv7m2UfJ8NQ",
+  "canonicalFilename": "test.tsx__1_Vv7m2UfJ8NQ",
   "path": "project",
   "extension": "tsx",
   "parent": null,
@@ -96,8 +96,8 @@ export const App_component_wGkRHWXaqjs = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    327,
-    377
+    316,
+    378
   ]
 }
 */

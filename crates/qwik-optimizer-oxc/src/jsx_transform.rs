@@ -20,46 +20,7 @@ use oxc::ast::AstBuilder;
 use oxc::ast::ast::*;
 use oxc::span::SPAN;
 
-use crate::inlined_fn::convert_inlined_fn;
 use crate::is_const::is_const_expression;
-use crate::transform::{IdentCollector, TypedId, compute_scoped_idents};
-
-// ---------------------------------------------------------------------------
-// DollarAttr -- $-suffixed JSX attribute requiring segment extraction
-// ---------------------------------------------------------------------------
-
-/// A `$`-suffixed JSX attribute whose value is a function expression,
-/// requiring segment extraction by QwikTransform.
-pub(crate) struct DollarAttr<'a> {
-    /// The original attribute key (e.g., "onClick$").
-    pub key: String,
-    /// The HTML attribute name from jsx_event_to_html_attribute, or None for non-event props.
-    pub html_attr: Option<String>,
-    /// Whether the parent element is a component (true) or HTML element (false).
-    pub is_component: bool,
-    /// The function/arrow expression value.
-    pub value_expr: Expression<'a>,
-    /// Span of the value expression.
-    pub value_span: oxc::span::Span,
-}
-
-// ---------------------------------------------------------------------------
-// Signal optimization context
-// ---------------------------------------------------------------------------
-
-/// Context needed for signal optimization (CONV-07) during JSX prop classification.
-///
-/// When provided to `transform_jsx_element`, dynamic prop values are checked
-/// via `convert_inlined_fn` to determine if they can be wrapped as `_fnSignal()`
-/// calls.
-pub(crate) struct SignalOptContext<'a, 'b> {
-    /// Flattened declaration stack (Var-type entries from all frames).
-    pub decl_stack_flat: &'b [TypedId],
-    /// Whether the transform is running in server mode.
-    pub is_server: bool,
-    /// The allocator for AST construction.
-    pub allocator: &'a Allocator,
-}
 
 // ---------------------------------------------------------------------------
 // JSX flags bitmask
@@ -79,34 +40,12 @@ const FLAG_STATIC_SUBTREE: u32 = 2;
 ///
 /// Returns the replacement call expression and a `JsxImportNeeds` indicating
 /// which runtime imports are required.
-/// Intermediate result from JSX element classification, before final call construction.
-/// This allows the caller to inject additional props (e.g., QRL replacements for dollar-attrs)
-/// before building the final `_jsxSorted`/`_jsxSplit` call expression.
-pub(crate) struct JsxElementParts<'a> {
-    pub has_spread: bool,
-    pub tag_expr: Expression<'a>,
-    pub var_props: Option<Expression<'a>>,
-    pub const_props: Option<Expression<'a>>,
-    pub children_opt: Option<Expression<'a>>,
-    pub final_key: Expression<'a>,
-    pub flags: u32,
-    pub needs: JsxImportNeeds,
-    pub dollar_attrs: Vec<DollarAttr<'a>>,
-    pub tag_name: String,
-    pub is_fn: bool,
-}
-
-/// Classify a JSX element's parts without building the final call expression.
-/// This returns the intermediate parts so that dollar-attr QRL replacement props
-/// can be injected before calling `build_jsx_call_from_parts`.
-pub(crate) fn classify_jsx_element<'a>(
+pub(crate) fn transform_jsx_element<'a>(
     el: JSXElement<'a>,
     jsx_key_counter: &mut u32,
-    key_prefix: &str,
     is_root: bool,
     allocator: &'a Allocator,
-    signal_ctx: Option<&SignalOptContext<'a, '_>>,
-) -> JsxElementParts<'a> {
+) -> (Expression<'a>, JsxImportNeeds) {
     let ast = AstBuilder::new(allocator);
     let mut needs = JsxImportNeeds::default();
 
@@ -116,13 +55,10 @@ pub(crate) fn classify_jsx_element<'a>(
     // 1. Classify element type (component vs intrinsic)
     let (is_fn, tag_expr) = classify_tag(&opening.name, &ast, allocator);
 
-    // Extract tag name for stack_ctxt re-push in exit_expression
-    let tag_name = extract_tag_name(&opening.name);
-
     // 2. Key generation
     let should_emit_key = is_fn || is_root;
     let key_expr = if should_emit_key {
-        let key = gen_jsx_key(jsx_key_counter, key_prefix);
+        let key = gen_jsx_key(jsx_key_counter);
         ast.expression_string_literal(SPAN, allocator.alloc_str(&key), None)
     } else {
         ast.expression_null_literal(SPAN)
@@ -130,186 +66,46 @@ pub(crate) fn classify_jsx_element<'a>(
 
     // 3. Process attributes
     let attrs = opening.attributes;
-    let (has_spread, var_props, const_props, extracted_key, children_from_props, signal_opt_result, dollar_attrs) =
-        classify_props(attrs, &ast, allocator, signal_ctx, is_fn);
+    let (has_spread, var_props, const_props, extracted_key, children_from_props) =
+        classify_props(attrs, &ast, allocator);
 
     // Use extracted key if present, otherwise use generated key
     let final_key = extracted_key.unwrap_or(key_expr);
 
-    // 4. Process children (with signal optimization)
-    let children_opt = build_children(children_vec, children_from_props, &ast, allocator, signal_ctx);
+    // 4. Process children
+    let children_opt = build_children(children_vec, children_from_props, &ast, allocator);
 
     // 5. Compute flags
     let flags: u32 = FLAG_DYNAMIC_CHILDREN;
 
-    // 6. Track callee needs from prop signal optimization
-    match &signal_opt_result {
-        SignalOptResult::FnSignal => { needs.needs_fn_signal = true; }
-        SignalOptResult::WrapProp => { needs.needs_wrap_prop = true; }
-        SignalOptResult::None => {}
-    }
-
-    if has_spread {
+    // 6. Choose callee
+    let callee_name = if has_spread {
         needs.needs_jsx_split = true;
-    } else {
-        needs.needs_jsx_sorted = true;
-    }
-
-    JsxElementParts {
-        has_spread,
-        tag_expr,
-        var_props,
-        const_props,
-        children_opt,
-        final_key,
-        flags,
-        needs,
-        dollar_attrs,
-        tag_name,
-        is_fn,
-    }
-}
-
-/// Build the final JSX call expression from classified parts, optionally injecting
-/// additional var props (e.g., QRL replacement props for dollar-attrs).
-pub(crate) fn build_jsx_call_from_parts<'a>(
-    parts: JsxElementParts<'a>,
-    extra_var_props: Vec<(String, Expression<'a>)>,
-    allocator: &'a Allocator,
-) -> (Expression<'a>, JsxImportNeeds) {
-    let ast = AstBuilder::new(allocator);
-
-    let callee_name = if parts.has_spread {
         "_jsxSplit"
     } else {
+        needs.needs_jsx_sorted = true;
         "_jsxSorted"
-    };
-
-    // If we have extra var props, inject them into the var_props object
-    let var_props = if extra_var_props.is_empty() {
-        parts.var_props
-    } else {
-        // We need to build or extend the var_props object expression
-        let mut var_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
-
-        // Extract existing entries from var_props if present
-        if let Some(var_expr) = parts.var_props {
-            if let Expression::ObjectExpression(obj) = var_expr {
-                for prop in obj.unbox().properties {
-                    var_entries.push(prop);
-                }
-            } else {
-                // Shouldn't happen, but just wrap as a property
-                var_entries.push(ObjectPropertyKind::SpreadProperty(
-                    ast.alloc_spread_element(SPAN, var_expr),
-                ));
-            }
-        }
-
-        // Add extra props
-        for (key, value) in extra_var_props {
-            let prop_key = build_prop_key(&key, &ast, allocator);
-            let prop = ObjectPropertyKind::ObjectProperty(ast.alloc_object_property(
-                SPAN,
-                PropertyKind::Init,
-                prop_key,
-                value,
-                false,
-                false,
-                false,
-            ));
-            var_entries.push(prop);
-        }
-
-        Some(ast.expression_object(SPAN, var_entries))
     };
 
     let call = build_jsx_call(
         callee_name,
-        parts.tag_expr,
+        tag_expr,
         var_props,
-        parts.const_props,
-        parts.children_opt,
-        parts.flags,
-        parts.final_key,
+        const_props,
+        children_opt,
+        flags,
+        final_key,
         &ast,
         allocator,
     );
 
-    (call, parts.needs)
-}
-
-/// Transform a JSXElement into a `_jsxSorted`/`_jsxSplit` call expression.
-/// Legacy API -- delegates to classify_jsx_element + build_jsx_call_from_parts.
-///
-/// Returns the replacement call expression and a `JsxImportNeeds` indicating
-/// which runtime imports are required.
-pub(crate) fn transform_jsx_element<'a>(
-    el: JSXElement<'a>,
-    jsx_key_counter: &mut u32,
-    key_prefix: &str,
-    is_root: bool,
-    allocator: &'a Allocator,
-    signal_ctx: Option<&SignalOptContext<'a, '_>>,
-) -> (Expression<'a>, JsxImportNeeds, Vec<DollarAttr<'a>>, String, bool) {
-    let parts = classify_jsx_element(el, jsx_key_counter, key_prefix, is_root, allocator, signal_ctx);
-    let dollar_attrs = parts.dollar_attrs;
-    let tag_name = parts.tag_name.clone();
-    let is_fn = parts.is_fn;
-
-    // If no dollar_attrs, build immediately. Otherwise, caller should use
-    // classify_jsx_element + build_jsx_call_from_parts directly.
-    let (call, needs) = build_jsx_call_from_parts(
-        JsxElementParts {
-            has_spread: parts.has_spread,
-            tag_expr: parts.tag_expr,
-            var_props: parts.var_props,
-            const_props: parts.const_props,
-            children_opt: parts.children_opt,
-            final_key: parts.final_key,
-            flags: parts.flags,
-            needs: parts.needs,
-            dollar_attrs: Vec::new(), // Don't pass dollar_attrs to builder
-            tag_name: tag_name.clone(),
-            is_fn,
-        },
-        Vec::new(),
-        allocator,
-    );
-
-    (call, needs, dollar_attrs, tag_name, is_fn)
-}
-
-/// Extract the tag name string from JSXElementName for stack_ctxt push.
-fn extract_tag_name(name: &JSXElementName<'_>) -> String {
-    match name {
-        JSXElementName::Identifier(id) => id.name.as_str().to_string(),
-        JSXElementName::IdentifierReference(id) => id.name.as_str().to_string(),
-        JSXElementName::MemberExpression(me) => {
-            // For Foo.Bar, return "Foo.Bar" (or just property for simpler names)
-            format_jsx_member_name(me)
-        }
-        JSXElementName::NamespacedName(nn) => {
-            format!("{}:{}", nn.namespace.name.as_str(), nn.name.name.as_str())
-        }
-        JSXElementName::ThisExpression(_) => "this".to_string(),
-    }
-}
-
-fn format_jsx_member_name(me: &JSXMemberExpression<'_>) -> String {
-    let object_name = match &me.object {
-        JSXMemberExpressionObject::IdentifierReference(id) => id.name.as_str().to_string(),
-        JSXMemberExpressionObject::MemberExpression(inner) => format_jsx_member_name(inner),
-        JSXMemberExpressionObject::ThisExpression(_) => "this".to_string(),
-    };
-    format!("{}.{}", object_name, me.property.name.as_str())
+    (call, needs)
 }
 
 /// Transform a JSXFragment into a `_jsxSorted(_Fragment, ...)` call expression.
 pub(crate) fn transform_jsx_fragment<'a>(
     frag: JSXFragment<'a>,
     jsx_key_counter: &mut u32,
-    key_prefix: &str,
     is_root: bool,
     allocator: &'a Allocator,
 ) -> (Expression<'a>, JsxImportNeeds) {
@@ -323,13 +119,13 @@ pub(crate) fn transform_jsx_fragment<'a>(
 
     let should_emit_key = is_root;
     let key_expr = if should_emit_key {
-        let key = gen_jsx_key(jsx_key_counter, key_prefix);
+        let key = gen_jsx_key(jsx_key_counter);
         ast.expression_string_literal(SPAN, allocator.alloc_str(&key), None)
     } else {
         ast.expression_null_literal(SPAN)
     };
 
-    let children_opt = build_children(frag.children, None, &ast, allocator, None);
+    let children_opt = build_children(frag.children, None, &ast, allocator);
     let flags: u32 = FLAG_DYNAMIC_CHILDREN;
 
     let call = build_jsx_call(
@@ -431,34 +227,23 @@ fn jsx_member_to_expr<'a>(
 
 /// Classify JSX props into var (dynamic) and const (static) buckets.
 ///
-/// When `signal_ctx` is provided, dynamic prop values are checked for signal
-/// optimization eligibility via `convert_inlined_fn`. If eligible, the prop
-/// value is replaced with a `_fnSignal()` call expression (parsed from the
-/// generated code string).
-///
-/// Returns `(has_spread, var_props_obj, const_props_obj, extracted_key, children_from_props, signal_used)`.
+/// Returns `(has_spread, var_props_obj, const_props_obj, extracted_key, children_from_props)`.
 fn classify_props<'a>(
     attrs: ArenaVec<'a, JSXAttributeItem<'a>>,
     ast: &AstBuilder<'a>,
     allocator: &'a Allocator,
-    signal_ctx: Option<&SignalOptContext<'a, '_>>,
-    is_fn: bool,
 ) -> (
     bool,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
     Option<Expression<'a>>,
-    SignalOptResult,
-    Vec<DollarAttr<'a>>,
 ) {
     let mut has_spread = false;
     let mut var_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
     let mut const_entries: ArenaVec<'a, ObjectPropertyKind<'a>> = ArenaVec::new_in(allocator);
     let mut extracted_key: Option<Expression<'a>> = None;
     let mut children_from_props: Option<Expression<'a>> = None;
-    let mut signal_opt_result = SignalOptResult::None;
-    let mut dollar_attrs: Vec<DollarAttr<'a>> = Vec::new();
 
     for attr in attrs {
         match attr {
@@ -505,48 +290,8 @@ fn classify_props<'a>(
                     ast.expression_boolean_literal(SPAN, true)
                 };
 
-                // Detect $-suffixed attribute with function/arrow value for segment extraction.
-                // Extract the function expression and record in dollar_attrs for processing
-                // by QwikTransform in exit_expression. The prop is NOT added to var/const
-                // entries -- QwikTransform will inject a QRL replacement prop.
-                if key_name.ends_with('$') {
-                    if matches!(&value_expr, Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)) {
-                        let value_span = match &value_expr {
-                            Expression::ArrowFunctionExpression(a) => a.span,
-                            Expression::FunctionExpression(f) => f.span,
-                            _ => unreachable!(),
-                        };
-                        let html_attr = crate::transform::jsx_event_to_html_attribute(&key_name);
-                        dollar_attrs.push(DollarAttr {
-                            key: key_name,
-                            html_attr,
-                            is_component: is_fn,
-                            value_expr,
-                            value_span,
-                        });
-                        continue; // Skip normal prop classification
-                    }
-                }
-
                 // Classify as const or var
                 let is_const = is_const_expression(&value_expr);
-
-                // Attempt signal optimization for dynamic prop values (CONV-07)
-                let value_expr = if !is_const {
-                    if let Some(ctx) = signal_ctx {
-                        try_signal_optimize(
-                            value_expr,
-                            ctx,
-                            &mut signal_opt_result,
-                            allocator,
-                        )
-                    } else {
-                        value_expr
-                    }
-                } else {
-                    value_expr
-                };
-
                 let prop_key = build_prop_key(&normalized_key, ast, allocator);
                 let prop = ObjectPropertyKind::ObjectProperty(ast.alloc_object_property(
                     SPAN,
@@ -579,142 +324,7 @@ fn classify_props<'a>(
         Some(ast.expression_object(SPAN, const_entries))
     };
 
-    (has_spread, var_props, const_props, extracted_key, children_from_props, signal_opt_result, dollar_attrs)
-}
-
-// ---------------------------------------------------------------------------
-// Signal optimization helper (CONV-07)
-// ---------------------------------------------------------------------------
-
-/// Result of signal optimization indicating which import is needed.
-pub(crate) enum SignalOptResult {
-    /// No optimization applied.
-    None,
-    /// `_fnSignal(...)` was used.
-    FnSignal,
-    /// `_wrapProp(...)` was used.
-    WrapProp,
-}
-/// Attempt to wrap a dynamic prop value expression as a `_fnSignal()` call.
-///
-/// Collects identifiers from the expression, computes scoped_idents against
-/// the declaration stack, and calls `convert_inlined_fn`. If eligible, parses
-/// the resulting code string into an AST expression and returns it.
-fn try_signal_optimize<'a>(
-    value_expr: Expression<'a>,
-    ctx: &SignalOptContext<'a, '_>,
-    signal_result: &mut SignalOptResult,
-    allocator: &'a Allocator,
-) -> Expression<'a> {
-    // Skip call expressions -- they can't be signal-optimized
-    if matches!(&value_expr, Expression::CallExpression(_)) {
-        return value_expr;
-
-    // Simple ident -> no wrapping needed
-    if matches!(&value_expr, Expression::Identifier(_)) {
-        return value_expr;
-    }
-
-    // Template literals that are not const cannot be wrapped
-    if matches!(&value_expr, Expression::TemplateLiteral(_)) {
-        return value_expr;
-    }
-
-    // _wrapProp fast path: simple obj.prop or obj["prop"] where obj is a scoped ident
-    if let Some(wrap_code) = try_wrap_prop(&value_expr, ctx) {
-        if let Some(parsed_expr) = parse_signal_expr(&wrap_code, allocator) {
-            *signal_result = SignalOptResult::WrapProp;
-            return parsed_expr;
-        }
-    }
-    }
-
-    // Collect identifiers referenced in this expression
-    let expr_idents = IdentCollector::collect(&value_expr);
-
-    // Compute scoped_idents (captures) for this expression
-    let scoped_names = compute_scoped_idents(&expr_idents, ctx.decl_stack_flat);
-
-    // Build (name, is_const) pairs for convert_inlined_fn
-    let scoped_pairs: Vec<(String, bool)> = scoped_names
-        .iter()
-        .map(|name| {
-            let is_const = ctx
-                .decl_stack_flat
-                .iter()
-                .any(|(n, t)| n == name && matches!(t, crate::transform::IdentType::Const));
-            (name.clone(), is_const)
-        })
-        .collect();
-
-    let (fn_signal_code, _arrow_code, _is_const) =
-        convert_inlined_fn(&value_expr, &scoped_pairs, false, ctx.is_server, allocator);
-
-    if let Some(code) = fn_signal_code {
-        // Parse the generated _fnSignal(...) code into an expression
-        if let Some(parsed_expr) = parse_signal_expr(&code, allocator) {
-            *signal_result = SignalOptResult::FnSignal;
-            return parsed_expr;
-        }
-    }
-
-    value_expr
-}
-
-/// Try the _wrapProp fast path for a simple member expression obj.prop.
-fn try_wrap_prop<'a>(
-    expr: &Expression<'a>,
-    ctx: &SignalOptContext<'a, '_>,
-) -> Option<String> {
-    let (obj_name, prop_name) = match expr {
-        Expression::StaticMemberExpression(member) => {
-            let obj = match &member.object {
-                Expression::ParenthesizedExpression(paren) => &paren.expression,
-                other => other,
-            };
-            if let Expression::Identifier(id) = obj {
-                (id.name.as_str(), member.property.name.as_str())
-            } else {
-                return None;
-            }
-        }
-        Expression::ComputedMemberExpression(member) => {
-            let obj = match &member.object {
-                Expression::ParenthesizedExpression(paren) => &paren.expression,
-                other => other,
-            };
-            if let Expression::Identifier(id) = obj {
-                if let Expression::StringLiteral(s) = &member.expression {
-                    (id.name.as_str(), s.value.as_str())
-                } else {
-                    return None;
-                }
-            } else {
-                return None;
-            }
-        }
-        _ => return None,
-    };
-    let is_scoped = ctx.decl_stack_flat.iter().any(|(name, typ)| {
-        name == obj_name && matches!(typ, crate::transform::IdentType::Const | crate::transform::IdentType::Let)
-    });
-    if !is_scoped {
-        return None;
-    }
-    if prop_name == "value" {
-        Some(format!("_wrapProp({})", obj_name))
-    } else {
-        Some(format!("_wrapProp({}, \"{}\")", obj_name, prop_name))
-    }
-}
-/// Parse a code string (e.g., `_fnSignal(p0 => p0.value, [obj])`) into an AST expression.
-fn parse_signal_expr<'a>(code: &str, allocator: &'a Allocator) -> Option<Expression<'a>> {
-    use oxc::parser::Parser;
-    use oxc::span::SourceType;
-
-    let src: &str = allocator.alloc_str(code);
-    let parser = Parser::new(allocator, src, SourceType::tsx());
-    parser.parse_expression().ok()
+    (has_spread, var_props, const_props, extracted_key, children_from_props)
 }
 
 // ---------------------------------------------------------------------------
@@ -727,7 +337,6 @@ fn build_children<'a>(
     children_from_props: Option<Expression<'a>>,
     ast: &AstBuilder<'a>,
     allocator: &'a Allocator,
-    signal_ctx: Option<&SignalOptContext<'a, '_>>,
 ) -> Option<Expression<'a>> {
     let mut child_exprs: Vec<Expression<'a>> = Vec::new();
 
@@ -745,17 +354,6 @@ fn build_children<'a>(
                     continue;
                 }
                 if let Some(expr) = jsx_expression_to_expr(container.unbox().expression) {
-                    // Apply signal optimization to child expressions
-                    let expr = if let Some(ctx) = signal_ctx {
-                        if !is_const_expression(&expr) {
-                            let mut _result = SignalOptResult::None;
-                            try_signal_optimize(expr, ctx, &mut _result, allocator)
-                        } else {
-                            expr
-                        }
-                    } else {
-                        expr
-                    };
                     child_exprs.push(expr);
                 }
             }
@@ -961,8 +559,8 @@ fn jsx_expression_to_expr<'a>(jsx_expr: JSXExpression<'a>) -> Option<Expression<
 }
 
 /// Generate a deterministic JSX key.
-fn gen_jsx_key(counter: &mut u32, prefix: &str) -> String {
-    let key = format!("{}_{counter}", prefix);
+fn gen_jsx_key(counter: &mut u32) -> String {
+    let key = format!("{counter}");
     *counter += 1;
     key
 }
@@ -1040,9 +638,9 @@ mod tests {
     #[test]
     fn jsx_transform_gen_key_increments() {
         let mut counter = 0u32;
-        assert_eq!(gen_jsx_key(&mut counter, "u6"), "u6_0");
-        assert_eq!(gen_jsx_key(&mut counter, "u6"), "u6_1");
-        assert_eq!(gen_jsx_key(&mut counter, "u6"), "u6_2");
+        assert_eq!(gen_jsx_key(&mut counter), "0");
+        assert_eq!(gen_jsx_key(&mut counter), "1");
+        assert_eq!(gen_jsx_key(&mut counter), "2");
     }
 
     #[test]
@@ -1132,7 +730,7 @@ mod tests {
         let frag = ast.jsx_fragment(SPAN, opening, children, closing);
 
         let mut counter = 0;
-        let (expr, needs) = transform_jsx_fragment(frag, &mut counter, "u6", false, &allocator);
+        let (expr, needs) = transform_jsx_fragment(frag, &mut counter, false, &allocator);
 
         assert!(needs.needs_jsx_sorted, "Fragment should need _jsxSorted");
         assert!(needs.needs_fragment, "Fragment should need _Fragment import");

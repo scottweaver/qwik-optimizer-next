@@ -1,20 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 1022
 expression: output
-snapshot_kind: text
 ---
 ============================= test.ts ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
-//
-export const Cmp = /*#__PURE__*/ componentQrl(q_Cmp_component_4ryKJTOKjWE);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, $, useSignal } from "@qwik.dev/core";
+export const Cmp = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Cmp_component_4ryKJTOKjWE.ts (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.ts (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
-export const Cmp_component_4ryKJTOKjWE = () => {
+export const _u6BtPnK76q4 = () => {
 			const toggleSig = useSignal(false);
 
 			const handleClick$ = $(() => {
@@ -30,11 +28,11 @@ export const Cmp_component_4ryKJTOKjWE = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Cmp_component_4ryKJTOKjWE",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Cmp_component",
-  "hash": "4ryKJTOKjWE",
-  "canonicalFilename": "test.tsx_Cmp_component_4ryKJTOKjWE",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "ts",
   "parent": null,
@@ -42,29 +40,29 @@ export const Cmp_component_4ryKJTOKjWE = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    94,
-    378
+    83,
+    379
   ]
 }
 */
-============================= test.tsx_Cmp_component_handleClick_WawHV3HwS1A.ts (ENTRY POINT) ==
+============================= test.tsx_component_ZUK1E201Ins.ts (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Cmp_component_handleClick_WawHV3HwS1A = ()=>{
-    const toggleSig = _captures[0];
-    toggleSig.value = !toggleSig.value;
+export const component_ZUK1E201Ins = () => {
+	const toggleSig = _captures[0];
+	toggleSig.value = !toggleSig.value;
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Cmp_component_handleClick_WawHV3HwS1A",
+  "name": "component_ZUK1E201Ins",
   "entry": null,
-  "displayName": "test.tsx_Cmp_component_handleClick",
-  "hash": "WawHV3HwS1A",
-  "canonicalFilename": "test.tsx_Cmp_component_handleClick_WawHV3HwS1A",
+  "displayName": "test.tsx_component",
+  "hash": "ZUK1E201Ins",
+  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
   "path": "",
   "extension": "ts",
-  "parent": "Cmp_component_4ryKJTOKjWE",
+  "parent": "_u6BtPnK76q4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,
@@ -72,8 +70,8 @@ export const Cmp_component_handleClick_WawHV3HwS1A = ()=>{
     "toggleSig"
   ],
   "loc": [
-    168,
-    220
+    166,
+    221
   ]
 }
 */

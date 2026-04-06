@@ -1,22 +1,19 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 892
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { _noopQrl } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
-//
-const q_Issue3795_component_wsE8beycatI = /*#__PURE__*/ _noopQrl("Issue3795_component_wsE8beycatI");
-//
-q_Issue3795_component_wsE8beycatI.s(()=>{
-    let base = "foo";
-    const firstAssignment = base;
-    base += "bar";
-    const secondAssignment = base;
-    return <div id="issue-3795-result">{firstAssignment} {secondAssignment}</div>;
-});
-export const Issue3795 = /*#__PURE__*/ componentQrl(q_Issue3795_component_wsE8beycatI);
+import { inlinedQrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+export const Issue3795 = componentQrl(() => {
+	let base = "foo";
+	const firstAssignment = base;
+	base += "bar";
+	const secondAssignment = base;
+	return _jsxSorted("div", null, { id: "issue-3795-result" }, [firstAssignment, secondAssignment], 1, null);
+}, "_u6BtPnK76q4");
 
 == DIAGNOSTICS ==
 []

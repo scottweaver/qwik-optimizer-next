@@ -1,20 +1,19 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 975
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
-//
-export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal } from "@qwik.dev/core";
+import { TestComponent } from "./testComponent";
+export const Child = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Child_component_9GyF01GDKqw.js (ENTRY POINT) ==
+============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
 import { TestComponent } from "./testComponent";
 import { useSignal } from "@qwik.dev/core";
-export const Child_component_9GyF01GDKqw = () => {
+export const _u6BtPnK76q4 = () => {
   const propCounterWithNested = useSignal(() => {
   return {
       data: [
@@ -40,11 +39,11 @@ export const Child_component_9GyF01GDKqw = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Child_component_9GyF01GDKqw",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Child_component",
-  "hash": "9GyF01GDKqw",
-  "canonicalFilename": "test.tsx_Child_component_9GyF01GDKqw",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -52,8 +51,8 @@ export const Child_component_9GyF01GDKqw = () => {
   "ctxName": "component$",
   "captures": false,
   "loc": [
-    139,
-    702
+    128,
+    703
   ]
 }
 */

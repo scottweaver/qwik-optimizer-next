@@ -1,131 +1,23 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 894
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
-import { qrl } from "@qwik.dev/core";
-import { componentQrl } from '@qwik.dev/core';
-import { componentQrl, jsx } from '@qwik.dev/core';
-//
-const q_App_component_Fh88JClhbC0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_Fh88JClhbC0_App_component_Fh88JClhbC0"), "App_component_Fh88JClhbC0");
-//
-export const App = /*#__PURE__*/ componentQrl(q_App_component_Fh88JClhbC0);
+import { componentQrl, inlinedQrl, useStore, jsxs, jsx, useLexicalScope } from "@qwik.dev/core";
+export const App = /* @__PURE__ */ componentQrl(inlinedQrl(() => {
+	useStyles$(inlinedQrl(STYLES, "STYLES_odz7dfdfdM"));
+	useStyles$(inlinedQrl(STYLES, "STYLES_odzdfdfdM"));
+	const store = useStore({ count: 0 });
+	return /* @__PURE__ */ jsxs("div", { children: [/* @__PURE__ */ jsxs("p", { children: ["Count: ", store.count] }), /* @__PURE__ */ jsx("p", { children: /* @__PURE__ */ jsx("button", {
+		onClick$: inlinedQrl(() => {
+			const [store] = useLexicalScope();
+			return store.count++;
+		}, "App_component_div_p_button_onClick_odz7eidI4GM", [store]),
+		children: "Click"
+	}) })] });
+}, "App_component_Fh88JClhbC0"));
 export const STYLES = ".red { color: red; }";
 
-============================= test.tsx_STYLES_odz7dfdfdM_STYLES_odz7dfdfdM.tsx ==
-export const STYLES_odz7dfdfdM = STYLES;
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "STYLES_odz7dfdfdM",
-  "entry": "entry_segments",
-  "displayName": "test.tsx_STYLES_odz7dfdfdM",
-  "hash": "STYLES_odz7dfdfdM",
-  "canonicalFilename": "test.tsx_STYLES_odz7dfdfdM_STYLES_odz7dfdfdM",
-  "path": "",
-  "extension": "tsx",
-  "parent": "App_component_Fh88JClhbC0",
-  "ctxKind": "function",
-  "ctxName": "useStyles$",
-  "captures": false,
-  "loc": [
-    185,
-    191
-  ]
-}
-*/
-============================= test.tsx_STYLES_odzdfdfdM_STYLES_odzdfdfdM.tsx ==
-export const STYLES_odzdfdfdM = STYLES;
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "STYLES_odzdfdfdM",
-  "entry": "entry_segments",
-  "displayName": "test.tsx_STYLES_odzdfdfdM",
-  "hash": "STYLES_odzdfdfdM",
-  "canonicalFilename": "test.tsx_STYLES_odzdfdfdM_STYLES_odzdfdfdM",
-  "path": "",
-  "extension": "tsx",
-  "parent": "App_component_Fh88JClhbC0",
-  "ctxKind": "function",
-  "ctxName": "useStyles$",
-  "captures": false,
-  "loc": [
-    239,
-    245
-  ]
-}
-*/
-============================= test.tsx_App_component_div_p_button_onClick_odz7eidI4GM_App_component_div_p_button_onClick_odz7eidI4GM.tsx ==
-import { _captures } from "@qwik.dev/core";
-export const App_component_div_p_button_onClick_odz7eidI4GM = ()=>{
-    const store = _captures[0];
-    const [store] = useLexicalScope();
-    return store.count++;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_component_div_p_button_onClick_odz7eidI4GM",
-  "entry": "entry_segments",
-  "displayName": "test.tsx_App_component_div_p_button_onClick_odz7eidI4GM",
-  "hash": "App_component_div_p_button_onClick_odz7eidI4GM",
-  "canonicalFilename": "test.tsx_App_component_div_p_button_onClick_odz7eidI4GM_App_component_div_p_button_onClick_odz7eidI4GM",
-  "path": "",
-  "extension": "tsx",
-  "parent": "App_component_Fh88JClhbC0",
-  "ctxKind": "function",
-  "ctxName": "jsx",
-  "captures": true,
-  "captureNames": [
-    "store"
-  ],
-  "loc": [
-    551,
-    632
-  ]
-}
-*/
-============================= test.tsx_App_component_Fh88JClhbC0_App_component_Fh88JClhbC0.tsx ==
-var App_component_div_p_button_onClick_odz7eidI4GM = inlinedQrl(()=>{
-    const [store] = useLexicalScope();
-    return store.count++;
-}, "App_component_div_p_button_onClick_odz7eidI4GM", [store]);
-var STYLES_odz7dfdfdM = inlinedQrl(STYLES, "STYLES_odz7dfdfdM");
-var STYLES_odzdfdfdM = inlinedQrl(STYLES, "STYLES_odzdfdfdM");
-export const App_component_Fh88JClhbC0 = ()=>{
-    useStyles$(STYLES_odz7dfdfdM);
-    useStyles$(STYLES_odzdfdfdM);
-    const store = useStore({ count: 0 });
-    return /*#__PURE__*/ jsxs("div", { children: [/*#__PURE__*/ jsxs("p", { children: ["Count: ", store.count] }), /*#__PURE__*/ jsx("p", { children: /*#__PURE__*/ jsx("button", {
-        onClick$: App_component_div_p_button_onClick_odz7eidI4GM,
-        children: "Click"
-    }) })] });
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_component_Fh88JClhbC0",
-  "entry": "entry_segments",
-  "displayName": "test.tsx_App_component_Fh88JClhbC0",
-  "hash": "App_component_Fh88JClhbC0",
-  "canonicalFilename": "test.tsx_App_component_Fh88JClhbC0_App_component_Fh88JClhbC0",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    156,
-    753
-  ]
-}
-*/
 == DIAGNOSTICS ==
 []

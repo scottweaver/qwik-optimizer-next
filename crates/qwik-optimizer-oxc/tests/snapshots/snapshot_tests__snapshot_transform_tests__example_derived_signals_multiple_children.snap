@@ -1,20 +1,19 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 855
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
-import { useStore, mutable } from '@qwik.dev/core';
-import { dep } from './file';
-//
-const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
-//
-q_App_component_ckEPmXZlub0.s(()=>{
-    const signal = useSignal(0);
-    const store = useStore({});
-    return <>
+import { _jsxSorted } from "@qwik.dev/core";
+import { Fragment } from "@qwik.dev/core";
+import { component$, useStore, mutable } from "@qwik.dev/core";
+import { dep } from "./file";
+const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
+q__u6BtPnK76q4.s(() => {
+	const signal = useSignal(0);
+	const store = useStore({});
+	return <>
 			<div>First text</div>
 			<div>First {`text`}</div>
 			<div>First {1}</div>
@@ -38,7 +37,7 @@ q_App_component_ckEPmXZlub0.s(()=>{
 			<div>First {signal.value + dep}</div>
 		</>;
 });
-export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+export const App = componentQrl(q__u6BtPnK76q4);
 
 == DIAGNOSTICS ==
 []

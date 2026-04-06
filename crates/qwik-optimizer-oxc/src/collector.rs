@@ -12,7 +12,7 @@
 use indexmap::IndexMap;
 use oxc::ast::ast::*;
 use oxc::span::Span;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,6 +65,9 @@ pub(crate) struct GlobalCollect {
     pub root: IndexMap<String, Span>,
     /// Reverse lookup: (specifier, source) -> local name.
     rev_imports: HashMap<(String, String), String>,
+    /// Set of local binding names that have any export (direct or aliased).
+    /// Used by ensure_export to avoid duplicate auto-exports.
+    pub export_locals: HashSet<String>,
 }
 
 impl GlobalCollect {
@@ -75,6 +78,7 @@ impl GlobalCollect {
             exports: IndexMap::with_capacity(16),
             root: IndexMap::with_capacity(16),
             rev_imports: HashMap::with_capacity(16),
+            export_locals: HashSet::new(),
         }
     }
 
@@ -253,6 +257,9 @@ pub(crate) fn global_collect(program: &Program<'_>) -> GlobalCollect {
                         }
                         ModuleExportName::StringLiteral(s) => s.value.as_str().to_string(),
                     };
+                    // Track the local name so ensure_export can detect already-exported locals
+                    let local_name = spec.local.name().as_str().to_string();
+                    collect.export_locals.insert(local_name);
                     collect
                         .exports
                         .insert(exported_name, ExportInfo::default());
@@ -260,7 +267,15 @@ pub(crate) fn global_collect(program: &Program<'_>) -> GlobalCollect {
 
                 // Inline declaration: `export const x = 1;` or `export function f() {}`
                 if let Some(decl) = &export_decl.declaration {
+                    // Track local names before adding to exports
+                    let before_keys: Vec<String> = collect.exports.keys().cloned().collect();
                     collect_decl_names(decl, &mut collect.exports, Some(&mut collect.root));
+                    // Any new keys added are also local names (direct export)
+                    for key in collect.exports.keys() {
+                        if !before_keys.contains(key) {
+                            collect.export_locals.insert(key.clone());
+                        }
+                    }
                 }
             }
 
@@ -275,16 +290,16 @@ pub(crate) fn global_collect(program: &Program<'_>) -> GlobalCollect {
                 match &export_default.declaration {
                     ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
                         if let Some(id) = &f.id {
-                            collect
-                                .root
-                                .insert(id.name.as_str().to_string(), id.span);
+                            let name = id.name.as_str().to_string();
+                            collect.export_locals.insert(name.clone());
+                            collect.root.insert(name, id.span);
                         }
                     }
                     ExportDefaultDeclarationKind::ClassDeclaration(c) => {
                         if let Some(id) = &c.id {
-                            collect
-                                .root
-                                .insert(id.name.as_str().to_string(), id.span);
+                            let name = id.name.as_str().to_string();
+                            collect.export_locals.insert(name.clone());
+                            collect.root.insert(name, id.span);
                         }
                     }
                     _ => {}

@@ -1,35 +1,34 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 840
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
-//
-const q_Header_WjUaUQN7Oxg = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_WjUaUQN7Oxg"), "Header_WjUaUQN7Oxg");
-//
+import { $, component$ } from "@qwik.dev/core";
+const Header = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
 
-============================= test.tsx_Header_WjUaUQN7Oxg.tsx (ENTRY POINT) ==
-export const Header_WjUaUQN7Oxg = (decl1, { decl2 }, [decl3])=>{
-    const { decl4, key: decl5 } = this;
-    let [decl6, ...decl7] = stuff;
-    const decl8 = 1, decl9;
-    function decl10(decl11, { decl12 }, [decl13]) {}
-    class decl14 {
-        method(decl15, { decl16 }, [decl17]) {}
-    }
-    try {} catch (decl18) {}
-    try {} catch ({ decl19 }) {}
+============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+export const _u6BtPnK76q4 = (decl1, { decl2 }, [decl3]) => {
+	const { decl4, key: decl5 } = this;
+	let [decl6, ...decl7] = stuff;
+	const decl8 = 1, decl9;
+	function decl10(decl11, { decl12 }, [decl13]) {}
+	class decl14 {
+		method(decl15, { decl16 }, [decl17]) {}
+	}
+	try {} catch (decl18) {}
+	try {} catch ({ decl19 }) {}
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Header_WjUaUQN7Oxg",
+  "name": "_u6BtPnK76q4",
   "entry": null,
-  "displayName": "test.tsx_Header",
-  "hash": "WjUaUQN7Oxg",
-  "canonicalFilename": "test.tsx_Header_WjUaUQN7Oxg",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -37,8 +36,8 @@ export const Header_WjUaUQN7Oxg = (decl1, { decl2 }, [decl3])=>{
   "ctxName": "$",
   "captures": false,
   "loc": [
-    66,
-    343
+    64,
+    344
   ],
   "paramNames": [
     "decl1",

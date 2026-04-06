@@ -44,8 +44,6 @@ pub(crate) fn emit_segment(
     if source_maps {
         let codegen_options = CodegenOptions {
             source_map_path: Some(PathBuf::from(filename)),
-            indent_char: oxc::codegen::IndentChar::Space,
-            indent_width: 4,
             ..Default::default()
         };
         let result = oxc::codegen::Codegen::new()
@@ -53,23 +51,12 @@ pub(crate) fn emit_segment(
             .with_source_text(source)
             .build(&program);
         let map = result.map.map(|sm| sm.to_json_string());
-        // Normalize PURE annotations: OXC emits `/* @__PURE__ */`, SWC uses `/*#__PURE__*/`
-        let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
-        let code = crate::emit::normalize_arrow_spacing_pub(&code);
-        (code, map)
+        (result.code, map)
     } else {
-        let codegen_options = CodegenOptions {
-            indent_char: oxc::codegen::IndentChar::Space,
-            indent_width: 4,
-            ..Default::default()
-        };
         let result = oxc::codegen::Codegen::new()
-            .with_options(codegen_options)
             .with_source_text(source)
             .build(&program);
-        let code = result.code.replace("/* @__PURE__ */", "/*#__PURE__*/");
-        let code = crate::emit::normalize_arrow_spacing_pub(&code);
-        (code, None)
+        (result.code, None)
     }
 }
 
@@ -660,9 +647,6 @@ pub(crate) fn collect_needed_extra_top_items(
             name: item.name.clone(),
             rhs_code: item.rhs_code.clone(),
             symbol_name: item.symbol_name.clone(),
-            is_root_level: item.is_root_level,
-            span_start: item.span_start,
-            parent_symbol: item.parent_symbol.clone(),
         })
         .collect()
 }

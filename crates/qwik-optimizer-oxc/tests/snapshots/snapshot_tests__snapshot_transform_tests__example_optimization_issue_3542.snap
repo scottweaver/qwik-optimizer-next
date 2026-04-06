@@ -1,30 +1,31 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 890
 expression: output
-snapshot_kind: text
 ---
 ============================= test.jsx ==
-import { _noopQrl } from "@qwik.dev/core";
-import { componentQrl } from "@qwik.dev/core";
-//
-const q_AtomStatus_component_hdwpoUtydSA = /*#__PURE__*/ _noopQrl("AtomStatus_component_hdwpoUtydSA");
-//
-q_AtomStatus_component_span_q_e_click_0yqKAycyBF0.s((ev)=>atomStatusClick(ctx, ev, [atom]));
-q_AtomStatus_component_hdwpoUtydSA.s(({ ctx, atom })=>{
-    let status = atom.status;
-    if (!atom.real) {
-        status = "WILL-VANISH";
-    } else if (JSON.stringify(atom.atom) == JSON.stringify(atom.real)) {
-        status = "WTFED";
-    }
-    return <span title={atom.ID} onClick$={(ev)=>atomStatusClick(ctx, ev, [atom])} class={[
-        "atom",
-        status,
-        ctx.store[atom.ID] ? "selected" : null
-    ]}>
-		</span>;
-});
-export const AtomStatus = /*#__PURE__*/ componentQrl(q_AtomStatus_component_hdwpoUtydSA);
+import { inlinedQrl } from "@qwik.dev/core";
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+export const AtomStatus = componentQrl((_rawProps) => {
+	const ctx = _rawProps.ctx;
+	const atom = _rawProps.atom;
+	let status = atom.status;
+	if (!atom.real) {
+		status = "WILL-VANISH";
+	} else if (JSON.stringify(atom.atom) == JSON.stringify(atom.real)) {
+		status = "WTFED";
+	}
+	return _jsxSorted("span", {
+		title: atom.ID,
+		onClick$: (ev) => atomStatusClick(ctx, ev, [atom]),
+		class: [
+			"atom",
+			status,
+			ctx.store[atom.ID] ? "selected" : null
+		]
+	}, null, null, 1, null);
+}, "_u6BtPnK76q4");
 
 == DIAGNOSTICS ==
 []
