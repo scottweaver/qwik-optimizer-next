@@ -6,16 +6,17 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, $ } from "@qwik.dev/core";
-import { hola } from "sdfds";
-export const Greeter = qrl(() => import("./test.tsx_Greeter_component_1_krCndSwhX4U"), "Greeter_component_1_krCndSwhX4U");
-const d = qrl(() => import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
+//
+const q_Greeter_LDKOk8PWmEs = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_LDKOk8PWmEs"), "Greeter_LDKOk8PWmEs");
+const q_d_wKNFJEIQVUA = /*#__PURE__*/ qrl(()=>import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
+//
+export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_LDKOk8PWmEs);
+const d = q_d_wKNFJEIQVUA;
 
-============================= test.tsx_Greeter_component_1_krCndSwhX4U.js (ENTRY POINT) ==
+============================= test.tsx_Greeter_LDKOk8PWmEs.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const Greeter_component_1_krCndSwhX4U = () => {
+export const Greeter_LDKOk8PWmEs = () => {
 	const stuff = useStore();
 	return $(() => {
 		return (
@@ -32,11 +33,11 @@ export const Greeter_component_1_krCndSwhX4U = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Greeter_component_1_krCndSwhX4U",
+  "name": "Greeter_LDKOk8PWmEs",
   "entry": null,
-  "displayName": "test.tsx_Greeter_component_1",
-  "hash": "krCndSwhX4U",
-  "canonicalFilename": "test.tsx_Greeter_component_1_krCndSwhX4U",
+  "displayName": "test.tsx_Greeter",
+  "hash": "LDKOk8PWmEs",
+  "canonicalFilename": "test.tsx_Greeter_LDKOk8PWmEs",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -73,7 +74,7 @@ export const Greeter_component_n7HuG2hhU0Q = () => {
   "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "js",
-  "parent": "Greeter_component_1_krCndSwhX4U",
+  "parent": "Greeter_LDKOk8PWmEs",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,

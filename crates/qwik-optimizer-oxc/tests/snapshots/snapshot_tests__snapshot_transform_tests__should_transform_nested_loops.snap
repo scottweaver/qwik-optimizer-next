@@ -6,9 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useSignal, Signal } from "@qwik.dev/core";
-const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+//
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+//
+const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
 
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
@@ -46,9 +47,41 @@ export const Foo_component_HTDRsvUbLiE = function() {
   ]
 }
 */
-============================= test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg.js (ENTRY POINT) ==
+============================= test.tsx_Foo_component_div_div_p_q_e_click_PjMbeUzoAMk.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Foo_component_div_q_e_click_YEa2A5ADUOg = () => {
+export const Foo_component_div_div_p_q_e_click_PjMbeUzoAMk = () => {
+	const item = _captures[0];
+	const row = _captures[1];
+	return console.log(row.value.id, item.value.id);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_div_div_p_q_e_click_PjMbeUzoAMk",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_div_div_p_q_e_click",
+  "hash": "PjMbeUzoAMk",
+  "canonicalFilename": "test.tsx_Foo_component_div_div_p_q_e_click_PjMbeUzoAMk",
+  "path": "",
+  "extension": "js",
+  "parent": "Foo_component_HTDRsvUbLiE",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "item",
+    "row"
+  ],
+  "loc": [
+    331,
+    377
+  ]
+}
+*/
+============================= test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_div_div_q_e_click_vKrX4PmH2aM = () => {
 	const row = _captures[0];
 	return console.log(row.value.id);
 };
@@ -56,11 +89,11 @@ export const Foo_component_div_q_e_click_YEa2A5ADUOg = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_component_div_q_e_click_YEa2A5ADUOg",
+  "name": "Foo_component_div_div_q_e_click_vKrX4PmH2aM",
   "entry": null,
-  "displayName": "test.tsx_Foo_component_div_q_e_click",
-  "hash": "YEa2A5ADUOg",
-  "canonicalFilename": "test.tsx_Foo_component_div_q_e_click_YEa2A5ADUOg",
+  "displayName": "test.tsx_Foo_component_div_div_q_e_click",
+  "hash": "vKrX4PmH2aM",
+  "canonicalFilename": "test.tsx_Foo_component_div_div_q_e_click_vKrX4PmH2aM",
   "path": "",
   "extension": "js",
   "parent": "Foo_component_HTDRsvUbLiE",

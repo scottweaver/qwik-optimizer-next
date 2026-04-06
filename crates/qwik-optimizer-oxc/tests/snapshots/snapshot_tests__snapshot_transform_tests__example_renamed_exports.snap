@@ -6,9 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$ as Component, $ as onRender, useStore } from "@qwik.dev/core";
-export const App = qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU"), "App_component_1_w0t0o3QMovU");
+//
+const q_App_Jlq9hNxnCvw = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_Jlq9hNxnCvw"), "App_Jlq9hNxnCvw");
+//
+export const App = /*#__PURE__*/ componentQrl(q_App_Jlq9hNxnCvw);
 
 ============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
@@ -25,7 +26,7 @@ export const App_component_ckEPmXZlub0 = () => (
   "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
   "path": "",
   "extension": "js",
-  "parent": "App_component_1_w0t0o3QMovU",
+  "parent": "App_Jlq9hNxnCvw",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,
@@ -38,10 +39,10 @@ export const App_component_ckEPmXZlub0 = () => (
   ]
 }
 */
-============================= test.tsx_App_component_1_w0t0o3QMovU.js (ENTRY POINT) ==
+============================= test.tsx_App_Jlq9hNxnCvw.js (ENTRY POINT) ==
 import { $ as onRender } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
-export const App_component_1_w0t0o3QMovU = (props) => {
+export const App_Jlq9hNxnCvw = (props) => {
 	const state = useStore({thing: 0});
 
 	return onRender(() => (
@@ -51,11 +52,11 @@ export const App_component_1_w0t0o3QMovU = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "App_component_1_w0t0o3QMovU",
+  "name": "App_Jlq9hNxnCvw",
   "entry": null,
-  "displayName": "test.tsx_App_component_1",
-  "hash": "w0t0o3QMovU",
-  "canonicalFilename": "test.tsx_App_component_1_w0t0o3QMovU",
+  "displayName": "test.tsx_App",
+  "hash": "Jlq9hNxnCvw",
+  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
   "path": "",
   "extension": "js",
   "parent": null,

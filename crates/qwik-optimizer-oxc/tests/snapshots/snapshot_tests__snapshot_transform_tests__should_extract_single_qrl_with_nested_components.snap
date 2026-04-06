@@ -6,10 +6,41 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { $, component$, useSignal, Signal } from "@qwik.dev/core";
-const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+//
+const q_Foo_n07hoBxfni0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_n07hoBxfni0"), "Foo_n07hoBxfni0");
+//
+const Foo = /*#__PURE__*/ componentQrl(q_Foo_n07hoBxfni0);
 
+============================= test.tsx_Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY = () => {
+	const item = _captures[0];
+	return console.log(item.value.id);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY",
+  "entry": null,
+  "displayName": "test.tsx_Foo_component_Inner_component_div_p_q_e_click",
+  "hash": "7oFgEhSmgvY",
+  "canonicalFilename": "test.tsx_Foo_component_Inner_component_div_p_q_e_click_7oFgEhSmgvY",
+  "path": "",
+  "extension": "js",
+  "parent": "Foo_component_Inner_component_AuJ9mTBx5YA",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "item"
+  ],
+  "loc": [
+    265,
+    297
+  ]
+}
+*/
 ============================= test.tsx_Foo_component_Inner_component_AuJ9mTBx5YA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const Foo_component_Inner_component_AuJ9mTBx5YA = (props) => {
@@ -28,7 +59,7 @@ export const Foo_component_Inner_component_AuJ9mTBx5YA = (props) => {
   "canonicalFilename": "test.tsx_Foo_component_Inner_component_AuJ9mTBx5YA",
   "path": "",
   "extension": "js",
-  "parent": "Foo_component_HTDRsvUbLiE",
+  "parent": "Foo_n07hoBxfni0",
   "ctxKind": "function",
   "ctxName": "component$",
   "captures": true,
@@ -44,11 +75,11 @@ export const Foo_component_Inner_component_AuJ9mTBx5YA = (props) => {
   ]
 }
 */
-============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
+============================= test.tsx_Foo_n07hoBxfni0.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
-export const Foo_component_HTDRsvUbLiE = () => {
+export const Foo_n07hoBxfni0 = () => {
   const data = useSignal<Signal<any>[]>([]);
   const Inner = component$((props) => {
     const _ref = {};
@@ -61,11 +92,11 @@ export const Foo_component_HTDRsvUbLiE = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Foo_component_HTDRsvUbLiE",
+  "name": "Foo_n07hoBxfni0",
   "entry": null,
-  "displayName": "test.tsx_Foo_component",
-  "hash": "HTDRsvUbLiE",
-  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
+  "displayName": "test.tsx_Foo",
+  "hash": "n07hoBxfni0",
+  "canonicalFilename": "test.tsx_Foo_n07hoBxfni0",
   "path": "",
   "extension": "js",
   "parent": null,

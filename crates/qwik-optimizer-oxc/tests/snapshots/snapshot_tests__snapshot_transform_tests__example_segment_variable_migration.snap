@@ -14,8 +14,8 @@ const q_Other_component_C1my3EIdP1k = /*#__PURE__*/ qrl(()=>import("./test.tsx_O
 const SHARED_CONFIG = { value: 42 };
 // This is an export, so it must stay at root
 export const publicHelper = () => console.log("public");
-export const App = qrl(() => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
-export const Other = qrl(() => import("./test.tsx_Other_component_C1my3EIdP1k"), "Other_component_C1my3EIdP1k");
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+export const Other = /*#__PURE__*/ componentQrl(q_Other_component_C1my3EIdP1k);
 
 ============================= test.tsx_Other_component_C1my3EIdP1k.tsx (ENTRY POINT) ==
 export const Other_component_C1my3EIdP1k = () => {

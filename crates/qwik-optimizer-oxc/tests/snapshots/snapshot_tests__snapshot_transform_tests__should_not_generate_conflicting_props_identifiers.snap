@@ -6,22 +6,21 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-import { component$, useComputed$, useTask$ } from "@qwik.dev/core";
-const q_test_component_useComputed_PYU291PvidQ = /* @__PURE__ */ _noopQrl("test_component_useComputed_PYU291PvidQ");
-const q_test_component_useTask_jewzFYh3XmQ = /* @__PURE__ */ _noopQrl("test_component_useTask_jewzFYh3XmQ");
-const q_test_component_LUXeXe0DQrg = /* @__PURE__ */ _noopQrl("test_component_LUXeXe0DQrg");
+//
+const q__u6BtPnK76q4 = /*#__PURE__*/ _noopQrl("_u6BtPnK76q4");
+//
 q_test_component_useComputed_PYU291PvidQ.s(() => color);
-q_test_component_useTask_jewzFYh3XmQ.s(() => {
+q_test_useTask_5pwZFJgUNow.s(() => {
 	props.checked;
 });
-q_test_component_LUXeXe0DQrg.s(({ color, ...props }) => {
+q__u6BtPnK76q4.s(({ color, ...props }) => {
 	useComputed$(() => color);
 	useTask$(() => {
 		props.checked;
 	});
 	return "hi";
 });
-export default componentQrl(q_test_component_LUXeXe0DQrg);
+export default componentQrl(q__u6BtPnK76q4);
 
 == DIAGNOSTICS ==
 []

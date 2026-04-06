@@ -7,7 +7,7 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 export default componentQrl(() => {
-	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
+	return _jsxSorted("div", { "q-e:click": inlinedQrl(() => console.log(mongodb), "mongo_component_div_q_e_click_jncbxvZVtWY") }, null, null, 1, null);
 }, "mongo_component_ouWLj4jA2oI");
 
 == DIAGNOSTICS ==

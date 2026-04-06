@@ -8,8 +8,8 @@ import { componentQrl } from "@qwik.dev/core";
 import { serverQrl } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	const text = "hola";
-	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_onClick_server_OsNoEFc5SM4", [text]) }, null, null, 1, null);
-}, "Works_component_t45qL4vNGv0");
+	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [text]) }, null, null, 1, null);
+}, "Works_3wleYXX4dYQ");
 
 == DIAGNOSTICS ==
 []

@@ -6,9 +6,44 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { component$, useTask$ } from "@qwik.dev/core";
-export default qrl<any>(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+//
+const q_test_5GvkoOCMrJc = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
+//
+export default /*#__PURE__*/ componentQrl(q_test_5GvkoOCMrJc);
 
+============================= test.tsx_test_5GvkoOCMrJc.js (ENTRY POINT) ==
+import { _restProps } from "@qwik.dev/core";
+import { useTask$ } from "@qwik.dev/core";
+export const test_5GvkoOCMrJc = ({ ...props }) => {
+	useTask$(() => {
+		props.checked;
+	});
+	return "hi";
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_5GvkoOCMrJc",
+  "entry": null,
+  "displayName": "test.tsx_test",
+  "hash": "5GvkoOCMrJc",
+  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    75,
+    171
+  ],
+  "paramNames": [
+    "_rawProps"
+  ]
+}
+*/
 ============================= test.tsx_test_component_useTask_jewzFYh3XmQ.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 export const test_component_useTask_jewzFYh3XmQ = () => {
@@ -26,7 +61,7 @@ export const test_component_useTask_jewzFYh3XmQ = () => {
   "canonicalFilename": "test.tsx_test_component_useTask_jewzFYh3XmQ",
   "path": "",
   "extension": "js",
-  "parent": "test_component_LUXeXe0DQrg",
+  "parent": "test_5GvkoOCMrJc",
   "ctxKind": "function",
   "ctxName": "useTask$",
   "captures": true,
@@ -36,39 +71,6 @@ export const test_component_useTask_jewzFYh3XmQ = () => {
   "loc": [
     113,
     151
-  ]
-}
-*/
-============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
-import { _restProps } from "@qwik.dev/core";
-import { useTask$ } from "@qwik.dev/core";
-export const test_component_LUXeXe0DQrg = ({ ...props }) => {
-	useTask$(() => {
-		props.checked;
-	});
-	return "hi";
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
-  "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    75,
-    171
-  ],
-  "paramNames": [
-    "_rawProps"
   ]
 }
 */

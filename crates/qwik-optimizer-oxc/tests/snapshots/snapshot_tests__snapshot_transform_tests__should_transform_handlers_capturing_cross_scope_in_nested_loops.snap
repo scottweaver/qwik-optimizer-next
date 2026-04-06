@@ -6,9 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useSignal } from "@qwik.dev/core";
-export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+//
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+//
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
 ============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
@@ -56,9 +57,41 @@ export const test_component_LUXeXe0DQrg = () => {
   ]
 }
 */
-============================= test.tsx_test_component_span_span_q_e_keydown_zm0yVAYNXLo.js (ENTRY POINT) ==
+============================= test.tsx_test_component_div_div_span_button_q_e_click_oBFNw2cK30o.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const test_component_span_span_q_e_keydown_zm0yVAYNXLo = () => {
+export const test_component_div_div_span_button_q_e_click_oBFNw2cK30o = () => {
+	const cellIndex = _captures[0];
+	const rowIndex = _captures[1];
+	return console.log(rowIndex, cellIndex);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_div_div_span_button_q_e_click_oBFNw2cK30o",
+  "entry": null,
+  "displayName": "test.tsx_test_component_div_div_span_button_q_e_click",
+  "hash": "oBFNw2cK30o",
+  "canonicalFilename": "test.tsx_test_component_div_div_span_button_q_e_click_oBFNw2cK30o",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "cellIndex",
+    "rowIndex"
+  ],
+  "loc": [
+    501,
+    539
+  ]
+}
+*/
+============================= test.tsx_test_component_div_div_span_span_q_e_keydown_SBPovprktLQ.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_div_span_span_q_e_keydown_SBPovprktLQ = () => {
 	const cellKey = _captures[0];
 	const i = _captures[1];
 	const j = _captures[2];
@@ -68,11 +101,11 @@ export const test_component_span_span_q_e_keydown_zm0yVAYNXLo = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_span_span_q_e_keydown_zm0yVAYNXLo",
+  "name": "test_component_div_div_span_span_q_e_keydown_SBPovprktLQ",
   "entry": null,
-  "displayName": "test.tsx_test_component_span_span_q_e_keydown",
-  "hash": "zm0yVAYNXLo",
-  "canonicalFilename": "test.tsx_test_component_span_span_q_e_keydown_zm0yVAYNXLo",
+  "displayName": "test.tsx_test_component_div_div_span_span_q_e_keydown",
+  "hash": "SBPovprktLQ",
+  "canonicalFilename": "test.tsx_test_component_div_div_span_span_q_e_keydown_SBPovprktLQ",
   "path": "",
   "extension": "js",
   "parent": "test_component_LUXeXe0DQrg",

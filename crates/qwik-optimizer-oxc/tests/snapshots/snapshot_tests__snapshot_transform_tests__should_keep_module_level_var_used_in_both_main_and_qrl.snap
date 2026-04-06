@@ -20,12 +20,12 @@ export function doSomething() {
 	}
 }
 export function useHook() {
-	const fn = qrl(() => import("./test.tsx_fn_aadn0Yprf04"), "fn_aadn0Yprf04");
+	const fn = q_useHook_fn_kScGJcREaTg;
 	return fn;
 }
 
-============================= test.tsx_fn_aadn0Yprf04.js (ENTRY POINT) ==
-export const fn_aadn0Yprf04 = () => {
+============================= test.tsx_useHook_fn_kScGJcREaTg.js (ENTRY POINT) ==
+export const useHook_fn_kScGJcREaTg = () => {
 	state.counter++;
 	console.log(state.id);
 };
@@ -33,11 +33,11 @@ export const fn_aadn0Yprf04 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "fn_aadn0Yprf04",
+  "name": "useHook_fn_kScGJcREaTg",
   "entry": null,
-  "displayName": "test.tsx_fn",
-  "hash": "aadn0Yprf04",
-  "canonicalFilename": "test.tsx_fn_aadn0Yprf04",
+  "displayName": "test.tsx_useHook_fn",
+  "hash": "kScGJcREaTg",
+  "canonicalFilename": "test.tsx_useHook_fn_kScGJcREaTg",
   "path": "",
   "extension": "js",
   "parent": null,

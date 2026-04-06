@@ -12,7 +12,7 @@ const q_RouterHead_component_DPA76mgIou0 = /*#__PURE__*/ qrl(()=>import("./test.
 /**
 * The RouterHead component is placed inside of the document `<head>` element.
 */
-export const RouterHead = qrl(() => import("./test.tsx_RouterHead_component_DPA76mgIou0"), "RouterHead_component_DPA76mgIou0");
+export const RouterHead = /*#__PURE__*/ componentQrl(q_RouterHead_component_DPA76mgIou0);
 
 ============================= test.tsx_RouterHead_component_DPA76mgIou0.js (ENTRY POINT) ==
 import { useDocumentHead } from "@qwik.dev/router";

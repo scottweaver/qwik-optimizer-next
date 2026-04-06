@@ -6,9 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useStore, useSignal } from "@qwik.dev/core";
-const Parent = qrl(() => import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
+//
+const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
+//
+const Parent = /*#__PURE__*/ componentQrl(q_Parent_component_0TaiDayHrlo);
 
 ============================= test.tsx_Parent_component_0TaiDayHrlo.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
@@ -61,9 +62,9 @@ export const Parent_component_0TaiDayHrlo = () => {
   ]
 }
 */
-============================= test.tsx_Parent_component_button_q_e_click_4QYpcz0cFow.js (ENTRY POINT) ==
+============================= test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Parent_component_button_q_e_click_4QYpcz0cFow = () => {
+export const Parent_component_div_button_q_e_click_5khsVRINUws = () => {
 	const cart = _captures[0];
 	const item = _captures[1];
 	cart.push(item);
@@ -72,11 +73,11 @@ export const Parent_component_button_q_e_click_4QYpcz0cFow = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Parent_component_button_q_e_click_4QYpcz0cFow",
+  "name": "Parent_component_div_button_q_e_click_5khsVRINUws",
   "entry": null,
-  "displayName": "test.tsx_Parent_component_button_q_e_click",
-  "hash": "4QYpcz0cFow",
-  "canonicalFilename": "test.tsx_Parent_component_button_q_e_click_4QYpcz0cFow",
+  "displayName": "test.tsx_Parent_component_div_button_q_e_click",
+  "hash": "5khsVRINUws",
+  "canonicalFilename": "test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws",
   "path": "",
   "extension": "js",
   "parent": "Parent_component_0TaiDayHrlo",
@@ -93,9 +94,9 @@ export const Parent_component_button_q_e_click_4QYpcz0cFow = () => {
   ]
 }
 */
-============================= test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws.js (ENTRY POINT) ==
+============================= test.tsx_Parent_component_div_button_q_e_click_1_rAeuW6OvuXM.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
-export const Parent_component_div_button_q_e_click_5khsVRINUws = () => {
+export const Parent_component_div_button_q_e_click_1_rAeuW6OvuXM = () => {
 	const results = _captures[0];
 	return results.value = ["item1", "item2"];
 };
@@ -103,11 +104,11 @@ export const Parent_component_div_button_q_e_click_5khsVRINUws = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "Parent_component_div_button_q_e_click_5khsVRINUws",
+  "name": "Parent_component_div_button_q_e_click_1_rAeuW6OvuXM",
   "entry": null,
-  "displayName": "test.tsx_Parent_component_div_button_q_e_click",
-  "hash": "5khsVRINUws",
-  "canonicalFilename": "test.tsx_Parent_component_div_button_q_e_click_5khsVRINUws",
+  "displayName": "test.tsx_Parent_component_div_button_q_e_click_1",
+  "hash": "rAeuW6OvuXM",
+  "canonicalFilename": "test.tsx_Parent_component_div_button_q_e_click_1_rAeuW6OvuXM",
   "path": "",
   "extension": "js",
   "parent": "Parent_component_0TaiDayHrlo",

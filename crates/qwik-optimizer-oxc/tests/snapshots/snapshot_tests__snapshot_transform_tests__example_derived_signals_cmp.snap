@@ -9,7 +9,9 @@ import { _noopQrl } from "@qwik.dev/core";
 import { useStore, mutable } from "@qwik.dev/core";
 import { dep } from "./file";
 import { Cmp } from "./cmp";
-const q_App_component_ckEPmXZlub0 = /* @__PURE__ */ _noopQrl("App_component_ckEPmXZlub0");
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
+//
 q_App_component_ckEPmXZlub0.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});

@@ -6,25 +6,26 @@ snapshot_kind: text
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, $, useStyles$ } from "@qwik.dev/core";
-export const App = qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU.tsx"), "App_component_1_w0t0o3QMovU");
+//
+const q__u6BtPnK76q4 = /*#__PURE__*/ qrl(()=>import("./test.tsx__u6BtPnK76q4.tsx"), "_u6BtPnK76q4");
+//
+export const App = /*#__PURE__*/ componentQrl(q__u6BtPnK76q4);
 
-============================= test.tsx_App_component_ckEPmXZlub0.tsx ==
-export const App_component_ckEPmXZlub0 = () => (
+============================= test.tsx_App_Jlq9hNxnCvw.tsx ==
+export const App_Jlq9hNxnCvw = () => (
 		<div></div>
 	);
 /*
 {
   "origin": "test.tsx",
-  "name": "App_component_ckEPmXZlub0",
+  "name": "App_Jlq9hNxnCvw",
   "entry": "entry_segments",
-  "displayName": "test.tsx_App_component",
-  "hash": "ckEPmXZlub0",
-  "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
+  "displayName": "test.tsx_App",
+  "hash": "Jlq9hNxnCvw",
+  "canonicalFilename": "test.tsx_App_Jlq9hNxnCvw",
   "path": "",
   "extension": "tsx",
-  "parent": "App_component_1_w0t0o3QMovU",
+  "parent": "_u6BtPnK76q4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,
@@ -34,10 +35,33 @@ export const App_component_ckEPmXZlub0 = () => (
   ]
 }
 */
-============================= test.tsx_App_component_1_w0t0o3QMovU.tsx ==
+============================= test.tsx_App_component_useStyles_t35nSa5UV7U.tsx ==
+export const App_component_useStyles_t35nSa5UV7U = "hola";
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "App_component_useStyles_t35nSa5UV7U",
+  "entry": "entry_segments",
+  "displayName": "test.tsx_App_component_useStyles",
+  "hash": "t35nSa5UV7U",
+  "canonicalFilename": "test.tsx_App_component_useStyles_t35nSa5UV7U",
+  "path": "",
+  "extension": "tsx",
+  "parent": "_u6BtPnK76q4",
+  "ctxKind": "function",
+  "ctxName": "useStyles$",
+  "captures": false,
+  "loc": [
+    106,
+    124
+  ]
+}
+*/
+============================= test.tsx__u6BtPnK76q4.tsx ==
 import { $ } from "@qwik.dev/core";
 import { useStyles$ } from "@qwik.dev/core";
-export const App_component_1_w0t0o3QMovU = (props) => {
+export const _u6BtPnK76q4 = (props) => {
 	useStyles$('hola');
 	return $(() => (
 		<div></div>
@@ -46,11 +70,11 @@ export const App_component_1_w0t0o3QMovU = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "App_component_1_w0t0o3QMovU",
+  "name": "_u6BtPnK76q4",
   "entry": "entry_segments",
-  "displayName": "test.tsx_App_component_1",
-  "hash": "w0t0o3QMovU",
-  "canonicalFilename": "test.tsx_App_component_1_w0t0o3QMovU",
+  "displayName": "test.tsx_",
+  "hash": "u6BtPnK76q4",
+  "canonicalFilename": "test.tsx__u6BtPnK76q4",
   "path": "",
   "extension": "tsx",
   "parent": null,

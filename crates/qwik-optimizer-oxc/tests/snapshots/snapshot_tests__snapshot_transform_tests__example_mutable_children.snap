@@ -10,11 +10,13 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { Slot, Fragment } from "@qwik.dev/core";
 import Image from "./image.jpg?jsx";
-const q_AppDynamic1_component_R00UJ05gbes = /* @__PURE__ */ _noopQrl("AppDynamic1_component_R00UJ05gbes");
-const q_AppDynamic2_component_3EY2zm0v00A = /* @__PURE__ */ _noopQrl("AppDynamic2_component_3EY2zm0v00A");
-const q_AppDynamic3_component_FVq83NlbTDQ = /* @__PURE__ */ _noopQrl("AppDynamic3_component_FVq83NlbTDQ");
-const q_AppDynamic4_component_IO0yr8UvWEI = /* @__PURE__ */ _noopQrl("AppDynamic4_component_IO0yr8UvWEI");
-const q_AppStatic_component_gYRXqF3G5nE = /* @__PURE__ */ _noopQrl("AppStatic_component_gYRXqF3G5nE");
+//
+const q_AppDynamic1_component_R00UJ05gbes = /*#__PURE__*/ _noopQrl("AppDynamic1_component_R00UJ05gbes");
+const q_AppDynamic2_component_3EY2zm0v00A = /*#__PURE__*/ _noopQrl("AppDynamic2_component_3EY2zm0v00A");
+const q_AppDynamic3_component_FVq83NlbTDQ = /*#__PURE__*/ _noopQrl("AppDynamic3_component_FVq83NlbTDQ");
+const q_AppDynamic4_component_IO0yr8UvWEI = /*#__PURE__*/ _noopQrl("AppDynamic4_component_IO0yr8UvWEI");
+const q_AppStatic_component_gYRXqF3G5nE = /*#__PURE__*/ _noopQrl("AppStatic_component_gYRXqF3G5nE");
+//
 q_AppDynamic1_component_R00UJ05gbes.s((props: Stuff) => {
 	return <>
 			<div>{prop < 2 ? <p>1</p> : <Stuff>2</Stuff>}</div>

@@ -17,56 +17,59 @@ export const Parent = componentQrl(() => {
 	_noopQrl("Parent_component_useClientMount_Yn2kIDABoYw");
 	useTaskQrl(() => {
 		// Code
-	}, "Parent_component_useTask_ngmvcygWux8");
+	}, "Parent_useTask_jEJCmVzD7yk");
 	return _jsxSorted("div", {
-		shouldRemove$: () => state.text,
-		onClick$: () => console.log("parent", state, threejs)
-	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
-}, "Parent_component_t6Wy3C0Q0XM");
+		shouldRemove: inlinedQrl(() => state.text, "div_shouldRemove_nyn0dI4cJvs", [state]),
+		"q-e:click": _noopQrl("div_q_e_click_FdfksvG3ICs")
+	}, null, [_jsxSorted(Div, {
+		onClick: _noopQrl("div_Div_q_e_click_ArtGFB7iAa4"),
+		render: inlinedQrl(() => state.text, "div_Div_render_uJOnRR7g1IY", [state])
+	}, null, null, 1, "0"), state.text], 1, null);
+}, "_7RMfCDur6ww");
 
-============================= components/component.tsx_Parent_component_div_q_e_click_oqNnfO6ubjU.js ==
-export const Parent_component_div_q_e_click_oqNnfO6ubjU = null;
-
-/*
-{
-  "origin": "components/component.tsx",
-  "name": "Parent_component_div_q_e_click_oqNnfO6ubjU",
-  "entry": "entry_segments",
-  "displayName": "component.tsx_Parent_component_div_q_e_click",
-  "hash": "oqNnfO6ubjU",
-  "canonicalFilename": "component.tsx_Parent_component_div_q_e_click_oqNnfO6ubjU",
-  "path": "components",
-  "extension": "js",
-  "parent": "Parent_component_t6Wy3C0Q0XM",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": false,
-  "loc": [
-    577,
-    620
-  ]
-}
-*/
-============================= components/component.tsx_Parent_component_div_Div_q_e_click_X6MyAcIWaA4.js ==
-export const Parent_component_div_Div_q_e_click_X6MyAcIWaA4 = null;
+============================= components/component.tsx_div_Div_q_e_click_ArtGFB7iAa4.js ==
+export const div_Div_q_e_click_ArtGFB7iAa4 = null;
 
 /*
 {
   "origin": "components/component.tsx",
-  "name": "Parent_component_div_Div_q_e_click_X6MyAcIWaA4",
+  "name": "div_Div_q_e_click_ArtGFB7iAa4",
   "entry": "entry_segments",
-  "displayName": "component.tsx_Parent_component_div_Div_q_e_click",
-  "hash": "X6MyAcIWaA4",
-  "canonicalFilename": "component.tsx_Parent_component_div_Div_q_e_click_X6MyAcIWaA4",
+  "displayName": "component.tsx_div_Div_q_e_click",
+  "hash": "ArtGFB7iAa4",
+  "canonicalFilename": "component.tsx_div_Div_q_e_click_ArtGFB7iAa4",
   "path": "components",
   "extension": "js",
-  "parent": "Parent_component_t6Wy3C0Q0XM",
+  "parent": "_7RMfCDur6ww",
   "ctxKind": "eventHandler",
   "ctxName": "onClick$",
   "captures": false,
   "loc": [
     648,
     673
+  ]
+}
+*/
+============================= components/component.tsx_div_q_e_click_FdfksvG3ICs.js ==
+export const div_q_e_click_FdfksvG3ICs = null;
+
+/*
+{
+  "origin": "components/component.tsx",
+  "name": "div_q_e_click_FdfksvG3ICs",
+  "entry": "entry_segments",
+  "displayName": "component.tsx_div_q_e_click",
+  "hash": "FdfksvG3ICs",
+  "canonicalFilename": "component.tsx_div_q_e_click_FdfksvG3ICs",
+  "path": "components",
+  "extension": "js",
+  "parent": "_7RMfCDur6ww",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    577,
+    620
   ]
 }
 */
@@ -83,7 +86,7 @@ export const Parent_component_useClientMount_Yn2kIDABoYw = null;
   "canonicalFilename": "component.tsx_Parent_component_useClientMount_Yn2kIDABoYw",
   "path": "components",
   "extension": "js",
-  "parent": "Parent_component_t6Wy3C0Q0XM",
+  "parent": "_7RMfCDur6ww",
   "ctxKind": "function",
   "ctxName": "useClientMount$",
   "captures": false,

@@ -1855,6 +1855,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     span_start: node.span.start,
                     is_sync,
                     descendent_idents,
+                    pushed_ctx_name: true,
                 });
             }
             // Dollar call detected but not emitted (stripped or not a function arg)
@@ -2543,26 +2544,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
     // Stack context push/pop for descriptive symbol naming (SWC parity)
     // -----------------------------------------------------------------------
 
-    fn enter_variable_declarator(
-        &mut self,
-        node: &mut VariableDeclarator<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if let BindingPattern::BindingIdentifier(ident) = &node.id {
-            self.stack_ctxt.push(ident.name.to_string());
-        }
-    }
-
-    fn exit_variable_declarator(
-        &mut self,
-        node: &mut VariableDeclarator<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if matches!(&node.id, BindingPattern::BindingIdentifier(_)) {
-            self.stack_ctxt.pop();
-        }
-    }
-
     fn enter_declaration(
         &mut self,
         node: &mut Declaration<'a>,
@@ -2621,49 +2602,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         if matches!(&node.name, JSXElementName::Identifier(_)) {
             self.stack_ctxt.pop();
         }
-    }
-
-    fn enter_jsx_attribute(
-        &mut self,
-        node: &mut JSXAttribute<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if let JSXAttributeName::Identifier(ident) = &node.name {
-            self.stack_ctxt.push(ident.name.to_string());
-        }
-    }
-
-    fn exit_jsx_attribute(
-        &mut self,
-        node: &mut JSXAttribute<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        if matches!(&node.name, JSXAttributeName::Identifier(_)) {
-            self.stack_ctxt.pop();
-        }
-    }
-
-    fn enter_export_default_declaration(
-        &mut self,
-        _node: &mut ExportDefaultDeclaration<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        // Push file stem (e.g., "test" from "test.tsx") for export default context.
-        // SWC uses path_data.file_stem; we derive it from file_name.
-        let file_stem = self.file_name
-            .rsplit_once('.')
-            .map(|(stem, _ext)| stem)
-            .unwrap_or(&self.file_name)
-            .to_string();
-        self.stack_ctxt.push(file_stem);
-    }
-
-    fn exit_export_default_declaration(
-        &mut self,
-        _node: &mut ExportDefaultDeclaration<'a>,
-        _ctx: &mut TraverseCtx<'a, ()>,
-    ) {
-        self.stack_ctxt.pop();
     }
 
     fn exit_program(

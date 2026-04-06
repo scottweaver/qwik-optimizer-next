@@ -6,51 +6,40 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { Fragment } from "@qwik.dev/core";
-import { component$, useStore, useTask$ } from "@qwik.dev/core";
-import { useForm, useForm2 } from "./some-file.ts";
-export const Input = qrl<{
-	error: string;
-	error2: string;
-	error3: string;
-}>(() => import("./test.tsx_Input_component_9metqqaxlN8"), "Input_component_9metqqaxlN8");
-export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+//
+const q_Input_xELXckvC5A4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Input_xELXckvC5A4"), "Input_xELXckvC5A4");
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+//
+export const Input = /*#__PURE__*/ componentQrl(q_Input_xELXckvC5A4);
+export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
 
-============================= test.tsx_Input_component_9metqqaxlN8.js (ENTRY POINT) ==
-import { useTask$ } from "@qwik.dev/core";
-export const Input_component_9metqqaxlN8 = (props) => {
-				useTask$(({ track }) => {
-					track(() => props.error);
-					track(() => props.error2);
-					track(() => props.error3);
-				});
+============================= test.tsx_test_component_div_button_q_e_click_2TvarUvNGmU.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_div_button_q_e_click_2TvarUvNGmU = () => {
+	const store = _captures[0];
+	store.errors.test = store.errors.test ? undefined : "ERROR TEST";
+};
 
-				return (
-					<>
-					</>
-				);
-			};
 /*
 {
   "origin": "test.tsx",
-  "name": "Input_component_9metqqaxlN8",
+  "name": "test_component_div_button_q_e_click_2TvarUvNGmU",
   "entry": null,
-  "displayName": "test.tsx_Input_component",
-  "hash": "9metqqaxlN8",
-  "canonicalFilename": "test.tsx_Input_component_9metqqaxlN8",
+  "displayName": "test.tsx_test_component_div_button_q_e_click",
+  "hash": "2TvarUvNGmU",
+  "canonicalFilename": "test.tsx_test_component_div_button_q_e_click_2TvarUvNGmU",
   "path": "",
   "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    146,
-    402
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": true,
+  "captureNames": [
+    "store"
   ],
-  "paramNames": [
-    "props"
+  "loc": [
+    834,
+    920
   ]
 }
 */
@@ -126,7 +115,7 @@ export const Input_component_useTask_Sbgs9Wtfkt0 = ({ track }) => {
   "canonicalFilename": "test.tsx_Input_component_useTask_Sbgs9Wtfkt0",
   "path": "",
   "extension": "js",
-  "parent": "Input_component_9metqqaxlN8",
+  "parent": "Input_xELXckvC5A4",
   "ctxKind": "function",
   "ctxName": "useTask$",
   "captures": true,
@@ -139,6 +128,43 @@ export const Input_component_useTask_Sbgs9Wtfkt0 = ({ track }) => {
   ],
   "paramNames": [
     "track"
+  ]
+}
+*/
+============================= test.tsx_Input_xELXckvC5A4.js (ENTRY POINT) ==
+import { useTask$ } from "@qwik.dev/core";
+export const Input_xELXckvC5A4 = (props) => {
+				useTask$(({ track }) => {
+					track(() => props.error);
+					track(() => props.error2);
+					track(() => props.error3);
+				});
+
+				return (
+					<>
+					</>
+				);
+			};
+/*
+{
+  "origin": "test.tsx",
+  "name": "Input_xELXckvC5A4",
+  "entry": null,
+  "displayName": "test.tsx_Input",
+  "hash": "xELXckvC5A4",
+  "canonicalFilename": "test.tsx_Input_xELXckvC5A4",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    146,
+    402
+  ],
+  "paramNames": [
+    "props"
   ]
 }
 */

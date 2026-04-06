@@ -7,17 +7,21 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { inlinedQrl, $, component$, jsx, useStylesScoped$ } from "@qwik.dev/core";
-const q_Lifecycle_component_r7jPBpjrWLc = /* @__PURE__ */ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
-const q_jsx_children_MBDXXL9gcz4 = /* @__PURE__ */ _noopQrl("jsx_children_MBDXXL9gcz4");
-const q_it_StyledComponent_component_F9AGTDZHx8I = /* @__PURE__ */ _noopQrl("it_StyledComponent_component_F9AGTDZHx8I");
-q_Lifecycle_component_r7jPBpjrWLc.s(() => {
-	return /* @__PURE__ */ jsx(Slot, {});
+import { inlinedQrl, jsx } from "@qwik.dev/core";
+//
+const q_Lifecycle_Lifecycle_component_PcjTk3N1YOg = /*#__PURE__*/ _noopQrl("Lifecycle_Lifecycle_component_PcjTk3N1YOg");
+const q_Field_jsx_children_eVTPl5mlRx4 = /*#__PURE__*/ _noopQrl("Field_jsx_children_eVTPl5mlRx4");
+const q_Field_jsx_pEiyP5dZzGA = /*#__PURE__*/ _noopQrl("Field_jsx_pEiyP5dZzGA");
+const q_it_StyledComponent_VXk2eht6Tr0 = /*#__PURE__*/ _noopQrl("it_StyledComponent_VXk2eht6Tr0");
+//
+q_Lifecycle_Lifecycle_component_PcjTk3N1YOg.s(() => {
+	return /*#__PURE__*/ jsx(Slot, {});
 });
-q_jsx_children_MBDXXL9gcz4.s((element) => {
+q_Field_jsx_children_eVTPl5mlRx4.s((element) => {
 	field.internal.elements.push(element);
 });
-q_it_StyledComponent_component_F9AGTDZHx8I.s(() => {
+q_it_StyledComponent_button_q_e_click_xbo4rreNsik.s(() => store.count++);
+q_it_StyledComponent_VXk2eht6Tr0.s(() => {
 	const stylesScopedData = useStylesScoped$(STYLE_RED);
 	const store = useStore({ count: 10 });
 	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
@@ -31,7 +35,7 @@ export default () => {
 	console.log(qrl);
 };
 function Lifecycle(props, key, flags) {
-	return componentQrl(q_Lifecycle_component_r7jPBpjrWLc)(props, key, flags);
+	return componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg)(props, key, flags);
 }
 export const rawFn = (event, element) => {
 	handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));
@@ -45,15 +49,15 @@ export function Field({ children, name, type, ...props }) {
 		children: children(field, {
 			name,
 			autoFocus: isServer && !!field.error,
-			ref: Qrl(q_jsx_children_MBDXXL9gcz4.w([field])),
-			onInput$: $(rawFn)
+			ref: Qrl(q_Field_jsx_children_eVTPl5mlRx4.w([field])),
+			onInput$: Qrl(q_Field_jsx_pEiyP5dZzGA)
 		})
 	}, name);
 }
 const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 	it("should render object style", async () => {
-		const StyledComponent = componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
+		const StyledComponent = componentQrl(q_it_StyledComponent_VXk2eht6Tr0);
 		const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
 	});
 });

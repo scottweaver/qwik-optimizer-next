@@ -6,10 +6,103 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$ } from "@qwik.dev/core";
-const ManyEventsComponent = qrl(() => import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
+//
+const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(()=>import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
+//
+const ManyEventsComponent = /*#__PURE__*/ componentQrl(q_ManyEventsComponent_component_ndbrzxiyG3g);
 
+============================= test.tsx_ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA.js (ENTRY POINT) ==
+export const ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA = () => {};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA",
+  "entry": null,
+  "displayName": "test.tsx_ManyEventsComponent_component_div_button_q_e_click_1",
+  "hash": "BOulU3QpiyA",
+  "canonicalFilename": "test.tsx_ManyEventsComponent_component_div_button_q_e_click_1_BOulU3QpiyA",
+  "path": "",
+  "extension": "js",
+  "parent": "ManyEventsComponent_component_ndbrzxiyG3g",
+  "ctxKind": "eventHandler",
+  "ctxName": "onClick$",
+  "captures": false,
+  "loc": [
+    251,
+    259
+  ]
+}
+*/
+============================= test.tsx_ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs.js (ENTRY POINT) ==
+export const ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs = () => {};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs",
+  "entry": null,
+  "displayName": "test.tsx_ManyEventsComponent_component_div_button_q_w_click",
+  "hash": "DjpgJ0bcgJs",
+  "canonicalFilename": "test.tsx_ManyEventsComponent_component_div_button_q_w_click_DjpgJ0bcgJs",
+  "path": "",
+  "extension": "js",
+  "parent": "ManyEventsComponent_component_ndbrzxiyG3g",
+  "ctxKind": "eventHandler",
+  "ctxName": "window:onClick$",
+  "captures": false,
+  "loc": [
+    379,
+    387
+  ]
+}
+*/
+============================= test.tsx_ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs.js (ENTRY POINT) ==
+export const ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs = () => {};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs",
+  "entry": null,
+  "displayName": "test.tsx_ManyEventsComponent_component_div_button_q_d_focus",
+  "hash": "fR03UCeyKSs",
+  "canonicalFilename": "test.tsx_ManyEventsComponent_component_div_button_q_d_focus_fR03UCeyKSs",
+  "path": "",
+  "extension": "js",
+  "parent": "ManyEventsComponent_component_ndbrzxiyG3g",
+  "ctxKind": "eventHandler",
+  "ctxName": "document:onFocus$",
+  "captures": false,
+  "loc": [
+    346,
+    354
+  ]
+}
+*/
+============================= test.tsx_ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY.js (ENTRY POINT) ==
+export const ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY = () => {};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY",
+  "entry": null,
+  "displayName": "test.tsx_ManyEventsComponent_component_div_button_q_e_blur",
+  "hash": "LVmlrV6TsTY",
+  "canonicalFilename": "test.tsx_ManyEventsComponent_component_div_button_q_e_blur_LVmlrV6TsTY",
+  "path": "",
+  "extension": "js",
+  "parent": "ManyEventsComponent_component_ndbrzxiyG3g",
+  "ctxKind": "eventHandler",
+  "ctxName": "onBlur$",
+  "captures": false,
+  "loc": [
+    276,
+    284
+  ]
+}
+*/
 ============================= test.tsx_ManyEventsComponent_component_ndbrzxiyG3g.js (ENTRY POINT) ==
 export const ManyEventsComponent_component_ndbrzxiyG3g = () => {
 			return (

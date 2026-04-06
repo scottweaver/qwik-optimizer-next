@@ -7,11 +7,10 @@ snapshot_kind: text
 import "./file";
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { Fragment } from "@qwik.dev/core";
-import { component$, useStore, mutable } from "@qwik.dev/core";
-import { dep } from "./file";
-const q_App_component_ckEPmXZlub0 = /* @__PURE__ */ _noopQrl("App_component_ckEPmXZlub0");
+import { useStore } from "@qwik.dev/core";
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
+//
 q_App_component_ckEPmXZlub0.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});

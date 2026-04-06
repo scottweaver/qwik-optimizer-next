@@ -7,12 +7,12 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
-const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+const q_test_5GvkoOCMrJc = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_5GvkoOCMrJc"), "test_5GvkoOCMrJc");
 //
 export const onGet = () => {
 	throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
 };
-export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+export default /*#__PURE__*/ componentQrl(q_test_5GvkoOCMrJc);
 
 ============================= test.tsx_test_component_useResource_4a8wVY7wh38.tsx (ENTRY POINT) ==
 import { onGet } from "./test";
@@ -30,7 +30,7 @@ export const test_component_useResource_4a8wVY7wh38 = () => {
   "canonicalFilename": "test.tsx_test_component_useResource_4a8wVY7wh38",
   "path": "",
   "extension": "tsx",
-  "parent": "test_component_LUXeXe0DQrg",
+  "parent": "test_5GvkoOCMrJc",
   "ctxKind": "function",
   "ctxName": "useResource$",
   "captures": false,
@@ -40,10 +40,10 @@ export const test_component_useResource_4a8wVY7wh38 = () => {
   ]
 }
 */
-============================= test.tsx_test_component_LUXeXe0DQrg.tsx (ENTRY POINT) ==
+============================= test.tsx_test_5GvkoOCMrJc.tsx (ENTRY POINT) ==
 import { onGet } from "./test";
 import { useResource$ } from "@qwik.dev/core";
-export const test_component_LUXeXe0DQrg = ()=> {
+export const test_5GvkoOCMrJc = ()=> {
 	useResource$(() => {
 		return onGet();
 	})
@@ -52,11 +52,11 @@ export const test_component_LUXeXe0DQrg = ()=> {
 /*
 {
   "origin": "test.tsx",
-  "name": "test_component_LUXeXe0DQrg",
+  "name": "test_5GvkoOCMrJc",
   "entry": null,
-  "displayName": "test.tsx_test_component",
-  "hash": "LUXeXe0DQrg",
-  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "displayName": "test.tsx_test",
+  "hash": "5GvkoOCMrJc",
+  "canonicalFilename": "test.tsx_test_5GvkoOCMrJc",
   "path": "",
   "extension": "tsx",
   "parent": null,
