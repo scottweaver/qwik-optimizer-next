@@ -159,6 +159,13 @@ fn transform_code(
         apply_variable_migration(&mut program, &mut xfrm, &collect, &allocator);
     }
 
+    // Post-migration cleanup: remove unused QRL declarations and dead imports.
+    // Matches SWC's separate remove_unused_qrl_declarations call, which runs
+    // after variable migration (i.e., not in Lib mode where migration is skipped).
+    if !matches!(config.mode, EmitMode::Lib) && !xfrm.segments.is_empty() {
+        remove_unused_qrl_declarations(&mut program);
+    }
+
     // Resolve deferred parent symbol names.
     xfrm.patch_segment_parents();
 
@@ -546,29 +553,127 @@ fn apply_variable_migration<'a>(
         }
     }
 
-    // Step 9: remove_unused_qrl_declarations -- iterative fixpoint.
+}
+
+// ---------------------------------------------------------------------------
+// remove_unused_qrl_declarations -- SWC-matching fixpoint cleanup
+// ---------------------------------------------------------------------------
+
+/// Remove unused `_qrl_`/`i_` variable declarations and dead imports from the
+/// root module in a fixpoint loop. Matches SWC's `remove_unused_qrl_declarations`
+/// (parse.rs lines 1482-1640).
+///
+/// This runs AFTER variable migration and import assembly. It iterates until
+/// stable, removing both unused `_qrl_`/`i_` var declarations AND unused imports
+/// (from ANY source, not just the core module). Transitive closure propagation
+/// ensures that if a `_qrl_` var references an import, and the `_qrl_` var is
+/// used, the import is kept.
+fn remove_unused_qrl_declarations(program: &mut oxc::ast::ast::Program<'_>) {
+    use oxc::ast::ast::*;
+    use oxc::ast_visit::Visit;
+    use std::collections::HashSet;
+
     loop {
-        let referenced = {
-            use oxc::ast_visit::Visit;
-            let mut collector = dependency_analysis::IdentRefCollector::default();
-            for stmt in program.body.iter() {
-                collector.visit_statement(stmt);
+        // 1. Collect all names DEFINED by _qrl_/i_ var declarations and ALL imports
+        let mut qrl_defined: HashSet<String> = HashSet::new();
+        let mut import_defined: HashSet<String> = HashSet::new();
+        for stmt in program.body.iter() {
+            match stmt {
+                Statement::VariableDeclaration(decl) => {
+                    for d in &decl.declarations {
+                        if let BindingPattern::BindingIdentifier(id) = &d.id {
+                            let name = id.name.as_str();
+                            if name.starts_with("_qrl_") || name.starts_with("i_") {
+                                qrl_defined.insert(name.to_string());
+                            }
+                        }
+                    }
+                }
+                Statement::ImportDeclaration(import_decl) => {
+                    if let Some(specifiers) = &import_decl.specifiers {
+                        for spec in specifiers {
+                            let sym = match spec {
+                                ImportDeclarationSpecifier::ImportSpecifier(n) => n.local.name.as_str(),
+                                ImportDeclarationSpecifier::ImportDefaultSpecifier(d) => d.local.name.as_str(),
+                                ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => ns.local.name.as_str(),
+                            };
+                            import_defined.insert(sym.to_string());
+                        }
+                    }
+                }
+                _ => {}
             }
-            collector.names
-        };
+        }
+        if qrl_defined.is_empty() && import_defined.is_empty() {
+            break;
+        }
 
-        let before_len = program.body.len();
-        let mut to_remove: Vec<usize> = Vec::new();
+        // 2. Collect all identifiers referenced by NON-removable items
+        //    (items that are not _qrl_/i_ vars and not imports)
+        let mut used: HashSet<String> = HashSet::new();
+        for stmt in program.body.iter() {
+            let is_removable = match stmt {
+                Statement::VariableDeclaration(decl) => {
+                    decl.declarations.iter().all(|d| {
+                        if let BindingPattern::BindingIdentifier(id) = &d.id {
+                            let name = id.name.as_str();
+                            name.starts_with("_qrl_") || name.starts_with("i_")
+                        } else {
+                            false
+                        }
+                    })
+                }
+                Statement::ImportDeclaration(_) => true,
+                _ => false,
+            };
+            if !is_removable {
+                let mut collector = dependency_analysis::IdentRefCollector::default();
+                collector.visit_statement(stmt);
+                for name in collector.names {
+                    used.insert(name);
+                }
+            }
+        }
 
-        for (i, stmt) in program.body.iter().enumerate() {
-            if let oxc::ast::ast::Statement::VariableDeclaration(decl) = stmt {
-                if let Some(declarator) = decl.declarations.first() {
-                    if let oxc::ast::ast::BindingPattern::BindingIdentifier(id) = &declarator.id {
-                        let name = id.name.as_str();
-                        if name.starts_with("_qrl_") || name.starts_with("i_") {
-                            let ref_count = referenced.iter().filter(|r| r.as_str() == name).count();
-                            if ref_count == 0 {
-                                to_remove.push(i);
+        // 3. Propagate: if a removable item is used, its references become used too
+        //    (transitive closure -- a used _qrl_ var may reference an import)
+        let mut changed = true;
+        while changed {
+            changed = false;
+            for stmt in program.body.iter() {
+                let defined_sym = match stmt {
+                    Statement::VariableDeclaration(decl) => {
+                        decl.declarations.first().and_then(|d| {
+                            if let BindingPattern::BindingIdentifier(id) = &d.id {
+                                let name = id.name.as_str();
+                                if name.starts_with("_qrl_") || name.starts_with("i_") {
+                                    Some(name.to_string())
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            }
+                        })
+                    }
+                    Statement::ImportDeclaration(import_decl) => {
+                        import_decl.specifiers.as_ref().and_then(|specs| {
+                            specs.first().map(|spec| match spec {
+                                ImportDeclarationSpecifier::ImportSpecifier(n) => n.local.name.to_string(),
+                                ImportDeclarationSpecifier::ImportDefaultSpecifier(d) => d.local.name.to_string(),
+                                ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => ns.local.name.to_string(),
+                            })
+                        })
+                    }
+                    _ => None,
+                };
+                if let Some(sym) = defined_sym {
+                    if used.contains(&sym) {
+                        let mut collector = dependency_analysis::IdentRefCollector::default();
+                        collector.visit_statement(stmt);
+                        for r in collector.names {
+                            if used.insert(r) {
+                                changed = true;
                             }
                         }
                     }
@@ -576,14 +681,48 @@ fn apply_variable_migration<'a>(
             }
         }
 
-        if to_remove.is_empty() {
-            break;
-        }
-        for idx in to_remove.into_iter().rev() {
-            program.body.remove(idx);
-        }
+        // 4. Remove unused _qrl_/i_ declarations and unused imports
+        let before_len = program.body.len();
+        program.body.retain(|stmt| {
+            match stmt {
+                Statement::VariableDeclaration(decl) => {
+                    let all_unused = decl.declarations.iter().all(|d| {
+                        if let BindingPattern::BindingIdentifier(id) = &d.id {
+                            let name = id.name.as_str();
+                            (name.starts_with("_qrl_") || name.starts_with("i_"))
+                                && !used.contains(name)
+                        } else {
+                            false
+                        }
+                    });
+                    !all_unused
+                }
+                Statement::ImportDeclaration(import_decl) => {
+                    // Keep side-effect imports (specifiers: None)
+                    let Some(specifiers) = &import_decl.specifiers else {
+                        return true;
+                    };
+                    if specifiers.is_empty() {
+                        // Empty specifier list = leftover shell after prior removal
+                        return false;
+                    }
+                    // Remove imports where ALL specifiers are unused
+                    let all_unused = specifiers.iter().all(|spec| {
+                        let sym = match spec {
+                            ImportDeclarationSpecifier::ImportSpecifier(n) => n.local.name.as_str(),
+                            ImportDeclarationSpecifier::ImportDefaultSpecifier(d) => d.local.name.as_str(),
+                            ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => ns.local.name.as_str(),
+                        };
+                        !used.contains(sym)
+                    });
+                    !all_unused
+                }
+                _ => true,
+            }
+        });
+
         if program.body.len() == before_len {
-            break;
+            break; // No more items removed, stable
         }
     }
 }

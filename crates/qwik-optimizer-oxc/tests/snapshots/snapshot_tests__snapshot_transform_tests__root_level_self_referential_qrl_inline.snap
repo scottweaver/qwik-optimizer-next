@@ -1,11 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 948
 expression: output
+snapshot_kind: text
 ---
 ============================= ./node_modules/qwik-tree/index.qwik.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrlDEV } from "@qwik.dev/core";
 // Root-level self-referential component
 // The QRL should NOT be hoisted before the component function is defined
 // or should use two-phase emission to avoid forward reference

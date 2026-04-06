@@ -7,10 +7,6 @@ snapshot_kind: text
 import "./keep";
 import "../keep2";
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
-import { renderQrl } from "@qwik.dev/core";
-import { shouldRemoveQrl } from "@qwik.dev/core";
-import { useClientMountQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";

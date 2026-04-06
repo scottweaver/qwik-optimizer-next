@@ -6,9 +6,7 @@ snapshot_kind: text
 ============================= test.js ==
 import "./foo";
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { serverQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	const text = "hola";

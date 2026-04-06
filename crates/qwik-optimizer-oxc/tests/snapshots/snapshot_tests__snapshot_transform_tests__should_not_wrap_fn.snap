@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");

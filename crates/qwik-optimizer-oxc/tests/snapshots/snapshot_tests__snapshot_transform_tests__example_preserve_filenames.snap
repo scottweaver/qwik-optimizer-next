@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 export const App = componentQrl((props) => {
 	return _jsxSorted(Cmp, null, null, _jsxSorted("p", { "q-e:click": inlinedQrl(() => console.log("warn"), "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4") }, { class: "stuff" }, "Hello Qwik", 1, null), 1, "0");

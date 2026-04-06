@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { useStylesQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_App_component_1_w0t0o3QMovU = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_1_w0t0o3QMovU.tsx"), "App_component_1_w0t0o3QMovU");

@@ -1,12 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 900
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
 import { CONST } from "const";
 export const Works = componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
 	console.log(hey, some);

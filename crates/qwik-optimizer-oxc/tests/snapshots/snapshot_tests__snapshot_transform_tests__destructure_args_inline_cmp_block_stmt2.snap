@@ -4,7 +4,6 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 //

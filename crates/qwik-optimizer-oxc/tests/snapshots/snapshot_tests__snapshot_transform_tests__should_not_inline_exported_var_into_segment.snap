@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { formActionQrl } from "forms";
-import { valiFormQrl } from "forms";
 import { qrl } from "@qwik.dev/core";
 import { wrapperFn, getEnv } from "utils";
 //

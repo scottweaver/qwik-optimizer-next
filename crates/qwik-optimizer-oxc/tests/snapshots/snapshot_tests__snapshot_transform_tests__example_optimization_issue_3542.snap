@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 export const AtomStatus = componentQrl((_rawProps) => {
 	const ctx = _rawProps.ctx;

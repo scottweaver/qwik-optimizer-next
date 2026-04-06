@@ -5,9 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { onBlurQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
-import { onDblClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(()=>import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");

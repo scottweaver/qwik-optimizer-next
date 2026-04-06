@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.ts ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Counter_component_zTmRHlL09Gg = /*#__PURE__*/ qrl(()=>import("./test.tsx_Counter_component_zTmRHlL09Gg"), "Counter_component_zTmRHlL09Gg");

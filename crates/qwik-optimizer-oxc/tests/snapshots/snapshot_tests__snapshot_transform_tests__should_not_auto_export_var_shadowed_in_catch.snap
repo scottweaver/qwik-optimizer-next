@@ -6,7 +6,6 @@ snapshot_kind: text
 ============================= test.js ==
 import { formActionQrl } from "forms";
 import { qrl } from "@qwik.dev/core";
-import { translate } from "i18n";
 //
 const q_action_formAction_dIQV5vh1He4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_action_formAction_dIQV5vh1He4"), "action_formAction_dIQV5vh1He4");
 //

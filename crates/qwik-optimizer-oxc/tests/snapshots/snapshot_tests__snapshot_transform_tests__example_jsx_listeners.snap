@@ -5,9 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { customQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
-import { onDocumentScrollQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Foo_component_1_DvU6FitWglY = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_1_DvU6FitWglY"), "Foo_component_1_DvU6FitWglY");

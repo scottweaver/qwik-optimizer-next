@@ -5,13 +5,8 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
-import { serverQrl } from "@qwik.dev/router";
 import { qrlDEV } from "@qwik.dev/core";
 import { _noopQrlDEV } from "@qwik.dev/core";
-import { clientSupabase } from "supabase";
-import { Client } from "openai";
-import { secret } from "./secret";
 import { sideEffect } from "./secret";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");

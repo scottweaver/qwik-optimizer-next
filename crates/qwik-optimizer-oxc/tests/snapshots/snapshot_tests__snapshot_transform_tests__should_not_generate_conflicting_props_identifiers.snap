@@ -4,10 +4,7 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { _restProps } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { useComputedQrl } from "@qwik.dev/core";
-import { useTaskQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 //
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ _noopQrl("test_component_LUXeXe0DQrg");

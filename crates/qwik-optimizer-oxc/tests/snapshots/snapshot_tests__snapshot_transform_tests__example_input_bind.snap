@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
 export const Greeter = componentQrl(() => {
 	const value = useSignal(0);
 	const checked = useSignal(false);

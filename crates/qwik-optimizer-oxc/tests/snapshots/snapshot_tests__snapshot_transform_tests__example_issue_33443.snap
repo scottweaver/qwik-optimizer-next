@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";
 //

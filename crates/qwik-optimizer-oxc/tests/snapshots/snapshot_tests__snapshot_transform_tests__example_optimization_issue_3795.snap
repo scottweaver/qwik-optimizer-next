@@ -1,11 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 894
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
 export const Issue3795 = componentQrl(() => {
 	let base = "foo";
 	const firstAssignment = base;

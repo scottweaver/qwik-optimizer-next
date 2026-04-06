@@ -4,7 +4,6 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { _restProps } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //

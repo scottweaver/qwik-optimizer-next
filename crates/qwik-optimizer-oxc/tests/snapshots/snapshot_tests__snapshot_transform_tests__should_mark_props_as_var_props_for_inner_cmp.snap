@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { useResourceQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 //
 const q_Image_component_CS20HgBlRYI = /*#__PURE__*/ qrl(()=>import("./test.tsx_Image_component_CS20HgBlRYI"), "Image_component_CS20HgBlRYI");

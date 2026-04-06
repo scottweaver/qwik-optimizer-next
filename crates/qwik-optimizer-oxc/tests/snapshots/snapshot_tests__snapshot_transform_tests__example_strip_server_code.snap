@@ -4,14 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { clientQrl } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
-import { serverLoaderQrl } from "@qwik.dev/core";
-import { serverStuffQrl } from "@qwik.dev/core";
-import { useTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _noopQrl } from "@qwik.dev/core";
 //
 const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo");
 //

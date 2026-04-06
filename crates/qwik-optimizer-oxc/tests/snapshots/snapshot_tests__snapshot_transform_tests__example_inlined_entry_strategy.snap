@@ -5,7 +5,6 @@ snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { onClickQrl } from "@qwik.dev/core";
 import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
 import { useStylesQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";

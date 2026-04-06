@@ -1,11 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 893
 expression: output
+snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
 export const Issue3561 = componentQrl(() => {
 	const props = useStore({ product: { currentVariant: {
 		variantImage: "image",
