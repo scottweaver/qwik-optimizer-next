@@ -91,10 +91,11 @@ Plans:
   1. Parity report shows 201/201 full match (root module + segment count + diagnostics all green)
   2. No regressions from v0.1.0 baseline (all previously passing tests still pass)
   3. Any stragglers discovered during final verification are identified, fixed, and re-verified
-**Plans**: TBD
+**Plans**: 2 plans (iteration 1 -- additional plans expected per D-08)
 
 Plans:
-- [ ] 13-01: TBD
+- [ ] 13-01-PLAN.md — Diagnostic triage + quote style preservation: create parity_diff_report test for categorized diff analysis, fix single-quote preservation for user-written imports
+- [ ] 13-02-PLAN.md — QRL const declarations + PURE annotations: emit const q_NAME for all segments, add /*#__PURE__*/ to wrapper calls, fix const stripping bug
 
 ## Progress
 
@@ -115,4 +116,4 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
 | 11. Root Module Code Generation | v0.2.0 | 4/4 | Complete   | 2026-04-06 |
 | 12. Diagnostics Parity | v0.2.0 | 1/1 | Complete    | 2026-04-06 |
-| 13. Final Acceptance | v0.2.0 | 0/1 | Not started | - |
+| 13. Final Acceptance | v0.2.0 | 0/2 | In progress | - |
