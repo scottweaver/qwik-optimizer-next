@@ -26,7 +26,7 @@ The specification must be comprehensive and precise enough that an OXC implement
 - [ ] Achieve 201/201 full SWC parity — every fixture's root module, segment count, and diagnostics match the SWC reference
 - [ ] Fix root module code generation mismatches (95 fixtures)
 - [x] Fix segment extraction for dollar-sign expressions in loops, ternaries, nested scopes, and spread props — Validated in Phase 10 (195/201 segment count parity, 97%)
-- [ ] Fix diagnostics parity (4 fixtures)
+- [x] Fix diagnostics parity — Validated in Phase 12 (201/201 diagnostics match, 100%)
 
 ### Out of Scope
 
