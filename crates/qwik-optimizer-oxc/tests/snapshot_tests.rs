@@ -1183,6 +1183,257 @@ mod swc_parity {
         }
         println!("{:=<60}\n", "");
     }
+
+    /// Diagnostic diff report for all root-mismatched fixtures.
+    ///
+    /// Prints normalized line-by-line diffs and categorizes each mismatch.
+    /// Always passes — run with `--nocapture` to see output:
+    ///
+    /// ```
+    /// cargo test -p qwik-optimizer-oxc --test snapshot_tests parity_diff_report -- --nocapture
+    /// ```
+    #[test]
+    fn parity_diff_report() {
+        let fixtures = load_fixtures();
+        let mut categories: HashMap<&str, Vec<String>> = HashMap::new();
+        let mut mismatch_count = 0;
+
+        let mut fixture_names: Vec<&String> = fixtures.fixtures.keys().collect();
+        fixture_names.sort();
+
+        for name in &fixture_names {
+            let config = &fixtures.fixtures[*name];
+            let expected = load_snapshot(name);
+
+            // Build options (same as parity_report)
+            let entry_strategy = match config.entry_strategy.as_str() {
+                "Segment" => EntryStrategy::Segment,
+                "Inline" => EntryStrategy::Inline,
+                "Hoist" => EntryStrategy::Hoist,
+                "Single" => EntryStrategy::Single,
+                "Component" => EntryStrategy::Component,
+                "Smart" => EntryStrategy::Smart,
+                "Hook" => EntryStrategy::Hook,
+                _ => EntryStrategy::Segment,
+            };
+            let mode = match config.mode.as_str() {
+                "Lib" => EmitMode::Lib,
+                "Prod" => EmitMode::Prod,
+                "Dev" => EmitMode::Dev,
+                "Hmr" => EmitMode::Hmr,
+                "Test" => EmitMode::Test,
+                _ => EmitMode::Lib,
+            };
+            let minify = match config.minify.as_str() {
+                "Simplify" => MinifyMode::Simplify,
+                "None" => MinifyMode::None,
+                _ => MinifyMode::Simplify,
+            };
+
+            let inputs: Vec<TransformModuleInput> = if expected.inputs.len() == 1 && expected.inputs[0].path.is_empty() {
+                config.inputs.iter().map(|fi| TransformModuleInput {
+                    code: expected.inputs[0].code.clone(),
+                    path: fi.path.clone(),
+                    dev_path: fi.dev_path.clone(),
+                }).collect()
+            } else {
+                config.inputs.iter().filter_map(|fi| {
+                    expected.inputs.iter()
+                        .find(|si| si.path == fi.path)
+                        .map(|si| TransformModuleInput {
+                            code: si.code.clone(),
+                            path: fi.path.clone(),
+                            dev_path: fi.dev_path.clone(),
+                        })
+                }).collect()
+            };
+
+            let opts = TransformModulesOptions {
+                src_dir: config.src_dir.clone(),
+                root_dir: config.root_dir.clone(),
+                input: inputs,
+                source_maps: config.source_maps,
+                minify,
+                transpile_ts: config.transpile_ts,
+                transpile_jsx: config.transpile_jsx,
+                preserve_filenames: config.preserve_filenames,
+                explicit_extensions: config.explicit_extensions,
+                entry_strategy,
+                mode,
+                scope: config.scope.clone(),
+                core_module: config.core_module.clone(),
+                strip_exports: config.strip_exports.clone(),
+                strip_ctx_name: config.strip_ctx_name.clone(),
+                strip_event_handlers: config.strip_event_handlers,
+                reg_ctx_name: config.reg_ctx_name.clone(),
+                is_server: config.is_server,
+            };
+
+            let result = qwik_optimizer_oxc::transform_modules(opts);
+
+            // Compare root module (normalized)
+            let actual_root = result.modules.iter().find(|m| m.segment.is_none());
+            let (exp_norm, act_norm) = match (actual_root, &expected.root_module) {
+                (Some(actual), Some(exp)) => {
+                    let en = normalize(&exp.code);
+                    let an = normalize(&actual.code);
+                    if en == an {
+                        continue; // Match -- skip
+                    }
+                    (en, an)
+                }
+                (None, None) => continue,
+                _ => {
+                    mismatch_count += 1;
+                    let cat = "STRUCTURAL";
+                    categories.entry(cat).or_default().push(name.to_string());
+                    println!("\n--- {} [STRUCTURAL: root presence mismatch] ---", name);
+                    continue;
+                }
+            };
+
+            mismatch_count += 1;
+
+            let exp_lines: Vec<&str> = exp_norm.lines().collect();
+            let act_lines: Vec<&str> = act_norm.lines().collect();
+
+            // Categorize based on diff analysis
+            let category = categorize_diff(&exp_lines, &act_lines);
+            categories.entry(category).or_default().push(name.to_string());
+
+            println!("\n--- {} [{}] ---", name, category);
+            // Print side-by-side diff
+            let max_lines = exp_lines.len().max(act_lines.len());
+            for i in 0..max_lines {
+                let exp_line = exp_lines.get(i).unwrap_or(&"");
+                let act_line = act_lines.get(i).unwrap_or(&"");
+                if exp_line != act_line {
+                    if !exp_line.is_empty() {
+                        println!("  - {}", exp_line);
+                    }
+                    if !act_line.is_empty() {
+                        println!("  + {}", act_line);
+                    }
+                }
+            }
+        }
+
+        // Summary table
+        println!("\n{:=<60}", "");
+        println!("PARITY DIFF REPORT SUMMARY");
+        println!("{:=<60}", "");
+        println!("Total root mismatches: {}", mismatch_count);
+        println!();
+
+        let mut cat_list: Vec<(&&str, &Vec<String>)> = categories.iter().collect();
+        cat_list.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+        println!("{:<25} {:>5}", "Category", "Count");
+        println!("{:-<25} {:->5}", "", "");
+        for (cat, fixtures) in &cat_list {
+            println!("{:<25} {:>5}", cat, fixtures.len());
+        }
+        println!("{:=<60}\n", "");
+    }
+
+    /// Categorize a diff between expected and actual normalized lines.
+    fn categorize_diff(exp_lines: &[&str], act_lines: &[&str]) -> &'static str {
+        let mut has_quote_diff = false;
+        let mut has_hash_diff = false;
+        let mut has_import_diff = false;
+        let mut has_pure_diff = false;
+        let mut has_qrl_const_diff = false;
+        let mut has_other = false;
+
+        let max_lines = exp_lines.len().max(act_lines.len());
+        for i in 0..max_lines {
+            let exp = exp_lines.get(i).unwrap_or(&"");
+            let act = act_lines.get(i).unwrap_or(&"");
+            if exp == act {
+                continue;
+            }
+
+            // Check if difference is only quotes (single vs double)
+            let exp_squote = exp.replace('"', "'");
+            let act_squote = act.replace('"', "'");
+            if exp_squote == act_squote {
+                has_quote_diff = true;
+                continue;
+            }
+
+            // Check import differences
+            if exp.starts_with("import ") || act.starts_with("import ") {
+                has_import_diff = true;
+                continue;
+            }
+
+            // Check missing PURE annotation
+            if exp.contains("/*#__PURE__*/") != act.contains("/*#__PURE__*/") {
+                has_pure_diff = true;
+                continue;
+            }
+
+            // Check missing QRL const
+            if (exp.starts_with("const q_") && !act.starts_with("const q_"))
+                || (!exp.starts_with("const q_") && act.starts_with("const q_"))
+            {
+                has_qrl_const_diff = true;
+                continue;
+            }
+
+            // Check hash differences (lines match except for hash strings)
+            // Hashes are typically 11-char alphanumeric sequences
+            let exp_dehashed = dehash(exp);
+            let act_dehashed = dehash(act);
+            if exp_dehashed == act_dehashed && exp_dehashed != *exp {
+                has_hash_diff = true;
+                continue;
+            }
+
+            has_other = true;
+        }
+
+        // Return most specific single category
+        if has_other {
+            return "STRUCTURAL";
+        }
+        if has_qrl_const_diff {
+            return "MISSING_QRL_CONST";
+        }
+        if has_pure_diff {
+            return "MISSING_PURE";
+        }
+        if has_import_diff {
+            return "IMPORT_DIFF";
+        }
+        if has_hash_diff {
+            return "HASH_DIFF";
+        }
+        if has_quote_diff {
+            return "QUOTE_STYLE";
+        }
+        "STRUCTURAL"
+    }
+
+    /// Replace likely hash strings (11-char alphanumeric) with a placeholder.
+    fn dehash(s: &str) -> String {
+        let mut result = String::with_capacity(s.len());
+        let chars: Vec<char> = s.chars().collect();
+        let mut i = 0;
+        while i < chars.len() {
+            // Look for underscore followed by potential hash
+            if chars[i] == '_' && i + 12 <= chars.len() {
+                let candidate: String = chars[i+1..i+12].iter().collect();
+                if candidate.len() == 11 && candidate.chars().all(|c| c.is_alphanumeric()) {
+                    result.push_str("_HASH");
+                    i += 12;
+                    continue;
+                }
+            }
+            result.push(chars[i]);
+            i += 1;
+        }
+        result
+    }
 }
 
 // ============================================================================
