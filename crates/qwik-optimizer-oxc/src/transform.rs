@@ -2054,6 +2054,40 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         let pending = self.segment_stack.pop().unwrap();
 
+        // C05: Check for missing Qrl implementation for locally-defined $-suffixed functions.
+        // SWC transform.rs:4066-4094 -- only for non-imported marker functions.
+        // If a locally-defined $-function (e.g., useMemo$) is called but the corresponding
+        // Qrl export (e.g., useMemoQrl) doesn't exist, emit C05 and skip segment creation.
+        // Use marker_fn_sources to distinguish imported from locally-defined: imported marker
+        // functions have their specifier in marker_fn_sources, locally-defined ones do not.
+        {
+            let collect = unsafe { &*self.global_collect_ptr };
+            if !self.marker_fn_sources.contains_key(&pending.ctx_name) {
+                // Locally-defined $-function -- check if Qrl counterpart is exported
+                let qrl_name = crate::words::dollar_to_qrl_name(&pending.ctx_name);
+                if !collect.exports.contains_key(&qrl_name) {
+                    self.diagnostics.push(crate::types::Diagnostic {
+                        scope: "optimizer".to_string(),
+                        category: crate::types::DiagnosticCategory::Error,
+                        code: Some("C05".to_string()),
+                        file: self.file_name.clone(),
+                        message: format!(
+                            "Found '{}' but did not find the corresponding '{}' exported in the same file. Please check that it is exported and spelled correctly",
+                            pending.ctx_name, qrl_name
+                        ),
+                        highlights: None,
+                        suggestions: None,
+                    });
+                    // Pop the marker name from stack_ctxt if it was pushed
+                    if pending.pushed_ctx_name {
+                        self.stack_ctxt.pop();
+                    }
+                    // Skip segment creation for invalid call (matching SWC behavior)
+                    return;
+                }
+            }
+        }
+
         // NOTE: Do NOT pop stack_ctxt here yet -- register_context_name needs
         // the full stack including the marker function name. Pop after name computation.
 
