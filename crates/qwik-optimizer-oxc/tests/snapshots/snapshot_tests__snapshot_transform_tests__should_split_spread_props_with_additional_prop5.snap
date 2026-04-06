@@ -43,12 +43,4 @@ export const test_component_LUXeXe0DQrg = () => {
 }
 */
 == DIAGNOSTICS ==
-[
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C02",
-    "file": "test.tsx",
-    "message": "Reference to identifier 'Hola' can not be used inside a Qrl($) scope because it's a function"
-  }
-]
+[]

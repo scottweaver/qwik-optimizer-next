@@ -22,12 +22,4 @@ export const Works = componentQrl((props) => {
 const STYLES = ".class {}";
 
 == DIAGNOSTICS ==
-[
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C03",
-    "file": "test.tsx",
-    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: STYLES"
-  }
-]
+[]

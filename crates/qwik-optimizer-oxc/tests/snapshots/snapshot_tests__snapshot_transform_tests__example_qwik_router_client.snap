@@ -2565,19 +2565,4 @@ export const ErrorBoundary_component_yTCHi5s1o00 = (props) => {
 }
 */
 == DIAGNOSTICS ==
-[
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C03",
-    "file": "index.qwik.mjs",
-    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: transitionCss"
-  },
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C02",
-    "file": "index.qwik.mjs",
-    "message": "Reference to identifier 'callRestoreScrollOnDocument' can not be used inside a Qrl($) scope because it's a function"
-  }
-]
+[]

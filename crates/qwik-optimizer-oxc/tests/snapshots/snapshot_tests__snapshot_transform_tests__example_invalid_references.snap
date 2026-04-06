@@ -76,26 +76,4 @@ export const App_component_1_w0t0o3QMovU = ({count}) => {
 }
 */
 == DIAGNOSTICS ==
-[
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C02",
-    "file": "test.tsx",
-    "message": "Reference to identifier 'I10' can not be used inside a Qrl($) scope because it's a function"
-  },
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C02",
-    "file": "test.tsx",
-    "message": "Reference to identifier 'I10' can not be used inside a Qrl($) scope because it's a function"
-  },
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C02",
-    "file": "test.tsx",
-    "message": "Reference to identifier 'I9' can not be used inside a Qrl($) scope because it's a function"
-  }
-]
+[]

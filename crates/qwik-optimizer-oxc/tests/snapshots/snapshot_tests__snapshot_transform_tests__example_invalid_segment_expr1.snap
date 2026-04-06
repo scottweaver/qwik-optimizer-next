@@ -12,6 +12,7 @@ const q_App_component_1_w0t0o3QMovU = /*#__PURE__*/ qrl(()=>import("./test.tsx_A
 export const App = /*#__PURE__*/ componentQrl(q_App_component_1_w0t0o3QMovU);
 
 ============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
 export const App_component_ckEPmXZlub0 = render;
 
 /*
@@ -27,7 +28,10 @@ export const App_component_ckEPmXZlub0 = render;
   "parent": "App_component_1_w0t0o3QMovU",
   "ctxKind": "function",
   "ctxName": "$",
-  "captures": false,
+  "captures": true,
+  "captureNames": [
+    "render"
+  ],
   "loc": [
     284,
     293
@@ -35,6 +39,7 @@ export const App_component_ckEPmXZlub0 = render;
 }
 */
 ============================= test.tsx_App_component_useStyles_t35nSa5UV7U.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
 export const App_component_useStyles_t35nSa5UV7U = style;
 
 /*
@@ -50,7 +55,10 @@ export const App_component_useStyles_t35nSa5UV7U = style;
   "parent": "App_component_1_w0t0o3QMovU",
   "ctxKind": "function",
   "ctxName": "useStyles$",
-  "captures": false,
+  "captures": true,
+  "captureNames": [
+    "style"
+  ],
   "loc": [
     199,
     216
@@ -92,19 +100,4 @@ export const App_component_1_w0t0o3QMovU = () => {
 }
 */
 == DIAGNOSTICS ==
-[
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C03",
-    "file": "test.tsx",
-    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: render"
-  },
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C03",
-    "file": "test.tsx",
-    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: style"
-  }
-]
+[]

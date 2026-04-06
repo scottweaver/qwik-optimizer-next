@@ -904,7 +904,12 @@ impl QwikTransform {
 
         for name in all_idents {
             for (decl_name, decl_type) in &all_decl {
-                if name == decl_name && matches!(decl_type, IdentType::Fn | IdentType::Class) {
+                if name == decl_name
+                    && matches!(decl_type, IdentType::Fn | IdentType::Class)
+                    && !collect.has_export_symbol(name)
+                    && !collect.root.contains_key(name)
+                    && !self_imports.contains(&name.to_string())
+                {
                     // C02 error: function/class declaration referenced across $ boundary
                     self.diagnostics.push(crate::types::Diagnostic {
                         scope: "optimizer".to_string(),
@@ -2071,7 +2076,25 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         let param_idents = Self::get_first_arg_params(&call.arguments[0]);
         scoped_idents.retain(|id| !param_idents.contains(id));
 
+        // --- Classify captures against GlobalCollect ---
+        // Must happen BEFORE C03 check so module-level declarations (self-imports)
+        // are removed from scoped_idents first. Otherwise C03 falsely fires on
+        // identifiers that are module-level consts/vars (not actual captures).
+        let mut needed_imports = Vec::new();
+        let mut self_imports = Vec::new();
+        self.classify_captures(
+            &pending.descendent_idents,
+            &mut scoped_idents,
+            &mut needed_imports,
+            &mut self_imports,
+        );
+
         // C03: if not a function/arrow and has captures, clear and emit diagnostic.
+        // SWC inlines const initializers before this check, which either:
+        // - Converts identifier references to function expressions (can_capture=true)
+        // - Converts to literals/expressions with no local captures
+        // Since OXC doesn't do const inlining, we suppress C03 when the first arg
+        // is a simple identifier (it's the value being passed, not a captured variable).
         let first_arg_can_capture = if !call.arguments.is_empty() {
             match &call.arguments[0] {
                 Argument::ArrowFunctionExpression(_) | Argument::FunctionExpression(_) => true,
@@ -2080,8 +2103,13 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         } else {
             false
         };
+        let first_arg_is_ident = if !call.arguments.is_empty() {
+            matches!(&call.arguments[0], Argument::Identifier(_))
+        } else {
+            false
+        };
 
-        if !first_arg_can_capture && !scoped_idents.is_empty() {
+        if !first_arg_can_capture && !first_arg_is_ident && !scoped_idents.is_empty() {
             self.diagnostics.push(crate::types::Diagnostic {
                 scope: "optimizer".to_string(),
                 category: crate::types::DiagnosticCategory::Error,
@@ -2096,16 +2124,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             });
             scoped_idents.clear();
         }
-
-        // --- Classify captures against GlobalCollect ---
-        let mut needed_imports = Vec::new();
-        let mut self_imports = Vec::new();
-        self.classify_captures(
-            &pending.descendent_idents,
-            &mut scoped_idents,
-            &mut needed_imports,
-            &mut self_imports,
-        );
 
         // --- Compute names via register_context_name ---
         let names = crate::hash::register_context_name(

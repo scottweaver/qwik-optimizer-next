@@ -63,19 +63,4 @@ describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 });
 
 == DIAGNOSTICS ==
-[
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C03",
-    "file": "test.tsx",
-    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: STYLE_RED"
-  },
-  {
-    "scope": "optimizer",
-    "category": "error",
-    "code": "C03",
-    "file": "test.tsx",
-    "message": "Qrl($) scope is not a function, but it's capturing local identifiers: rawFn"
-  }
-]
+[]
