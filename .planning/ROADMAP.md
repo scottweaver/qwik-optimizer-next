@@ -96,7 +96,7 @@ Plans:
 Plans:
 - [x] 13-01-PLAN.md — Diagnostic triage + quote style preservation: create parity_diff_report test for categorized diff analysis, fix single-quote preservation for user-written imports
 - [ ] 13-02-PLAN.md — QRL const declarations + PURE annotations: emit const q_NAME for all segments, add /*#__PURE__*/ to wrapper calls, fix const stripping bug
-- [ ] 13-03-PLAN.md — Indentation fix: convert tabs to 4-space indentation matching SWC output
+- [x] 13-03-PLAN.md — Indentation fix: convert tabs to 4-space indentation matching SWC output
 - [ ] 13-04-PLAN.md — Hash/naming fix: fix segment hash computation and remove spurious counter suffixes to match SWC QRL names
 - [ ] 13-05-PLAN.md — Import count + _wrapProp + Fragment: fix import differences, add _wrapProp generation, add Fragment import for JSX fragments
 - [ ] 13-06-PLAN.md — Inline strategy + tagName: rework Inline entry strategy to _noopQrl/.s()/.w() format, preserve component tagName option
@@ -122,4 +122,4 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
 | 11. Root Module Code Generation | v0.2.0 | 4/4 | Complete   | 2026-04-06 |
 | 12. Diagnostics Parity | v0.2.0 | 1/1 | Complete    | 2026-04-06 |
-| 13. Final Acceptance | v0.2.0 | 1/8 | In Progress|  |
+| 13. Final Acceptance | v0.2.0 | 2/8 | In Progress|  |
