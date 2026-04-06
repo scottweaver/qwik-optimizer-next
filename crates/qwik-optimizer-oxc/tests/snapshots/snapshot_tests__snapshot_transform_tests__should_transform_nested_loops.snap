@@ -6,43 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
-const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal, Signal } from "@qwik.dev/core";
+const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 
-============================= test.tsx_Foo_component_p_q_e_click_9U1d0Ar5X2I.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Foo_component_p_q_e_click_9U1d0Ar5X2I = () => {
-	const item = _captures[0];
-	const row = _captures[1];
-	return console.log(row.value.id, item.value.id);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_p_q_e_click_9U1d0Ar5X2I",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component_p_q_e_click",
-  "hash": "9U1d0Ar5X2I",
-  "canonicalFilename": "test.tsx_Foo_component_p_q_e_click_9U1d0Ar5X2I",
-  "path": "",
-  "extension": "js",
-  "parent": "Foo_component_HTDRsvUbLiE",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "item",
-    "row"
-  ],
-  "loc": [
-    331,
-    377
-  ]
-}
-*/
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";

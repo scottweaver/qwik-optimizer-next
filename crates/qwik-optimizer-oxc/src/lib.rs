@@ -135,6 +135,8 @@ fn transform_code(
         config,
         &collect,
         &path_data.file_name,
+        &path_data.file_stem,
+        &path_data.rel_dir.to_string_lossy(),
         &rel_path,
         &file_extension,
         source_in_arena,
@@ -1052,7 +1054,9 @@ export const App = component$(() => {
     }
 
     #[test]
-    fn test_entry_policy_smart_strategy_separates_pure_event_handlers() {
+    fn test_entry_policy_smart_strategy_groups_component_with_context() {
+        // Smart strategy: component$ segments with a parent context (e.g., declared in a
+        // named variable) are grouped per-component, NOT given their own chunk.
         let code = r#"import { component$, $ } from "@qwik.dev/core";
 export const App = component$(() => {
     return <div onClick$={() => console.log("click")}></div>;
@@ -1066,35 +1070,23 @@ export const App = component$(() => {
             ..TransformModulesOptions::default()
         };
         let result = transform_modules(opts);
-        // Smart strategy: pure event handlers (no captures) get their own chunk
         let segment_modules: Vec<_> = result.modules.iter().filter(|m| m.segment.is_some()).collect();
         assert!(
             !segment_modules.is_empty(),
             "Smart strategy should produce segments"
         );
-        // Note: onClick$ JSX attribute QRL wrapping not yet implemented,
-        // so only component$ produces a segment. With proper stack_ctxt,
-        // the component segment has context ["App"] and gets grouped
-        // (is_entry=false). When JSX QRL wrapping is added, the onClick
-        // handler should get its own chunk (is_entry=true) as a pure
-        // event handler with no captures.
-        // For now, verify segments are produced and component is grouped.
-        if segment_modules.len() == 1 {
-            // Only component$ segment exists (no JSX QRL wrapping yet)
-            // Smart strategy groups it per-component context
-            assert!(
-                !segment_modules[0].is_entry,
-                "Smart strategy should group component segment per-context (is_entry=false)"
-            );
-        } else {
-            // Once JSX QRL wrapping is implemented, pure event handlers
-            // should have is_entry=true (own chunk)
-            let has_own_chunk = segment_modules.iter().any(|m| m.is_entry);
-            assert!(
-                has_own_chunk,
-                "Smart strategy should give pure event handler its own chunk (is_entry=true)"
-            );
-        }
+        // component$ in a named variable context should be grouped (is_entry=false)
+        let component_seg = segment_modules.iter().find(|m| {
+            m.segment.as_ref().map_or(false, |s| s.ctx_name == "component$")
+        });
+        assert!(
+            component_seg.is_some(),
+            "Should produce a component$ segment"
+        );
+        assert!(
+            !component_seg.unwrap().is_entry,
+            "Smart strategy should group component$ with its parent context (is_entry=false)"
+        );
     }
 
     #[test]

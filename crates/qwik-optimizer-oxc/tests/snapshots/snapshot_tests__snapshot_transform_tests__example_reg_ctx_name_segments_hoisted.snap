@@ -6,9 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-//
-const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
-//
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, server$, useStyle$ } from "@qwik.dev/core";
+const q_Works_component_div_onClick_server_OsNoEFc5SM4 = /* @__PURE__ */ _noopQrl("Works_component_div_onClick_server_OsNoEFc5SM4");
+const q_Works_component_t45qL4vNGv0 = /* @__PURE__ */ _noopQrl("Works_component_t45qL4vNGv0");
 q_Works_component_div_onClick_server_OsNoEFc5SM4.s(() => console.log("in server", text));
 q_Works_component_t45qL4vNGv0.s((props) => {
 	useStyle$(STYLES);

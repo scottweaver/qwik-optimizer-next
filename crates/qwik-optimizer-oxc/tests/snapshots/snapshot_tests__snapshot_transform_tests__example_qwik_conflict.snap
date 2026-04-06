@@ -15,11 +15,15 @@ export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
 componentQrl();
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
-export const Root = /*#__PURE__*/ componentQrl(q_Root_component_2_iqSg9SGBdfk);
+export const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+export const Root = qrl(() => import("./test.tsx_Root_component_1_cBpQNYDUHI4"), "Root_component_1_cBpQNYDUHI4");
 
 ============================= test.tsx_Root_component_1_cBpQNYDUHI4.js (ENTRY POINT) ==
+import { $ } from "@qwik.dev/core";
+import { useStyles } from "@qwik.dev/core";
 export const Root_component_1_cBpQNYDUHI4 = () => {
+	useStyles($('thing'));
+	return $(() => {
 		return (
 			<div/>
 		)
@@ -77,40 +81,13 @@ export const Foo_component_HTDRsvUbLiE = () => {
   ]
 }
 */
-============================= test.tsx_Root_component_2_iqSg9SGBdfk.js (ENTRY POINT) ==
-import { $ } from "@qwik.dev/core";
-import { useStyles } from "@qwik.dev/core";
-export const Root_component_2_iqSg9SGBdfk = () => {
-	useStyles($('thing'));
-	return $(() => {
+============================= test.tsx_Root_component_royhjYaCbYE.js (ENTRY POINT) ==
+export const Root_component_royhjYaCbYE = () => {
 		return (
 			<div/>
 		)
 	});
 };
-/*
-{
-  "origin": "test.tsx",
-  "name": "Root_component_2_iqSg9SGBdfk",
-  "entry": null,
-  "displayName": "test.tsx_Root_component_2",
-  "hash": "iqSg9SGBdfk",
-  "canonicalFilename": "test.tsx_Root_component_2_iqSg9SGBdfk",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    468,
-    586
-  ]
-}
-*/
-============================= test.tsx_Root_component_royhjYaCbYE.js (ENTRY POINT) ==
-export const Root_component_royhjYaCbYE = "thing";
-
 /*
 {
   "origin": "test.tsx",
@@ -121,7 +98,7 @@ export const Root_component_royhjYaCbYE = "thing";
   "canonicalFilename": "test.tsx_Root_component_royhjYaCbYE",
   "path": "",
   "extension": "js",
-  "parent": "Root_component_2_iqSg9SGBdfk",
+  "parent": "Root_component_1_cBpQNYDUHI4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,

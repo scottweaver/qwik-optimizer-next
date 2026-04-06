@@ -6,10 +6,9 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
-//
-export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useBrowserVisibleTask$, useStore, useStyles$ } from "@qwik.dev/core";
+export const Child = qrl(() => import("./test.tsx_Child_component_9GyF01GDKqw"), "Child_component_9GyF01GDKqw");
 
 ============================= test.tsx_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";

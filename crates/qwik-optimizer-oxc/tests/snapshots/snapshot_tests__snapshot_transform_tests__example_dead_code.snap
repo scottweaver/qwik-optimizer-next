@@ -6,10 +6,10 @@ snapshot_kind: text
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$ } from "@qwik.dev/core";
+import { deps } from "deps";
+export const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.tsx (ENTRY POINT) ==
 import { deps } from "deps";

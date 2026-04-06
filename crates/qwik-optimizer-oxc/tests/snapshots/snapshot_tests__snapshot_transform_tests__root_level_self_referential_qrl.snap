@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 947
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
@@ -12,7 +12,7 @@ const q_Tree_component_T0k10EAlawU = /*#__PURE__*/ qrl(()=>import("./test.tsx_Tr
 // Root-level self-referential component
 // The QRL should NOT be hoisted before the component function is defined
 // or should use two-phase emission to avoid forward reference
-export const Tree = /*#__PURE__*/ componentQrl(q_Tree_component_T0k10EAlawU);
+export const Tree = qrl(() => import("./test.tsx_Tree_component_T0k10EAlawU"), "Tree_component_T0k10EAlawU");
 
 ============================= test.tsx_Tree_component_T0k10EAlawU.tsx (ENTRY POINT) ==
 import { Tree } from "./test";

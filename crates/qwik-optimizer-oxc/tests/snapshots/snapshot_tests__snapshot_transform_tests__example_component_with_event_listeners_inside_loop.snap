@@ -6,79 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
-//
-export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, useStore, useSignal } from "@qwik.dev/core";
+export const App = qrl(() => import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
 
-============================= test.tsx_App_component_loopWhile_span_q_e_click_05kCMrZVn5E.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const App_component_loopWhile_span_q_e_click_05kCMrZVn5E = () => {
-	const cart = _captures[0];
-	const i = _captures[1];
-	const results = _captures[2];
-	cart.push(results[i]);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_component_loopWhile_span_q_e_click_05kCMrZVn5E",
-  "entry": null,
-  "displayName": "test.tsx_App_component_loopWhile_span_q_e_click",
-  "hash": "05kCMrZVn5E",
-  "canonicalFilename": "test.tsx_App_component_loopWhile_span_q_e_click_05kCMrZVn5E",
-  "path": "",
-  "extension": "js",
-  "parent": "App_component_ckEPmXZlub0",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "cart",
-    "i",
-    "results"
-  ],
-  "loc": [
-    1692,
-    1754
-  ]
-}
-*/
-============================= test.tsx_App_component_loopForIn_span_q_e_click_adzBGickx1U.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const App_component_loopForIn_span_q_e_click_adzBGickx1U = () => {
-	const cart = _captures[0];
-	const key = _captures[1];
-	const results = _captures[2];
-	cart.push(results[key]);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_component_loopForIn_span_q_e_click_adzBGickx1U",
-  "entry": null,
-  "displayName": "test.tsx_App_component_loopForIn_span_q_e_click",
-  "hash": "adzBGickx1U",
-  "canonicalFilename": "test.tsx_App_component_loopForIn_span_q_e_click_adzBGickx1U",
-  "path": "",
-  "extension": "js",
-  "parent": "App_component_ckEPmXZlub0",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "cart",
-    "key",
-    "results"
-  ],
-  "loc": [
-    1318,
-    1382
-  ]
-}
-*/
 ============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";

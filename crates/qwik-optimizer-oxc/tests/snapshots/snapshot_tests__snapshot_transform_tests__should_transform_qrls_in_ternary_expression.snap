@@ -6,41 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
-//
-export const FieldInput = /*#__PURE__*/ componentQrl(q_FieldInput_component_V4XAtJSTRKg);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, useSignal } from "@qwik.dev/core";
+export const FieldInput = qrl(() => import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
 
-============================= test.tsx_FieldInput_component_input_q_e_focus_Sgf3MDWzexI.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const FieldInput_component_input_q_e_focus_Sgf3MDWzexI = () => {
-	const enabled = _captures[0];
-	enabled.value = true;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "FieldInput_component_input_q_e_focus_Sgf3MDWzexI",
-  "entry": null,
-  "displayName": "test.tsx_FieldInput_component_input_q_e_focus",
-  "hash": "Sgf3MDWzexI",
-  "canonicalFilename": "test.tsx_FieldInput_component_input_q_e_focus_Sgf3MDWzexI",
-  "path": "",
-  "extension": "js",
-  "parent": "FieldInput_component_V4XAtJSTRKg",
-  "ctxKind": "eventHandler",
-  "ctxName": "onFocus$",
-  "captures": true,
-  "captureNames": [
-    "enabled"
-  ],
-  "loc": [
-    323,
-    359
-  ]
-}
-*/
 ============================= test.tsx_FieldInput_component_V4XAtJSTRKg.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";

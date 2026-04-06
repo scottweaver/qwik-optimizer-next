@@ -12,7 +12,7 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_te
 export const onGet = () => {
 	throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
 };
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
 ============================= test.tsx_test_component_useResource_4a8wVY7wh38.tsx (ENTRY POINT) ==
 import { onGet } from "./test";

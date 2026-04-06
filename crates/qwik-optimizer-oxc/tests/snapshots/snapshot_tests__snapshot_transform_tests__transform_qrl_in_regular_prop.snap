@@ -1,15 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1025
 expression: output
+snapshot_kind: text
 ---
 ============================= test.ts ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Cmp_component_4ryKJTOKjWE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
-//
-export const Cmp = /*#__PURE__*/ componentQrl(q_Cmp_component_4ryKJTOKjWE);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, $ } from "@qwik.dev/core";
+export const Cmp = qrl(() => import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
 
 ============================= test.tsx_Cmp_component_4ryKJTOKjWE.ts (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
@@ -36,17 +35,17 @@ export const Cmp_component_4ryKJTOKjWE = () =>
   ]
 }
 */
-============================= test.tsx_Cmp_component_foo_NWdBU7Rizzk.ts (ENTRY POINT) ==
-export const Cmp_component_foo_NWdBU7Rizzk = () => console.log("hi there");
+============================= test.tsx_Cmp_component_Cmp_foo_iPpdemxi0uE.ts (ENTRY POINT) ==
+export const Cmp_component_Cmp_foo_iPpdemxi0uE = () => console.log("hi there");
 
 /*
 {
   "origin": "test.tsx",
-  "name": "Cmp_component_foo_NWdBU7Rizzk",
+  "name": "Cmp_component_Cmp_foo_iPpdemxi0uE",
   "entry": null,
-  "displayName": "test.tsx_Cmp_component_foo",
-  "hash": "NWdBU7Rizzk",
-  "canonicalFilename": "test.tsx_Cmp_component_foo_NWdBU7Rizzk",
+  "displayName": "test.tsx_Cmp_component_Cmp_foo",
+  "hash": "iPpdemxi0uE",
+  "canonicalFilename": "test.tsx_Cmp_component_Cmp_foo_iPpdemxi0uE",
   "path": "",
   "extension": "ts",
   "parent": "Cmp_component_4ryKJTOKjWE",

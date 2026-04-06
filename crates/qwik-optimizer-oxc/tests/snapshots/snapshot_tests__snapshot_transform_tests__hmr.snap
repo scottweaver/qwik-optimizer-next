@@ -1,17 +1,15 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 933
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrlDEV } from "@qwik.dev/core";
-//
-const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"), "TestGetsHmr_component_jBUoou0sxX4");
-const q_TestNoHmr_Zk400rjx7cI = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestNoHmr_Zk400rjx7cI"), "TestNoHmr_Zk400rjx7cI");
-//
-export const TestGetsHmr = /*#__PURE__*/ componentQrl(q_TestGetsHmr_component_jBUoou0sxX4);
-export const TestNoHmr = componentQrl(q_TestNoHmr_Zk400rjx7cI);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, component$, $ } from "@qwik.dev/core";
+export const TestGetsHmr = qrlDEV(() => import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"), "TestGetsHmr_component_jBUoou0sxX4");
+export const TestNoHmr = componentQrl(qrlDEV(() => import("./test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs"), "TestNoHmr_componentQrl_Uqk3jGTNmYs"));
 
 ============================= test.tsx_TestGetsHmr_component_jBUoou0sxX4.js (ENTRY POINT) ==
 import { _useHmr } from "@qwik.dev/core";
@@ -40,18 +38,18 @@ _useHmr("/user/qwik/src/test.tsx");
   ]
 }
 */
-============================= test.tsx_TestNoHmr_Zk400rjx7cI.js (ENTRY POINT) ==
-export const TestNoHmr_Zk400rjx7cI = () => {
+============================= test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs.js (ENTRY POINT) ==
+export const TestNoHmr_componentQrl_Uqk3jGTNmYs = () => {
 			return <div>Test</div>;
 		};
 /*
 {
   "origin": "test.tsx",
-  "name": "TestNoHmr_Zk400rjx7cI",
+  "name": "TestNoHmr_componentQrl_Uqk3jGTNmYs",
   "entry": null,
-  "displayName": "test.tsx_TestNoHmr",
-  "hash": "Zk400rjx7cI",
-  "canonicalFilename": "test.tsx_TestNoHmr_Zk400rjx7cI",
+  "displayName": "test.tsx_TestNoHmr_componentQrl",
+  "hash": "Uqk3jGTNmYs",
+  "canonicalFilename": "test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs",
   "path": "",
   "extension": "js",
   "parent": null,

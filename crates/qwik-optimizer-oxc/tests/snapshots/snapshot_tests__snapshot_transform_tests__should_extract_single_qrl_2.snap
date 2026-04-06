@@ -6,10 +6,9 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Parent_component_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
-//
-const Parent = /*#__PURE__*/ componentQrl(q_Parent_component_0TaiDayHrlo);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useStore, useSignal } from "@qwik.dev/core";
+const Parent = qrl(() => import("./test.tsx_Parent_component_0TaiDayHrlo"), "Parent_component_0TaiDayHrlo");
 
 ============================= test.tsx_Parent_component_0TaiDayHrlo.js (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";

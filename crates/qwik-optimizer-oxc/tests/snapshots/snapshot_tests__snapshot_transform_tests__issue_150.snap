@@ -6,12 +6,11 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Greeter_component_1_krCndSwhX4U = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_component_1_krCndSwhX4U"), "Greeter_component_1_krCndSwhX4U");
-const q_d_wKNFJEIQVUA = /*#__PURE__*/ qrl(()=>import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
-//
-export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_1_krCndSwhX4U);
-const d = q_d_wKNFJEIQVUA;
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, $ } from "@qwik.dev/core";
+import { hola } from "sdfds";
+export const Greeter = qrl(() => import("./test.tsx_Greeter_component_1_krCndSwhX4U"), "Greeter_component_1_krCndSwhX4U");
+const d = qrl(() => import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
 
 ============================= test.tsx_Greeter_component_1_krCndSwhX4U.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";

@@ -6,10 +6,9 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_App_component_1_w0t0o3QMovU = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_1_w0t0o3QMovU.tsx"), "App_component_1_w0t0o3QMovU");
-//
-export const App = /*#__PURE__*/ componentQrl(q_App_component_1_w0t0o3QMovU);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, $, useStyles$ } from "@qwik.dev/core";
+export const App = qrl(() => import("./test.tsx_App_component_1_w0t0o3QMovU.tsx"), "App_component_1_w0t0o3QMovU");
 
 ============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
 export const App_component_ckEPmXZlub0 = () => (
@@ -32,29 +31,6 @@ export const App_component_ckEPmXZlub0 = () => (
   "loc": [
     134,
     161
-  ]
-}
-*/
-============================= test.tsx_App_component_useStyles_t35nSa5UV7U.js (ENTRY POINT) ==
-export const App_component_useStyles_t35nSa5UV7U = "hola";
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "App_component_useStyles_t35nSa5UV7U",
-  "entry": null,
-  "displayName": "test.tsx_App_component_useStyles",
-  "hash": "t35nSa5UV7U",
-  "canonicalFilename": "test.tsx_App_component_useStyles_t35nSa5UV7U",
-  "path": "",
-  "extension": "js",
-  "parent": "App_component_1_w0t0o3QMovU",
-  "ctxKind": "function",
-  "ctxName": "useStyles$",
-  "captures": false,
-  "loc": [
-    106,
-    124
   ]
 }
 */

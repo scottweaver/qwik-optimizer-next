@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 864
 expression: output
+snapshot_kind: text
 ---
 ============================= project/test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
@@ -16,7 +16,7 @@ export { exp1, internal as expr2 };
 export function foo() {}
 export class bar {}
 export default function DefaultFn() {}
-export const Header = /*#__PURE__*/ componentQrl(q_Header_component_1_uWM1kg0IGO0);
+export const Header = qrl(() => import("./test.tsx_Header_component_1_uWM1kg0IGO0"), "Header_component_1_uWM1kg0IGO0");
 export const Footer = component$();
 
 ============================= project/test.tsx_Header_component_UVBJuFYfvDo.jsx (ENTRY POINT) ==

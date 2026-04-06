@@ -11,7 +11,7 @@ const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_te
 //
 // the count results in _fnSignal because of the rename
 // would be nice to consider it a prop too
-export default /*#__PURE__*/ componentQrl(q_test_component_LUXeXe0DQrg);
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
 ============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { _restProps } from "@qwik.dev/core";

@@ -6,10 +6,9 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
-const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, useSignal, Signal } from "@qwik.dev/core";
+const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 
 ============================= test.tsx_Foo_component_Inner_component_AuJ9mTBx5YA.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
@@ -42,36 +41,6 @@ export const Foo_component_Inner_component_AuJ9mTBx5YA = function(props) {
   ],
   "paramNames": [
     "props"
-  ]
-}
-*/
-============================= test.tsx_Foo_component_Inner_component_p_q_e_click_eIrlGsxiMgs.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Foo_component_Inner_component_p_q_e_click_eIrlGsxiMgs = () => {
-	const item = _captures[0];
-	return console.log(item.value.id);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_Inner_component_p_q_e_click_eIrlGsxiMgs",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component_Inner_component_p_q_e_click",
-  "hash": "eIrlGsxiMgs",
-  "canonicalFilename": "test.tsx_Foo_component_Inner_component_p_q_e_click_eIrlGsxiMgs",
-  "path": "",
-  "extension": "js",
-  "parent": "Foo_component_Inner_component_AuJ9mTBx5YA",
-  "ctxKind": "eventHandler",
-  "ctxName": "onClick$",
-  "captures": true,
-  "captureNames": [
-    "item"
-  ],
-  "loc": [
-    275,
-    307
   ]
 }
 */

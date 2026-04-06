@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 965
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -10,7 +10,7 @@ const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(()=>import("./test.tsx_handler_T
 //
 const shared = { id: "abc" };
 export const exportedValue = shared.id;
-export const handler = q_handler_T7IDIUVU4lI;
+export const handler = qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
 
 ============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
 export const handler_T7IDIUVU4lI = () => {

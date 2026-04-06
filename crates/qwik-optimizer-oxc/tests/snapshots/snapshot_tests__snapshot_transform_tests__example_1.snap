@@ -1,18 +1,41 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 832
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
-import { component } from "@qwik.dev/core";
-//
-const q_renderHeader1_jMxQsjbyDss = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
-const q_renderHeader2_PJjSfD4ZE08 = /*#__PURE__*/ qrl(()=>import("./test.tsx_renderHeader2_PJjSfD4ZE08"), "renderHeader2_PJjSfD4ZE08");
-//
-export const renderHeader1 = q_renderHeader1_jMxQsjbyDss;
-const renderHeader2 = component(q_renderHeader2_PJjSfD4ZE08);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component, onRender } from "@qwik.dev/core";
+export const renderHeader1 = qrl(() => import("./test.tsx_renderHeader1_jMxQsjbyDss"), "renderHeader1_jMxQsjbyDss");
+const renderHeader2 = component(qrl(() => import("./test.tsx_renderHeader2_component_Ay6ibkfFYsw"), "renderHeader2_component_Ay6ibkfFYsw"));
 
+============================= test.tsx_renderHeader2_component_Ay6ibkfFYsw.tsx (ENTRY POINT) ==
+export const renderHeader2_component_Ay6ibkfFYsw = () => {
+	console.log("mount");
+	return render;
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "renderHeader2_component_Ay6ibkfFYsw",
+  "entry": null,
+  "displayName": "test.tsx_renderHeader2_component",
+  "hash": "Ay6ibkfFYsw",
+  "canonicalFilename": "test.tsx_renderHeader2_component_Ay6ibkfFYsw",
+  "path": "",
+  "extension": "tsx",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    196,
+    247
+  ]
+}
+*/
 ============================= test.tsx_renderHeader1_jMxQsjbyDss.tsx (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 export const renderHeader1_jMxQsjbyDss = () => {
@@ -37,32 +60,6 @@ export const renderHeader1_jMxQsjbyDss = () => {
   "loc": [
     88,
     162
-  ]
-}
-*/
-============================= test.tsx_renderHeader2_PJjSfD4ZE08.tsx (ENTRY POINT) ==
-export const renderHeader2_PJjSfD4ZE08 = () => {
-	console.log("mount");
-	return render;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "renderHeader2_PJjSfD4ZE08",
-  "entry": null,
-  "displayName": "test.tsx_renderHeader2",
-  "hash": "PJjSfD4ZE08",
-  "canonicalFilename": "test.tsx_renderHeader2_PJjSfD4ZE08",
-  "path": "",
-  "extension": "tsx",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    196,
-    247
   ]
 }
 */

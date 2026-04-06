@@ -7,21 +7,17 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-import { inlinedQrl, jsx } from "@qwik.dev/core";
-//
-const q_Lifecycle_component_r7jPBpjrWLc = /*#__PURE__*/ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
-const q_Field_FIPfOhEtx3A = /*#__PURE__*/ _noopQrl("Field_FIPfOhEtx3A");
-const q_Field_1_6RtkEWquHu0 = /*#__PURE__*/ _noopQrl("Field_1_6RtkEWquHu0");
-const q_StyledComponent_component_Wg7SquUqgAE = /*#__PURE__*/ _noopQrl("StyledComponent_component_Wg7SquUqgAE");
-//
+import { inlinedQrl, $, component$, jsx, useStylesScoped$ } from "@qwik.dev/core";
+const q_Lifecycle_component_r7jPBpjrWLc = /* @__PURE__ */ _noopQrl("Lifecycle_component_r7jPBpjrWLc");
+const q_jsx_children_MBDXXL9gcz4 = /* @__PURE__ */ _noopQrl("jsx_children_MBDXXL9gcz4");
+const q_it_StyledComponent_component_F9AGTDZHx8I = /* @__PURE__ */ _noopQrl("it_StyledComponent_component_F9AGTDZHx8I");
 q_Lifecycle_component_r7jPBpjrWLc.s(() => {
-	return /*#__PURE__*/ jsx(Slot, {});
+	return /* @__PURE__ */ jsx(Slot, {});
 });
-q_Field_FIPfOhEtx3A.s((element) => {
+q_jsx_children_MBDXXL9gcz4.s((element) => {
 	field.internal.elements.push(element);
 });
-q_StyledComponent_component_button_q_e_click_TSmqO2JiBqI.s(() => store.count++);
-q_StyledComponent_component_Wg7SquUqgAE.s(() => {
+q_it_StyledComponent_component_F9AGTDZHx8I.s(() => {
 	const stylesScopedData = useStylesScoped$(STYLE_RED);
 	const store = useStore({ count: 10 });
 	return <button class={["container", `count-${store.count}`]} onClick$={() => store.count++}>
@@ -49,15 +45,15 @@ export function Field({ children, name, type, ...props }) {
 		children: children(field, {
 			name,
 			autoFocus: isServer && !!field.error,
-			ref: Qrl(q_Field_FIPfOhEtx3A.w([field])),
-			onInput$: Qrl(q_Field_1_6RtkEWquHu0)
+			ref: Qrl(q_jsx_children_MBDXXL9gcz4.w([field])),
+			onInput$: $(rawFn)
 		})
 	}, name);
 }
 const STYLE_RED = `.container {background-color: red;}`;
 describe.each([])("$render.name: useStylesScoped", ({ render }) => {
 	it("should render object style", async () => {
-		const StyledComponent = componentQrl(q_StyledComponent_component_Wg7SquUqgAE);
+		const StyledComponent = componentQrl(q_it_StyledComponent_component_F9AGTDZHx8I);
 		const { vNode, getStyles, document } = await render(_jsxSorted(StyledComponent, null, null, null, 1, "0"), { debug });
 	});
 });

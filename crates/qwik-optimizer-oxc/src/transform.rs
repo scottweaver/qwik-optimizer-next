@@ -286,6 +286,9 @@ pub(crate) struct SegmentScope {
     pub is_sync: bool,
     /// Identifier references collected from the callback body.
     pub descendent_idents: HashSet<String>,
+    /// Whether we pushed the ctx_name onto stack_ctxt (true for named marker calls,
+    /// false for bare `$` and `sync$` which don't contribute to display_name).
+    pub pushed_ctx_name: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -394,6 +397,10 @@ pub(crate) struct QwikTransform {
     /// variable declarator and popped on exit. Used to build `display_name`.
     pub(crate) stack_ctxt: Vec<String>,
 
+    /// Tracks whether each enter_call_expression pushed a callee ident name
+    /// onto stack_ctxt (so exit_call_expression knows whether to pop).
+    pub(crate) call_name_pushed: Vec<bool>,
+
     /// Stack of segment scopes -- one per detected $ call.
     pub(crate) segment_stack: Vec<SegmentScope>,
 
@@ -450,6 +457,8 @@ pub(crate) struct QwikTransform {
     pub(crate) entry_strategy: EntryStrategy,
     pub(crate) is_server: bool,
     pub(crate) file_name: String,
+    pub(crate) file_stem: String,
+    pub(crate) rel_dir: String,
     pub(crate) rel_path: String,
     pub(crate) extension: String,
     pub(crate) core_module: String,
@@ -477,6 +486,8 @@ impl QwikTransform {
         config: &TransformCodeOptions,
         collect: &GlobalCollect,
         file_name: &str,
+        file_stem: &str,
+        rel_dir: &str,
         rel_path: &str,
         extension: &str,
         source_text: &str,
@@ -527,6 +538,7 @@ impl QwikTransform {
             qsegment_fn,
             sync_qrl_fn,
             stack_ctxt: Vec::new(),
+            call_name_pushed: Vec::new(),
             segment_stack: Vec::new(),
             segments: Vec::new(),
             segment_names: HashMap::new(),
@@ -550,6 +562,8 @@ impl QwikTransform {
             entry_strategy: config.entry_strategy.clone(),
             is_server: config.is_server,
             file_name: file_name.to_string(),
+            file_stem: file_stem.to_string(),
+            rel_dir: rel_dir.to_string(),
             rel_path: rel_path.to_string(),
             extension: extension.to_string(),
             core_module: config.core_module.clone(),
@@ -1603,6 +1617,7 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
     // -----------------------------------------------------------------------
     // Function/class declaration tracking for Category 8
+    // + stack_ctxt push for display_name building
     // -----------------------------------------------------------------------
 
     fn enter_statement(
@@ -1613,20 +1628,166 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         match stmt {
             Statement::FunctionDeclaration(func) => {
                 if let Some(id) = &func.id {
+                    let name = id.name.as_str().to_string();
                     if let Some(frame) = self.decl_stack.last_mut() {
-                        frame.push((id.name.as_str().to_string(), IdentType::Fn));
+                        frame.push((name.clone(), IdentType::Fn));
                     }
+                    // Push function name onto stack_ctxt for display_name
+                    self.stack_ctxt.push(name);
                 }
             }
             Statement::ClassDeclaration(class) => {
                 if let Some(id) = &class.id {
+                    let name = id.name.as_str().to_string();
                     if let Some(frame) = self.decl_stack.last_mut() {
-                        frame.push((id.name.as_str().to_string(), IdentType::Class));
+                        frame.push((name.clone(), IdentType::Class));
                     }
+                    // Push class name onto stack_ctxt for display_name
+                    self.stack_ctxt.push(name);
                 }
             }
             _ => {}
         }
+    }
+
+    fn exit_statement(
+        &mut self,
+        stmt: &mut Statement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        match stmt {
+            Statement::FunctionDeclaration(func) => {
+                if func.id.is_some() {
+                    self.stack_ctxt.pop();
+                }
+            }
+            Statement::ClassDeclaration(class) => {
+                if class.id.is_some() {
+                    self.stack_ctxt.pop();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Variable declarator: push variable name onto stack_ctxt
+    // -----------------------------------------------------------------------
+
+    fn enter_variable_declarator(
+        &mut self,
+        node: &mut VariableDeclarator<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // SWC fold_var_declarator: push ident name for display_name building
+        if let BindingPattern::BindingIdentifier(ident) = &node.id {
+            self.stack_ctxt.push(ident.name.as_str().to_string());
+        }
+    }
+
+    fn exit_variable_declarator(
+        &mut self,
+        node: &mut VariableDeclarator<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if let BindingPattern::BindingIdentifier(_) = &node.id {
+            self.stack_ctxt.pop();
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Export default declaration: push file stem for display_name
+    // -----------------------------------------------------------------------
+
+    fn enter_export_default_declaration(
+        &mut self,
+        _node: &mut ExportDefaultDeclaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // SWC fold_export_default_expr: push file_stem (or folder name if index)
+        let mut name = self.file_stem.clone();
+        if name == "index" {
+            // Use parent directory name if file is index.*
+            if !self.rel_dir.is_empty() {
+                if let Some(folder) = std::path::Path::new(&self.rel_dir)
+                    .file_name()
+                    .and_then(|s| s.to_str())
+                {
+                    name = folder.to_string();
+                }
+            }
+        }
+        self.stack_ctxt.push(name);
+    }
+
+    fn exit_export_default_declaration(
+        &mut self,
+        _node: &mut ExportDefaultDeclaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        self.stack_ctxt.pop();
+    }
+
+    // -----------------------------------------------------------------------
+    // JSX element: push tag name onto stack_ctxt
+    // -----------------------------------------------------------------------
+
+    fn enter_jsx_element(
+        &mut self,
+        node: &mut JSXElement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // SWC fold_jsx_element: push element tag name for display_name
+        match &node.opening_element.name {
+            JSXElementName::Identifier(ident) => {
+                self.stack_ctxt.push(ident.name.as_str().to_string());
+            }
+            JSXElementName::IdentifierReference(ident) => {
+                self.stack_ctxt.push(ident.name.as_str().to_string());
+            }
+            _ => {
+                // MemberExpression, NamespacedName -- push empty to keep balanced
+                self.stack_ctxt.push(String::new());
+            }
+        }
+    }
+
+    fn exit_jsx_element(
+        &mut self,
+        _node: &mut JSXElement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        self.stack_ctxt.pop();
+    }
+
+    // -----------------------------------------------------------------------
+    // JSX attribute: push attribute name onto stack_ctxt
+    // -----------------------------------------------------------------------
+
+    fn enter_jsx_attribute(
+        &mut self,
+        node: &mut JSXAttribute<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // SWC fold_jsx_attr: push attribute name for display_name
+        match &node.name {
+            JSXAttributeName::Identifier(ident) => {
+                self.stack_ctxt.push(ident.name.as_str().to_string());
+            }
+            JSXAttributeName::NamespacedName(ns) => {
+                // SWC: push "ns-name" concatenated
+                let ident_name = format!("{}-{}", ns.namespace.name, ns.name.name);
+                self.stack_ctxt.push(ident_name);
+            }
+        }
+    }
+
+    fn exit_jsx_attribute(
+        &mut self,
+        _node: &mut JSXAttribute<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        self.stack_ctxt.pop();
     }
 
     // -----------------------------------------------------------------------
@@ -1651,39 +1812,31 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             if !node.arguments.is_empty() {
                 let ctx_kind = words::classify_ctx_kind(&ctx_name);
 
-                // C05: For locally-defined marker functions (not imported from core),
-                // verify the Qrl counterpart exists as an export. If not, produce
-                // a diagnostic and skip segment creation.
-                let callee_local = if let Expression::Identifier(ident) = &node.callee {
-                    Some(ident.name.as_str().to_string())
-                } else {
-                    None
-                };
-                let is_imported = callee_local.as_ref().map_or(false, |name| {
-                    let collect = unsafe { &*self.global_collect_ptr };
-                    collect.imports.contains_key(name)
-                });
-                if !is_imported && !is_sync {
-                    // Locally-defined marker: check for Qrl counterpart
-                    let qrl_name = words::dollar_to_qrl_name(&ctx_name);
-                    let collect = unsafe { &*self.global_collect_ptr };
-                    if !collect.has_export_symbol(&qrl_name) {
-                        // C05: Missing Qrl implementation
-                        self.diagnostics.push(crate::types::Diagnostic {
-                            scope: "optimizer".to_string(),
-                            category: crate::types::DiagnosticCategory::Error,
-                            code: Some("C05".to_string()),
-                            file: self.file_name.clone(),
-                            message: format!(
-                                "Found '{}' but did not find the corresponding '{}' exported in the same file. Please check that it is exported and spelled correctly",
-                                ctx_name, qrl_name
-                            ),
-                            highlights: None,
-                            suggestions: None,
-                        });
-                        // Don't create a segment -- just consume the import and continue
-                        return;
+                // 3. Check if this segment should be emitted (not stripped)
+                if self.should_emit_segment(&ctx_name, &ctx_kind) {
+                    // Collect descendent identifiers from the callback body
+                    let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
+
+                    // Push context name for display_name building.
+                    // SWC only pushes for named marker function calls (component$, useTask$, etc.),
+                    // NOT for bare `$()` or `sync$()` which don't contribute to display_name.
+                    let pushed_ctx_name = ctx_name != "$" && ctx_name != "sync$";
+                    if pushed_ctx_name {
+                        self.stack_ctxt.push(escape_dollar(&ctx_name));
                     }
+
+                    // 4. Push a SegmentScope onto segment_stack
+                    self.segment_stack.push(SegmentScope {
+                        ctx_name,
+                        ctx_kind,
+                        span_start: node.span.start,
+                        is_sync,
+                        descendent_idents,
+                        pushed_ctx_name,
+                    });
+                    // Don't push callee ident separately -- the marker name push handles it
+                    self.call_name_pushed.push(false);
+                    return;
                 }
 
                 // Collect descendent identifiers from the first argument
@@ -1704,6 +1857,30 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     descendent_idents,
                 });
             }
+            // Dollar call detected but not emitted (stripped or not a function arg)
+            // Still don't push callee name for $ calls
+            self.call_name_pushed.push(false);
+            return;
+        }
+
+        // Non-dollar call: push callee ident name for display_name building
+        // (SWC fold_call_expr line 4096-4098: push ident.sym for any non-special call)
+        if let Expression::Identifier(ident) = &node.callee {
+            self.stack_ctxt.push(ident.name.as_str().to_string());
+            self.call_name_pushed.push(true);
+        } else {
+            self.call_name_pushed.push(false);
+        }
+    }
+
+    fn exit_call_expression(
+        &mut self,
+        _node: &mut CallExpression<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // Pop callee ident name if we pushed one
+        if let Some(true) = self.call_name_pushed.pop() {
+            self.stack_ctxt.pop();
         }
     }
 
@@ -1856,25 +2033,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         let pending = self.segment_stack.pop().unwrap();
 
-        // --- Compute names via register_context_name ---
-        // IMPORTANT: Must be called BEFORE popping stack_ctxt so the ctx_name
-        // (e.g., "component") is included in the display_name_core, matching
-        // SWC's naming behavior (SWC calls register_context_name during fold,
-        // before the ctx_name is popped).
-        let names = crate::hash::register_context_name(
-            &self.stack_ctxt,
-            &mut self.segment_names,
-            self.scope.as_deref(),
-            &self.rel_path,
-            &self.file_name,
-            &self.mode,
-            None,
-            None,
-            None,
-        );
-
-        // NOTE: stack_ctxt pop is deferred until after compute_entry (below)
-        // to match SWC, which passes the full context to the entry policy.
+        // NOTE: Do NOT pop stack_ctxt here yet -- register_context_name needs
+        // the full stack including the marker function name. Pop after name computation.
 
         // --- Flatten decl_stack for Var entries ---
         let all_decl: Vec<TypedId> = self
@@ -1930,6 +2090,24 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             &mut needed_imports,
             &mut self_imports,
         );
+
+        // --- Compute names via register_context_name ---
+        let names = crate::hash::register_context_name(
+            &self.stack_ctxt,
+            &mut self.segment_names,
+            self.scope.as_deref(),
+            &self.rel_path,
+            &self.file_name,
+            &self.mode,
+            None,
+            None,
+            None,
+        );
+
+        // Now pop the marker function name from stack_ctxt (after name computation)
+        if pending.pushed_ctx_name {
+            self.stack_ctxt.pop();
+        }
 
         let has_captures = !scoped_idents.is_empty();
         let should_emit = self.should_emit_segment(&pending.ctx_name, &pending.ctx_kind);
@@ -3042,6 +3220,8 @@ pub(crate) fn transform_code(
         config,
         &collect,
         &path_data.file_name,
+        &path_data.file_stem,
+        &path_data.rel_dir.to_string_lossy(),
         filename,
         extension,
         source_in_arena,
@@ -3280,7 +3460,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test", "", "test.tsx", "tsx", "");
 
         assert!(
             t.marker_functions.contains_key("component$"),
@@ -3305,7 +3485,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test", "", "test.tsx", "tsx", "");
 
         assert!(
             t.marker_functions.contains_key("myHelper$"),
@@ -3322,7 +3502,7 @@ mod tests {
         "#;
         let collect = global_collect_from_str(src);
         let config = make_config();
-        let t = QwikTransform::new(&config, &collect, "test.tsx", "test.tsx", "tsx", "");
+        let t = QwikTransform::new(&config, &collect, "test.tsx", "test", "", "test.tsx", "tsx", "");
 
         assert!(
             t.sync_qrl_fn.is_some(),

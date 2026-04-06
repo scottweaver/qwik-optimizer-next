@@ -6,41 +6,10 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
-//
-const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+import { _jsxSorted } from "@qwik.dev/core";
+import { component$, useSignal, Signal } from "@qwik.dev/core";
+const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 
-============================= test.tsx_Foo_component_div_q_e_mouseover_2avcXUo8nVI.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const Foo_component_div_q_e_mouseover_2avcXUo8nVI = () => {
-	const row = _captures[0];
-	return console.log("over" + row.value.id);
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "Foo_component_div_q_e_mouseover_2avcXUo8nVI",
-  "entry": null,
-  "displayName": "test.tsx_Foo_component_div_q_e_mouseover",
-  "hash": "2avcXUo8nVI",
-  "canonicalFilename": "test.tsx_Foo_component_div_q_e_mouseover_2avcXUo8nVI",
-  "path": "",
-  "extension": "js",
-  "parent": "Foo_component_HTDRsvUbLiE",
-  "ctxKind": "eventHandler",
-  "ctxName": "onMouseOver$",
-  "captures": true,
-  "captureNames": [
-    "row"
-  ],
-  "loc": [
-    264,
-    304
-  ]
-}
-*/
 ============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { Signal } from "@qwik.dev/core";
 import { useSignal } from "@qwik.dev/core";

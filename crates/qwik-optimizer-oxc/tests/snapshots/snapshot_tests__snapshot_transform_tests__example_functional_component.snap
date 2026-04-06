@@ -1,15 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 866
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Header_component_J4uyIhaBNR4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_J4uyIhaBNR4"), "Header_component_J4uyIhaBNR4");
-//
-const Header = /*#__PURE__*/ componentQrl(q_Header_component_J4uyIhaBNR4);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$, useStore } from "@qwik.dev/core";
+const Header = qrl(() => import("./test.tsx_Header_component_J4uyIhaBNR4"), "Header_component_J4uyIhaBNR4");
 
 ============================= test.tsx_Header_component_J4uyIhaBNR4.tsx (ENTRY POINT) ==
 import { useStore } from "@qwik.dev/core";

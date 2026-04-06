@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 964
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -14,7 +14,7 @@ const { a, ...rest } = {
 	c: 3
 };
 console.log("root", rest.b, rest.c);
-export const handler = q_handler_T7IDIUVU4lI;
+export const handler = qrl(() => import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
 
 ============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
 export const handler_T7IDIUVU4lI = () => {

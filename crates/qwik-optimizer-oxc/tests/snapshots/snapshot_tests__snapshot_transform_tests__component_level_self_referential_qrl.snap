@@ -10,7 +10,7 @@ import { qrl } from "@qwik.dev/core";
 const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 //
 // Component-level self-referential component
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+export const Foo = qrl(() => import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 
 ============================= test.tsx_Foo_component_sig_useAsync_f0BGwWm4eeY.tsx (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";

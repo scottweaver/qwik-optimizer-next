@@ -6,25 +6,26 @@ snapshot_kind: text
 ============================= project/test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-//
-const q_Header_component_UVBJuFYfvDo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
-const q_App_component_wGkRHWXaqjs = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
-//
-export const Header = /*#__PURE__*/ componentQrl(q_Header_component_UVBJuFYfvDo);
-export const App = /*#__PURE__*/ componentQrl(q_App_component_wGkRHWXaqjs);
+import { _jsxSorted } from "@qwik.dev/core";
+import { $, component$ } from "@qwik.dev/core";
+import { foo, bar as bbar } from "../state";
+import * as dep2 from "dep2";
+import dep3 from "dep3/something";
+export const Header = qrl(() => import("./test.tsx_Header_component_UVBJuFYfvDo"), "Header_component_UVBJuFYfvDo");
+export const App = qrl(() => import("./test.tsx_App_component_wGkRHWXaqjs"), "App_component_wGkRHWXaqjs");
 
-============================= project/test.tsx_Header_component_onClick_FaGKP0YO8vk.tsx ==
+============================= project/test.tsx_Header_component_Header_onClick_KjD9TCNkNxY.tsx ==
 import { default as dep3 } from "dep3/something";
-export const Header_component_onClick_FaGKP0YO8vk = (ev) => dep3(ev);
+export const Header_component_Header_onClick_KjD9TCNkNxY = (ev) => dep3(ev);
 
 /*
 {
   "origin": "project/test.tsx",
-  "name": "Header_component_onClick_FaGKP0YO8vk",
+  "name": "Header_component_Header_onClick_KjD9TCNkNxY",
   "entry": "entry_segments",
-  "displayName": "test.tsx_Header_component_onClick",
-  "hash": "FaGKP0YO8vk",
-  "canonicalFilename": "test.tsx_Header_component_onClick_FaGKP0YO8vk",
+  "displayName": "test.tsx_Header_component_Header_onClick",
+  "hash": "KjD9TCNkNxY",
+  "canonicalFilename": "test.tsx_Header_component_Header_onClick_KjD9TCNkNxY",
   "path": "project",
   "extension": "tsx",
   "parent": "Header_component_UVBJuFYfvDo",
