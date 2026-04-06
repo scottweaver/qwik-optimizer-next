@@ -77,11 +77,11 @@ Plans:
 **Requirements**: DIAG-01, DIAG-02
 **Success Criteria** (what must be TRUE):
   1. Invalid reference errors and missing custom inlined function errors match SWC diagnostic output
-  2. All 201 fixtures produce the same diagnostic presence/absence as SWC (197/201 already match, fix remaining 4)
-**Plans**: TBD
+  2. All 201 fixtures produce the same diagnostic presence/absence as SWC (192/201 baseline, fix remaining 9)
+**Plans**: 1 plan
 
 Plans:
-- [ ] 12-01: TBD
+- [ ] 12-01-PLAN.md — C02 export-symbol gate + C05 MissingQrlImplementation: suppress 8 false positive C02 diagnostics, implement missing C05 diagnostic for 1 false negative
 
 ### Phase 13: Final Acceptance
 **Goal**: Full SWC parity achieved -- 201/201 fixtures match on root module, segment count, and diagnostics
