@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.2.0
 milestone_name: Full SWC Parity
 status: executing
-stopped_at: Completed 13-04-PLAN.md
-last_updated: "2026-04-06T20:38:10.206Z"
+stopped_at: Completed 13-06-PLAN.md
+last_updated: "2026-04-06T20:46:00.959Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 15
-  completed_plans: 11
+  completed_plans: 12
   percent: 77
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 
 Milestone: v0.2.0 Full SWC Parity
 Phase: 13 (final-acceptance) — EXECUTING
-Plan: 5 of 8
+Plan: 6 of 8
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -70,6 +70,7 @@ Progress: [########░░] 77%
 | Phase 13 P03 | 4m | 1 tasks | 140 files |
 | Phase 13 P02 | 15m | 2 tasks | 49 files |
 | Phase 13 P04 | 13m | 1 tasks | 18 files |
+| Phase 13 P06 | 21m | 2 tasks | 28 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Recent decisions affecting current work:
 - [Phase 13]: q_* names excluded from const stripping candidates to fix dangling reference bug
 - [Phase 13]: Post-processing string injection for PURE annotations on wrapper calls (componentQrl, _jsxSorted, etc.)
 - [Phase 13]: Pre-register segment names at enter_call_expression time via SegmentScope.pre_registered_name to match SWC Fold ordering for collision counters
+- [Phase 13]: Inline strategy uses same _noopQrl/.s()/.w() code path as Hoist; Lib mode retains inlinedQrl
 
 ### Pending Todos
 
@@ -119,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T20:38:10.202Z
-Stopped at: Completed 13-04-PLAN.md
+Last session: 2026-04-06T20:46:00.955Z
+Stopped at: Completed 13-06-PLAN.md
 Resume file: None
