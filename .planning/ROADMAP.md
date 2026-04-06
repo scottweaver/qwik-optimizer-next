@@ -32,7 +32,7 @@ Full details: [v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md)
 
 - [x] **Phase 10: Segment Extraction** - Fix dollar-sign expression detection in loops, JSX handlers, ternaries, spread props, and inline strategies (completed 2026-04-04)
 - [x] **Phase 11: Root Module Code Generation** - Fix import ordering, declarations, exports, QRL references, and comment structure (completed 2026-04-06)
-- [ ] **Phase 12: Diagnostics Parity** - Fix error reporting to match SWC for all 201 fixtures
+- [x] **Phase 12: Diagnostics Parity** - Fix error reporting to match SWC for all 201 fixtures (completed 2026-04-06)
 - [ ] **Phase 13: Final Acceptance** - Verify 201/201 full match and fix any remaining stragglers
 
 ## Phase Details
@@ -81,7 +81,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 12-01-PLAN.md — C02 export-symbol gate + C05 MissingQrlImplementation: suppress 8 false positive C02 diagnostics, implement missing C05 diagnostic for 1 false negative
+- [x] 12-01-PLAN.md — C02 export-symbol gate + C05 MissingQrlImplementation: suppress 8 false positive C02 diagnostics, implement missing C05 diagnostic for 1 false negative
 
 ### Phase 13: Final Acceptance
 **Goal**: Full SWC parity achieved -- 201/201 fixtures match on root module, segment count, and diagnostics
@@ -114,5 +114,5 @@ Phases execute in numeric order: 10 -> 10.x -> 11 -> 11.x -> 12 -> 12.x -> 13
 | 9. Metadata & Verification Cleanup | v0.1.0 | 3/3 | Complete | 2026-04-03 |
 | 10. Segment Extraction | v0.2.0 | 2/2 | Complete    | 2026-04-04 |
 | 11. Root Module Code Generation | v0.2.0 | 4/4 | Complete   | 2026-04-06 |
-| 12. Diagnostics Parity | v0.2.0 | 0/1 | Not started | - |
+| 12. Diagnostics Parity | v0.2.0 | 1/1 | Complete   | 2026-04-06 |
 | 13. Final Acceptance | v0.2.0 | 0/1 | Not started | - |

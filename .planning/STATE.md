@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.2.0
 milestone_name: Full SWC Parity
-status: executing
-stopped_at: Phase 12 context gathered (assumptions mode)
-last_updated: "2026-04-06T15:55:48.639Z"
+status: verifying
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-04-06T17:17:24.776Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
   percent: 77
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** The OXC implementation must produce functionally equivalent output to the SWC version for all 201 test fixtures.
-**Current focus:** Phase 11 — Root Module Code Generation
+**Current focus:** Phase 12 — diagnostics-parity
 
 ## Current Position
 
 Milestone: v0.2.0 Full SWC Parity
-Phase: 11 (Root Module Code Generation) — EXECUTING
-Plan: 3 of 4
-Status: Ready to execute
+Phase: 12 (diagnostics-parity) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
 Last activity: 2026-04-06
 
 Progress: [########░░] 77%
@@ -65,6 +65,7 @@ Progress: [########░░] 77%
 | Phase 06 P02 | 6m | 2 tasks | 3 files |
 | Phase 11 P03 | 15m | 1 tasks | 187 files |
 | Phase 11 P04 | 36m | 1 tasks | 80 files |
+| Phase 12 P01 | 12m | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Recent decisions affecting current work:
 - [Phase 11]: D-10: Gate marker name push for bare $ and sync$; D-11: Move stack_ctxt pop after register_context_name; D-12: Non-marker ident calls push callee name matching SWC
 - [Phase 11]: D-50: Dev metadata injected as text post-processing to avoid OXC codegen span violations
 - [Phase 11]: D-51: Const stripping uses text-level fixpoint loop (OXC arena prevents in-place Statement type changes)
+- [Phase 12]: classify_captures must run before C03 check; marker_fn_sources distinguishes imported from local marker functions for C05
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T15:55:48.635Z
-Stopped at: Phase 12 context gathered (assumptions mode)
-Resume file: .planning/phases/12-diagnostics-parity/12-CONTEXT.md
+Last session: 2026-04-06T17:17:24.773Z
+Stopped at: Completed 12-01-PLAN.md
+Resume file: None

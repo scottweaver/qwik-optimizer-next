@@ -25,8 +25,8 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 ### Diagnostics
 
-- [ ] **DIAG-01**: Error diagnostics match SWC for invalid references and missing custom inlined functions
-- [ ] **DIAG-02**: Diagnostic presence/absence matches SWC for all 201 fixtures
+- [x] **DIAG-01**: Error diagnostics match SWC for invalid references and missing custom inlined functions
+- [x] **DIAG-02**: Diagnostic presence/absence matches SWC for all 201 fixtures
 
 ### Acceptance
 
@@ -62,8 +62,8 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 | SEG-03 | Phase 10 | Complete |
 | SEG-04 | Phase 10 | Complete |
 | SEG-05 | Phase 10 | Complete |
-| DIAG-01 | Phase 12 | Pending |
-| DIAG-02 | Phase 12 | Pending |
+| DIAG-01 | Phase 12 | Complete |
+| DIAG-02 | Phase 12 | Complete |
 | ACC-01 | Phase 13 | Pending |
 
 **Coverage:**
