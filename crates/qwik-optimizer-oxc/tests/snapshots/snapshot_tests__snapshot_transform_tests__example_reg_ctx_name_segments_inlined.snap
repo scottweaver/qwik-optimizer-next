@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 909
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -9,8 +9,8 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { $, component$, server$ } from "@qwik.dev/core";
 export const Works = componentQrl((props) => {
 	const text = "hola";
-	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "component_ZUK1E201Ins", [text]) }, null, null, 1, null);
-}, "_u6BtPnK76q4");
+	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_onClick_server_OsNoEFc5SM4", [text]) }, null, null, 1, null);
+}, "Works_component_t45qL4vNGv0");
 
 == DIAGNOSTICS ==
 []

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 891
 expression: output
+snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -16,7 +16,7 @@ export const Issue3561 = componentQrl(() => {
 	const { currentVariant: { variantImage, variantNumber, setContents } = {} } = props.product;
 	console.log(variantImage, variantNumber, setContents);
 	return _jsxSorted("p", null, null, null, 1, null);
-}, "_u6BtPnK76q4");
+}, "Issue3561_component_hHTw654BZB8");
 
 == DIAGNOSTICS ==
 []

@@ -1,17 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 880
 expression: output
+snapshot_kind: text
 ---
 ============================= project/index.js ==
 import { qrlDEV } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useStore } from "@qwik.dev/core";
-export const App = qrlDEV(() => import("./index.tsx__Q6Dyy5BeIxw.tsx"), "_Q6Dyy5BeIxw");
+export const App = qrlDEV(() => import("./index.tsx_App_component_KGLYFBhvJc0.tsx"), "App_component_KGLYFBhvJc0");
 
-============================= project/index.tsx__Q6Dyy5BeIxw.js (ENTRY POINT) ==
-export const _Q6Dyy5BeIxw = (props: Stuff) => {
+============================= project/index.tsx_App_component_KGLYFBhvJc0.js (ENTRY POINT) ==
+export const App_component_KGLYFBhvJc0 = (props: Stuff) => {
 	return (
 		<>
 			<Cmp key="stuff"></Cmp>
@@ -25,11 +25,11 @@ export const _Q6Dyy5BeIxw = (props: Stuff) => {
 /*
 {
   "origin": "project/index.tsx",
-  "name": "_Q6Dyy5BeIxw",
+  "name": "App_component_KGLYFBhvJc0",
   "entry": null,
-  "displayName": "index.tsx_",
-  "hash": "Q6Dyy5BeIxw",
-  "canonicalFilename": "index.tsx__Q6Dyy5BeIxw",
+  "displayName": "index.tsx_App_component",
+  "hash": "KGLYFBhvJc0",
+  "canonicalFilename": "index.tsx_App_component_KGLYFBhvJc0",
   "path": "project",
   "extension": "js",
   "parent": null,

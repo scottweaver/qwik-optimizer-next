@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 882
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { inlinedQrl } from "@qwik.dev/core";
@@ -13,9 +13,9 @@ export const Works = componentQrl((props) => {
 	const sig = useSignal("hola");
 	useTaskQrl(() => {
 		console.log(sig.value, text);
-	}, "component_ZUK1E201Ins", [sig, text]);
-	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "component_1_vX1B9oMEgiI", [sig, text]) }, null, null, 1, null);
-}, "_u6BtPnK76q4");
+	}, "Works_component_useTask_pjo5U5Ikll0", [sig, text]);
+	return _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", sig.value, text), "Works_component_div_onClick_server_OsNoEFc5SM4", [sig, text]) }, null, null, 1, null);
+}, "Works_component_t45qL4vNGv0");
 const STYLES = ".class {}";
 
 == DIAGNOSTICS ==

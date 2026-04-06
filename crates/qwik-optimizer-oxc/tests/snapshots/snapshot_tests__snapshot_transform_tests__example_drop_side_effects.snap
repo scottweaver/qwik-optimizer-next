@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 858
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrlDEV } from "@qwik.dev/core";
@@ -19,51 +19,24 @@ import { sideEffect } from "./secret";
 	console.log("run");
 })();
 sideEffect();
-export const api = qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export default qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const api = qrlDEV(() => import("./test.tsx_api_server_JonPp043gH0"), "api_server_JonPp043gH0");
+export default qrlDEV(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
-import { api } from "./test";
-export const _1_iZVV0eoW44k = () => {
-	return (
-		<button onClick$={() => await api()}></button>
-	)
-	};
-/*
-{
-  "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
-  "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    491,
-    575
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_api_server_JonPp043gH0.js (ENTRY POINT) ==
 const dfd = new Client(secret);
 const supabase = clientSupabase();
-export const _u6BtPnK76q4 = () => {
+export const api_server_JonPp043gH0 = () => {
 	supabase.from("ffg").do(dfd);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "api_server_JonPp043gH0",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_api_server",
+  "hash": "JonPp043gH0",
+  "canonicalFilename": "test.tsx_api_server_JonPp043gH0",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -73,6 +46,33 @@ export const _u6BtPnK76q4 = () => {
   "loc": [
     424,
     473
+  ]
+}
+*/
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+import { api } from "./test";
+export const test_component_LUXeXe0DQrg = () => {
+	return (
+		<button onClick$={() => await api()}></button>
+	)
+	};
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_LUXeXe0DQrg",
+  "entry": null,
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    491,
+    575
   ]
 }
 */

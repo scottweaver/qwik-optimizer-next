@@ -1,16 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 933
 expression: output
+snapshot_kind: text
 ---
 ============================= test.ts ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useSignal } from "@qwik.dev/core";
-export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx__u6BtPnK76q4.ts (ENTRY POINT) ==
+============================= test.tsx_test_component_LUXeXe0DQrg.ts (ENTRY POINT) ==
 import { useSignal } from "@qwik.dev/core";
 const useFoo = (count) => {
 	const tag = (s) => {
@@ -19,7 +19,7 @@ const useFoo = (count) => {
 	};
 	return tag;
 };
-export const _u6BtPnK76q4 = () => {
+export const test_component_LUXeXe0DQrg = () => {
 			const count = useSignal(0);
 			const foo = useFoo(count);
 			return (
@@ -33,11 +33,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "ts",
   "parent": null,

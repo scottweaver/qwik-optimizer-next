@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 918
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
@@ -11,12 +11,38 @@ import mongodb from "mongodb";
 export const onGet = () => {
 	throw "Symbol removed by Qwik Optimizer, it can not be called from current platform";
 };
-export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+============================= test.tsx_test_component_useResource_4a8wVY7wh38.tsx (ENTRY POINT) ==
+import { onGet } from "./test";
+export const test_component_useResource_4a8wVY7wh38 = () => {
+	return onGet();
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_useResource_4a8wVY7wh38",
+  "entry": null,
+  "displayName": "test.tsx_test_component_useResource",
+  "hash": "4a8wVY7wh38",
+  "canonicalFilename": "test.tsx_test_component_useResource_4a8wVY7wh38",
+  "path": "",
+  "extension": "tsx",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "function",
+  "ctxName": "useResource$",
+  "captures": false,
+  "loc": [
+    236,
+    278
+  ]
+}
+*/
+============================= test.tsx_test_component_LUXeXe0DQrg.tsx (ENTRY POINT) ==
 import { onGet } from "./test";
 import { useResource$ } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = ()=> {
+export const test_component_LUXeXe0DQrg = ()=> {
 	useResource$(() => {
 		return onGet();
 	})
@@ -25,11 +51,11 @@ export const _u6BtPnK76q4 = ()=> {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "tsx",
   "parent": null,
@@ -39,32 +65,6 @@ export const _u6BtPnK76q4 = ()=> {
   "loc": [
     217,
     304
-  ]
-}
-*/
-============================= test.tsx_component_ZUK1E201Ins.tsx (ENTRY POINT) ==
-import { onGet } from "./test";
-export const component_ZUK1E201Ins = () => {
-	return onGet();
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "component_ZUK1E201Ins",
-  "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
-  "path": "",
-  "extension": "tsx",
-  "parent": "_u6BtPnK76q4",
-  "ctxKind": "function",
-  "ctxName": "useResource$",
-  "captures": false,
-  "loc": [
-    236,
-    278
   ]
 }
 */

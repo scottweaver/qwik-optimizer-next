@@ -1,15 +1,15 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 840
 expression: output
+snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { qrl } from "@qwik.dev/core";
 import { $, component$ } from "@qwik.dev/core";
-const Header = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+const Header = qrl(() => import("./test.tsx_Header_WjUaUQN7Oxg"), "Header_WjUaUQN7Oxg");
 
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
-export const _u6BtPnK76q4 = (decl1, { decl2 }, [decl3]) => {
+============================= test.tsx_Header_WjUaUQN7Oxg.tsx (ENTRY POINT) ==
+export const Header_WjUaUQN7Oxg = (decl1, { decl2 }, [decl3]) => {
 	const { decl4, key: decl5 } = this;
 	let [decl6, ...decl7] = stuff;
 	const decl8 = 1, decl9;
@@ -24,11 +24,11 @@ export const _u6BtPnK76q4 = (decl1, { decl2 }, [decl3]) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Header_WjUaUQN7Oxg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Header",
+  "hash": "WjUaUQN7Oxg",
+  "canonicalFilename": "test.tsx_Header_WjUaUQN7Oxg",
   "path": "",
   "extension": "tsx",
   "parent": null,

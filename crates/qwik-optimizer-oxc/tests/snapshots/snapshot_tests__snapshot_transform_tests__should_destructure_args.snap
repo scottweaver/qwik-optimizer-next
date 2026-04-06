@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 949
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -9,11 +9,11 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 // the count results in _fnSignal because of the rename
 // would be nice to consider it a prop too
-export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { _restProps } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = ({ message, id, count: c, ...rest }: Record<string, any>) => {
+export const test_component_LUXeXe0DQrg = ({ message, id, count: c, ...rest }: Record<string, any>) => {
 			const _ref = {};
 			_ref.renders = useStore({ _ref.renders: 0 }, { reactive: false });
 			const { renders } = _ref;
@@ -31,11 +31,11 @@ export const _u6BtPnK76q4 = ({ message, id, count: c, ...rest }: Record<string, 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "js",
   "parent": null,

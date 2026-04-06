@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 986
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -9,12 +9,12 @@ import { _jsxSorted } from "@qwik.dev/core";
 import { Fragment } from "@qwik.dev/core";
 import { component$, useSignal } from "@qwik.dev/core";
 import { A } from "./componentA";
-export const Cmp = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export const Cmp = qrl(() => import("./test.tsx_Cmp_component_4ryKJTOKjWE"), "Cmp_component_4ryKJTOKjWE");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_Cmp_component_4ryKJTOKjWE.js (ENTRY POINT) ==
 import { A } from "./componentA";
 import { useSignal } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => {
+export const Cmp_component_4ryKJTOKjWE = () => {
 	const currentStep = useSignal('STEP_1');
 	const currentType = useSignal<'NEXT' | 'PREVIOUS'>('PREVIOUS');
 
@@ -32,11 +32,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Cmp_component_4ryKJTOKjWE",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Cmp_component",
+  "hash": "4ryKJTOKjWE",
+  "canonicalFilename": "test.tsx_Cmp_component_4ryKJTOKjWE",
   "path": "",
   "extension": "js",
   "parent": null,

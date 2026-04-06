@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 946
 expression: output
+snapshot_kind: text
 ---
 ============================= ./node_modules/qwik-tree/index.qwik.js ==
 import { inlinedQrlDEV } from "@qwik.dev/core";
@@ -13,7 +13,7 @@ import { component$ } from "@qwik.dev/core";
 // or should use two-phase emission to avoid forward reference
 export const Tree = componentQrl((props) => {
 	return _jsxSorted("div", null, null, [props.label, props.children && props.children.map((child) => _jsxSplit(Tree, { ...child }, null, null, 1, "0"))], 1, null);
-}, "_ziH4q1QHsFs");
+}, "Tree_component_XMEiO6Rrd3Y");
 
 == DIAGNOSTICS ==
 []

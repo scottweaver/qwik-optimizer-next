@@ -1,30 +1,30 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1013
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
 import { component$ } from "@qwik.dev/core";
 import { globalAction$ } from "@qwik.dev/router";
-export const useSecretAction = qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const SecretForm = qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+export const useSecretAction = qrl(() => import("./test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q"), "useSecretAction_globalAction_Cbn41AEUQ0Q");
+export const SecretForm = qrl(() => import("./test.tsx_SecretForm_component_1noi8FsTz7c"), "SecretForm_component_1noi8FsTz7c");
 
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
+============================= test.tsx_SecretForm_component_1noi8FsTz7c.js (ENTRY POINT) ==
 import { useSecretAction } from "./test";
-export const _1_iZVV0eoW44k = () => {
+export const SecretForm_component_1noi8FsTz7c = () => {
 			const action = useSecretAction();
 			return <div>{action.value}</div>
 		};
 /*
 {
   "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
+  "name": "SecretForm_component_1noi8FsTz7c",
   "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
+  "displayName": "test.tsx_SecretForm_component",
+  "hash": "1noi8FsTz7c",
+  "canonicalFilename": "test.tsx_SecretForm_component_1noi8FsTz7c",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -37,17 +37,17 @@ export const _1_iZVV0eoW44k = () => {
   ]
 }
 */
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = async (payload) => console.log(payload) || "hi";
+============================= test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q.js (ENTRY POINT) ==
+export const useSecretAction_globalAction_Cbn41AEUQ0Q = async (payload) => console.log(payload) || "hi";
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "useSecretAction_globalAction_Cbn41AEUQ0Q",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_useSecretAction_globalAction",
+  "hash": "Cbn41AEUQ0Q",
+  "canonicalFilename": "test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q",
   "path": "",
   "extension": "js",
   "parent": null,

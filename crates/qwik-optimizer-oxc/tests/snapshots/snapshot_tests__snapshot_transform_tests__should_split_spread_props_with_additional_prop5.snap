@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 995
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
@@ -11,10 +11,10 @@ import { component$ } from "@qwik.dev/core";
 function Hola(props: any) {
 	return _jsxSplit("div", { ...props }, null, null, 1, "0");
 }
-export default qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+export default qrl(() => import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
 
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
+export const test_component_LUXeXe0DQrg = () => {
 		return <Hola>
 			<div>1</div>
 			<div>2</div>
@@ -23,11 +23,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "js",
   "parent": null,
