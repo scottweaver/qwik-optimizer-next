@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.2.0
 milestone_name: Full SWC Parity
 status: executing
-stopped_at: Phase 11 context gathered
-last_updated: "2026-04-06T13:55:47.244Z"
-last_activity: 2026-04-06 -- Phase 11 execution started
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-04-06T14:20:20.281Z"
+last_activity: 2026-04-06
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 4
   percent: 0
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 
 Milestone: v0.2.0 Full SWC Parity
 Phase: 11 (Root Module Code Generation) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 11
-Last activity: 2026-04-06 -- Phase 11 execution started
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-06
 
 Progress: [░░░░░░░░░░] 0% (0/6 plans)
 
@@ -45,6 +45,8 @@ Progress: [░░░░░░░░░░] 0% (0/6 plans)
 - [Phase 10]: strip_ctx_name uses starts_with prefix matching to match SWC behavior
 - [Phase 10]: Noop segments always produce separate module files regardless of entry strategy
 - [Phase 10]: Non-function first args in marker function calls produce segments (useStyles$, qwikify$, etc.)
+- [Phase 11]: D-40: Extracted remove_unused_qrl_declarations as standalone function matching SWC architecture
+- [Phase 11]: D-41: Fixpoint only runs in non-Lib modes to preserve Lib mode inlined QRL behavior
 
 ### Blockers/Concerns
 
@@ -53,6 +55,6 @@ Progress: [░░░░░░░░░░] 0% (0/6 plans)
 
 ## Session Continuity
 
-Last session: 2026-04-06T13:31:41.064Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-root-module-code-generation/11-CONTEXT.md
+Last session: 2026-04-06T14:20:20.277Z
+Stopped at: Completed 11-02-PLAN.md
+Resume file: None
