@@ -30,7 +30,7 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 
 ### Acceptance
 
-- [ ] **ACC-01**: Parity report shows 201/201 full match (root module + segment count + diagnostics)
+- [x] **ACC-01**: Parity report shows 201/201 full match (root module + segment count + diagnostics)
 
 ## Future Requirements
 
@@ -64,7 +64,7 @@ Requirements for full SWC parity. Each maps to roadmap phases.
 | SEG-05 | Phase 10 | Complete |
 | DIAG-01 | Phase 12 | Complete |
 | DIAG-02 | Phase 12 | Complete |
-| ACC-01 | Phase 13 | Pending |
+| ACC-01 | Phase 13 | Complete |
 
 **Coverage:**
 - v0.2.0 requirements: 13 total
