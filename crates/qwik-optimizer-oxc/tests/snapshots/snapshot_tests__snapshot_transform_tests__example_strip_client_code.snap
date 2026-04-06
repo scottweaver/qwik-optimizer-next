@@ -4,6 +4,8 @@ expression: output
 snapshot_kind: text
 ---
 ============================= components/component.js ==
+import "./keep";
+import "../keep2";
 import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
 import { renderQrl } from "@qwik.dev/core";
@@ -13,12 +15,6 @@ import { useTaskQrl } from "@qwik.dev/core";
 import { inlinedQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
-import mongo from "mongodb";
-import redis from "redis";
-import threejs from "threejs";
-import { a } from "./keep";
-import { b } from "../keep2";
-import { c } from "../../remove";
 export const Parent = componentQrl(() => {
 	const state = useStore({ text: "" });
 	// Double count watch

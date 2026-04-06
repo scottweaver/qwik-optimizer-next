@@ -1,13 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 1015
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { globalActionQrl } from "@qwik.dev/core";
+import { globalActionQrl } from "@qwik.dev/router";
 import { qrl } from "@qwik.dev/core";
-import { globalAction$ } from "@qwik.dev/router";
 //
 const q_useSecretAction_globalAction_Cbn41AEUQ0Q = /*#__PURE__*/ qrl(()=>import("./test.tsx_useSecretAction_globalAction_Cbn41AEUQ0Q"), "useSecretAction_globalAction_Cbn41AEUQ0Q");
 const q_SecretForm_component_1noi8FsTz7c = /*#__PURE__*/ qrl(()=>import("./test.tsx_SecretForm_component_1noi8FsTz7c"), "SecretForm_component_1noi8FsTz7c");

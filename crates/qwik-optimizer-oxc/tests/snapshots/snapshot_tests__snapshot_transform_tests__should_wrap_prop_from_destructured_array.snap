@@ -8,7 +8,6 @@ import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { useForm, useForm2 } from "./some-file.ts";
 //
 const q_Input_component_9metqqaxlN8 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Input_component_9metqqaxlN8"), "Input_component_9metqqaxlN8");
 const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");

@@ -5,12 +5,9 @@ snapshot_kind: text
 ---
 ============================= test.js ==
 import { onClickQrl } from "@qwik.dev/core";
-import { qwikifyQrl } from "@qwik.dev/core";
+import { qwikifyQrl } from "./qwikfy";
 import { qrl } from "@qwik.dev/core";
 import { _jsxSorted } from "@qwik.dev/core";
-//
-/* @jsxImportSource react */
-import { qwikify$ } from "./qwikfy";
 //
 const q_App_div_q_e_click_Z1sbYFdSKC4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_div_q_e_click_Z1sbYFdSKC4.tsx"), "App_div_q_e_click_Z1sbYFdSKC4");
 const q_App2_qwikify_RKJW7oCMdS4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App2_qwikify_RKJW7oCMdS4.tsx"), "App2_qwikify_RKJW7oCMdS4");

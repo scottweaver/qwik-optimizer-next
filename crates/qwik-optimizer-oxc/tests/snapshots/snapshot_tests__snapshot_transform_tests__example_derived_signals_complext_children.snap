@@ -1,13 +1,13 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 855
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
+import "./file";
 import { componentQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
-import { dep } from "./file";
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
 //

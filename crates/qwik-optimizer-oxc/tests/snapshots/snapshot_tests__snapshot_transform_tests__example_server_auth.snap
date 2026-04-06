@@ -4,13 +4,9 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { authQrl } from "@qwik.dev/core";
-import { serverAuthQrl } from "@qwik.dev/core";
+import { authQrl } from "@auth/qwik";
+import { serverAuthQrl } from "@auth/qwik";
 import { qrl } from "@qwik.dev/core";
-import GitHub from "@auth/core/providers/github";
-import Facebook from "next-auth/providers/facebook";
-import Google from "next-auth/providers/google";
-import { serverAuth$, auth$ } from "@auth/qwik";
 //
 const q_serverAuth_qVqpX2a0p9Y = /*#__PURE__*/ qrl(()=>import("./test.tsx_serverAuth_qVqpX2a0p9Y"), "serverAuth_qVqpX2a0p9Y");
 const q_auth_GU0aY5QCETY = /*#__PURE__*/ qrl(()=>import("./test.tsx_auth_GU0aY5QCETY"), "auth_GU0aY5QCETY");

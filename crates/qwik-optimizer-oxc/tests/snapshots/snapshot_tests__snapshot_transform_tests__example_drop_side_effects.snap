@@ -6,10 +6,9 @@ snapshot_kind: text
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
-import { serverQrl } from "@qwik.dev/core";
+import { serverQrl } from "@qwik.dev/router";
 import { qrlDEV } from "@qwik.dev/core";
 import { _noopQrlDEV } from "@qwik.dev/core";
-import { server$ } from "@qwik.dev/router";
 import { clientSupabase } from "supabase";
 import { Client } from "openai";
 import { secret } from "./secret";

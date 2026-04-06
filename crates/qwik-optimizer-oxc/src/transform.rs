@@ -376,6 +376,10 @@ pub(crate) struct QwikTransform {
     /// imports AND locally-exported $-suffixed identifiers.
     pub(crate) marker_functions: HashMap<String, String>,
 
+    /// Maps marker function ctx_name (e.g., "globalAction$") to its original import source module.
+    /// Used in exit_program to emit QRL wrapper imports from the correct source (not always core_module).
+    pub(crate) marker_fn_sources: HashMap<String, String>,
+
     /// Import specifiers consumed during transformation (e.g., "$", "component$").
     /// These are stripped from the root module output in exit_program.
     pub(crate) consumed_imports: HashSet<String>,
@@ -478,11 +482,13 @@ impl QwikTransform {
         source_text: &str,
     ) -> Self {
         let mut marker_functions: HashMap<String, String> = HashMap::new();
+        let mut marker_fn_sources: HashMap<String, String> = HashMap::new();
 
         // --- Named imports whose specifier ends with `$` ---
         for (local, import) in &collect.imports {
             if import.kind == ImportKind::Named && import.specifier.ends_with('$') {
                 marker_functions.insert(local.clone(), import.specifier.clone());
+                marker_fn_sources.insert(import.specifier.clone(), import.source.clone());
             }
         }
 
@@ -516,6 +522,7 @@ impl QwikTransform {
 
         QwikTransform {
             marker_functions,
+            marker_fn_sources,
             consumed_imports: HashSet::new(),
             qsegment_fn,
             sync_qrl_fn,
@@ -552,6 +559,26 @@ impl QwikTransform {
             explicit_extensions: config.explicit_extensions,
             source_text: source_text as *const str,
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // find_wrapper_source -- look up the correct import source for a QRL wrapper
+    // -----------------------------------------------------------------------
+
+    /// Find the correct import source module for a QRL wrapper function name.
+    /// E.g., "globalActionQrl" -> look up "globalAction$" in marker_fn_sources -> "@qwik.dev/router"
+    /// Falls back to self.core_module if not found.
+    fn find_wrapper_source(&self, wrapper_name: &str) -> String {
+        // Convert QRL wrapper name back to marker name: "componentQrl" -> "component$"
+        let marker_name = if wrapper_name.ends_with("Qrl") {
+            format!("{}$", &wrapper_name[..wrapper_name.len() - 3])
+        } else {
+            return self.core_module.clone();
+        };
+        self.marker_fn_sources
+            .get(&marker_name)
+            .cloned()
+            .unwrap_or_else(|| self.core_module.clone())
     }
 
     // -----------------------------------------------------------------------
@@ -2541,10 +2568,28 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         // 2. Wrapper imports (componentQrl, etc.) -- inserted at pos 0 in reverse sorted order
         //    Since these are inserted AFTER regular imports, they end up BEFORE them (at top).
+        //    Use tracked source module per marker function (not always core_module).
         for wrapper in wrapper_imports.into_iter().rev() {
-            let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, self.core_module);
+            let source = self.find_wrapper_source(&wrapper);
+            let import_str = format!(r#"import {{ {} }} from "{}";"#, wrapper, source);
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
                 program.body.insert(0, stmt);
+            }
+        }
+
+        // 3. Synthetic imports from global_collect (e.g., _restProps from props destructuring)
+        //    Inserted last at pos 0 so they end up at the very top of the module.
+        {
+            let collect = unsafe { &*self.global_collect_ptr };
+            for (local_name, import) in &collect.synthetic {
+                let import_str = if local_name == &import.specifier {
+                    format!(r#"import {{ {} }} from "{}";"#, local_name, import.source)
+                } else {
+                    format!(r#"import {{ {} as {} }} from "{}";"#, import.specifier, local_name, import.source)
+                };
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
+                    program.body.insert(0, stmt);
+                }
             }
         }
 
@@ -2567,34 +2612,29 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             program.body.retain_mut(|stmt| {
                 if let Statement::ImportDeclaration(import_decl) = stmt {
-                    let source_val = import_decl.source.value.as_str();
-                    // Only strip from core module imports
-                    let is_core = source_val == self.core_module
-                        || source_val == "@qwik.dev/core"
-                        || source_val.ends_with("/core");
-                    if is_core {
-                        if let Some(specifiers) = &mut import_decl.specifiers {
-                            specifiers.retain(|spec| {
-                                if let ImportDeclarationSpecifier::ImportSpecifier(named) = spec {
-                                    let local_name = named.local.name.as_str();
-                                    let imported_name = match &named.imported {
-                                        ModuleExportName::IdentifierName(id) => id.name.as_str(),
-                                        ModuleExportName::IdentifierReference(id) => id.name.as_str(),
-                                        ModuleExportName::StringLiteral(s) => s.value.as_str(),
-                                    };
-                                    // Strip if it's a marker function or consumed import
-                                    let should_strip = strip_names.contains(local_name)
-                                        || strip_names.contains(imported_name)
-                                        || consumed_owned.iter().any(|c| c == local_name || c == imported_name);
-                                    !should_strip
-                                } else {
-                                    true // Keep default/namespace imports
-                                }
-                            });
-                            // Remove the entire import if no specifiers remain
-                            if specifiers.is_empty() {
-                                return false;
+                    // Strip marker function imports from ALL sources (not just core module).
+                    // SWC removes marker functions regardless of their source module.
+                    if let Some(specifiers) = &mut import_decl.specifiers {
+                        specifiers.retain(|spec| {
+                            if let ImportDeclarationSpecifier::ImportSpecifier(named) = spec {
+                                let local_name = named.local.name.as_str();
+                                let imported_name = match &named.imported {
+                                    ModuleExportName::IdentifierName(id) => id.name.as_str(),
+                                    ModuleExportName::IdentifierReference(id) => id.name.as_str(),
+                                    ModuleExportName::StringLiteral(s) => s.value.as_str(),
+                                };
+                                // Strip if it's a marker function or consumed import
+                                let should_strip = strip_names.contains(local_name)
+                                    || strip_names.contains(imported_name)
+                                    || consumed_owned.iter().any(|c| c == local_name || c == imported_name);
+                                !should_strip
+                            } else {
+                                true // Keep default/namespace imports
                             }
+                        });
+                        // Remove the entire import if no specifiers remain
+                        if specifiers.is_empty() {
+                            return false;
                         }
                     }
                 }
@@ -2646,9 +2686,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             }
         }
 
-        // Dead import elimination: remove any ORIGINAL core module import specifier
-        // whose local binding is NOT referenced in the remaining program body.
-        // This handles cases like `onRender` being imported but never used.
+        // Dead import elimination: remove any import specifier whose local
+        // binding is NOT referenced in the remaining program body.
+        // Covers ALL imports (not just core module) to match SWC behavior.
         // Skip in Lib mode where code generation patterns differ.
         if !matches!(self.mode, EmitMode::Lib) {
             // Build set of synthetically-added import names (should not be eliminated)
@@ -2665,6 +2705,13 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                          "Fragment", "_fnSignal", "_wrapProp"] {
                 synthetic_names.insert(name.to_string());
             }
+            // Add collect.synthetic names to the protection set
+            {
+                let collect = unsafe { &*self.global_collect_ptr };
+                for (local_name, _) in &collect.synthetic {
+                    synthetic_names.insert(local_name.clone());
+                }
+            }
 
             // Collect all identifier references in non-import statements
             let mut referenced: HashSet<String> = HashSet::new();
@@ -2677,33 +2724,30 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
             program.body.retain_mut(|stmt| {
                 if let Statement::ImportDeclaration(import_decl) = stmt {
-                    let source_val = import_decl.source.value.as_str();
-                    let is_core = source_val == self.core_module
-                        || source_val == "@qwik.dev/core"
-                        || source_val.ends_with("/core");
-                    if is_core {
-                        if let Some(specifiers) = &mut import_decl.specifiers {
-                            specifiers.retain(|spec| {
-                                match spec {
-                                    ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                                        let local = named.local.name.as_str();
-                                        // Keep synthetic imports unconditionally
-                                        synthetic_names.contains(local)
-                                            || referenced.contains(local)
-                                    }
-                                    ImportDeclarationSpecifier::ImportDefaultSpecifier(def) => {
-                                        referenced.contains(def.local.name.as_str())
-                                    }
-                                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
-                                        referenced.contains(ns.local.name.as_str())
-                                    }
+                    // Apply dead import elimination to ALL imports, not just core module.
+                    // Keep side-effect-only imports (bare `import "module"` with no specifiers).
+                    if let Some(specifiers) = &mut import_decl.specifiers {
+                        specifiers.retain(|spec| {
+                            match spec {
+                                ImportDeclarationSpecifier::ImportSpecifier(named) => {
+                                    let local = named.local.name.as_str();
+                                    // Keep synthetic imports unconditionally
+                                    synthetic_names.contains(local)
+                                        || referenced.contains(local)
                                 }
-                            });
-                            if specifiers.is_empty() {
-                                return false;
+                                ImportDeclarationSpecifier::ImportDefaultSpecifier(def) => {
+                                    referenced.contains(def.local.name.as_str())
+                                }
+                                ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
+                                    referenced.contains(ns.local.name.as_str())
+                                }
                             }
+                        });
+                        if specifiers.is_empty() {
+                            return false;
                         }
                     }
+                    // Bare imports (no specifiers) are side-effect-only; keep them.
                 }
                 true
             });

@@ -7,9 +7,6 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { useStylesQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import css1 from "./global.css";
-import css2 from "./style.css";
-import css3 from "./style.css";
 //
 const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
 //

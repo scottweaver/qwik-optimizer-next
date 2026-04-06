@@ -5,13 +5,8 @@ snapshot_kind: text
 ---
 ============================= test.ts ==
 import { componentQrl } from "@qwik.dev/core";
-import { qwikifyQrl } from "@qwik.dev/core";
+import { qwikifyQrl } from "@qwik.dev/react";
 import { qrl } from "@qwik.dev/core";
-import { isDev } from "@qwik.dev/core/build";
-import { stuff } from "@qwik.dev/router";
-import { moreStuff } from "@qwik.dev/router/more/here";
-import { qwikify$ } from "@qwik.dev/react";
-import sdk from "@builder.io/sdk";
 //
 const q_Foo_qwikify_0Yoy9qA0SC0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_qwikify_0Yoy9qA0SC0"), "Foo_qwikify_0Yoy9qA0SC0");
 const q_Bar_GXXnVUtURSw = /*#__PURE__*/ qrl(()=>import("./test.tsx_Bar_GXXnVUtURSw"), "Bar_GXXnVUtURSw");

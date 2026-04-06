@@ -12,9 +12,6 @@ import { serverStuffQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-import mongo from "mongodb";
-import redis from "redis";
-import { handler } from "serverless";
 //
 const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo");
 //

@@ -1,9 +1,10 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
-assertion_line: 982
 expression: output
+snapshot_kind: text
 ---
 ============================= test.js ==
+import { _restProps } from "@qwik.dev/core";
 import { componentQrl } from "@qwik.dev/core";
 import { useComputedQrl } from "@qwik.dev/core";
 import { useTaskQrl } from "@qwik.dev/core";

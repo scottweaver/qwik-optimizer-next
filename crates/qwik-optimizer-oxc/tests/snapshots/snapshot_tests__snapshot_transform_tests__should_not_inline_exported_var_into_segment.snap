@@ -4,11 +4,10 @@ expression: output
 snapshot_kind: text
 ---
 ============================= test.js ==
-import { formActionQrl } from "@qwik.dev/core";
-import { valiFormQrl } from "@qwik.dev/core";
+import { formActionQrl } from "forms";
+import { valiFormQrl } from "forms";
 import { qrl } from "@qwik.dev/core";
 import { wrapperFn, getEnv } from "utils";
-import { formAction$, valiForm$ } from "forms";
 //
 const q_featureAction_formAction_cZgh2PzV1cc = /*#__PURE__*/ qrl(()=>import("./test.tsx_featureAction_formAction_cZgh2PzV1cc"), "featureAction_formAction_cZgh2PzV1cc");
 //

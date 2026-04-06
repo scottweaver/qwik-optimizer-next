@@ -7,7 +7,6 @@ snapshot_kind: text
 import { componentQrl } from "@qwik.dev/core";
 import { onClickQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { destructureBindings } from "./destructure-bindings";
 //
 const q_FieldInput_component_V4XAtJSTRKg = /*#__PURE__*/ qrl(()=>import("./test.tsx_FieldInput_component_V4XAtJSTRKg"), "FieldInput_component_V4XAtJSTRKg");
 //
