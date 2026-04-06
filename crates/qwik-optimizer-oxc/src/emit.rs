@@ -59,6 +59,19 @@ pub(crate) fn emit_module<'a>(
     }
 }
 
+/// Strip TypeScript type annotations from emitted code using OXC's
+/// isolated declarations transform.
+///
+/// Since we cannot use OXC's `transformer` feature (per project constraints),
+/// TS type stripping is deferred to a future plan that implements manual
+/// AST mutation for type annotation removal.
+///
+/// Placeholder: returns the code unchanged for now.
+#[allow(dead_code)]
+pub(crate) fn strip_typescript_types(code: &str) -> String {
+    code.to_string()
+}
+
 /// Post-process emitted code to collapse single-property object literals to one line.
 ///
 /// OXC codegen renders `{ key: value }` as:
@@ -191,5 +204,13 @@ mod tests {
             "Expected double-quoted string in output: {}",
             result.code
         );
+    }
+
+    #[test]
+    fn test_strip_typescript_types_placeholder() {
+        // Placeholder: strip_typescript_types is a no-op pending manual AST mutation impl
+        let input = "export const foo = (ref: SeenRef) => {};";
+        let result = strip_typescript_types(input);
+        assert_eq!(result, input, "Placeholder should return unchanged");
     }
 }
