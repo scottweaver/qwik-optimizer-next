@@ -1,26 +1,30 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 903
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { useSignal } from '@qwik.dev/core';
-export const Works = /*#__PURE__*/ componentQrl((_rawProps) => {
-    const fromProps = _rawProps.fromProps;
+//
+const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
+//
+q_Works_component_t45qL4vNGv0.s(({ fromProps }) => {
     let fromLocal = useSignal(0);
-    return /*#__PURE__*/ _jsxSorted("div", null, null, [
-        fromLocal,
-        fromProps,
-        fromLocal + fromProps,
-        { props: fromProps },
-        { local: fromLocal },
-        {
-            props: fromProps,
-            local: fromLocal
-        }
-    ], 1, null);
-}, "Works_component_t45qL4vNGv0");
+    return <div>
+			{fromLocal}
+			{fromProps}
+			{fromLocal + fromProps}
+			{{ props: fromProps }}
+			{{ local: fromLocal }}
+			{{
+        props: fromProps,
+        local: fromLocal
+    }}
+		</div>;
+});
+export const Works = /*#__PURE__*/ componentQrl(q_Works_component_t45qL4vNGv0);
 
 == DIAGNOSTICS ==
 []

@@ -1,14 +1,21 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 897
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
-export const App = /*#__PURE__*/ componentQrl((props) => {
-    return /*#__PURE__*/ _jsxSorted(Cmp, null, null, /*#__PURE__*/ _jsxSorted("p", { "q-e:click": inlinedQrl(() => console.log("warn"), "App_component_Cmp_p_q_e_click_Yl4ybrJWrt4") }, { class: "stuff" }, "Hello Qwik", 1, null), 1, "0");
-}, "App_component_ckEPmXZlub0");
+import { _noopQrl } from "@qwik.dev/core";
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
+//
+q_App_component_Cmp_p_q_e_click_Yl4ybrJWrt4.s(() => console.log("warn"));
+q_App_component_ckEPmXZlub0.s((props) => {
+    return <Cmp>
+			<p class="stuff" onClick$={() => console.log("warn")}>Hello Qwik</p>
+		</Cmp>;
+});
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 
 == DIAGNOSTICS ==
 []

@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 932
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -35,7 +35,7 @@ globalThis.bar();
     console.log(qrl);
 };
 function Lifecycle(props, key, flags) {
-    return /*#__PURE__*/ componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg)(props, key, flags);
+    return (/*#__PURE__*/ componentQrl(q_Lifecycle_Lifecycle_component_PcjTk3N1YOg))(props, key, flags);
 }
 export const rawFn = (event, element) => {
     handleFieldEvent(form, field, name, event, element, ["touched", "input"], getElementInput(element, field, type));

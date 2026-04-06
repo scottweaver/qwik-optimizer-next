@@ -1,11 +1,15 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 893
 expression: output
-snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
-export const Issue3561 = /*#__PURE__*/ componentQrl(() => {
+import { _noopQrl } from "@qwik.dev/core";
+//
+const q_Issue3561_component_hHTw654BZB8 = /*#__PURE__*/ _noopQrl("Issue3561_component_hHTw654BZB8");
+//
+q_Issue3561_component_hHTw654BZB8.s(() => {
     const props = useStore({ product: { currentVariant: {
         variantImage: "image",
         variantNumber: "number",
@@ -13,8 +17,9 @@ export const Issue3561 = /*#__PURE__*/ componentQrl(() => {
     } } });
     const { currentVariant: { variantImage, variantNumber, setContents } = {} } = props.product;
     console.log(variantImage, variantNumber, setContents);
-    return /*#__PURE__*/ _jsxSorted("p", null, null, null, 1, null);
-}, "Issue3561_component_hHTw654BZB8");
+    return <p></p>;
+});
+export const Issue3561 = /*#__PURE__*/ componentQrl(q_Issue3561_component_hHTw654BZB8);
 
 == DIAGNOSTICS ==
 []

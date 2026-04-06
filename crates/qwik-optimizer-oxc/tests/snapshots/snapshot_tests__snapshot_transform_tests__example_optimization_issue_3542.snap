@@ -1,30 +1,30 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 892
 expression: output
-snapshot_kind: text
 ---
 ============================= test.jsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
-export const AtomStatus = /*#__PURE__*/ componentQrl((_rawProps) => {
-    const ctx = _rawProps.ctx;
-    const atom = _rawProps.atom;
+import { _noopQrl } from "@qwik.dev/core";
+//
+const q_AtomStatus_component_hdwpoUtydSA = /*#__PURE__*/ _noopQrl("AtomStatus_component_hdwpoUtydSA");
+//
+q_AtomStatus_component_span_q_e_click_0yqKAycyBF0.s((ev) => atomStatusClick(ctx, ev, [atom]));
+q_AtomStatus_component_hdwpoUtydSA.s(({ ctx, atom }) => {
     let status = atom.status;
     if (!atom.real) {
         status = "WILL-VANISH";
     } else if (JSON.stringify(atom.atom) == JSON.stringify(atom.real)) {
         status = "WTFED";
     }
-    return /*#__PURE__*/ _jsxSorted("span", {
-        title: atom.ID,
-        class: [
-            "atom",
-            status,
-            ctx.store[atom.ID] ? "selected" : null
-        ],
-        "q-e:click": inlinedQrl((ev) => atomStatusClick(ctx, ev, [atom]), "AtomStatus_component_span_q_e_click_0yqKAycyBF0", [atom, ctx])
-    }, null, null, 1, null);
-}, "AtomStatus_component_hdwpoUtydSA");
+    return <span title={atom.ID} onClick$={(ev) => atomStatusClick(ctx, ev, [atom])} class={[
+        "atom",
+        status,
+        ctx.store[atom.ID] ? "selected" : null
+    ]}>
+		</span>;
+});
+export const AtomStatus = /*#__PURE__*/ componentQrl(q_AtomStatus_component_hdwpoUtydSA);
 
 == DIAGNOSTICS ==
 []

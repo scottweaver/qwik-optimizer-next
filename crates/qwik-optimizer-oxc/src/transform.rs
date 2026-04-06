@@ -1416,8 +1416,8 @@ impl QwikTransform {
             });
 
             return Some((replacement_key, replacement));
-        } else if is_inline {
-            // Inline strategy: same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
+        } else if matches!(self.entry_strategy, EntryStrategy::Inline) && !matches!(self.mode, EmitMode::Lib) {
+            // Inline strategy (non-Lib): same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
             let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
             let ident_name = format!("q_{}", names.symbol_name);
@@ -1479,6 +1479,52 @@ impl QwikTransform {
             });
 
             return Some((replacement_key, replacement));
+        } else if is_inline {
+            // Lib mode inline: inlinedQrl(fn_expr, "symbol_name"[, captures])
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
+
+            let fn_body_code = expr_code.as_deref().unwrap_or("()=>{}");
+            let inlined_code = if has_captures {
+                let caps_str = scoped_idents.join(", ");
+                format!(r#"{}({}, "{}", [{}])"#, inlined_name, fn_body_code, names.symbol_name, caps_str)
+            } else {
+                format!(r#"{}({}, "{}")"#, inlined_name, fn_body_code, names.symbol_name)
+            };
+
+            self.needs_inlined_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: dollar_attr.key.clone(),
+                ctx_kind: ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (call_span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
+
+            let qrl_expr = crate::add_side_effect::parse_single_statement(
+                &format!("{};", inlined_code), allocator
+            ).and_then(|stmt| {
+                if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                    Some(es.unbox().expression)
+                } else {
+                    None
+                }
+            })?;
+
+            return Some((replacement_key, qrl_expr));
         } else {
             // Segment strategy: hoist QRL to module scope
             let import_path = if self.explicit_extensions {
@@ -2501,15 +2547,30 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             };
 
             // 5. Wrap in wrapperQrl(replacement) -- e.g., componentQrl(q_sym)
-            let wrapper_call_code = format!("{}(0)", qrl_wrapper_name);
-            let wrapper_stmt = format!("{};", wrapper_call_code);
-            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_stmt, allocator) {
+            // Preserve extra arguments (e.g., tagName options for component$)
+            let extra_args_code = self.extract_extra_args_code(call, 1);
+            let needs_pure = qrl_wrapper_name == "componentQrl";
+            let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
+            let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_call_code, allocator) {
                 if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
                     let mut wrapper_expr = es.unbox().expression;
                     if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
-                        // Replace the dummy 0 arg with our replacement
                         wrapper_call.arguments.clear();
                         wrapper_call.arguments.push(expr_to_argument(replacement));
+                        if let Some(ref extra_code) = extra_args_code {
+                            if let Some(extra_expr) = crate::add_side_effect::parse_single_statement(
+                                &format!("f({});", extra_code), allocator
+                            ) {
+                                if let oxc::ast::ast::Statement::ExpressionStatement(es2) = extra_expr {
+                                    if let Expression::CallExpression(mut fc) = es2.unbox().expression {
+                                        for arg in fc.arguments.drain(..) {
+                                            wrapper_call.arguments.push(arg);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     *expr = wrapper_expr;
                 }
@@ -2536,14 +2597,143 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 pending_parent_span: parent_span,
                 param_names: param_names.clone(),
             });
+        } else if matches!(self.entry_strategy, EntryStrategy::Inline) && !matches!(self.mode, EmitMode::Lib) {
+            // Inline strategy (non-Lib): same _noopQrl/.s()/.w() pattern as Hoist (SWC parity)
+            let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
+            let noop_fn = if is_dev { "_noopQrlDEV" } else { "_noopQrl" };
+            let ident_name = format!("q_{}", names.symbol_name);
+
+            let noop_rhs = format!(r#"/*#__PURE__*/ {}("{}")"#, noop_fn, names.symbol_name);
+
+            if !self.extra_top_items.iter().any(|h| h.symbol_name == names.symbol_name) {
+                let is_root_level = self.segment_stack.is_empty();
+                self.extra_top_items.push(HoistedConst {
+                    name: ident_name.clone(),
+                    rhs_code: noop_rhs,
+                    symbol_name: names.symbol_name.clone(),
+                    is_root_level,
+                });
+            }
+
+            // Extract fn_body code from source text for .s()
+            let fn_body_code: Option<String> = if !call.arguments.is_empty() {
+                let first_arg_span = match &call.arguments[0] {
+                    Argument::ArrowFunctionExpression(a) => Some(a.span),
+                    Argument::FunctionExpression(f) => Some(f.span),
+                    _ => None,
+                };
+                first_arg_span.and_then(|span| {
+                    let src = unsafe { &*self.source_text };
+                    let start = span.start as usize;
+                    let end = span.end as usize;
+                    if start <= end && end <= src.len() {
+                        Some(src[start..end].to_string())
+                    } else {
+                        None
+                    }
+                })
+            } else {
+                let first_arg_span = match &call.arguments[0] {
+                    Argument::StringLiteral(s) => Some(s.span),
+                    _ => None,
+                };
+                first_arg_span.and_then(|span| {
+                    let src = unsafe { &*self.source_text };
+                    let start = span.start as usize;
+                    let end = span.end as usize;
+                    if start <= end && end <= src.len() {
+                        Some(src[start..end].to_string())
+                    } else {
+                        None
+                    }
+                })
+            };
+
+            if let Some(ref body_code) = fn_body_code {
+                let s_call = format!("{}.s({});", ident_name, body_code);
+                self.ref_assignments.push(s_call);
+            }
+
+            let allocator = ctx.ast.allocator;
+
+            let replacement = if has_captures {
+                let caps_str = scoped_idents.join(", ");
+                let w_expr_code = format!("{}.w([{}])", ident_name, caps_str);
+                let expr_stmt = format!("{};", w_expr_code);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&expr_stmt, allocator) {
+                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                        es.unbox().expression
+                    } else {
+                        ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+                    }
+                } else {
+                    ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+                }
+            } else {
+                ctx.ast.expression_identifier(SPAN, arena_ident(ctx, &ident_name))
+            };
+
+            // Wrap in wrapperQrl(replacement) for named markers, or use bare ident for $()
+            let is_bare_dollar = pending.ctx_name == "$";
+
+            if is_bare_dollar {
+                *expr = replacement;
+            } else {
+                let extra_args_code = self.extract_extra_args_code(call, 1);
+                let needs_pure = qrl_wrapper_name == "componentQrl";
+                let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
+                let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
+                if let Some(stmt) = crate::add_side_effect::parse_single_statement(&wrapper_call_code, allocator) {
+                    if let oxc::ast::ast::Statement::ExpressionStatement(es) = stmt {
+                        let mut wrapper_expr = es.unbox().expression;
+                        if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
+                            wrapper_call.arguments.clear();
+                            wrapper_call.arguments.push(expr_to_argument(replacement));
+                            if let Some(ref extra_code) = extra_args_code {
+                                if let Some(extra_expr) = crate::add_side_effect::parse_single_statement(
+                                    &format!("f({});", extra_code), allocator
+                                ) {
+                                    if let oxc::ast::ast::Statement::ExpressionStatement(es2) = extra_expr {
+                                        if let Expression::CallExpression(mut fc) = es2.unbox().expression {
+                                            for arg in fc.arguments.drain(..) {
+                                                wrapper_call.arguments.push(arg);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        *expr = wrapper_expr;
+                    }
+                }
+            }
+
+            self.needs_noop_qrl_import = true;
+
+            self.segments.push(SegmentRecord {
+                name: names.symbol_name.clone(),
+                display_name: names.display_name.clone(),
+                canonical_filename: names.canonical_filename.clone(),
+                entry: entry.clone(),
+                expr: expr_code.clone(),
+                scoped_idents: scoped_idents.clone(),
+                local_idents: local_idents.clone(),
+                ctx_name: pending.ctx_name.clone(),
+                ctx_kind: pending.ctx_kind.clone(),
+                origin: self.rel_path.clone(),
+                span: (pending.span_start, call_span_end),
+                hash: names.hash.clone(),
+                is_inline: true,
+                migrated_root_vars: Vec::new(),
+                parent: None,
+                pending_parent_span: parent_span,
+                param_names: param_names.clone(),
+            });
         } else if is_inline {
-            // Inline strategy: inlinedQrl(fn_expr, "symbol_name"[, captures])
+            // Lib mode inline: inlinedQrl(fn_expr, "symbol_name"[, captures])
             let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
             let _inlined_name = if is_dev { "inlinedQrlDEV" } else { "inlinedQrl" };
 
-            // Replace callee with inlinedQrl wrapper
-            // The first arg stays as the function expression
-            // Insert symbol name as second arg
             call.arguments.push(Argument::StringLiteral(
                 ctx.ast.alloc_string_literal(
                     SPAN,
@@ -2553,7 +2743,6 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             ));
 
             if has_captures {
-                // Build captures array: [capture1, capture2, ...]
                 let captures_array = build_capture_array_expr(&scoped_idents, ctx);
                 call.arguments.push(expr_to_argument(captures_array));
             }
@@ -2653,6 +2842,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             } else {
                 // Wrapper call: e.g., componentQrl(q_sym)
                 // CONV-08: PURE annotation on componentQrl wrapper calls
+                // Preserve extra arguments (e.g., tagName options for component$)
+                let extra_args_code = self.extract_extra_args_code(call, 1);
                 let needs_pure = qrl_wrapper_name == "componentQrl";
                 let wrapper_prefix = if needs_pure { "/*#__PURE__*/ " } else { "" };
                 let wrapper_call_code = format!("{}{}(0);", wrapper_prefix, qrl_wrapper_name);
@@ -2662,6 +2853,19 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                         if let Expression::CallExpression(ref mut wrapper_call) = wrapper_expr {
                             wrapper_call.arguments.clear();
                             wrapper_call.arguments.push(expr_to_argument(replacement));
+                            if let Some(ref extra_code) = extra_args_code {
+                                if let Some(extra_expr) = crate::add_side_effect::parse_single_statement(
+                                    &format!("f({});", extra_code), allocator
+                                ) {
+                                    if let oxc::ast::ast::Statement::ExpressionStatement(es2) = extra_expr {
+                                        if let Expression::CallExpression(mut fc) = es2.unbox().expression {
+                                            for arg in fc.arguments.drain(..) {
+                                                wrapper_call.arguments.push(arg);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                         *expr = wrapper_expr;
                     }
@@ -4083,7 +4287,7 @@ mod tests {
 
     #[test]
     fn props_destructuring_in_component_pipeline() {
-        // In Inline mode, the function body stays in the root module,
+        // In Lib mode (which uses inlinedQrl), the function body stays in the root module,
         // so we can see the _rawProps transformation.
         let src = r#"
             import { component$ } from "@qwik.dev/core";
@@ -4092,7 +4296,8 @@ mod tests {
             });
         "#;
         let mut config = make_config();
-        config.entry_strategy = EntryStrategy::Inline;
+        // Use Lib mode (not Inline) because Inline now uses _noopQrl/.s() with source text
+        config.mode = EmitMode::Lib;
         let output = transform_code(src, "test.tsx", &config);
         let code = &output.modules[0].code;
         // Props destructuring should have run (pre-pass)

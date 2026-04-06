@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 905
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -15,8 +15,8 @@ export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
 /*#__PURE__*/ componentQrl();
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
-export const Root = /*#__PURE__*/ componentQrl(q_Root_component_royhjYaCbYE);
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE, { tagName: "my-foo" });
+export const Root = /*#__PURE__*/ componentQrl(q_Root_component_royhjYaCbYE, { tagName: "my-foo" });
 
 ============================= test.tsx_Root_component_1_cBpQNYDUHI4.js (ENTRY POINT) ==
 export const Root_component_1_cBpQNYDUHI4 = () => {

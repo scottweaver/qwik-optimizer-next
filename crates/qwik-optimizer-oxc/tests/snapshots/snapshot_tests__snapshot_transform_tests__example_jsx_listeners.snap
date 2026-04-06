@@ -1,7 +1,7 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 883
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
@@ -9,7 +9,7 @@ import { qrl } from "@qwik.dev/core";
 //
 const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
 //
-export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE, { tagName: "my-foo" });
 
 ============================= test.tsx_Foo_component_div_q_e_documentscroll_0FSbGzUROso.js (ENTRY POINT) ==
 export const Foo_component_div_q_e_documentscroll_0FSbGzUROso = () => console.log("onDocumentScroll");

@@ -1,47 +1,56 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 900
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { componentQrl } from "@qwik.dev/core";
-import { useTaskQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { CONST } from 'const';
-export const Works = /*#__PURE__*/ componentQrl(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
+//
+const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
+const q_NoWorks2_component_JPD9t2HyEKg = /*#__PURE__*/ _noopQrl("NoWorks2_component_JPD9t2HyEKg");
+const q_NoWorks3_component_fc13h5yYn14 = /*#__PURE__*/ _noopQrl("NoWorks3_component_fc13h5yYn14");
+//
+q_Works_component_useTask_pjo5U5Ikll0.s(({ track }) => {
+    track(() => count);
+    console.log(count, rest, hey, some, hey2);
+});
+q_Works_component_t45qL4vNGv0.s(({ count, some = 1 + 2, hello = CONST, stuff: hey, stuffDefault: hey2 = 123, ...rest }) => {
     console.log(hey, some);
-    useTaskQrl(({ track }) => {
+    useTask$(({ track }) => {
         track(() => count);
         console.log(count, rest, hey, some, hey2);
-    }, "Works_component_useTask_pjo5U5Ikll0", [
-        count,
-        hey,
-        hey2,
-        rest,
-        some
-    ]);
-    return /*#__PURE__*/ _jsxSplit("div", {
-        some,
-        params: { some },
-        class: count,
-        ...rest
-    }, { override: true }, count, 1, null);
-}, "Works_component_t45qL4vNGv0");
-export const NoWorks2 = /*#__PURE__*/ componentQrl(({ count, stuff: { hey } }) => {
+    });
+    return <div some={some} params={{ some }} class={count} {...rest} override>{count}</div>;
+});
+q_NoWorks2_component_useTask_lXiqwbxxjq0.s(({ track }) => {
+    track(() => count);
+    console.log(count);
+});
+q_NoWorks2_component_JPD9t2HyEKg.s(({ count, stuff: { hey } }) => {
     console.log(hey);
-    useTaskQrl(({ track }) => {
+    useTask$(({ track }) => {
         track(() => count);
         console.log(count);
-    }, "NoWorks2_component_useTask_lXiqwbxxjq0", [count]);
-    return /*#__PURE__*/ _jsxSorted("div", { class: count }, null, count, 1, null);
-}, "NoWorks2_component_JPD9t2HyEKg");
-export const NoWorks3 = /*#__PURE__*/ componentQrl(({ count, stuff = hola() }) => {
+    });
+    return <div class={count}>{count}</div>;
+});
+q_NoWorks3_component_useTask_3cQGU0s1VwU.s(({ track }) => {
+    track(() => count);
+    console.log(count);
+});
+q_NoWorks3_component_fc13h5yYn14.s(({ count, stuff = hola() }) => {
     console.log(stuff);
-    useTaskQrl(({ track }) => {
+    useTask$(({ track }) => {
         track(() => count);
         console.log(count);
-    }, "NoWorks3_component_useTask_3cQGU0s1VwU", [count]);
-    return /*#__PURE__*/ _jsxSorted("div", { class: count }, null, count, 1, null);
-}, "NoWorks3_component_fc13h5yYn14");
+    });
+    return <div class={count}>{count}</div>;
+});
+export const Works = /*#__PURE__*/ componentQrl(q_Works_component_t45qL4vNGv0);
+export const NoWorks2 = /*#__PURE__*/ componentQrl(q_NoWorks2_component_JPD9t2HyEKg);
+export const NoWorks3 = /*#__PURE__*/ componentQrl(q_NoWorks3_component_fc13h5yYn14);
 
 == DIAGNOSTICS ==
 []

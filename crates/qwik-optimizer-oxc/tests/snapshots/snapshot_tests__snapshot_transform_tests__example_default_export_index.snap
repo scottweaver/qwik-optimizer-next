@@ -1,14 +1,20 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 851
 expression: output
-snapshot_kind: text
 ---
 ============================= src/components/mongo/index.tsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
-export default /*#__PURE__*/ componentQrl(() => {
-    return /*#__PURE__*/ _jsxSorted("div", { "q-e:click": inlinedQrl(() => console.log(mongodb), "mongo_component_div_q_e_click_jncbxvZVtWY") }, null, null, 1, null);
-}, "mongo_component_ouWLj4jA2oI");
+import { _noopQrl } from "@qwik.dev/core";
+//
+const q_mongo_component_ouWLj4jA2oI = /*#__PURE__*/ _noopQrl("mongo_component_ouWLj4jA2oI");
+//
+q_mongo_component_div_q_e_click_jncbxvZVtWY.s(() => console.log(mongodb));
+q_mongo_component_ouWLj4jA2oI.s(() => {
+    return <div onClick$={() => console.log(mongodb)}>
+		</div>;
+});
+export default /*#__PURE__*/ componentQrl(q_mongo_component_ouWLj4jA2oI);
 
 == DIAGNOSTICS ==
 []

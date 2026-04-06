@@ -1,25 +1,31 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 873
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
 import { componentQrl } from "@qwik.dev/core";
-import { useBrowserVisibleTaskQrl } from "@qwik.dev/core";
-import { useStylesQrl } from "@qwik.dev/core";
-import { inlinedQrl } from "@qwik.dev/core";
+import { _noopQrl } from "@qwik.dev/core";
 import { useStore } from '@qwik.dev/core';
 import { thing } from './sibling';
 import mongodb from "mongodb";
-export const Child = /*#__PURE__*/ componentQrl(() => {
-    useStylesQrl("somestring", "Child_component_useStyles_qBZTuFM0160");
+//
+const q_Child_component_9GyF01GDKqw = /*#__PURE__*/ _noopQrl("Child_component_9GyF01GDKqw");
+//
+q_Child_component_useBrowserVisibleTask_0IGFPOyJmQA.s(() => {
+    state.count = thing.doStuff() + import("./sibling");
+});
+q_Child_component_div_q_e_click_cROa4sult1s.s(() => console.log(mongodb));
+q_Child_component_9GyF01GDKqw.s(() => {
+    useStyles$("somestring");
     const state = useStore({ count: 0 });
-    // Double count watch
-    useBrowserVisibleTaskQrl(() => {
+    useBrowserVisibleTask$(() => {
         state.count = thing.doStuff() + import("./sibling");
-    }, "Child_component_useBrowserVisibleTask_0IGFPOyJmQA", [state]);
-    return /*#__PURE__*/ _jsxSorted("div", { "q-e:click": inlinedQrl(() => console.log(mongodb), "Child_component_div_q_e_click_cROa4sult1s") }, null, null, 1, null);
-}, "Child_component_9GyF01GDKqw");
+    });
+    return <div onClick$={() => console.log(mongodb)}>
+		</div>;
+});
+export const Child = /*#__PURE__*/ componentQrl(q_Child_component_9GyF01GDKqw);
 
 == DIAGNOSTICS ==
 []

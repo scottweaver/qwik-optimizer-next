@@ -1,17 +1,24 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 909
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import "./foo";
 import { componentQrl } from "@qwik.dev/core";
-import { serverQrl } from "@qwik.dev/core";
 import { _noopQrl } from "@qwik.dev/core";
-export const Works = /*#__PURE__*/ componentQrl((props) => {
+import { foo } from './foo';
+//
+const q_Works_component_t45qL4vNGv0 = /*#__PURE__*/ _noopQrl("Works_component_t45qL4vNGv0");
+//
+q_Works_component_div_div_onClick_server_lFRg0PjqeUM.s(() => console.log("in server", text));
+q_Works_component_t45qL4vNGv0.s((props) => {
     const text = "hola";
-    return /*#__PURE__*/ _jsxSorted(_Fragment, null, null, [/*#__PURE__*/ _jsxSorted("div", { onClick$: serverQrl(() => console.log("in server", text), "Works_component_div_div_onClick_server_lFRg0PjqeUM", [text]) }, null, null, 1, null), /*#__PURE__*/ _jsxSorted("div", { "q-e:click": /*#__PURE__*/ _noopQrl("Works_component_div_q_e_click_XuNgFdV2Umk") }, null, null, 1, null)], 1, null);
-}, "Works_component_t45qL4vNGv0");
+    return <>
+		<div onClick$={server$(() => console.log("in server", text))}></div>
+		<div onClick$={() => foo()}></div>
+		</>;
+});
+export const Works = /*#__PURE__*/ componentQrl(q_Works_component_t45qL4vNGv0);
 
 ============================= test.tsx_Works_component_div_q_e_click_XuNgFdV2Umk.js ==
 export const Works_component_div_q_e_click_XuNgFdV2Umk = null;
