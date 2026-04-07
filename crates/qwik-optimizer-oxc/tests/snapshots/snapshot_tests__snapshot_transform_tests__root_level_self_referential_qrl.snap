@@ -1,20 +1,21 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 947
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { _jsxSplit } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+//
+const q_Tree_component_T0k10EAlawU = /*#__PURE__*/ qrl(()=>import("./test.tsx_Tree_component_T0k10EAlawU"), "Tree_component_T0k10EAlawU");
+//
 // Root-level self-referential component
 // The QRL should NOT be hoisted before the component function is defined
 // or should use two-phase emission to avoid forward reference
-export const Tree = componentQrl(q__u6BtPnK76q4);
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
+export const Tree = /*#__PURE__*/ componentQrl(q_Tree_component_T0k10EAlawU);
+============================= test.tsx_Tree_component_T0k10EAlawU.tsx (ENTRY POINT) ==
 import { Tree } from "./test";
-export const _u6BtPnK76q4 = (props) => {
+export const Tree_component_T0k10EAlawU = (props) => {
 	return (
 		<div>
 			{props.label}
@@ -25,11 +26,11 @@ export const _u6BtPnK76q4 = (props) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Tree_component_T0k10EAlawU",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Tree_component",
+  "hash": "T0k10EAlawU",
+  "canonicalFilename": "test.tsx_Tree_component_T0k10EAlawU",
   "path": "",
   "extension": "tsx",
   "parent": null,

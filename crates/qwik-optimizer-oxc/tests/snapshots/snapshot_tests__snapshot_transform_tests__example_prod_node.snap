@@ -1,15 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 899
 expression: output
-snapshot_kind: text
 ---
 ============================= test.tsx ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-const q_s_u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
-export const Foo = componentQrl(q_s_u6BtPnK76q4);
-============================= test.tsx__u6BtPnK76q4.tsx (ENTRY POINT) ==
-export const s_u6BtPnK76q4 = () => {
+//
+const q_s_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "s_HTDRsvUbLiE");
+//
+export const Foo = /*#__PURE__*/ componentQrl(q_s_HTDRsvUbLiE);
+============================= test.tsx_Foo_component_HTDRsvUbLiE.tsx (ENTRY POINT) ==
+export const s_HTDRsvUbLiE = () => {
 	return (
 		<div>
 			<div onClick$={() => console.log('first')}/>
@@ -21,11 +23,11 @@ export const s_u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "s_u6BtPnK76q4",
+  "name": "s_HTDRsvUbLiE",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Foo_component",
+  "hash": "HTDRsvUbLiE",
+  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "tsx",
   "parent": null,

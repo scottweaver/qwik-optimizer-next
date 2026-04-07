@@ -1,28 +1,30 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 961
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { qrl } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+//
+const q_handler_T7IDIUVU4lI = /*#__PURE__*/ qrl(()=>import("./test.tsx_handler_T7IDIUVU4lI"), "handler_T7IDIUVU4lI");
+//
 const [a, b] = [1, 2];
 console.log("root", b);
-export const handler = q__u6BtPnK76q4;
+export const handler = q_handler_T7IDIUVU4lI;
 export { a as _auto_a };
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+============================= test.tsx_handler_T7IDIUVU4lI.js (ENTRY POINT) ==
+export const handler_T7IDIUVU4lI = () => {
 	console.log("qrl", a);
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "handler_T7IDIUVU4lI",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_handler",
+  "hash": "T7IDIUVU4lI",
+  "canonicalFilename": "test.tsx_handler_T7IDIUVU4lI",
   "path": "",
   "extension": "js",
   "parent": null,

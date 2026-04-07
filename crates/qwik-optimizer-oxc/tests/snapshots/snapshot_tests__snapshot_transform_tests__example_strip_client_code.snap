@@ -1,20 +1,23 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 918
 expression: output
-snapshot_kind: text
 ---
 ============================= components/component.js ==
-import { _noopQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useClientMount$, useStore, useTask$ } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import threejs from "threejs";
 import { a } from "./keep";
 import { b } from "../keep2";
 import { c } from "../../remove";
-const q__7RMfCDur6ww = /* @__PURE__ */ _noopQrl("_7RMfCDur6ww");
-q__7RMfCDur6ww.s(() => {
+import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+//
+const q_Parent_component_t6Wy3C0Q0XM = /*#__PURE__*/ _noopQrl("Parent_component_t6Wy3C0Q0XM");
+//
+q_Parent_component_t6Wy3C0Q0XM.s(() => {
 	const state = useStore({ text: "" });
 	useClientMount$(async () => {
 		state.text = await mongo.users();
@@ -26,6 +29,6 @@ q__7RMfCDur6ww.s(() => {
 		onClick$: () => console.log("parent", state, threejs)
 	}, null, [<Div onClick$={() => console.log("keep")} render$={() => state.text} />, state.text], 1, null);
 });
-export const Parent = componentQrl(q__7RMfCDur6ww);
+export const Parent = /*#__PURE__*/ componentQrl(q_Parent_component_t6Wy3C0Q0XM);
 == DIAGNOSTICS ==
 []

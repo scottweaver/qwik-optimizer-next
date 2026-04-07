@@ -1,21 +1,49 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 863
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-const App = componentQrl(q__u6BtPnK76q4);
-export const Root = componentQrl(q__1_iZVV0eoW44k);
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ qrl(()=>import("./test.tsx_App_component_ckEPmXZlub0"), "App_component_ckEPmXZlub0");
+const q_Root_component_royhjYaCbYE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Root_component_royhjYaCbYE"), "Root_component_royhjYaCbYE");
+//
+const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
+export const Root = /*#__PURE__*/ componentQrl(q_Root_component_royhjYaCbYE);
 const Other = 12;
 export { Other as App };
 export default App;
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
+============================= test.tsx_App_component_ckEPmXZlub0.js (ENTRY POINT) ==
+export const App_component_ckEPmXZlub0 = () => {
+	return (
+		<div>hola</div>
+	);
+};
+/*
+{
+  "origin": "test.tsx",
+  "name": "App_component_ckEPmXZlub0",
+  "entry": null,
+  "displayName": "test.tsx_App_component",
+  "hash": "ckEPmXZlub0",
+  "canonicalFilename": "test.tsx_App_component_ckEPmXZlub0",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "component$",
+  "captures": false,
+  "loc": [
+    59,
+    112
+  ]
+}
+*/
+============================= test.tsx_Root_component_royhjYaCbYE.js (ENTRY POINT) ==
 import { App } from "./test";
-export const _1_iZVV0eoW44k = (props: Stuff) => {
+export const Root_component_royhjYaCbYE = (props: Stuff) => {
 	return (
 		<App/>
 	);
@@ -23,11 +51,11 @@ export const _1_iZVV0eoW44k = (props: Stuff) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
+  "name": "Root_component_royhjYaCbYE",
   "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
+  "displayName": "test.tsx_Root_component",
+  "hash": "royhjYaCbYE",
+  "canonicalFilename": "test.tsx_Root_component_royhjYaCbYE",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -40,32 +68,6 @@ export const _1_iZVV0eoW44k = (props: Stuff) => {
   ],
   "paramNames": [
     "props"
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
-	return (
-		<div>hola</div>
-	);
-};
-/*
-{
-  "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
-  "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "component$",
-  "captures": false,
-  "loc": [
-    59,
-    112
   ]
 }
 */

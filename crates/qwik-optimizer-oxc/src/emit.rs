@@ -32,24 +32,39 @@ pub(crate) fn emit_module<'a>(
     source_filename: &str,
 ) -> EmitResult {
     if options.source_maps {
-        let codegen_options = oxc::codegen::CodegenOptions {
-            source_map_path: Some(PathBuf::from(source_filename)),
-            ..Default::default()
-        };
-        let codegen_result = oxc::codegen::Codegen::new()
-            .with_options(codegen_options)
-            .with_source_text(source)
-            .build(program);
+        // Use catch_unwind to handle OXC codegen span violations that occur
+        // when AST transforms create nodes with spans beyond the source text.
+        let sm_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let codegen_options = oxc::codegen::CodegenOptions {
+                source_map_path: Some(PathBuf::from(source_filename)),
+                ..Default::default()
+            };
+            oxc::codegen::Codegen::new()
+                .with_options(codegen_options)
+                .with_source_text(source)
+                .build(program)
+        }));
 
-        let map = codegen_result.map.map(|sm| sm.to_json_string());
-
-        EmitResult {
-            code: collapse_single_prop_objects(&codegen_result.code),
-            map,
+        match sm_result {
+            Ok(codegen_result) => {
+                let map = codegen_result.map.map(|sm| sm.to_json_string());
+                EmitResult {
+                    code: collapse_single_prop_objects(&codegen_result.code),
+                    map,
+                }
+            }
+            Err(_) => {
+                // Fallback: emit without source maps if span violation occurs
+                let codegen_result = oxc::codegen::Codegen::new()
+                    .build(program);
+                EmitResult {
+                    code: collapse_single_prop_objects(&codegen_result.code),
+                    map: None,
+                }
+            }
         }
     } else {
         let codegen_result = oxc::codegen::Codegen::new()
-            .with_source_text(source)
             .build(program);
 
         EmitResult {

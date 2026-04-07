@@ -1,10 +1,11 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 939
 expression: output
 ---
 ============================= test.tsx ==
-import { _jsxSorted } from "@qwik.dev/core";
 import { Counter } from "./counter.tsx";
+import { _jsxSorted } from "@qwik.dev/core";
 export const Root = () => {
 	return _jsxSorted("html", null, null, [<head>
 				<meta charset="utf-8" />

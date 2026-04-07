@@ -1,27 +1,30 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 872
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
 import json from "./foo.json" assert { type: "json" };
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export const Greeter = componentQrl(q__u6BtPnK76q4);
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_Greeter_component_n7HuG2hhU0Q = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_component_n7HuG2hhU0Q"), "Greeter_component_n7HuG2hhU0Q");
+//
+export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_n7HuG2hhU0Q);
+============================= test.tsx_Greeter_component_n7HuG2hhU0Q.js (ENTRY POINT) ==
 import { default as json } from "./foo.json";
-export const _u6BtPnK76q4 = () => {
+export const Greeter_component_n7HuG2hhU0Q = () => {
 	return json;
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Greeter_component_n7HuG2hhU0Q",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Greeter_component",
+  "hash": "n7HuG2hhU0Q",
+  "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "js",
   "parent": null,

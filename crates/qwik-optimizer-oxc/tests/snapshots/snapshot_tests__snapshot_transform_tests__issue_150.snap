@@ -1,43 +1,22 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 938
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
 import { hola } from "sdfds";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-export const Greeter = componentQrl(q__u6BtPnK76q4);
-const d = q__1_iZVV0eoW44k;
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
-export const _1_iZVV0eoW44k = () => console.log("thing");
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
-  "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    320,
-    347
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { componentQrl } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+//
+const q_Greeter_component_1_krCndSwhX4U = /*#__PURE__*/ qrl(()=>import("./test.tsx_Greeter_component_1_krCndSwhX4U"), "Greeter_component_1_krCndSwhX4U");
+const q_d_wKNFJEIQVUA = /*#__PURE__*/ qrl(()=>import("./test.tsx_d_wKNFJEIQVUA"), "d_wKNFJEIQVUA");
+//
+export const Greeter = /*#__PURE__*/ componentQrl(q_Greeter_component_1_krCndSwhX4U);
+const d = q_d_wKNFJEIQVUA;
+============================= test.tsx_Greeter_component_1_krCndSwhX4U.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const _u6BtPnK76q4 = () => {
+export const Greeter_component_1_krCndSwhX4U = () => {
 	const stuff = useStore();
 	return $(() => {
 		return (
@@ -54,11 +33,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Greeter_component_1_krCndSwhX4U",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Greeter_component_1",
+  "hash": "krCndSwhX4U",
+  "canonicalFilename": "test.tsx_Greeter_component_1_krCndSwhX4U",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -71,10 +50,10 @@ export const _u6BtPnK76q4 = () => {
   ]
 }
 */
-============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
+============================= test.tsx_Greeter_component_n7HuG2hhU0Q.js (ENTRY POINT) ==
 import { _captures } from "@qwik.dev/core";
 import { hola } from "sdfds";
-export const component_ZUK1E201Ins = () => {
+export const Greeter_component_n7HuG2hhU0Q = () => {
 		return (
 			<div
 				class={{
@@ -88,14 +67,14 @@ export const component_ZUK1E201Ins = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "component_ZUK1E201Ins",
+  "name": "Greeter_component_n7HuG2hhU0Q",
   "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "displayName": "test.tsx_Greeter_component",
+  "hash": "n7HuG2hhU0Q",
+  "canonicalFilename": "test.tsx_Greeter_component_n7HuG2hhU0Q",
   "path": "",
   "extension": "js",
-  "parent": "_u6BtPnK76q4",
+  "parent": "Greeter_component_1_krCndSwhX4U",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": true,
@@ -105,6 +84,29 @@ export const component_ZUK1E201Ins = () => {
   "loc": [
     157,
     303
+  ]
+}
+*/
+============================= test.tsx_d_wKNFJEIQVUA.js (ENTRY POINT) ==
+export const d_wKNFJEIQVUA = () => console.log("thing");
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "d_wKNFJEIQVUA",
+  "entry": null,
+  "displayName": "test.tsx_d",
+  "hash": "wKNFJEIQVUA",
+  "canonicalFilename": "test.tsx_d_wKNFJEIQVUA",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    320,
+    347
   ]
 }
 */

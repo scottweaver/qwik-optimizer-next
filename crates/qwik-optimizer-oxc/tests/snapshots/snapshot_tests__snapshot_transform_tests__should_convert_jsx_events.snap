@@ -1,15 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 949
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const ManyEventsComponent = componentQrl(q__u6BtPnK76q4);
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+//
+const q_ManyEventsComponent_component_ndbrzxiyG3g = /*#__PURE__*/ qrl(()=>import("./test.tsx_ManyEventsComponent_component_ndbrzxiyG3g"), "ManyEventsComponent_component_ndbrzxiyG3g");
+//
+const ManyEventsComponent = /*#__PURE__*/ componentQrl(q_ManyEventsComponent_component_ndbrzxiyG3g);
+============================= test.tsx_ManyEventsComponent_component_ndbrzxiyG3g.js (ENTRY POINT) ==
+export const ManyEventsComponent_component_ndbrzxiyG3g = () => {
 			return (
 				<div>
 					<button
@@ -33,11 +35,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "ManyEventsComponent_component_ndbrzxiyG3g",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_ManyEventsComponent_component",
+  "hash": "ndbrzxiyG3g",
+  "canonicalFilename": "test.tsx_ManyEventsComponent_component_ndbrzxiyG3g",
   "path": "",
   "extension": "js",
   "parent": null,

@@ -1,15 +1,16 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 833
 expression: output
-snapshot_kind: text
 ---
 ============================= project/test.tsx ==
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-const q__cA4RUxLrFo0 = /* @__PURE__ */ qrl(() => import("./test.tsx__cA4RUxLrFo0"), "_cA4RUxLrFo0");
-const Header = q__cA4RUxLrFo0;
-============================= project/test.tsx__cA4RUxLrFo0.tsx (ENTRY POINT) ==
-export const _cA4RUxLrFo0 = (decl1, {decl2}, [decl3]) => {
+//
+const q_Header_WlR3xnI6u38 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Header_WlR3xnI6u38"), "Header_WlR3xnI6u38");
+//
+const Header = q_Header_WlR3xnI6u38;
+============================= project/test.tsx_Header_WlR3xnI6u38.tsx (ENTRY POINT) ==
+export const Header_WlR3xnI6u38 = (decl1, {decl2}, [decl3]) => {
 
 	const hola = ident1.no;
 	ident2;
@@ -30,11 +31,11 @@ export const _cA4RUxLrFo0 = (decl1, {decl2}, [decl3]) => {
 /*
 {
   "origin": "project/test.tsx",
-  "name": "_cA4RUxLrFo0",
+  "name": "Header_WlR3xnI6u38",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "cA4RUxLrFo0",
-  "canonicalFilename": "test.tsx__cA4RUxLrFo0",
+  "displayName": "test.tsx_Header",
+  "hash": "WlR3xnI6u38",
+  "canonicalFilename": "test.tsx_Header_WlR3xnI6u38",
   "path": "project",
   "extension": "tsx",
   "parent": null,

@@ -1,16 +1,50 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 950
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-export default componentQrl(q__u6BtPnK76q4);
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { useTaskQrl } from "@qwik.dev/core";
+//
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ qrl(()=>import("./test.tsx_test_component_LUXeXe0DQrg"), "test_component_LUXeXe0DQrg");
+//
+export default componentQrl(q_test_component_LUXeXe0DQrg);
+============================= test.tsx_test_component_useTask_jewzFYh3XmQ.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+export const test_component_useTask_jewzFYh3XmQ = () => {
+	const props = _captures[0];
+	props.checked;
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "test_component_useTask_jewzFYh3XmQ",
+  "entry": null,
+  "displayName": "test.tsx_test_component_useTask",
+  "hash": "jewzFYh3XmQ",
+  "canonicalFilename": "test.tsx_test_component_useTask_jewzFYh3XmQ",
+  "path": "",
+  "extension": "js",
+  "parent": "test_component_LUXeXe0DQrg",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "props"
+  ],
+  "loc": [
+    113,
+    151
+  ]
+}
+*/
+============================= test.tsx_test_component_LUXeXe0DQrg.js (ENTRY POINT) ==
 import { _restProps } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = ({ ...props }) => {
+export const test_component_LUXeXe0DQrg = ({ ...props }) => {
 	useTask$(() => {
 		props.checked;
 	});
@@ -20,11 +54,11 @@ export const _u6BtPnK76q4 = ({ ...props }) => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "test_component_LUXeXe0DQrg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_test_component",
+  "hash": "LUXeXe0DQrg",
+  "canonicalFilename": "test.tsx_test_component_LUXeXe0DQrg",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -37,36 +71,6 @@ export const _u6BtPnK76q4 = ({ ...props }) => {
   ],
   "paramNames": [
     "_rawProps"
-  ]
-}
-*/
-============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-export const component_ZUK1E201Ins = () => {
-	const props = _captures[0];
-	props.checked;
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "component_ZUK1E201Ins",
-  "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
-  "path": "",
-  "extension": "js",
-  "parent": "_u6BtPnK76q4",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "props"
-  ],
-  "loc": [
-    113,
-    151
   ]
 }
 */

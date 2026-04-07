@@ -1,12 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 982
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
 import { _noopQrl } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
-q__u6BtPnK76q4.s((_rawProps) => {
+import { componentQrl } from "@qwik.dev/core";
+import { useComputedQrl } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+//
+const q_test_component_LUXeXe0DQrg = /*#__PURE__*/ _noopQrl("test_component_LUXeXe0DQrg");
+//
+q_test_component_LUXeXe0DQrg.s((_rawProps) => {
 	const props = _restProps(_rawProps, ["color"]);
 	const color = _rawProps.color;
 	useComputedQrl(() => color);
@@ -15,6 +20,6 @@ q__u6BtPnK76q4.s((_rawProps) => {
 	});
 	return "hi";
 });
-export default componentQrl(q__u6BtPnK76q4);
+export default componentQrl(q_test_component_LUXeXe0DQrg);
 == DIAGNOSTICS ==
 []

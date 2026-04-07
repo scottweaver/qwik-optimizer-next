@@ -1,16 +1,18 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 854
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { _noopQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, useStore, mutable } from "@qwik.dev/core";
-import { dep } from "./file";
 import { Cmp } from "./cmp";
-const q__u6BtPnK76q4 = /* @__PURE__ */ _noopQrl("_u6BtPnK76q4");
-q__u6BtPnK76q4.s(() => {
+import { dep } from "./file";
+import { _noopQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+import { useStore, mutable } from "@qwik.dev/core";
+//
+const q_App_component_ckEPmXZlub0 = /*#__PURE__*/ _noopQrl("App_component_ckEPmXZlub0");
+//
+q_App_component_ckEPmXZlub0.s(() => {
 	const signal = useSignal(0);
 	const store = useStore({});
 	return _jsxSorted(Cmp, {
@@ -38,6 +40,6 @@ q__u6BtPnK76q4.s(() => {
 		staticExpr2: typeof `text${12}` === "string" ? 12 : 43
 	}, null, 1, "0");
 });
-export const App = componentQrl(q__u6BtPnK76q4);
+export const App = /*#__PURE__*/ componentQrl(q_App_component_ckEPmXZlub0);
 == DIAGNOSTICS ==
 []

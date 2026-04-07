@@ -1,15 +1,17 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 851
 expression: output
-snapshot_kind: text
 ---
 ============================= src/components/mongo/index.tsx ==
 import { _noopQrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-const q__0VZ6pAxegk0 = /* @__PURE__ */ _noopQrl("_0VZ6pAxegk0");
-q__0VZ6pAxegk0.s(() => {
+import { componentQrl } from "@qwik.dev/core";
+//
+const q_index_component_SlchSt2Vxlo = /*#__PURE__*/ _noopQrl("index_component_SlchSt2Vxlo");
+//
+q_index_component_SlchSt2Vxlo.s(() => {
 	return _jsxSorted("div", { onClick$: () => console.log(mongodb) }, null, null, 1, null);
 });
-export default componentQrl(q__0VZ6pAxegk0);
+export default componentQrl(q_index_component_SlchSt2Vxlo);
 == DIAGNOSTICS ==
 []

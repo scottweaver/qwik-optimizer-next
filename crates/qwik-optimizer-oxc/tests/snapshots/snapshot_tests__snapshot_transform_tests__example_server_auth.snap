@@ -1,12 +1,12 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 915
 expression: output
 ---
 ============================= test.tsx ==
-import GitHub from "@auth/core/providers/github";
 import Facebook from "next-auth/providers/facebook";
+import GitHub from "@auth/core/providers/github";
 import Google from "next-auth/providers/google";
-import { serverAuth$, auth$ } from "@auth/qwik";
 export const { onRequest, logout, getSession, signup } = serverAuth$({ providers: [
 	GitHub({
 		clientId: process.env.GITHUB_ID,

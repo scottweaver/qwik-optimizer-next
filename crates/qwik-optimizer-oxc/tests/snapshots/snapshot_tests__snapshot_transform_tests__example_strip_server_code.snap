@@ -1,94 +1,24 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 921
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
-import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { component$, serverLoader$, serverStuff$, $, client$, useStore, useTask$ } from "@qwik.dev/core";
-import { isServer } from "@qwik.dev/core";
 import mongo from "mongodb";
 import redis from "redis";
 import { handler } from "serverless";
-const q_s_u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "s_u6BtPnK76q4");
-export const Parent = componentQrl(q_s_u6BtPnK76q4);
-============================= test.tsx_component_serverStuff_1_IOaKJyEUknw.js (ENTRY POINT) ==
-export const s_IOaKJyEUknw = () => {
-	// from clien$(), should not be removed
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "s_IOaKJyEUknw",
-  "entry": null,
-  "displayName": "test.tsx_component_serverStuff_1",
-  "hash": "IOaKJyEUknw",
-  "canonicalFilename": "test.tsx_component_serverStuff_1_IOaKJyEUknw",
-  "path": "",
-  "extension": "js",
-  "parent": "s_vX1B9oMEgiI",
-  "ctxKind": "function",
-  "ctxName": "client$",
-  "captures": false,
-  "loc": [
-    601,
-    664
-  ]
-}
-*/
-============================= test.tsx_component_2_ivlVT3MNu2c.js (ENTRY POINT) ==
-export const s_ivlVT3MNu2c = () => {
-	// Code
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "s_ivlVT3MNu2c",
-  "entry": null,
-  "displayName": "test.tsx_component_2",
-  "hash": "ivlVT3MNu2c",
-  "canonicalFilename": "test.tsx_component_2_ivlVT3MNu2c",
-  "path": "",
-  "extension": "js",
-  "parent": "s_u6BtPnK76q4",
-  "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": false,
-  "loc": [
-    714,
-    744
-  ]
-}
-*/
-============================= test.tsx_component_serverStuff_ojRqwHNSAtg.js (ENTRY POINT) ==
-export const s_ojRqwHNSAtg = () => {
-	// from $(), should not be removed
-};
-
-/*
-{
-  "origin": "test.tsx",
-  "name": "s_ojRqwHNSAtg",
-  "entry": null,
-  "displayName": "test.tsx_component_serverStuff",
-  "hash": "ojRqwHNSAtg",
-  "canonicalFilename": "test.tsx_component_serverStuff_ojRqwHNSAtg",
-  "path": "",
-  "extension": "js",
-  "parent": "s_vX1B9oMEgiI",
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    535,
-    587
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+import { clientQrl } from "@qwik.dev/core";
+import { componentQrl } from "@qwik.dev/core";
+import { isServer } from "@qwik.dev/core";
+import { qrl } from "@qwik.dev/core";
+import { serverStuffQrl } from "@qwik.dev/core";
+import { useStore } from "@qwik.dev/core";
+import { useTaskQrl } from "@qwik.dev/core";
+//
+const q_s_0TaiDayHrlo = /*#__PURE__*/ qrl(()=>import("./test.tsx_Parent_component_0TaiDayHrlo"), "s_0TaiDayHrlo");
+//
+export const Parent = /*#__PURE__*/ componentQrl(q_s_0TaiDayHrlo);
+============================= test.tsx_Parent_component_0TaiDayHrlo.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { client$ } from "@qwik.dev/core";
 import { handler } from "serverless";
@@ -97,7 +27,7 @@ import { serverLoader$ } from "@qwik.dev/core";
 import { serverStuff$ } from "@qwik.dev/core";
 import { useStore } from "@qwik.dev/core";
 import { useTask$ } from "@qwik.dev/core";
-export const s_u6BtPnK76q4 = () => {
+export const s_0TaiDayHrlo = () => {
 	const state = useStore({
 		text: ''
 	});
@@ -135,11 +65,11 @@ export const s_u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "s_u6BtPnK76q4",
+  "name": "s_0TaiDayHrlo",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Parent_component",
+  "hash": "0TaiDayHrlo",
+  "canonicalFilename": "test.tsx_Parent_component_0TaiDayHrlo",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -152,10 +82,93 @@ export const s_u6BtPnK76q4 = () => {
   ]
 }
 */
-============================= test.tsx_component_1_vX1B9oMEgiI.js (ENTRY POINT) ==
+============================= test.tsx_Parent_component_serverStuff_a_2ca3HLDC7yc.js (ENTRY POINT) ==
+export const s_2ca3HLDC7yc = () => {
+	// from $(), should not be removed
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "s_2ca3HLDC7yc",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_serverStuff_a",
+  "hash": "2ca3HLDC7yc",
+  "canonicalFilename": "test.tsx_Parent_component_serverStuff_a_2ca3HLDC7yc",
+  "path": "",
+  "extension": "js",
+  "parent": "s_r1qAHX7Opp0",
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    535,
+    587
+  ]
+}
+*/
+============================= test.tsx_Parent_component_useTask_gDH1EtUWqBU.js (ENTRY POINT) ==
+import { _captures } from "@qwik.dev/core";
+import { default as mongo } from "mongodb";
+export const s_gDH1EtUWqBU = async () => {
+	const state = _captures[0];
+	if (!isServer) return;
+	state.text = await mongo.users();
+	redis.set(state.text);
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "s_gDH1EtUWqBU",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_useTask",
+  "hash": "gDH1EtUWqBU",
+  "canonicalFilename": "test.tsx_Parent_component_useTask_gDH1EtUWqBU",
+  "path": "",
+  "extension": "js",
+  "parent": "s_0TaiDayHrlo",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": true,
+  "captureNames": [
+    "state"
+  ],
+  "loc": [
+    353,
+    465
+  ]
+}
+*/
+============================= test.tsx_Parent_component_useTask_1_P8oRQhHsurk.js (ENTRY POINT) ==
+export const s_P8oRQhHsurk = () => {
+	// Code
+};
+
+/*
+{
+  "origin": "test.tsx",
+  "name": "s_P8oRQhHsurk",
+  "entry": null,
+  "displayName": "test.tsx_Parent_component_useTask_1",
+  "hash": "P8oRQhHsurk",
+  "canonicalFilename": "test.tsx_Parent_component_useTask_1_P8oRQhHsurk",
+  "path": "",
+  "extension": "js",
+  "parent": "s_0TaiDayHrlo",
+  "ctxKind": "function",
+  "ctxName": "useTask$",
+  "captures": false,
+  "loc": [
+    714,
+    744
+  ]
+}
+*/
+============================= test.tsx_Parent_component_serverStuff_r1qAHX7Opp0.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { client$ } from "@qwik.dev/core";
-export const s_vX1B9oMEgiI = async () => {
+export const s_r1qAHX7Opp0 = async () => {
 	// should be removed too
 	const a = $(() => {
 		// from $(), should not be removed
@@ -169,14 +182,14 @@ export const s_vX1B9oMEgiI = async () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "s_vX1B9oMEgiI",
+  "name": "s_r1qAHX7Opp0",
   "entry": null,
-  "displayName": "test.tsx_component_1",
-  "hash": "vX1B9oMEgiI",
-  "canonicalFilename": "test.tsx_component_1_vX1B9oMEgiI",
+  "displayName": "test.tsx_Parent_component_serverStuff",
+  "hash": "r1qAHX7Opp0",
+  "canonicalFilename": "test.tsx_Parent_component_serverStuff_r1qAHX7Opp0",
   "path": "",
   "extension": "js",
-  "parent": "s_u6BtPnK76q4",
+  "parent": "s_0TaiDayHrlo",
   "ctxKind": "function",
   "ctxName": "serverStuff$",
   "captures": false,
@@ -186,36 +199,28 @@ export const s_vX1B9oMEgiI = async () => {
   ]
 }
 */
-============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
-import { _captures } from "@qwik.dev/core";
-import { default as mongo } from "mongodb";
-export const s_ZUK1E201Ins = async () => {
-	const state = _captures[0];
-	if (!isServer) return;
-	state.text = await mongo.users();
-	redis.set(state.text);
+============================= test.tsx_Parent_component_serverStuff_b_client_v9qawr2Inkk.js (ENTRY POINT) ==
+export const s_v9qawr2Inkk = () => {
+	// from clien$(), should not be removed
 };
 
 /*
 {
   "origin": "test.tsx",
-  "name": "s_ZUK1E201Ins",
+  "name": "s_v9qawr2Inkk",
   "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "displayName": "test.tsx_Parent_component_serverStuff_b_client",
+  "hash": "v9qawr2Inkk",
+  "canonicalFilename": "test.tsx_Parent_component_serverStuff_b_client_v9qawr2Inkk",
   "path": "",
   "extension": "js",
-  "parent": "s_u6BtPnK76q4",
+  "parent": "s_r1qAHX7Opp0",
   "ctxKind": "function",
-  "ctxName": "useTask$",
-  "captures": true,
-  "captureNames": [
-    "state"
-  ],
+  "ctxName": "client$",
+  "captures": false,
   "loc": [
-    353,
-    465
+    601,
+    664
   ]
 }
 */

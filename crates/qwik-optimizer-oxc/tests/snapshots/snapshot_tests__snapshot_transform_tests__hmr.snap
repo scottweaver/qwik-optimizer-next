@@ -1,42 +1,20 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 933
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrlDEV } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrlDEV(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /* @__PURE__ */ qrlDEV(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
-export const TestGetsHmr = componentQrl(q__u6BtPnK76q4);
-export const TestNoHmr = componentQrl(q__1_iZVV0eoW44k);
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
-export const _1_iZVV0eoW44k = () => {
-			return <div>Test</div>;
-		};
-/*
-{
-  "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
-  "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
-  "path": "",
-  "extension": "js",
-  "parent": null,
-  "ctxKind": "function",
-  "ctxName": "$",
-  "captures": false,
-  "loc": [
-    185,
-    226
-  ]
-}
-*/
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+//
+const q_TestGetsHmr_component_jBUoou0sxX4 = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestGetsHmr_component_jBUoou0sxX4"), "TestGetsHmr_component_jBUoou0sxX4");
+const q_TestNoHmr_componentQrl_Uqk3jGTNmYs = /*#__PURE__*/ qrlDEV(()=>import("./test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs"), "TestNoHmr_componentQrl_Uqk3jGTNmYs");
+//
+export const TestGetsHmr = /*#__PURE__*/ componentQrl(q_TestGetsHmr_component_jBUoou0sxX4);
+export const TestNoHmr = /*#__PURE__*/ componentQrl(q_TestNoHmr_componentQrl_Uqk3jGTNmYs);
+============================= test.tsx_TestGetsHmr_component_jBUoou0sxX4.js (ENTRY POINT) ==
 import { _useHmr } from "@qwik.dev/core";
-export const _u6BtPnK76q4 = () => { 
+export const TestGetsHmr_component_jBUoou0sxX4 = () => { 
 _useHmr("/user/qwik/src/test.tsx");
 
 			return <div>Test</div>;
@@ -44,11 +22,11 @@ _useHmr("/user/qwik/src/test.tsx");
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "TestGetsHmr_component_jBUoou0sxX4",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_TestGetsHmr_component",
+  "hash": "jBUoou0sxX4",
+  "canonicalFilename": "test.tsx_TestGetsHmr_component_jBUoou0sxX4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -58,6 +36,30 @@ _useHmr("/user/qwik/src/test.tsx");
   "loc": [
     93,
     143
+  ]
+}
+*/
+============================= test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs.js (ENTRY POINT) ==
+export const TestNoHmr_componentQrl_Uqk3jGTNmYs = () => {
+			return <div>Test</div>;
+		};
+/*
+{
+  "origin": "test.tsx",
+  "name": "TestNoHmr_componentQrl_Uqk3jGTNmYs",
+  "entry": null,
+  "displayName": "test.tsx_TestNoHmr_componentQrl",
+  "hash": "Uqk3jGTNmYs",
+  "canonicalFilename": "test.tsx_TestNoHmr_componentQrl_Uqk3jGTNmYs",
+  "path": "",
+  "extension": "js",
+  "parent": null,
+  "ctxKind": "function",
+  "ctxName": "$",
+  "captures": false,
+  "loc": [
+    185,
+    226
   ]
 }
 */

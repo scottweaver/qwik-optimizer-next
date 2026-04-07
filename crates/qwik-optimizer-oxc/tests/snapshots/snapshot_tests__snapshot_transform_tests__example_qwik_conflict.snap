@@ -1,25 +1,27 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 905
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
+import { componentQrl } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { _jsxSorted } from "@qwik.dev/core";
-import { $, component$, useStyles } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core/what";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
-const q__1_iZVV0eoW44k = /* @__PURE__ */ qrl(() => import("./test.tsx__1_iZVV0eoW44k"), "_1_iZVV0eoW44k");
+import { useStyles } from "@qwik.dev/core";
+//
+const q_Foo_component_HTDRsvUbLiE = /*#__PURE__*/ qrl(()=>import("./test.tsx_Foo_component_HTDRsvUbLiE"), "Foo_component_HTDRsvUbLiE");
+const q_Root_component_1_cBpQNYDUHI4 = /*#__PURE__*/ qrl(()=>import("./test.tsx_Root_component_1_cBpQNYDUHI4"), "Root_component_1_cBpQNYDUHI4");
+//
 export const hW = 12;
 export const handleWatch = 42;
 const componentQrl = () => console.log("not this", qrl());
 componentQrl();
-export const Foo = componentQrl(q__u6BtPnK76q4);
-export const Root = componentQrl(q__1_iZVV0eoW44k);
-============================= test.tsx__1_iZVV0eoW44k.js (ENTRY POINT) ==
+export const Foo = /*#__PURE__*/ componentQrl(q_Foo_component_HTDRsvUbLiE);
+export const Root = /*#__PURE__*/ componentQrl(q_Root_component_1_cBpQNYDUHI4);
+============================= test.tsx_Root_component_1_cBpQNYDUHI4.js (ENTRY POINT) ==
 import { $ } from "@qwik.dev/core";
 import { useStyles } from "@qwik.dev/core";
-export const _1_iZVV0eoW44k = () => {
+export const Root_component_1_cBpQNYDUHI4 = () => {
 	useStyles($('thing'));
 	return $(() => {
 		return (
@@ -30,11 +32,11 @@ export const _1_iZVV0eoW44k = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_1_iZVV0eoW44k",
+  "name": "Root_component_1_cBpQNYDUHI4",
   "entry": null,
-  "displayName": "test.tsx__1",
-  "hash": "iZVV0eoW44k",
-  "canonicalFilename": "test.tsx__1_iZVV0eoW44k",
+  "displayName": "test.tsx_Root_component_1",
+  "hash": "cBpQNYDUHI4",
+  "canonicalFilename": "test.tsx_Root_component_1_cBpQNYDUHI4",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -47,11 +49,11 @@ export const _1_iZVV0eoW44k = () => {
   ]
 }
 */
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
+============================= test.tsx_Foo_component_HTDRsvUbLiE.js (ENTRY POINT) ==
 import { hW } from "./test";
 import { handleWatch } from "./test";
 import { qrl } from "@qwik.dev/core/what";
-export const _u6BtPnK76q4 = () => {
+export const Foo_component_HTDRsvUbLiE = () => {
 	useStyles$('thing');
 	const qwik = hW + handleWatch;
 	console.log(qwik);
@@ -63,11 +65,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "Foo_component_HTDRsvUbLiE",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_Foo_component",
+  "hash": "HTDRsvUbLiE",
+  "canonicalFilename": "test.tsx_Foo_component_HTDRsvUbLiE",
   "path": "",
   "extension": "js",
   "parent": null,
@@ -80,8 +82,8 @@ export const _u6BtPnK76q4 = () => {
   ]
 }
 */
-============================= test.tsx_component_ZUK1E201Ins.js (ENTRY POINT) ==
-export const component_ZUK1E201Ins = () => {
+============================= test.tsx_Root_component_royhjYaCbYE.js (ENTRY POINT) ==
+export const Root_component_royhjYaCbYE = () => {
 		return (
 			<div/>
 		)
@@ -89,14 +91,14 @@ export const component_ZUK1E201Ins = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "component_ZUK1E201Ins",
+  "name": "Root_component_royhjYaCbYE",
   "entry": null,
-  "displayName": "test.tsx_component",
-  "hash": "ZUK1E201Ins",
-  "canonicalFilename": "test.tsx_component_ZUK1E201Ins",
+  "displayName": "test.tsx_Root_component",
+  "hash": "royhjYaCbYE",
+  "canonicalFilename": "test.tsx_Root_component_royhjYaCbYE",
   "path": "",
   "extension": "js",
-  "parent": "_1_iZVV0eoW44k",
+  "parent": "Root_component_1_cBpQNYDUHI4",
   "ctxKind": "function",
   "ctxName": "$",
   "captures": false,

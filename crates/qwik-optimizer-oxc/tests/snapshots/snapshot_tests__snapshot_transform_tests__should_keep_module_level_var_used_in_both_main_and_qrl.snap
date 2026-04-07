@@ -1,12 +1,14 @@
 ---
 source: crates/qwik-optimizer-oxc/tests/snapshot_tests.rs
+assertion_line: 960
 expression: output
-snapshot_kind: text
 ---
 ============================= test.js ==
+import { isServer } from "@qwik.dev/core";
 import { qrl } from "@qwik.dev/core";
-import { $, isServer } from "@qwik.dev/core";
-const q__u6BtPnK76q4 = /* @__PURE__ */ qrl(() => import("./test.tsx__u6BtPnK76q4"), "_u6BtPnK76q4");
+//
+const q_useHook_fn_kScGJcREaTg = /*#__PURE__*/ qrl(()=>import("./test.tsx_useHook_fn_kScGJcREaTg"), "useHook_fn_kScGJcREaTg");
+//
 const state = {
 	counter: 0,
 	id: Math.random().toString(36).slice(2, 8)
@@ -16,12 +18,12 @@ export function doSomething() {
 	if (!isServer) { state.counter++; }
 }
 export function useHook() {
-	const fn = q__u6BtPnK76q4;
+	const fn = q_useHook_fn_kScGJcREaTg;
 	return fn;
 }
 export { state as _auto_state };
-============================= test.tsx__u6BtPnK76q4.js (ENTRY POINT) ==
-export const _u6BtPnK76q4 = () => {
+============================= test.tsx_useHook_fn_kScGJcREaTg.js (ENTRY POINT) ==
+export const useHook_fn_kScGJcREaTg = () => {
 	state.counter++;
 	console.log(state.id);
 };
@@ -29,11 +31,11 @@ export const _u6BtPnK76q4 = () => {
 /*
 {
   "origin": "test.tsx",
-  "name": "_u6BtPnK76q4",
+  "name": "useHook_fn_kScGJcREaTg",
   "entry": null,
-  "displayName": "test.tsx_",
-  "hash": "u6BtPnK76q4",
-  "canonicalFilename": "test.tsx__u6BtPnK76q4",
+  "displayName": "test.tsx_useHook_fn",
+  "hash": "kScGJcREaTg",
+  "canonicalFilename": "test.tsx_useHook_fn_kScGJcREaTg",
   "path": "",
   "extension": "js",
   "parent": null,

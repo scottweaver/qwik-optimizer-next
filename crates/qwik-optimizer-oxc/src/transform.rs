@@ -426,9 +426,40 @@ pub(crate) struct QwikTransform {
     pub(crate) needs_fn_signal_import: bool,
     pub(crate) needs_wrap_prop_import: bool,
 
+    /// Set of marker wrapper Qrl names that were actually used in the transform.
+    /// E.g., "componentQrl" is added when component$() is actually invoked.
+    pub(crate) used_marker_qrl_names: HashSet<String>,
+
     // ---- Auto-export tracking (for variable migration _auto_ exports) --------
     /// Names that need `export { name as _auto_name }` in the root module.
     pub(crate) auto_exports: Vec<String>,
+
+    // ---- stack_ctxt push tracking (Phase 18) --------------------------------
+    /// Tracks whether each variable declarator pushed a name to `stack_ctxt`.
+    /// Pushed `true`/`false` in `enter_variable_declarator`, popped in `exit_variable_declarator`.
+    pub(crate) var_decl_ctxt_push_stack: Vec<bool>,
+
+    /// Span-start values of plain-identifier calls that pushed to `stack_ctxt`.
+    /// Used for symmetric pop in `exit_call_expression`.
+    pub(crate) ctxt_pushed_calls: HashSet<u32>,
+
+    /// Whether `enter_export_default_declaration` pushed the file stem to `stack_ctxt`.
+    pub(crate) default_export_ctxt_pushed: bool,
+
+    /// Span-start values of JSX elements that pushed their tag name to `stack_ctxt`.
+    pub(crate) jsx_element_pushed_spans: HashSet<u32>,
+
+    /// Span-start values of JSX attributes that pushed their key to `stack_ctxt`.
+    pub(crate) jsx_attr_pushed_spans: HashSet<u32>,
+
+    /// Tracks whether each enter_function pushed a name to `stack_ctxt`.
+    pub(crate) fn_ctxt_push_stack: Vec<bool>,
+
+    /// Span-start values of marker function calls that pushed ctx_name to `stack_ctxt`.
+    pub(crate) marker_ctxt_pushed_spans: HashSet<u32>,
+
+    /// File stem (without extension) for export default naming.
+    pub(crate) file_stem: String,
 
     // ---- JSX state -----------------------------------------------------------
     /// Counter for deterministic JSX key generation.
@@ -522,6 +553,7 @@ impl QwikTransform {
             decl_stack: vec![root_frame],
             diagnostics: Vec::new(),
             global_collect_ptr: collect as *const GlobalCollect,
+            used_marker_qrl_names: HashSet::new(),
             extra_top_items: Vec::new(),
             ref_assignments: Vec::new(),
             entry_policy,
@@ -534,6 +566,18 @@ impl QwikTransform {
             needs_fn_signal_import: false,
             needs_wrap_prop_import: false,
             auto_exports: Vec::new(),
+            var_decl_ctxt_push_stack: Vec::new(),
+            ctxt_pushed_calls: HashSet::new(),
+            default_export_ctxt_pushed: false,
+            jsx_element_pushed_spans: HashSet::new(),
+            jsx_attr_pushed_spans: HashSet::new(),
+            marker_ctxt_pushed_spans: HashSet::new(),
+            fn_ctxt_push_stack: Vec::new(),
+            file_stem: {
+                // Extract stem from file_name (e.g., "test.tsx" -> "test")
+                let stem = file_name.rsplit_once('.').map(|(s, _)| s).unwrap_or(file_name);
+                crate::hash::escape_sym(stem)
+            },
             jsx_key_counter: 0,
             mode: config.mode.clone(),
             entry_strategy: config.entry_strategy.clone(),
@@ -873,6 +917,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         func: &mut Function<'a>,
         _ctx: &mut TraverseCtx<'a, ()>,
     ) {
+        // If the function has a name (declaration or named expression),
+        // push it to stack_ctxt for display_name accumulation.
+        if let Some(id) = &func.id {
+            let name = id.name.as_str().to_string();
+            self.stack_ctxt.push(name);
+            self.fn_ctxt_push_stack.push(true);
+        } else {
+            self.fn_ctxt_push_stack.push(false);
+        }
         // Push a new declaration frame for this function scope
         let mut frame = Vec::new();
         // Collect parameters into decl_stack
@@ -886,6 +939,9 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         _ctx: &mut TraverseCtx<'a, ()>,
     ) {
         self.decl_stack.pop();
+        if let Some(true) = self.fn_ctxt_push_stack.pop() {
+            self.stack_ctxt.pop();
+        }
     }
 
     fn enter_arrow_function_expression(
@@ -920,6 +976,132 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             for declarator in &decl.declarations {
                 collect_binding_to_decl(&declarator.id, frame, is_const);
             }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Variable declarator context push (for display_name building)
+    // -----------------------------------------------------------------------
+
+    fn enter_variable_declarator(
+        &mut self,
+        decl: &mut VariableDeclarator<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // Only push simple BindingIdentifier names to stack_ctxt.
+        let name = match &decl.id {
+            BindingPattern::BindingIdentifier(id) => id.name.as_str().to_string(),
+            _ => {
+                self.var_decl_ctxt_push_stack.push(false);
+                return;
+            }
+        };
+        self.stack_ctxt.push(name);
+        self.var_decl_ctxt_push_stack.push(true);
+    }
+
+    fn exit_variable_declarator(
+        &mut self,
+        _decl: &mut VariableDeclarator<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if let Some(pushed) = self.var_decl_ctxt_push_stack.pop() {
+            if pushed {
+                self.stack_ctxt.pop();
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Export default declaration context push
+    // -----------------------------------------------------------------------
+
+    fn enter_export_default_declaration(
+        &mut self,
+        _node: &mut ExportDefaultDeclaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if !self.file_stem.is_empty() {
+            self.stack_ctxt.push(self.file_stem.clone());
+            self.default_export_ctxt_pushed = true;
+        }
+    }
+
+    fn exit_export_default_declaration(
+        &mut self,
+        _node: &mut ExportDefaultDeclaration<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if self.default_export_ctxt_pushed {
+            self.stack_ctxt.pop();
+            self.default_export_ctxt_pushed = false;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // JSX element/attribute context push (for display_name building)
+    // -----------------------------------------------------------------------
+
+    fn enter_jsx_element(
+        &mut self,
+        node: &mut JSXElement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        let tag_name = match &node.opening_element.name {
+            JSXElementName::Identifier(id) => id.name.as_str().to_string(),
+            JSXElementName::IdentifierReference(id) => id.name.as_str().to_string(),
+            _ => return,
+        };
+        if tag_name.is_empty() {
+            return;
+        }
+        self.stack_ctxt.push(tag_name);
+        self.jsx_element_pushed_spans.insert(node.span.start);
+    }
+
+    fn exit_jsx_element(
+        &mut self,
+        node: &mut JSXElement<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if self.jsx_element_pushed_spans.remove(&node.span.start) {
+            self.stack_ctxt.pop();
+        }
+    }
+
+    fn enter_jsx_attribute(
+        &mut self,
+        node: &mut JSXAttribute<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        // Only push when the attribute has an expression container value
+        let has_expr_value = matches!(
+            &node.value,
+            Some(JSXAttributeValue::ExpressionContainer(_))
+        );
+        if !has_expr_value {
+            return;
+        }
+        let attr_name = match &node.name {
+            JSXAttributeName::Identifier(id) => id.name.as_str().to_string(),
+            JSXAttributeName::NamespacedName(nn) => {
+                format!("{}:{}", nn.namespace.name.as_str(), nn.name.name.as_str())
+            }
+        };
+        if attr_name.is_empty() {
+            return;
+        }
+        self.stack_ctxt.push(attr_name);
+        self.jsx_attr_pushed_spans.insert(node.span.start);
+    }
+
+    fn exit_jsx_attribute(
+        &mut self,
+        node: &mut JSXAttribute<'a>,
+        _ctx: &mut TraverseCtx<'a, ()>,
+    ) {
+        if self.jsx_attr_pushed_spans.remove(&node.span.start) {
+            self.stack_ctxt.pop();
         }
     }
 
@@ -1021,8 +1203,12 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     // Collect descendent identifiers from the callback body
                     let descendent_idents = Self::collect_descendent_idents(&node.arguments[0]);
 
-                    // Push context name for display_name building
-                    self.stack_ctxt.push(escape_dollar(&ctx_name));
+                    // Push context name (without $) for display_name building
+                    let ctx_name_escaped = escape_dollar(&ctx_name);
+                    if !ctx_name_escaped.is_empty() {
+                        self.stack_ctxt.push(ctx_name_escaped);
+                        self.marker_ctxt_pushed_spans.insert(node.span.start);
+                    }
 
                     // 4. Push a SegmentScope onto segment_stack
                     self.segment_stack.push(SegmentScope {
@@ -1034,6 +1220,14 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                     });
                 }
             }
+            return;
+        }
+
+        // Priority 7: plain identifier -- push to context stack for display_name
+        if let Expression::Identifier(id) = &node.callee {
+            let callee_name = id.name.as_str().to_string();
+            self.stack_ctxt.push(callee_name);
+            self.ctxt_pushed_calls.insert(node.span.start);
         }
     }
 
@@ -1078,14 +1272,18 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
                 }
             };
 
-            if needs.needs_jsx_sorted {
-                self.needs_jsx_sorted_import = true;
-            }
-            if needs.needs_jsx_split {
-                self.needs_jsx_split_import = true;
-            }
-            if needs.needs_fragment {
-                self.needs_fragment_import = true;
+            // Only add JSX imports to root module when the JSX is in root scope.
+            // JSX inside segment bodies will have their imports added by code_move.
+            if is_root {
+                if needs.needs_jsx_sorted {
+                    self.needs_jsx_sorted_import = true;
+                }
+                if needs.needs_jsx_split {
+                    self.needs_jsx_split_import = true;
+                }
+                if needs.needs_fragment {
+                    self.needs_fragment_import = true;
+                }
             }
 
             *expr = new_expr;
@@ -1099,6 +1297,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             _ => return,
         };
 
+        // Symmetric pop for plain-identifier pushes (priority 7 from enter_call_expression).
+        if self.ctxt_pushed_calls.remove(&call_span_start) {
+            self.stack_ctxt.pop();
+        }
+
         // Check if we have a matching segment scope
         let has_pending = self
             .segment_stack
@@ -1111,8 +1314,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
 
         let pending = self.segment_stack.pop().unwrap();
 
-        // Pop the context name we pushed
-        self.stack_ctxt.pop();
+        // Track whether we need to pop the marker context name AFTER register_context_name
+        let should_pop_marker = self.marker_ctxt_pushed_spans.remove(&call_span_start);
 
         // --- Flatten decl_stack for Var entries ---
         let all_decl: Vec<TypedId> = self
@@ -1177,6 +1380,8 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         }
 
         // --- Compute names via register_context_name ---
+        // stack_ctxt still contains the marker name at this point (e.g., "component")
+        // so register_context_name sees the full context (e.g., ["SecretForm", "component"])
         let names = crate::hash::register_context_name(
             &self.stack_ctxt,
             &mut self.segment_names,
@@ -1188,6 +1393,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             None,
             None,
         );
+
+        // NOW pop the marker context name after register_context_name has used it
+        if should_pop_marker {
+            self.stack_ctxt.pop();
+        }
 
         let has_captures = !scoped_idents.is_empty();
         let should_emit = self.should_emit_segment(&pending.ctx_name, &pending.ctx_kind);
@@ -1322,6 +1532,11 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         // ---------------------------------------------------------------
 
         let qrl_wrapper_name = words::dollar_to_qrl_name(&pending.ctx_name);
+        // Track which marker wrappers are used for import generation.
+        // Skip bare $ (wrapper is just the QRL ident, no Qrl wrapper call needed).
+        if pending.ctx_name != "$" && pending.ctx_name != "sync$" {
+            self.used_marker_qrl_names.insert(qrl_wrapper_name.clone());
+        }
         let is_inline = self.is_inline_mode();
         let is_lib = matches!(self.mode, EmitMode::Lib);
         let is_dev = matches!(self.mode, EmitMode::Dev | EmitMode::Hmr);
@@ -1549,36 +1764,67 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
             imports_to_add.push(("_wrapProp", "_wrapProp"));
         }
 
-        // Clean up original imports: remove $-suffixed specifiers from core module
-        // imports since they've been consumed by the transform. SWC removes `$`
-        // entirely and renames `component$` to `component` (without $).
-        // For simplicity, we remove $-suffixed specifiers and drop empty imports.
+        // Clean up original imports: remove $-suffixed specifiers from import
+        // declarations since they've been consumed by the transform, and collect
+        // the Qrl-suffixed replacements with their original import sources.
+        let gc = self.global_collect();
+        let mut marker_qrl_imports: Vec<(String, String)> = Vec::new(); // (qrl_name, source)
         if !self.segments.is_empty() {
             let marker_specifiers: HashSet<String> = self.marker_functions.values().cloned().collect();
+
+            // Collect the Qrl-suffixed import names from USED marker functions.
+            // Only add imports for markers that were actually invoked.
+            for (local_name, specifier) in &self.marker_functions {
+                if specifier == "$" || specifier == "sync$" {
+                    continue;
+                }
+                let base = specifier.trim_end_matches('$');
+                if base.is_empty() {
+                    continue;
+                }
+                let qrl_name = format!("{}Qrl", base);
+                // Only add if this wrapper was actually used
+                if !self.used_marker_qrl_names.contains(&qrl_name) {
+                    continue;
+                }
+                if let Some(import) = gc.imports.get(local_name) {
+                    // Avoid duplicates
+                    if !marker_qrl_imports.iter().any(|(n, _)| n == &qrl_name) {
+                        marker_qrl_imports.push((qrl_name, import.source.clone()));
+                    }
+                }
+            }
+
+            // Remove marker specifiers from import declarations.
+            // For imports where ALL specifiers are markers, remove the whole import.
+            // For imports with mixed specifiers, we can't easily remove individual
+            // specifiers from the AST, so we mark them for string-level cleanup in
+            // post_process_root_module.
             let mut imports_to_remove: Vec<usize> = Vec::new();
 
             for (i, stmt) in program.body.iter().enumerate() {
                 if let Statement::ImportDeclaration(import_decl) = stmt {
-                    if let Some(source) = import_decl.source.value.strip_prefix("") {
-                        let _ = source; // use the full value
-                        if let Some(specifiers) = &import_decl.specifiers {
-                            // Check if ALL specifiers are $-suffixed markers
-                            let all_markers = !specifiers.is_empty() && specifiers.iter().all(|spec| {
-                                match spec {
-                                    ImportDeclarationSpecifier::ImportSpecifier(s) => {
-                                        let imported = match &s.imported {
-                                            ModuleExportName::IdentifierName(id) => id.name.as_str(),
-                                            ModuleExportName::IdentifierReference(id) => id.name.as_str(),
-                                            ModuleExportName::StringLiteral(s) => s.value.as_str(),
-                                        };
-                                        imported.ends_with('$') || marker_specifiers.contains(imported)
-                                    }
-                                    _ => false,
+                    if let Some(specifiers) = &import_decl.specifiers {
+                        // Check if ALL specifiers are $-suffixed markers or the bare `$` import
+                        let all_markers = !specifiers.is_empty() && specifiers.iter().all(|spec| {
+                            match spec {
+                                ImportDeclarationSpecifier::ImportSpecifier(s) => {
+                                    let imported = match &s.imported {
+                                        ModuleExportName::IdentifierName(id) => id.name.as_str(),
+                                        ModuleExportName::IdentifierReference(id) => id.name.as_str(),
+                                        ModuleExportName::StringLiteral(s) => s.value.as_str(),
+                                    };
+                                    imported.ends_with('$') || marker_specifiers.contains(imported)
                                 }
-                            });
-                            if all_markers {
-                                imports_to_remove.push(i);
+                                _ => false,
                             }
+                        });
+                        if all_markers {
+                            imports_to_remove.push(i);
+                        } else {
+                            // Check if ANY specifiers are markers -- if so, we need to
+                            // strip them later in post-processing. For now we leave the
+                            // import as-is; post_process_root_module will clean up.
                         }
                     }
                 }
@@ -1592,6 +1838,15 @@ impl<'a> Traverse<'a, ()> for QwikTransform {
         // Insert synthetic import declarations at position 0 using string-based parsing.
         // This avoids complex AST builder API differences across OXC versions.
         let allocator = ctx.ast.allocator;
+
+        // Add marker Qrl imports (e.g., componentQrl from @qwik.dev/core)
+        for (qrl_name, source) in marker_qrl_imports.into_iter().rev() {
+            let import_str = format!(r#"import {{ {} }} from "{}";"#, qrl_name, source);
+            if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
+                program.body.insert(0, stmt);
+            }
+        }
+
         for (specifier, _local) in imports_to_add.into_iter().rev() {
             let import_str = format!(r#"import {{ {} }} from "{}";"#, specifier, self.core_module);
             if let Some(stmt) = crate::add_side_effect::parse_single_statement(&import_str, allocator) {
