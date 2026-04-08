@@ -2,131 +2,35 @@
 gsd_state_version: 1.0
 milestone: v0.2.0
 milestone_name: Full SWC Parity
-status: verifying
-stopped_at: Completed 13-08-PLAN.md
-last_updated: "2026-04-06T22:02:11.970Z"
-last_activity: 2026-04-06
+status: complete
+stopped_at: Milestone v0.2.0 complete
+last_updated: "2026-04-08T18:48:26.460Z"
+last_activity: 2026-04-08
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
-  percent: 77
+  total_plans: 18
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-03)
+See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** The OXC implementation must produce functionally equivalent output to the SWC version for all 201 test fixtures.
-**Current focus:** Phase 13 — final-acceptance
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Milestone: v0.2.0 Full SWC Parity
-Phase: 13 (final-acceptance) — EXECUTING
-Plan: 8 of 8
-Status: Phase complete — ready for verification
-Last activity: 2026-04-06
-
-Progress: [########░░] 77%
-
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 3
-- Average duration: ~5m
-- Total execution time: ~0.25 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-**Recent Trend:**
-
-- Last 5 plans: -
-- Trend: -
-
-*Updated after each plan completion*
-| Phase 01 P01 | 4m | 2 tasks | 1 files |
-| Phase 01 P03 | 5m | 2 tasks | 1 files |
-| Phase 01 P05 | 4m | 2 tasks | 1 files |
-| Phase 04 P03 | 8m | 2 tasks | 1 files |
-| Phase 05 P03 | 7m | 2 tasks | 6 files |
-| Phase 05 P05 | 14m | 2 tasks | 1 files |
-| Phase 05 P06 | 14m | 2 tasks | 5 files |
-| Phase 05 P07 | 25m | 3 tasks | 9 files |
-| Phase 06 P03 | 3m | 2 tasks | 7 files |
-| Phase 06 P02 | 6m | 2 tasks | 3 files |
-| Phase 11 P03 | 15m | 1 tasks | 187 files |
-| Phase 11 P04 | 36m | 1 tasks | 80 files |
-| Phase 12 P01 | 12m | 2 tasks | 10 files |
-| Phase 13 P01 | 6m | 2 tasks | 36 files |
-| Phase 13 P03 | 4m | 1 tasks | 140 files |
-| Phase 13 P02 | 15m | 2 tasks | 49 files |
-| Phase 13 P04 | 13m | 1 tasks | 18 files |
-| Phase 13 P06 | 21m | 2 tasks | 28 files |
-| Phase 13 P05 | 28m | 2 tasks | 2 files |
-| Phase 13 P07 | 32m | 2 tasks | 159 files |
-| Phase 13 P08 | 31m | 1 tasks | 154 files |
-
-## Accumulated Context
-
-### Decisions
-
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Roadmap]: Spec phases split into 4 incremental phases (core pipeline -> JSX/props -> build modes -> API/bindings) rather than one monolithic phase
-- [Roadmap]: Implementation split into 2 phases (core transform -> strategies/modes/bindings) per research recommendation
-- [Phase 01]: Spec document follows pipeline execution order with 6 stage groupings (D-01)
-- [Phase 01 P03]: Capture analysis uses 8-category taxonomy with self-import reclassification as first-class pattern
-- [Phase 01 P03]: All 16 capture edge cases documented as named spec test cases (CAPTURE-EDGE-01 through 16)
-- [Phase 01]: Variable Migration placed as top-level ## section per D-12; Source Map Generation uses ## Infrastructure: prefix matching existing convention
-- [Phase 04 P03]: D-30 fulfilled: 24 curated examples in Appendix B complementing inline CONV examples from Phases 1-3
-- [Phase 05]: OXC 0.123 uses Str type (from oxc_str) instead of Atom for arena strings; SegmentData added as internal type to types.rs
-- [Phase 05 P05]: Capture analysis uses decl_stack manual scope tracking (D-09 compliant) with IdentCollector Visit trait
-- [Phase 05 P05]: Arena string allocation via ctx.ast.allocator.alloc_str for dynamic names in QRL AST nodes
-- [Phase 05 P06]: Props destructuring implemented as VisitMut pre-pass before Traverse
-- [Phase 05 P06]: JSX transform integrated into exit_expression via take-and-replace pattern
-- [Phase 05 P06]: Signal optimization uses string-based rendering for _fnSignal construction
-- [Phase 05 P07]: Span-based body extraction for segment construction (slice source at recorded spans, not AST cloning)
-- [Phase 05 P07]: String assembly then re-parse pattern for normalized codegen output
-- [Phase 05 P07]: 24 spec examples intentionally ignored (not part of 201 fixture corpus)
-- [Phase 06 P03]: D-39 WASM validation complete -- NAPI v3 unified WASM not viable, wasm-bindgen fallback adopted
-- [Phase 06 P03]: napi-build v2 compatible with napi v3 (v3 not published); async feature required for async fn
-- [Phase 06 P02]: HMR _useHmr injection via string-based prepend in code_move::inject_use_hmr
-- [Phase 06 P02]: Synthetic imports mechanism added to NewModuleCtx for segment-level import injection
-- [Phase 11]: D-10: Gate marker name push for bare $ and sync$; D-11: Move stack_ctxt pop after register_context_name; D-12: Non-marker ident calls push callee name matching SWC
-- [Phase 11]: D-50: Dev metadata injected as text post-processing to avoid OXC codegen span violations
-- [Phase 11]: D-51: Const stripping uses text-level fixpoint loop (OXC arena prevents in-place Statement type changes)
-- [Phase 12]: classify_captures must run before C03 check; marker_fn_sources distinguishes imported from local marker functions for C05
-- [Phase 13]: Binding-level matching for quote restoration: compare import names to distinguish user vs synthesized imports
-- [Phase 13]: OXC CodegenOptions IndentChar::Space with indent_width=4 used for SWC parity (not post-processing)
-- [Phase 13]: q_* names excluded from const stripping candidates to fix dangling reference bug
-- [Phase 13]: Post-processing string injection for PURE annotations on wrapper calls (componentQrl, _jsxSorted, etc.)
-- [Phase 13]: Pre-register segment names at enter_call_expression time via SegmentScope.pre_registered_name to match SWC Fold ordering for collision counters
-- [Phase 13]: Inline strategy uses same _noopQrl/.s()/.w() code path as Hoist; Lib mode retains inlinedQrl
-- [Phase 13]: _wrapProp fast path checks obj.prop member expressions where obj is a scoped ident; remaining import diffs are structural
-- [Phase 13]: first_arg_span for SWC-compatible loc/dev metadata; inlinedQrl as separate code path with is_inlined_qrl flag
-- [Phase 13]: Arrow spacing as post-processing since OXC codegen has no config option; alphabetical const sorting matches SWC BTreeMap; JSX key prefix uses SipHash file hash
-
-### Pending Todos
-
-None yet.
-
-### Blockers/Concerns
-
-- 173 fixtures need fixing (95 root-only + 76 segment count + 4 diagnostics, with overlaps)
-- Some fixtures may have overlapping root + segment issues -- fixing segments may fix some root mismatches
+Milestone: v0.2.0 Full SWC Parity — COMPLETE (2026-04-08)
+All 4 phases, 18 plans shipped.
+200/201 snapshot tests passing.
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:02:11.966Z
-Stopped at: Completed 13-08-PLAN.md
+Last session: 2026-04-08
+Stopped at: Milestone v0.2.0 complete
 Resume file: None

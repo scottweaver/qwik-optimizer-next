@@ -43,6 +43,47 @@
 
 ---
 
+## Milestone: v0.2.0 — Full SWC Parity
+
+**Shipped:** 2026-04-08
+**Phases:** 4 | **Plans:** 18 | **Timeline:** 5 days (2026-04-03 → 2026-04-07)
+
+### What Was Built
+- Segment extraction parity: 125/201 → 195/201 (97%) via JSX dollar-attr extraction and edge case fixes
+- Diagnostics parity: 197/201 → 201/201 (100%) via C02/C03/C05 fixes
+- Root module code generation rewrite: import assembly, dead code elimination, PURE annotations, quote preservation
+- 11 gap-closure plans in Phase 13 bringing full parity from 28/201 (14%) to 200/201 (99.5%)
+- Universal QRL hoisting with unified _noopQrl/.s()/.w() code path
+
+### What Worked
+- **Parity diff report as diagnostic tool**: The categorized diff report (Phase 13-01) provided a clear roadmap for all remaining fixes, enabling systematic triage of 121 root mismatches by category.
+- **Iterative gap closure**: Phase 13's 11 plans each targeted specific mismatch categories. Each plan moved the parity number visibly (28→79→89→95→99→107→200), maintaining momentum.
+- **Post-processing patterns**: String-level transformations (PURE annotations, arrow spacing, quote restoration) were more reliable than fighting OXC codegen limitations.
+- **Pre-registration for ordering**: Matching SWC's Fold semantics for collision counters required pre-registering segment names at enter time — a non-obvious but critical insight.
+
+### What Was Inefficient
+- **Late discovery of structural patterns**: Some patterns (const sorting, JSX key prefixes, arrow spacing) could have been caught earlier with a more systematic diff analysis at the start of Phase 13.
+- **Multiple passes over same fixtures**: Each gap-closure plan re-ran all 201 tests. A more targeted approach could have reduced iteration cycles.
+- **1 remaining failure**: example_1's spurious `$` import was not caught during the milestone — a more thorough review of the final diff would have caught it.
+
+### Patterns Established
+- **Parity diff report**: Run a categorized diff analysis at the start of each parity phase to map the full problem space before planning fixes.
+- **Post-processing string transforms**: When OXC codegen doesn't support a formatting option, apply it as a text-level post-processing step.
+- **Pre-registration for SWC ordering semantics**: SWC's Fold trait processes nodes in definition order; OXC Traverse processes in AST order. Bridge the gap by pre-registering names at enter time.
+
+### Key Lessons
+1. **Categorize before fixing** — the diff report was the highest-leverage artifact in the milestone, turning 121 unknown mismatches into 8 named categories
+2. **OXC codegen has formatting gaps** — arrow spacing, PURE comments, and quote styles all required post-processing workarounds
+3. **SWC Fold vs OXC Traverse ordering matters** — collision counter ordering, const sorting, and import assembly all depended on matching SWC's specific traversal order
+4. **String-level transforms are pragmatic** — fighting the AST for formatting wins is less reliable than post-processing the codegen output
+
+### Cost Observations
+- Model mix: Primarily Opus for all phases
+- Sessions: ~10 across 5 days
+- Notable: Phase 13 (11 plans) consumed the bulk of effort; earlier phases (10-12) were efficient
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -50,14 +91,17 @@
 | Milestone | Timeline | Phases | Key Change |
 |-----------|----------|--------|------------|
 | v0.1.0 | 4 days | 9 | Initial milestone — established spec-first + gap-closure pattern |
+| v0.2.0 | 5 days | 4 | Parity-focused — diff report + iterative gap closure pattern |
 
 ### Cumulative Quality
 
 | Milestone | Tests | SWC Parity | Requirements |
 |-----------|-------|------------|--------------|
 | v0.1.0 | 444 | 57/201 (28%) | 35/35 (100%) |
+| v0.2.0 | 200+ | 200/201 (99.5%) | 13/13 (100%) |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Measure output parity early — structural alignment decisions compound
-2. Gap-closure phases are cheaper than reopening completed phases
+1. **Categorize problems before fixing them** — v0.1.0's gap analysis and v0.2.0's diff report were both the highest-leverage artifacts in their milestones
+2. **Gap-closure is a first-class workflow** — both milestones needed dedicated cleanup phases after initial implementation
+3. **Post-processing beats fighting the framework** — when the AST tool doesn't support a pattern, string-level transforms are more reliable than workarounds

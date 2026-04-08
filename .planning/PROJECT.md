@@ -20,13 +20,13 @@ The specification must be comprehensive and precise enough that an OXC implement
 - [x] Spec includes OXC migration notes per transformation section — Validated in Phase 4
 - [x] Feature-complete OXC implementation passes 201 behavioral tests — Validated in Phases 5, 8
 - [x] OXC implementation uses Traverse trait, arena allocators, SemanticBuilder, Codegen — Validated in Phase 5
+- [x] Full SWC parity: 200/201 fixtures match root module, segment count, and diagnostics — Validated in Phases 10-13 (v0.2.0)
+- [x] Segment extraction parity: 195/201 segment count match — Validated in Phase 10
+- [x] Diagnostics parity: 201/201 diagnostics match — Validated in Phase 12
 
 ### Active
 
-- [ ] Achieve 201/201 full SWC parity — every fixture's root module, segment count, and diagnostics match the SWC reference
-- [ ] Fix root module code generation mismatches (95 fixtures)
-- [x] Fix segment extraction for dollar-sign expressions in loops, ternaries, nested scopes, and spread props — Validated in Phase 10 (195/201 segment count parity, 97%)
-- [x] Fix diagnostics parity — Validated in Phase 12 (201/201 diagnostics match, 100%)
+(None yet — define in next milestone)
 
 ### Out of Scope
 
@@ -38,22 +38,20 @@ The specification must be comprehensive and precise enough that an OXC implement
 
 ## Context
 
-## Current Milestone: v0.2.0 Full SWC Parity
+## Current State (after v0.2.0)
 
-**Goal:** Achieve 201/201 full SWC parity — every OXC-transformed fixture produces output matching the SWC reference.
+**Shipped:** v0.2.0 Full SWC Parity (2026-04-08)
 
-**Target features:**
-- Fix 95 root-module-only mismatches (code generation differences)
-- Fix ~76 segment count mismatches (missing segment extraction)
-- Fix 4 diagnostics mismatches (error reporting parity)
-
-**Baseline:** 28/201 (14%) full match | 57/201 root match | 125/201 segment count match | 197/201 diagnostics match
-
-**Current state (Phase 10 complete 2026-04-04):**
-- ~190K LOC Rust across 3 crates (qwik-optimizer-oxc, qwik-optimizer-napi, qwik-optimizer-wasm)
-- 511 tests passing (264 unit + 223 snapshot + 24 spec)
-- 195/201 segment count parity (97%) — up from 125/201 (62%) at v0.1.0
+- ~14.8K LOC Rust across 3 crates (qwik-optimizer-oxc, qwik-optimizer-napi, qwik-optimizer-wasm)
+- 200/201 snapshot tests passing (1 known gap: example_1 spurious `$` import in segment)
+- 201/201 diagnostics parity, 195/201 segment count parity
 - Comprehensive spec document covering all 14 CONVs with 24+ examples
+
+**Next milestone goals:**
+- Fix remaining example_1 regression
+- Performance benchmarking (OXC vs SWC)
+- Parallel module processing via rayon (feature-gated)
+- Integration testing with real Qwik applications
 
 **Source material:**
 - SWC-based Qwik v2 optimizer: `/Users/scottweaver/Projects/qwik/packages/optimizer` (~18.5k LOC Rust, 18 modules)
@@ -98,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-04 after Phase 10 completion*
+*Last updated: 2026-04-08 after v0.2.0 milestone*
